@@ -11,10 +11,10 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Mission Timing")]
-    [SerializeField] float phase1Duration = 60f;   // 1 min (test) — raise to 300 for real game
-    [SerializeField] float phase2Duration = 60f;   // 1 min (test)
-    [SerializeField] float forceEvacTime = 180f;   // 3 min (test) — raise to 900 for real game
-    [SerializeField] float forcedEvacDuration = 60f; // auto-fail after this many seconds in ForcedEvac
+    [SerializeField] float phase1Duration = 180f;  // 3 min Active
+    [SerializeField] float phase2Duration = 180f;  // 3 min Escalating
+    [SerializeField] float forceEvacTime = 480f;   // 8 min — ForcedEvac starts here
+    [SerializeField] float forcedEvacDuration = 120f; // 2 min to evacuate before auto-fail
 
     public enum MissionPhase { Preparation, Active, Escalating, Critical, ForcedEvac, Ended }
 

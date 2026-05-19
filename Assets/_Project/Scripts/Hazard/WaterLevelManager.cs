@@ -10,16 +10,16 @@ public class WaterLevelManager : NetworkBehaviour
     public static WaterLevelManager Instance { get; private set; }
 
     [Header("Water Rise Settings")]
-    [SerializeField] float startHeight = -0.1f;     // just below floor surface
+    [SerializeField] float startHeight = -2.0f;     // well below floor — safe at mission start
     [SerializeField] float maxHeight = 1.2f;        // waist height — dangerous
-    [SerializeField] float[] phaseRiseRates = { 0.03f, 0.08f, 0.15f, 0.3f };
+    [SerializeField] float[] phaseRiseRates = { 0.003f, 0.006f, 0.012f, 0.02f };
 
     [Header("Zone Heights")]
     [SerializeField] float ankleTrigger = -2.5f;    // slow movement 10%
     [SerializeField] float kneeTrigger = -1.5f;     // slow movement 40%, electrics dangerous
     [SerializeField] float waistTrigger = -0.5f;    // slow movement 60%, can't carry heavy items
 
-    public NetworkVariable<float> CurrentWaterHeight = new(-0.1f,
+    public NetworkVariable<float> CurrentWaterHeight = new(-2.0f,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     void Awake()
