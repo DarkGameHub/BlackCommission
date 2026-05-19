@@ -19,10 +19,12 @@ public class SettlementManager : NetworkBehaviour
 
     [Header("Penalties")]
     [SerializeField] int survivorDeathPenalty = 600;
-    [SerializeField] int playerInjuryPenalty = 100;
-    [SerializeField] int playerSeriousInjuryPenalty = 300;
+#pragma warning disable 0414
+    [SerializeField] int playerInjuryPenalty = 100;          // used in M2 injury tracking
+    [SerializeField] int playerSeriousInjuryPenalty = 300;   // used in M2 injury tracking
+    [SerializeField] int propertyDamagePenalty = 150;        // used in M2 damage tracking
+#pragma warning restore 0414
     [SerializeField] int timeoutPenalty = 200;
-    [SerializeField] int propertyDamagePenalty = 150;
 
     void Awake()
     {
@@ -32,7 +34,7 @@ public class SettlementManager : NetworkBehaviour
 
     public void BeginSettlement(int survivorsRescued, int evidenceCount)
     {
-        if (!IsServer) return;
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
 
         var gm = GameManager.Instance;
         int income = 0;

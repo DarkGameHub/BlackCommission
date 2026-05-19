@@ -43,13 +43,14 @@ public class CleaningRobot : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (!IsServer) { agent.enabled = false; return; }
-        GoToNextPatrolPoint();
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) { agent.enabled = false; return; }
+        // Delay first patrol tick so NavMesh has time to init
+        Invoke(nameof(GoToNextPatrolPoint), 0.5f);
     }
 
     void Update()
     {
-        if (!IsServer) return;
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
 
         stateTimer += Time.deltaTime;
 
@@ -82,6 +83,7 @@ public class CleaningRobot : NetworkBehaviour
     void UpdateAlerted()
     {
         if (chaseTarget == null) { SetState(RobotState.Patrolling); return; }
+        if (!agent.isOnNavMesh) return;
 
         float dist = Vector3.Distance(transform.position, chaseTarget.position);
         if (dist < sightRange)
@@ -100,6 +102,7 @@ public class CleaningRobot : NetworkBehaviour
     void UpdateChase()
     {
         if (chaseTarget == null) { SetState(RobotState.Patrolling); return; }
+        if (!agent.isOnNavMesh) return;
 
         agent.SetDestination(chaseTarget.position);
         float dist = Vector3.Distance(transform.position, chaseTarget.position);
@@ -171,6 +174,7 @@ public class CleaningRobot : NetworkBehaviour
     void GoToNextPatrolPoint()
     {
         if (patrolPoints.Length == 0) return;
+        if (!agent.isOnNavMesh) return;
         agent.speed = patrolSpeed;
         agent.SetDestination(patrolPoints[patrolIndex].position);
         patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
@@ -179,7 +183,7 @@ public class CleaningRobot : NetworkBehaviour
     // Called by noisy events (drop, run, interact)
     public void AlertToSound(Vector3 soundPosition, float volume)
     {
-        if (!IsServer) return;
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
         float dist = Vector3.Distance(transform.position, soundPosition);
         if (dist < hearingRange * volume && state.Value == RobotState.Patrolling)
         {
