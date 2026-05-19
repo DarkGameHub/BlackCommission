@@ -60,8 +60,9 @@ public static class ProjectSetup
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
+        EditorSceneManager.OpenScene("Assets/_Project/Scenes/HQ.unity");
         EditorUtility.DisplayDialog("完成!",
-            "配置完成!\n所有 Prefabs 和场景已更新。\n\n打开 Mall_B2 场景开始测试!", "开始!");
+            "配置完成!\n\n测试流程:\n1. 打开 HQ 场景 (已自动打开)\n2. 点 Play\n3. 点左上角 Start Host\n4. 走到桌上绿色屏幕按 [E] 接工单\n5. 自动进入任务场景", "开始!");
     }
 
     // ─────────────────────────────── Folders ─────────────────────────────────
@@ -90,6 +91,16 @@ public static class ProjectSetup
         cc.height = 2f; cc.radius = 0.4f; cc.center = new Vector3(0, 1f, 0);
 
         player.AddComponent<NetworkObject>();
+        var netTransform = player.AddComponent<ClientNetworkTransform>();
+        netTransform.SyncPositionX = true;
+        netTransform.SyncPositionY = true;
+        netTransform.SyncPositionZ = true;
+        netTransform.SyncRotAngleY = true;
+        netTransform.SyncRotAngleX = false;
+        netTransform.SyncRotAngleZ = false;
+        netTransform.SyncScaleX = false;
+        netTransform.SyncScaleY = false;
+        netTransform.SyncScaleZ = false;
 
         var cameraRoot = new GameObject("CameraRoot");
         cameraRoot.transform.SetParent(player.transform);
@@ -501,7 +512,8 @@ public static class ProjectSetup
 
         // ── Spawn ─────────────────────────────────────────────
         var spawnPoint = new GameObject("PlayerSpawnPoint");
-        spawnPoint.transform.position = new Vector3(0, 1.1f, 1);
+        spawnPoint.transform.position = new Vector3(0, 1.1f, 0);
+        spawnPoint.transform.rotation = Quaternion.Euler(0, 180, 0);
 
         var spawnMgr = new GameObject("HQSpawnManager");
         var mgr = spawnMgr.AddComponent<HQSpawnManager>();
@@ -758,7 +770,17 @@ public static class ProjectSetup
     {
         var rend = go.GetComponent<Renderer>();
         if (rend == null) return;
-        var mat = new Material(rend.sharedMaterial) { color = color };
+        var urpShader = Shader.Find("Universal Render Pipeline/Lit");
+        Material mat;
+        if (urpShader != null)
+        {
+            mat = new Material(urpShader);
+            mat.SetColor("_BaseColor", color);
+        }
+        else
+        {
+            mat = new Material(rend.sharedMaterial) { color = color };
+        }
         rend.sharedMaterial = mat;
     }
 

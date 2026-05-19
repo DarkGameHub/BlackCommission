@@ -22,6 +22,7 @@ public class HQSpawnManager : MonoBehaviour
             if (cc == null) continue;
             cc.enabled = false;
             players[i].transform.position = spawnPoint.position + Vector3.right * (i * 1.5f);
+            players[i].transform.rotation = spawnPoint.rotation;
             cc.enabled = true;
         }
     }

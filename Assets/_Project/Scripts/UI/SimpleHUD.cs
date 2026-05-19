@@ -85,20 +85,32 @@ public class SimpleHUD : MonoBehaviour
             }
         }
 
-        // Debug: confirm server is running
-        bool isServer = NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer;
-        string timerVal = gm != null ? $"{gm.MissionTimer.Value:F0}s" : "N/A";
-        GUI.Label(new Rect(10, y, 300, 24),
-            $"<color=#888888>[服务器:{(isServer ? "是" : "否")}  计时:{timerVal}]</color>", normalStyle); y += 26;
-
-        // Interaction debug: shows nearest interactable for the local player
-        var pi = FindFirstObjectByType<PlayerInteraction>();
-        if (pi != null)
+        if (localPlayer != null && localPlayer.TryGetComponent<FlashlightController>(out var fl))
         {
-            string tgt = pi.DebugTargetName;
+            string flColor = fl.BatteryNormalized > 0.3f ? "#aaccff" : "#ff6644";
+            string cdText = fl.CooldownRemaining > 0 ? $"  冷却:{fl.CooldownRemaining:F0}s" : "";
             GUI.Label(new Rect(10, y, 300, 24),
-                $"<color=#888888>[交互目标:{(string.IsNullOrEmpty(tgt) ? "无" : tgt)}]</color>", normalStyle);
+                $"<color={flColor}>手电: {fl.BatteryNormalized * 100:F0}%{cdText}</color>", normalStyle); y += 26;
         }
+
+        if (localPlayer != null)
+        {
+            var pc = localPlayer.GetComponent<PlayerController>();
+            if (pc != null)
+            {
+                string stColor = pc.Stamina > 30 ? "#88ff88" : "#ffcc00";
+                GUI.Label(new Rect(10, y, 300, 24), $"<color={stColor}>体力: {pc.Stamina:F0}/{100}</color>", normalStyle); y += 26;
+            }
+        }
+
+        // ── 右下操作提示 ─────────────────────────────────
+        var keyStyle = new GUIStyle(GUI.skin.label) { fontSize = 12, normal = { textColor = new Color(0.7f, 0.7f, 0.7f) } };
+        float ky = Screen.height - 130;
+        float kx = Screen.width - 200;
+        GUI.Label(new Rect(kx, ky, 190, 18), "[WASD] 移动  [Shift] 冲刺", keyStyle); ky += 16;
+        GUI.Label(new Rect(kx, ky, 190, 18), "[E] 交互  [F] 拾取  [G] 丢弃", keyStyle); ky += 16;
+        GUI.Label(new Rect(kx, ky, 190, 18), "[V] 手电筒  [鼠标左键] 强光", keyStyle); ky += 16;
+        GUI.Label(new Rect(kx, ky, 190, 18), "[C] 蹲下  [空格] 跳跃", keyStyle);
 
         // ── 中央警告 ─────────────────────────────────────
         if (gm?.CurrentPhase.Value == GameManager.MissionPhase.ForcedEvac)
