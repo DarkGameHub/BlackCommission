@@ -24,7 +24,8 @@ public class CleaningRobot : NetworkBehaviour
 
     [Header("Attack")]
     [SerializeField] float ramForce = 8f;
-    [SerializeField] float stunSelf = 1.5f;        // robot stuns itself after ramming
+    [SerializeField] float ramDamage = 30f;
+    [SerializeField] float stunSelf = 1.5f;
 
     enum RobotState { Patrolling, Alerted, Chasing, Ramming, Stunned }
     NetworkVariable<RobotState> state = new(RobotState.Patrolling,
@@ -34,6 +35,7 @@ public class CleaningRobot : NetworkBehaviour
     Transform chaseTarget;
     int patrolIndex;
     float stateTimer;
+    float currentStunDuration;
 
     // Angry phase multiplier — set by GameManager as phase increases
     public NetworkVariable<float> AggressionMultiplier = new(1f,
@@ -120,11 +122,20 @@ public class CleaningRobot : NetworkBehaviour
 
     void UpdateStunned()
     {
-        if (stateTimer > stunSelf)
+        if (stateTimer > currentStunDuration)
         {
             SetState(RobotState.Patrolling);
             agent.isStopped = false;
         }
+    }
+
+    public void ApplyFlashlightStun(float duration)
+    {
+        if (!IsServer) return;
+        if (state.Value == RobotState.Stunned) return;
+        currentStunDuration = duration / AggressionMultiplier.Value;
+        agent.isStopped = true;
+        SetState(RobotState.Stunned);
     }
 
     IEnumerator Ram(Transform target)
@@ -132,11 +143,14 @@ public class CleaningRobot : NetworkBehaviour
         SetState(RobotState.Ramming);
         agent.isStopped = true;
 
-        // Apply force to player via ClientRpc
         if (target.TryGetComponent<NetworkObject>(out var netObj))
             RamPlayerClientRpc(new NetworkObjectReference(netObj));
 
+        if (target.TryGetComponent<PlayerHealth>(out var ph))
+            ph.TakeDamage(ramDamage);
+
         yield return new WaitForSeconds(0.3f);
+        currentStunDuration = stunSelf;
         SetState(RobotState.Stunned);
         stateTimer = 0;
 

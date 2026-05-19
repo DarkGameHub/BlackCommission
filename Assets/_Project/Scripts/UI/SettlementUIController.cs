@@ -6,6 +6,7 @@ public class SettlementUIController : MonoBehaviour
 {
     public static SettlementUIController Instance { get; private set; }
 
+    public bool IsVisible => _visible;
     bool _visible;
     SettlementData _data;
 
@@ -102,6 +103,8 @@ public class SettlementUIController : MonoBehaviour
         else if (GUILayout.Button("返回事务所", btnStyle))
         {
             _visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
             if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
                 NetworkManager.Singleton.SceneManager.LoadScene("HQ", LoadSceneMode.Single);
             else

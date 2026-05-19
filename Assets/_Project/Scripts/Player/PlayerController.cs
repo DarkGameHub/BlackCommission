@@ -28,6 +28,7 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] Transform cameraRoot;
 
     CharacterController cc;
+    PlayerHealth health;
     PlayerInputActions inputActions;
     Vector3 velocity;
     bool isCrouching;
@@ -42,6 +43,7 @@ public class PlayerController : NetworkBehaviour
     void Awake()
     {
         cc = GetComponent<CharacterController>();
+        TryGetComponent(out health);
         Stamina = maxStamina;
     }
 
@@ -71,6 +73,7 @@ public class PlayerController : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
+        if (health != null && health.IsDowned.Value) return;
 
         if (WaterLevelManager.Instance != null)
             SpeedMultiplier = WaterLevelManager.Instance.GetSpeedModifierForHeight(transform.position.y);

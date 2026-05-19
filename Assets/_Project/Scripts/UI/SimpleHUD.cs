@@ -73,6 +73,18 @@ public class SimpleHUD : MonoBehaviour
             GUI.Label(new Rect(10, y, 300, 24), $"<color={waterColor}>水位: {pct:F0}%  (Y={wm.CurrentWaterHeight.Value:F2})</color>", normalStyle); y += 26;
         }
 
+        // ── 本地玩家 HP ────────────────────────────────
+        var localPlayer = NetworkManager.Singleton.LocalClient?.PlayerObject;
+        if (localPlayer != null && localPlayer.TryGetComponent<PlayerHealth>(out var ph))
+        {
+            string hpColor = ph.CurrentHP.Value > 50 ? "#88ff88" : ph.CurrentHP.Value > 20 ? "#ffcc00" : "#ff4444";
+            GUI.Label(new Rect(10, y, 300, 24), $"<color={hpColor}>HP: {ph.CurrentHP.Value:F0}/{100}</color>", normalStyle); y += 26;
+            if (ph.IsDowned.Value)
+            {
+                GUI.Label(new Rect(10, y, 300, 24), "<color=#ff2222>已倒地 — 等待队友救援</color>", normalStyle); y += 26;
+            }
+        }
+
         // Debug: confirm server is running
         bool isServer = NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer;
         string timerVal = gm != null ? $"{gm.MissionTimer.Value:F0}s" : "N/A";
@@ -95,12 +107,14 @@ public class SimpleHUD : MonoBehaviour
                 "⚠  立即前往撤离点！  ⚠", warningStyle);
         }
 
-        // ── 任务结束画面 ──────────────────────────────────
-        if (gm?.CurrentPhase.Value == GameManager.MissionPhase.Ended)
+        // ── 任务结束画面 (skip if settlement panel is showing) ──
+        if (gm?.CurrentPhase.Value == GameManager.MissionPhase.Ended
+            && !(SettlementUIController.Instance != null && SettlementUIController.Instance.IsVisible))
         {
             float bw = 500, bh = 140;
+            string title = gm.MissionFailed.Value ? "任务失败..." : "任务完成！";
             GUI.Box(new Rect((Screen.width - bw) / 2f, (Screen.height - bh) / 2f, bw, bh),
-                $"任务完成！\n救出幸存者: {gm.SurvivorsRescued.Value}/2\n排水泵: {(gm.PumpRepaired.Value ? "已修复" : "未修复")}",
+                $"{title}\n救出幸存者: {gm.SurvivorsRescued.Value}/2\n排水泵: {(gm.PumpRepaired.Value ? "已修复" : "未修复")}",
                 endStyle);
         }
     }

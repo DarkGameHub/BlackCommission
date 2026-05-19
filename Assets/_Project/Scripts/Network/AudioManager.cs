@@ -16,6 +16,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] AudioClip survivorCalmClip;
     [SerializeField] AudioClip waterRiseClip;
     [SerializeField] AudioClip evacBroadcastClip;
+    [SerializeField] AudioClip robotStunnedClip;
+    [SerializeField] AudioClip[] phaseBroadcastClips;
 
     AudioSource sfxSource;
 
@@ -51,4 +53,14 @@ public class AudioManager : MonoBehaviour
 
     public void PlayEvacBroadcast()
     { if (evacBroadcastClip != null && sfxSource != null) sfxSource.PlayOneShot(evacBroadcastClip); }
+
+    public void PlayRobotStunned(Vector3 position)
+    { if (robotStunnedClip != null) AudioSource.PlayClipAtPoint(robotStunnedClip, position); }
+
+    public void PlayPhaseBroadcast(int phaseIndex)
+    {
+        if (phaseIndex < 0 || phaseIndex >= phaseBroadcastClips.Length) return;
+        if (phaseBroadcastClips[phaseIndex] != null && sfxSource != null)
+            sfxSource.PlayOneShot(phaseBroadcastClips[phaseIndex]);
+    }
 }

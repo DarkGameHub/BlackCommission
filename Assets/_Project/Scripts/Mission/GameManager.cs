@@ -14,6 +14,7 @@ public class GameManager : NetworkBehaviour
     [SerializeField] float phase1Duration = 60f;   // 1 min (test) — raise to 300 for real game
     [SerializeField] float phase2Duration = 60f;   // 1 min (test)
     [SerializeField] float forceEvacTime = 180f;   // 3 min (test) — raise to 900 for real game
+    [SerializeField] float forcedEvacDuration = 60f; // auto-fail after this many seconds in ForcedEvac
 
     public enum MissionPhase { Preparation, Active, Escalating, Critical, ForcedEvac, Ended }
 
@@ -29,6 +30,8 @@ public class GameManager : NetworkBehaviour
     public NetworkVariable<bool> PumpRepaired = new(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<bool> EvacuationComplete = new(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<bool> MissionFailed = new(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public event Action<MissionPhase> OnPhaseChanged;
@@ -61,6 +64,7 @@ public class GameManager : NetworkBehaviour
 
         MissionTimer.Value += Time.deltaTime;
         UpdatePhase();
+        CheckAllPlayersDowned();
     }
 
     void UpdatePhase()
@@ -74,6 +78,9 @@ public class GameManager : NetworkBehaviour
 
         if (target != CurrentPhase.Value)
             CurrentPhase.Value = target;
+
+        if (CurrentPhase.Value == MissionPhase.ForcedEvac && t >= forceEvacTime + forcedEvacDuration)
+            TriggerMissionFailure();
     }
 
     // Called by EvacuationPoint when all required objectives are met and players exit
@@ -110,4 +117,35 @@ public class GameManager : NetworkBehaviour
     public bool CanComplete => SurvivorsRescued.Value >= 1 && PumpRepaired.Value;
 
     public float TimeRemainingToForcedEvac => Mathf.Max(0, forceEvacTime - MissionTimer.Value);
+
+    void CheckAllPlayersDowned()
+    {
+        if (MissionFailed.Value) return;
+        var players = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
+        if (players.Length == 0) return;
+
+        bool allDowned = true;
+        foreach (var p in players)
+        {
+            if (!p.IsDowned.Value) { allDowned = false; break; }
+        }
+
+        if (allDowned)
+            TriggerMissionFailure();
+    }
+
+    public void TriggerMissionFailure()
+    {
+        if (!IsServer) return;
+        MissionFailed.Value = true;
+        CurrentPhase.Value = MissionPhase.Ended;
+        MissionFailedClientRpc();
+    }
+
+    [ClientRpc]
+    void MissionFailedClientRpc()
+    {
+        OnMissionComplete?.Invoke();
+        SettlementManager.Instance?.BeginSettlement(0, 0);
+    }
 }

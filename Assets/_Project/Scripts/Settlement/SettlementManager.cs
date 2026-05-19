@@ -52,7 +52,7 @@ public class SettlementManager : NetworkBehaviour
         // Penalties (simplified for MVP — expand with actual tracking later)
         int deadSurvivors = 2 - survivorsRescued;
         expenses += deadSurvivors * survivorDeathPenalty;
-        if (gm.CurrentPhase.Value == GameManager.MissionPhase.ForcedEvac)
+        if (gm.TimeRemainingToForcedEvac <= 0f)
             expenses += timeoutPenalty;
 
         int netResult = income - expenses;
