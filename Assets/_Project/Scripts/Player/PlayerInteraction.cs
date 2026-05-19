@@ -90,7 +90,7 @@ public class PlayerInteraction : NetworkBehaviour
 
             hintStyle = new GUIStyle(GUI.skin.label)
             {
-                font = UIFont.Get(), fontSize = 16,
+                fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.white, background = hintBg },

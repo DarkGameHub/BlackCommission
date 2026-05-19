@@ -501,7 +501,7 @@ public static class ProjectSetup
         // Monitor on desk (the job board) — bright green, easy to spot
         var jobBoardGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
         jobBoardGO.name = "JobBoard_Screen";
-        jobBoardGO.transform.position = new Vector3(0, 1.15f, -1.95f);
+        jobBoardGO.transform.position = new Vector3(0, 0.95f, -1.95f);
         jobBoardGO.transform.localScale = new Vector3(0.8f, 0.55f, 0.06f);
         SetColor(jobBoardGO, new Color(0.05f, 0.9f, 0.2f));
         Object.DestroyImmediate(jobBoardGO.GetComponent<BoxCollider>());

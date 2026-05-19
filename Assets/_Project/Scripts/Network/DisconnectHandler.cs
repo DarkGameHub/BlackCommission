@@ -61,7 +61,7 @@ public class DisconnectHandler : MonoBehaviour
         {
             messageStyle = new GUIStyle(GUI.skin.box)
             {
-                font = UIFont.Get(), fontSize = 24,
+                fontSize = 24,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.red }
