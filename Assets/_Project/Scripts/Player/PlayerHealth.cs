@@ -86,8 +86,7 @@ public class PlayerHealth : NetworkBehaviour, IInteractable
         if (GameManager.Instance != null && GameManager.Instance.PumpRepaired.Value) return;
 
         float waterHeight = WaterLevelManager.Instance.CurrentWaterHeight.Value;
-        float feetY = transform.position.y - 1f;
-        if (waterHeight > feetY)
+        if (waterHeight > transform.position.y)
             TakeDamage(electrocutionDamageRate * Time.deltaTime);
     }
 
