@@ -5,6 +5,8 @@ using UnityEditor.AI;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public static class ProjectSetup
 {
@@ -28,6 +30,7 @@ public static class ProjectSetup
         }
 
         EnsureFolders();
+        EnsureURPPipeline();
 
         var playerPrefab   = CreatePlayerPrefab();
         if (playerPrefab == null) { Debug.LogError("Player prefab creation failed."); return; }
@@ -79,6 +82,46 @@ public static class ProjectSetup
             AssetDatabase.CreateFolder("Assets/_Project", "Scenes");
     }
 
+    // ─────────────────────────────── URP Pipeline ─────────────────────────────
+
+    static void EnsureURPPipeline()
+    {
+        if (!AssetDatabase.IsValidFolder("Assets/Settings"))
+            AssetDatabase.CreateFolder("Assets", "Settings");
+
+        const string rendererPath = "Assets/Settings/URP-Renderer.asset";
+        const string pipelinePath = "Assets/Settings/URP-Pipeline.asset";
+
+        var rendererData = AssetDatabase.LoadAssetAtPath<ScriptableRendererData>(rendererPath);
+        if (rendererData == null)
+        {
+            rendererData = ScriptableObject.CreateInstance<UniversalRendererData>();
+            AssetDatabase.CreateAsset(rendererData, rendererPath);
+        }
+
+        var pipelineAsset = AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(pipelinePath);
+        if (pipelineAsset == null)
+        {
+            pipelineAsset = ScriptableObject.CreateInstance<UniversalRenderPipelineAsset>();
+            var so = new SerializedObject(pipelineAsset);
+            var rendererList = so.FindProperty("m_RendererDataList");
+            if (rendererList != null)
+            {
+                rendererList.arraySize = 1;
+                rendererList.GetArrayElementAtIndex(0).objectReferenceValue = rendererData;
+            }
+            var defaultIdx = so.FindProperty("m_DefaultRendererIndex");
+            if (defaultIdx != null) defaultIdx.intValue = 0;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.CreateAsset(pipelineAsset, pipelinePath);
+        }
+
+        GraphicsSettings.defaultRenderPipeline = pipelineAsset;
+        QualitySettings.renderPipeline = pipelineAsset;
+        AssetDatabase.SaveAssets();
+        Debug.Log("[Setup] URP Pipeline configured.");
+    }
+
     // ─────────────────────────────── Player Prefab ───────────────────────────
 
     static GameObject CreatePlayerPrefab()
@@ -86,6 +129,7 @@ public static class ProjectSetup
         var player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         player.name = "Player";
 
+        SetColor(player, new Color(0.3f, 0.5f, 0.7f));
         Object.DestroyImmediate(player.GetComponent<CapsuleCollider>());
         var cc = player.AddComponent<CharacterController>();
         cc.height = 2f; cc.radius = 0.4f; cc.center = new Vector3(0, 1f, 0);
@@ -499,7 +543,7 @@ public static class ProjectSetup
         pointLight.intensity = 1.5f;
         pointLight.color = new Color(1f, 0.9f, 0.7f);
 
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientMode = AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.15f, 0.13f, 0.12f);
 
         // ── NetworkManager ────────────────────────────────────
@@ -563,7 +607,7 @@ public static class ProjectSetup
         var defaultLight = GameObject.Find("Directional Light");
         if (defaultLight != null) Object.DestroyImmediate(defaultLight);
 
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientMode = AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.04f, 0.04f, 0.06f);
 
         // ── Geometry ──────────────────────────────────────────────
@@ -593,7 +637,7 @@ public static class ProjectSetup
         waterPlane.name = "WaterSurface";
         waterPlane.transform.localScale = new Vector3(3f, 1f, 3f);
         waterPlane.transform.position = new Vector3(0f, -0.1f, 0f);
-        SetColor(waterPlane, new Color(0.15f, 0.4f, 0.9f));
+        SetColor(waterPlane, new Color(0.1f, 0.3f, 0.7f, 0.6f));
         Object.DestroyImmediate(waterPlane.GetComponent<MeshCollider>());
         waterPlane.AddComponent<WaterVisual>();
 
@@ -795,6 +839,7 @@ public static class ProjectSetup
     {
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.name = name; go.transform.position = pos; go.transform.localScale = scale;
+        SetColor(go, new Color(0.4f, 0.4f, 0.42f));
         GameObjectUtility.SetStaticEditorFlags(go,
             StaticEditorFlags.NavigationStatic | StaticEditorFlags.ContributeGI);
         return go;
@@ -805,15 +850,25 @@ public static class ProjectSetup
         var rend = go.GetComponent<Renderer>();
         if (rend == null) return;
         var urpShader = Shader.Find("Universal Render Pipeline/Lit");
-        Material mat;
-        if (urpShader != null)
+        if (urpShader == null) urpShader = Shader.Find("Lit");
+        if (urpShader == null)
         {
-            mat = new Material(urpShader);
-            mat.SetColor("_BaseColor", color);
+            rend.sharedMaterial = new Material(rend.sharedMaterial) { color = color };
+            return;
         }
-        else
+        var mat = new Material(urpShader);
+        mat.SetColor("_BaseColor", color);
+        if (color.a < 1f)
         {
-            mat = new Material(rend.sharedMaterial) { color = color };
+            mat.SetFloat("_Surface", 1);
+            mat.SetFloat("_Blend", 0);
+            mat.SetFloat("_AlphaClip", 0);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
         }
         rend.sharedMaterial = mat;
     }
