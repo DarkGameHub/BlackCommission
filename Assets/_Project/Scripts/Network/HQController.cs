@@ -5,12 +5,26 @@ public class HQController : MonoBehaviour
 {
     GUIStyle labelStyle;
     GUIStyle headerStyle;
+    Texture2D panelBg;
 
     void InitStyles()
     {
         if (labelStyle != null) return;
-        labelStyle = new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = Color.white } };
-        headerStyle = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold, normal = { textColor = Color.yellow } };
+        panelBg = new Texture2D(1, 1);
+        panelBg.SetPixel(0, 0, new Color(0, 0, 0, 0.6f));
+        panelBg.Apply();
+
+        var font = UIFont.Get();
+        labelStyle = new GUIStyle(GUI.skin.label)
+        {
+            font = font, fontSize = 14,
+            normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
+        };
+        headerStyle = new GUIStyle(GUI.skin.label)
+        {
+            font = font, fontSize = 16, fontStyle = FontStyle.Bold,
+            normal = { textColor = new Color(0.95f, 0.85f, 0.4f) }
+        };
     }
 
     void OnGUI()
@@ -18,11 +32,8 @@ public class HQController : MonoBehaviour
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return;
         InitStyles();
 
-        float x = 20, y = 20, w = 300;
-
-        GUI.color = new Color(0f, 0f, 0f, 0.7f);
-        GUI.DrawTexture(new Rect(x - 4, y - 4, w + 8, 130), Texture2D.whiteTexture);
-        GUI.color = Color.white;
+        float x = 20, y = 40, w = 300;
+        GUI.DrawTexture(new Rect(x - 4, y - 4, w + 8, 130), panelBg);
 
         GUILayout.BeginArea(new Rect(x, y, w, 122));
         GUILayout.Label("外包事故组", headerStyle);

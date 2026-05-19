@@ -70,7 +70,7 @@ public class PhaseBroadcaster : NetworkBehaviour
         {
             broadcastStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = 26,
+                font = UIFont.Get(), fontSize = 26,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = new Color(1f, 0.85f, 0.2f) }

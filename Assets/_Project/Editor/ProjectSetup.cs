@@ -498,17 +498,27 @@ public static class ProjectSetup
         // ── Furniture ─────────────────────────────────────────
         // Desk (job board computer sits on this)
         CreateBoxColored("Desk", new Vector3(0, 0.4f, -1.8f), new Vector3(1.6f, 0.8f, 0.7f), deskColor);
-        // Small monitor on desk (the job board)
+        // Monitor on desk (the job board) — bright green, easy to spot
         var jobBoardGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
         jobBoardGO.name = "JobBoard_Screen";
-        jobBoardGO.transform.position = new Vector3(0, 1.1f, -2f);
-        jobBoardGO.transform.localScale = new Vector3(0.6f, 0.45f, 0.05f);
-        SetColor(jobBoardGO, new Color(0.1f, 0.8f, 0.3f));
+        jobBoardGO.transform.position = new Vector3(0, 1.15f, -1.95f);
+        jobBoardGO.transform.localScale = new Vector3(0.8f, 0.55f, 0.06f);
+        SetColor(jobBoardGO, new Color(0.05f, 0.9f, 0.2f));
         Object.DestroyImmediate(jobBoardGO.GetComponent<BoxCollider>());
         var jbCol = jobBoardGO.AddComponent<BoxCollider>();
-        jbCol.size = new Vector3(1f, 1f, 3f);
-        jbCol.center = Vector3.zero;
+        jbCol.size = new Vector3(1.5f, 1.5f, 8f);
+        jbCol.isTrigger = true;
         jobBoardGO.AddComponent<JobBoard>();
+
+        // Glow light on job board to make it obvious
+        var jbLight = new GameObject("JobBoardLight");
+        jbLight.transform.SetParent(jobBoardGO.transform);
+        jbLight.transform.localPosition = new Vector3(0, 0, 1f);
+        var jbl = jbLight.AddComponent<Light>();
+        jbl.type = LightType.Point;
+        jbl.range = 3f;
+        jbl.intensity = 0.8f;
+        jbl.color = new Color(0.2f, 1f, 0.4f);
 
         // Equipment shelf (right side)
         CreateBoxColored("Shelf", new Vector3(2.2f, 0.5f, -1.5f), new Vector3(1.2f, 1f, 0.5f), shelfColor);

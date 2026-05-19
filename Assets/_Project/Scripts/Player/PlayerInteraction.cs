@@ -10,6 +10,8 @@ public class PlayerInteraction : NetworkBehaviour
     PlayerInputActions inputActions;
     IInteractable currentTarget;
     bool isInteracting;
+    GUIStyle hintStyle;
+    Texture2D hintBg;
 
     void Awake() => player = GetComponent<PlayerController>();
 
@@ -39,6 +41,7 @@ public class PlayerInteraction : NetworkBehaviour
 
         foreach (var hit in hits)
         {
+            if (hit.transform.root == transform) continue;
             var interactable = hit.GetComponentInParent<IInteractable>();
             if (interactable == null) continue;
             float dist = Vector3.Distance(transform.position, hit.transform.position);
@@ -73,21 +76,30 @@ public class PlayerInteraction : NetworkBehaviour
         }
     }
 
-    public string DebugTargetName => currentTarget == null ? "" : currentTarget.GetType().Name;
-
     void OnGUI()
     {
         if (currentTarget == null) return;
         string hint = currentTarget.InteractHint;
         if (string.IsNullOrEmpty(hint)) return;
 
-        var style = new GUIStyle(GUI.skin.box);
-        style.fontSize = 18;
-        style.alignment = TextAnchor.MiddleCenter;
-        style.normal.textColor = Color.white;
+        if (hintStyle == null)
+        {
+            hintBg = new Texture2D(1, 1);
+            hintBg.SetPixel(0, 0, new Color(0, 0, 0, 0.7f));
+            hintBg.Apply();
 
-        float w = 320, h = 36;
-        GUI.Box(new Rect((Screen.width - w) / 2f, Screen.height * 0.72f, w, h),
-            $"[E] {hint}", style);
+            hintStyle = new GUIStyle(GUI.skin.label)
+            {
+                font = UIFont.Get(), fontSize = 16,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = Color.white, background = hintBg },
+                padding = new RectOffset(16, 16, 8, 8)
+            };
+        }
+
+        float w = 340, h = 38;
+        GUI.Label(new Rect((Screen.width - w) / 2f, Screen.height * 0.7f, w, h),
+            $"[E] {hint}", hintStyle);
     }
 }
