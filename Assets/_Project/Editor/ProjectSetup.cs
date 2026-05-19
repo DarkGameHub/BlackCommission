@@ -109,7 +109,10 @@ public static class ProjectSetup
         var camGO = new GameObject("PlayerCamera");
         camGO.transform.SetParent(cameraRoot.transform);
         camGO.transform.localPosition = Vector3.zero;
-        camGO.AddComponent<Camera>();
+        var cam = camGO.AddComponent<Camera>();
+        cam.clearFlags = CameraClearFlags.SolidColor;
+        cam.backgroundColor = new Color(0.05f, 0.05f, 0.08f);
+        cam.nearClipPlane = 0.1f;
         camGO.AddComponent<AudioListener>();
 
         var holdPoint = new GameObject("HoldPoint");
@@ -432,6 +435,8 @@ public static class ProjectSetup
 
         var defaultCam = GameObject.Find("Main Camera");
         if (defaultCam != null) Object.DestroyImmediate(defaultCam);
+        var defaultLight = GameObject.Find("Directional Light");
+        if (defaultLight != null) Object.DestroyImmediate(defaultLight);
 
         Color wallColor  = new Color(0.6f, 0.55f, 0.45f);
         Color floorColor = new Color(0.35f, 0.3f, 0.25f);
@@ -478,6 +483,14 @@ public static class ProjectSetup
         CreateBoxColored("DoorFrame", new Vector3(0, 1.25f, 2.42f), new Vector3(0.9f, 2.5f, 0.1f), new Color(0.35f, 0.25f, 0.15f));
 
         // ── Lighting ──────────────────────────────────────────
+        var dirLightGO = new GameObject("DirectionalLight");
+        dirLightGO.transform.position = new Vector3(0, 3, 0);
+        dirLightGO.transform.rotation = Quaternion.Euler(50, -30, 0);
+        var dirLight = dirLightGO.AddComponent<Light>();
+        dirLight.type = LightType.Directional;
+        dirLight.intensity = 0.3f;
+        dirLight.color = new Color(0.8f, 0.85f, 1f);
+
         var lightGO = new GameObject("OfficeLight");
         lightGO.transform.position = new Vector3(0, 2.8f, 0);
         var pointLight = lightGO.AddComponent<Light>();
@@ -485,6 +498,9 @@ public static class ProjectSetup
         pointLight.range = 8f;
         pointLight.intensity = 1.5f;
         pointLight.color = new Color(1f, 0.9f, 0.7f);
+
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.15f, 0.13f, 0.12f);
 
         // ── NetworkManager ────────────────────────────────────
         var nmGO = new GameObject("NetworkManager");
@@ -544,6 +560,11 @@ public static class ProjectSetup
 
         var defaultCam = GameObject.Find("Main Camera");
         if (defaultCam != null) Object.DestroyImmediate(defaultCam);
+        var defaultLight = GameObject.Find("Directional Light");
+        if (defaultLight != null) Object.DestroyImmediate(defaultLight);
+
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.04f, 0.04f, 0.06f);
 
         // ── Geometry ──────────────────────────────────────────────
         CreateBox("Ground",         Vector3.zero,                   new Vector3(30, 0.2f, 30));
@@ -727,8 +748,21 @@ public static class ProjectSetup
         sunGO.transform.rotation = Quaternion.Euler(50, -30, 0);
         var sunLight = sunGO.AddComponent<Light>();
         sunLight.type = LightType.Directional;
-        sunLight.intensity = 0.3f;
-        sunLight.color = new Color(0.5f, 0.7f, 1f);
+        sunLight.intensity = 0.15f;
+        sunLight.color = new Color(0.4f, 0.5f, 0.7f);
+
+        // Emergency ceiling lights
+        for (int ix = -1; ix <= 1; ix++)
+        for (int iz = -1; iz <= 1; iz++)
+        {
+            var emLight = new GameObject($"EmergencyLight_{ix}_{iz}");
+            emLight.transform.position = new Vector3(ix * 8f, 4.8f, iz * 8f);
+            var pl = emLight.AddComponent<Light>();
+            pl.type = LightType.Point;
+            pl.range = 10f;
+            pl.intensity = 0.6f;
+            pl.color = new Color(1f, 0.6f, 0.3f);
+        }
 
         // ── Spawn points + spawn manager ─────────────────────────
         var missionSpawn = new GameObject("MissionSpawnPoint");
