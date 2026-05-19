@@ -5,22 +5,43 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(BoxCollider))]
 public class JobBoard : MonoBehaviour, IInteractable
 {
-    public string InteractHint => "查看工单 [E]";
-
     float _msgTimer;
+    string _msg;
+
+    public string InteractHint
+    {
+        get
+        {
+            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+                return "需要先联机";
+            if (!NetworkManager.Singleton.IsHost)
+                return "等待房主接单";
+            return "接受工单: 地下商场积水事故 (¥1700)";
+        }
+    }
 
     public void OnInteractStart(PlayerController player)
     {
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening
-            || !NetworkManager.Singleton.IsHost)
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
-            _msgTimer = 3f;
+            ShowMessage("请先点 Start Host 开始联机");
+            return;
+        }
+        if (!NetworkManager.Singleton.IsHost)
+        {
+            ShowMessage("只有房主可以接单");
             return;
         }
         NetworkManager.Singleton.SceneManager.LoadScene("Mall_B2", LoadSceneMode.Single);
     }
 
     public void OnInteractEnd(PlayerController player) { }
+
+    void ShowMessage(string msg)
+    {
+        _msg = msg;
+        _msgTimer = 3f;
+    }
 
     void OnGUI()
     {
@@ -33,8 +54,7 @@ public class JobBoard : MonoBehaviour, IInteractable
             alignment = TextAnchor.MiddleCenter,
             normal = { textColor = Color.yellow }
         };
-        float w = 360, h = 40;
-        GUI.Box(new Rect((Screen.width - w) / 2f, Screen.height * 0.6f, w, h),
-            "请先开始联机 (点 Start Host)", style);
+        float w = 400, h = 40;
+        GUI.Box(new Rect((Screen.width - w) / 2f, Screen.height * 0.6f, w, h), _msg, style);
     }
 }

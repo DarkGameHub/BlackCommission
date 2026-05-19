@@ -37,12 +37,18 @@ public static class ProjectSetup
         var survivorLight  = CreateSurvivorLightPrefab();
         var survivorHeavy  = CreateSurvivorHeavyPrefab();
         var robotPrefab    = CreateRobotPrefab();
+        var fusePrefab     = CreateFusePrefab();
+        var toolboxPrefab  = CreateToolboxPrefab();
+        var batteryPrefab  = CreateBatteryPrefab();
+        var evidencePrefab = CreateEvidenceBoxPrefab();
+        var doorPrefab     = CreateDoorPrefab();
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
         SetupHQScene(playerPrefab);
-        SetupMallScene(playerPrefab, pumpPrefab, evacPrefab, survivorLight, survivorHeavy, robotPrefab);
+        SetupMallScene(playerPrefab, pumpPrefab, evacPrefab, survivorLight, survivorHeavy, robotPrefab,
+            fusePrefab, toolboxPrefab, batteryPrefab, evidencePrefab, doorPrefab);
 
         AddSceneToBuildSettings("Assets/_Project/Scenes/HQ.unity");
         AddSceneToBuildSettings("Assets/_Project/Scenes/Mall_B2.unity");
@@ -50,7 +56,7 @@ public static class ProjectSetup
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         EditorUtility.DisplayDialog("完成!",
-            "配置完成!\n- Player / Pump / EvacPoint / SurvivorLight / SurvivorHeavy / CleaningRobot Prefabs\n- HQ 场景\n- Mall_B2 场景\n\n打开 Mall_B2 场景开始测试!", "开始!");
+            "配置完成!\n所有 Prefabs 和场景已更新。\n\n打开 Mall_B2 场景开始测试!", "开始!");
     }
 
     // ─────────────────────────────── Folders ─────────────────────────────────
@@ -94,6 +100,17 @@ public static class ProjectSetup
         holdPoint.transform.SetParent(camGO.transform);
         holdPoint.transform.localPosition = new Vector3(0, -0.2f, 0.6f);
 
+        // Flashlight (SpotLight child of camera)
+        var flashlightGO = new GameObject("Flashlight");
+        flashlightGO.transform.SetParent(camGO.transform);
+        flashlightGO.transform.localPosition = Vector3.zero;
+        var spotLight = flashlightGO.AddComponent<Light>();
+        spotLight.type = LightType.Spot;
+        spotLight.range = 15f;
+        spotLight.spotAngle = 60f;
+        spotLight.intensity = 1f;
+        spotLight.enabled = false;
+
         var pc = player.AddComponent<PlayerController>();
         SetField(pc, "cameraRoot", cameraRoot.transform);
 
@@ -104,6 +121,8 @@ public static class ProjectSetup
         SetField(carry, "holdPoint", holdPoint.transform);
 
         player.AddComponent<PlayerInteraction>();
+        player.AddComponent<PlayerHealth>();
+        player.AddComponent<FlashlightController>();
 
         const string path = "Assets/_Project/Prefabs/Player/Player.prefab";
         var prefab = PrefabUtility.SaveAsPrefabAsset(player, path);
@@ -174,7 +193,7 @@ public static class ProjectSetup
 
         var root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         root.name = "SurvivorLight";
-        SetColor(root, new Color(1f, 0.9f, 0.1f)); // yellow
+        SetColor(root, new Color(1f, 0.9f, 0.1f));
         Object.DestroyImmediate(root.GetComponent<CapsuleCollider>());
 
         root.AddComponent<NetworkObject>();
@@ -203,7 +222,7 @@ public static class ProjectSetup
 
         var root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         root.name = "SurvivorHeavy";
-        SetColor(root, new Color(1f, 0.4f, 0.1f)); // orange
+        SetColor(root, new Color(1f, 0.4f, 0.1f));
         Object.DestroyImmediate(root.GetComponent<CapsuleCollider>());
 
         root.AddComponent<NetworkObject>();
@@ -233,7 +252,7 @@ public static class ProjectSetup
         var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
         root.name = "CleaningRobot";
         root.transform.localScale = new Vector3(0.8f, 0.6f, 1.2f);
-        SetColor(root, new Color(0.7f, 0.7f, 0.7f)); // grey
+        SetColor(root, new Color(0.7f, 0.7f, 0.7f));
         Object.DestroyImmediate(root.GetComponent<BoxCollider>());
 
         root.AddComponent<NetworkObject>();
@@ -251,6 +270,137 @@ public static class ProjectSetup
         return prefab;
     }
 
+    // ─────────────────────────── Fuse Prefab ────────────────────────────────
+
+    static GameObject CreateFusePrefab()
+    {
+        const string path = "Assets/_Project/Prefabs/Mission/Fuse.prefab";
+
+        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        root.name = "Fuse";
+        root.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+        SetColor(root, new Color(1f, 0.95f, 0.2f));
+        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
+
+        root.AddComponent<NetworkObject>();
+        var rb = root.AddComponent<Rigidbody>();
+        rb.mass = 0.5f;
+        var col = root.AddComponent<BoxCollider>();
+        col.size = Vector3.one;
+        root.AddComponent<FuseItem>();
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        Debug.Log($"[Setup] Fuse prefab → {path}");
+        return prefab;
+    }
+
+    // ─────────────────────────── Toolbox Prefab ─────────────────────────────
+
+    static GameObject CreateToolboxPrefab()
+    {
+        const string path = "Assets/_Project/Prefabs/Mission/Toolbox.prefab";
+
+        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        root.name = "Toolbox";
+        root.transform.localScale = new Vector3(0.3f, 0.2f, 0.2f);
+        SetColor(root, new Color(0.9f, 0.15f, 0.1f));
+        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
+
+        root.AddComponent<NetworkObject>();
+        var rb = root.AddComponent<Rigidbody>();
+        rb.mass = 2f;
+        var col = root.AddComponent<BoxCollider>();
+        col.size = Vector3.one;
+        root.AddComponent<ToolboxItem>();
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        Debug.Log($"[Setup] Toolbox prefab → {path}");
+        return prefab;
+    }
+
+    // ─────────────────────────── Battery Prefab ─────────────────────────────
+
+    static GameObject CreateBatteryPrefab()
+    {
+        const string path = "Assets/_Project/Prefabs/Mission/TemporaryBattery.prefab";
+
+        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        root.name = "TemporaryBattery";
+        root.transform.localScale = new Vector3(0.4f, 0.3f, 0.3f);
+        SetColor(root, new Color(0.2f, 0.5f, 0.9f));
+        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
+
+        root.AddComponent<NetworkObject>();
+        var rb = root.AddComponent<Rigidbody>();
+        rb.mass = 5f;
+        var col = root.AddComponent<BoxCollider>();
+        col.size = Vector3.one;
+        var battery = root.AddComponent<TemporaryBatteryItem>();
+
+        var so = new SerializedObject(battery);
+        var heavyProp = so.FindProperty("isHeavy");
+        if (heavyProp != null) { heavyProp.boolValue = true; so.ApplyModifiedPropertiesWithoutUndo(); }
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        Debug.Log($"[Setup] TemporaryBattery prefab → {path}");
+        return prefab;
+    }
+
+    // ─────────────────────────── EvidenceBox Prefab ──────────────────────────
+
+    static GameObject CreateEvidenceBoxPrefab()
+    {
+        const string path = "Assets/_Project/Prefabs/Mission/EvidenceBox.prefab";
+
+        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        root.name = "EvidenceBox";
+        root.transform.localScale = new Vector3(0.3f, 0.25f, 0.25f);
+        SetColor(root, new Color(0.55f, 0.35f, 0.15f));
+        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
+
+        root.AddComponent<NetworkObject>();
+        var rb = root.AddComponent<Rigidbody>();
+        rb.mass = 1.5f;
+        var col = root.AddComponent<BoxCollider>();
+        col.size = Vector3.one;
+        root.AddComponent<EvidenceBoxItem>();
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        Debug.Log($"[Setup] EvidenceBox prefab → {path}");
+        return prefab;
+    }
+
+    // ─────────────────────────── Door Prefab ────────────────────────────────
+
+    static GameObject CreateDoorPrefab()
+    {
+        const string path = "Assets/_Project/Prefabs/Mission/Door.prefab";
+
+        var root = new GameObject("Door");
+        root.AddComponent<NetworkObject>();
+        root.AddComponent<DoorController>();
+
+        var pivot = new GameObject("Pivot");
+        pivot.transform.SetParent(root.transform);
+        pivot.transform.localPosition = new Vector3(-0.5f, 0, 0);
+
+        var doorBody = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        doorBody.name = "DoorBody";
+        doorBody.transform.SetParent(pivot.transform);
+        doorBody.transform.localPosition = new Vector3(0.5f, 1.25f, 0);
+        doorBody.transform.localScale = new Vector3(1f, 2.5f, 0.1f);
+        SetColor(doorBody, new Color(0.45f, 0.3f, 0.15f));
+
+        var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
+        Object.DestroyImmediate(root);
+        Debug.Log($"[Setup] Door prefab → {path}");
+        return prefab;
+    }
+
     // ─────────────────────────────── HQ Scene ────────────────────────────────
 
     static void SetupHQScene(GameObject playerPrefab)
@@ -260,23 +410,60 @@ public static class ProjectSetup
         var defaultCam = GameObject.Find("Main Camera");
         if (defaultCam != null) Object.DestroyImmediate(defaultCam);
 
-        var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        floor.name = "Floor";
-        floor.transform.localScale = new Vector3(3, 1, 3);
+        Color wallColor  = new Color(0.6f, 0.55f, 0.45f);
+        Color floorColor = new Color(0.35f, 0.3f, 0.25f);
+        Color deskColor  = new Color(0.45f, 0.3f, 0.15f);
+        Color shelfColor = new Color(0.3f, 0.3f, 0.35f);
 
-        // Job board
+        // ── Office room (6x3x5 meters) ────────────────────────
+        var floor = CreateBoxColored("Floor", Vector3.zero, new Vector3(6, 0.1f, 5), floorColor);
+        CreateBoxColored("Ceiling", new Vector3(0, 3, 0), new Vector3(6, 0.1f, 5), wallColor);
+        CreateBoxColored("Wall_Back",  new Vector3(0, 1.5f, -2.5f), new Vector3(6, 3, 0.15f), wallColor);
+        CreateBoxColored("Wall_Left",  new Vector3(-3, 1.5f, 0), new Vector3(0.15f, 3, 5), wallColor);
+        CreateBoxColored("Wall_Right", new Vector3(3, 1.5f, 0), new Vector3(0.15f, 3, 5), wallColor);
+        CreateBoxColored("Wall_Front", new Vector3(0, 1.5f, 2.5f), new Vector3(6, 3, 0.15f), wallColor);
+
+        // ── Furniture ─────────────────────────────────────────
+        // Desk (job board computer sits on this)
+        CreateBoxColored("Desk", new Vector3(0, 0.4f, -1.8f), new Vector3(1.6f, 0.8f, 0.7f), deskColor);
+        // Small monitor on desk (the job board)
         var jobBoardGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        jobBoardGO.name = "JobBoard";
-        jobBoardGO.transform.position = new Vector3(0, 1, -2);
-        jobBoardGO.transform.localScale = new Vector3(1f, 2f, 0.1f);
-        SetColor(jobBoardGO, new Color(1f, 0.6f, 0.1f)); // orange
+        jobBoardGO.name = "JobBoard_Screen";
+        jobBoardGO.transform.position = new Vector3(0, 1.1f, -2f);
+        jobBoardGO.transform.localScale = new Vector3(0.6f, 0.45f, 0.05f);
+        SetColor(jobBoardGO, new Color(0.1f, 0.8f, 0.3f));
         Object.DestroyImmediate(jobBoardGO.GetComponent<BoxCollider>());
         var jbCol = jobBoardGO.AddComponent<BoxCollider>();
-        jbCol.size = new Vector3(1f, 2f, 0.5f);
+        jbCol.size = new Vector3(1f, 1f, 3f);
         jbCol.center = Vector3.zero;
         jobBoardGO.AddComponent<JobBoard>();
 
-        // NetworkManager
+        // Equipment shelf (right side)
+        CreateBoxColored("Shelf", new Vector3(2.2f, 0.5f, -1.5f), new Vector3(1.2f, 1f, 0.5f), shelfColor);
+        CreateBoxColored("Shelf_Top", new Vector3(2.2f, 1.05f, -1.5f), new Vector3(1.2f, 0.05f, 0.5f), shelfColor);
+
+        // Whiteboard on back wall
+        CreateBoxColored("Whiteboard", new Vector3(-1.5f, 1.6f, -2.35f), new Vector3(1.2f, 0.8f, 0.03f), Color.white);
+
+        // "零事故 0 天" sign
+        CreateBoxColored("Sign_ZeroAccident", new Vector3(1.5f, 2.2f, -2.35f), new Vector3(0.8f, 0.3f, 0.02f), new Color(1f, 0.3f, 0.1f));
+
+        // Old fan on floor (atmosphere)
+        CreateBoxColored("OldFan", new Vector3(-2.2f, 0.3f, 1f), new Vector3(0.3f, 0.6f, 0.3f), new Color(0.5f, 0.5f, 0.5f));
+
+        // Exit door frame (atmosphere, south wall)
+        CreateBoxColored("DoorFrame", new Vector3(0, 1.25f, 2.42f), new Vector3(0.9f, 2.5f, 0.1f), new Color(0.35f, 0.25f, 0.15f));
+
+        // ── Lighting ──────────────────────────────────────────
+        var lightGO = new GameObject("OfficeLight");
+        lightGO.transform.position = new Vector3(0, 2.8f, 0);
+        var pointLight = lightGO.AddComponent<Light>();
+        pointLight.type = LightType.Point;
+        pointLight.range = 8f;
+        pointLight.intensity = 1.5f;
+        pointLight.color = new Color(1f, 0.9f, 0.7f);
+
+        // ── NetworkManager ────────────────────────────────────
         var nmGO = new GameObject("NetworkManager");
         var nm = nmGO.AddComponent<NetworkManager>();
         var transport = nmGO.AddComponent<UnityTransport>();
@@ -293,24 +480,39 @@ public static class ProjectSetup
         amGO.AddComponent<AudioSource>();
         amGO.AddComponent<AudioManager>();
 
-        var hqUI = new GameObject("HQUI");
-        hqUI.AddComponent<HQController>();
+        new GameObject("HQUI").AddComponent<HQController>();
 
         var settlementUI = new GameObject("SettlementUI");
         settlementUI.AddComponent<SettlementUIController>();
 
+        new GameObject("DisconnectHandler").AddComponent<DisconnectHandler>();
+
+        // ── Spawn ─────────────────────────────────────────────
         var spawnPoint = new GameObject("PlayerSpawnPoint");
-        spawnPoint.transform.position = new Vector3(0, 1.1f, 2);
+        spawnPoint.transform.position = new Vector3(0, 1.1f, 1);
+
+        var spawnMgr = new GameObject("HQSpawnManager");
+        var mgr = spawnMgr.AddComponent<HQSpawnManager>();
+        SetField(mgr, "spawnPoint", spawnPoint.transform);
 
         const string path = "Assets/_Project/Scenes/HQ.unity";
         EditorSceneManager.SaveScene(scene, path);
         Debug.Log($"[Setup] HQ scene → {path}");
     }
 
+    static GameObject CreateBoxColored(string name, Vector3 pos, Vector3 scale, Color color)
+    {
+        var go = CreateBox(name, pos, scale);
+        SetColor(go, color);
+        return go;
+    }
+
     // ──────────────────────────── Mall_B2 Scene ──────────────────────────────
 
     static void SetupMallScene(GameObject playerPrefab, GameObject pumpPrefab, GameObject evacPrefab,
-        GameObject survivorLight, GameObject survivorHeavy, GameObject robotPrefab)
+        GameObject survivorLight, GameObject survivorHeavy, GameObject robotPrefab,
+        GameObject fusePrefab, GameObject toolboxPrefab, GameObject batteryPrefab,
+        GameObject evidencePrefab, GameObject doorPrefab)
     {
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
@@ -334,6 +536,10 @@ public static class ProjectSetup
 
         CreateBox("PumpRoom_Wall",   new Vector3(-10, 2.5f, -12), new Vector3(8, 5, 0.5f));
         CreateBox("PumpRoom_Wall_L", new Vector3(-14, 2.5f,  -9), new Vector3(0.5f, 5, 6));
+
+        // Power control room area
+        CreateBox("PowerRoom_Wall",   new Vector3(-10, 2.5f, -6), new Vector3(6, 5, 0.5f));
+        CreateBox("PowerRoom_Wall_R", new Vector3(-7, 2.5f, -9), new Vector3(0.5f, 5, 6));
 
         // ── Water surface ─────────────────────────────────────────
         var waterPlane = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -367,6 +573,81 @@ public static class ProjectSetup
         {
             var sh = (GameObject)PrefabUtility.InstantiatePrefab(survivorHeavy);
             sh.transform.position = new Vector3(-11f, 1f, -8f);
+        }
+
+        // ── Equipment items ───────────────────────────────────────
+        if (fusePrefab != null)
+        {
+            var fuse = (GameObject)PrefabUtility.InstantiatePrefab(fusePrefab);
+            fuse.transform.position = new Vector3(-9f, 0.5f, -8f); // Power control room
+        }
+
+        if (toolboxPrefab != null)
+        {
+            var toolbox = (GameObject)PrefabUtility.InstantiatePrefab(toolboxPrefab);
+            toolbox.transform.position = new Vector3(3f, 0.5f, -3f); // Shop area
+        }
+
+        if (batteryPrefab != null)
+        {
+            var battery = (GameObject)PrefabUtility.InstantiatePrefab(batteryPrefab);
+            battery.transform.position = new Vector3(5f, 0.5f, -8f); // Storage area
+        }
+
+        if (evidencePrefab != null)
+        {
+            var evidence = (GameObject)PrefabUtility.InstantiatePrefab(evidencePrefab);
+            evidence.transform.position = new Vector3(-8f, 0.5f, 3f); // Shop area
+        }
+
+        // ── Doors ─────────────────────────────────────────────────
+        if (doorPrefab != null)
+        {
+            // Pump room entrance
+            var door1 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+            door1.name = "Door_PumpRoom";
+            door1.transform.position = new Vector3(-6f, 0f, -12f);
+
+            // Power room entrance
+            var door2 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+            door2.name = "Door_PowerRoom";
+            door2.transform.position = new Vector3(-7f, 0f, -6f);
+
+            // Shortcut door
+            var door3 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+            door3.name = "Door_Shortcut";
+            door3.transform.position = new Vector3(0f, 0f, -5f);
+            var dc3 = door3.GetComponent<DoorController>();
+            if (dc3 != null)
+            {
+                var so3 = new SerializedObject(dc3);
+                var typeProp3 = so3.FindProperty("doorType");
+                if (typeProp3 != null) { typeProp3.enumValueIndex = (int)DoorController.DoorType.Shortcut; so3.ApplyModifiedPropertiesWithoutUndo(); }
+            }
+
+            // Water-blocked door
+            var door4 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+            door4.name = "Door_WaterBlocked";
+            door4.transform.position = new Vector3(-3f, 0f, -10f);
+            var dc4 = door4.GetComponent<DoorController>();
+            if (dc4 != null)
+            {
+                var so4 = new SerializedObject(dc4);
+                var typeProp4 = so4.FindProperty("doorType");
+                if (typeProp4 != null) { typeProp4.enumValueIndex = (int)DoorController.DoorType.WaterBlocked; so4.ApplyModifiedPropertiesWithoutUndo(); }
+            }
+
+            // Locked door (needs toolbox)
+            var door5 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+            door5.name = "Door_Locked";
+            door5.transform.position = new Vector3(6f, 0f, -8f);
+            var dc5 = door5.GetComponent<DoorController>();
+            if (dc5 != null)
+            {
+                var so5 = new SerializedObject(dc5);
+                var typeProp5 = so5.FindProperty("doorType");
+                if (typeProp5 != null) { typeProp5.enumValueIndex = (int)DoorController.DoorType.Locked; so5.ApplyModifiedPropertiesWithoutUndo(); }
+            }
         }
 
         // ── Patrol waypoints ──────────────────────────────────────
@@ -423,6 +704,8 @@ public static class ProjectSetup
         new GameObject("WaterLevelManager").AddComponent<WaterLevelManager>();
         new GameObject("SettlementManager").AddComponent<SettlementManager>();
         new GameObject("SimpleHUD").AddComponent<SimpleHUD>();
+        new GameObject("PhaseBroadcaster").AddComponent<PhaseBroadcaster>();
+        new GameObject("DisconnectHandler").AddComponent<DisconnectHandler>();
 
         var settlementUI = new GameObject("SettlementUI");
         settlementUI.AddComponent<SettlementUIController>();
@@ -439,12 +722,13 @@ public static class ProjectSetup
         sunLight.intensity = 0.3f;
         sunLight.color = new Color(0.5f, 0.7f, 1f);
 
-        // ── Spawn points ──────────────────────────────────────────
-        for (int i = 0; i < 4; i++)
-        {
-            var sp = new GameObject($"SpawnPoint_{i}");
-            sp.transform.position = new Vector3(-2 + i * 1.5f, 1.1f, 10);
-        }
+        // ── Spawn points + spawn manager ─────────────────────────
+        var missionSpawn = new GameObject("MissionSpawnPoint");
+        missionSpawn.transform.position = new Vector3(-2f, 1.1f, 10f);
+
+        var missionSpawnMgr = new GameObject("MissionSpawnManager");
+        var msm = missionSpawnMgr.AddComponent<HQSpawnManager>();
+        SetField(msm, "spawnPoint", missionSpawn.transform);
 
         const string path = "Assets/_Project/Scenes/Mall_B2.unity";
         EditorSceneManager.SaveScene(scene, path);

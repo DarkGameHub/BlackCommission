@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class EvacuationPoint : NetworkBehaviour, IInteractable
 {
-    [SerializeField] float survivorRescueRadius = 15f;
+    [SerializeField] float rescueRadius = 15f;
 
     public string InteractHint
     {
@@ -32,16 +32,21 @@ public class EvacuationPoint : NetworkBehaviour, IInteractable
         if (GameManager.Instance == null) return;
         if (GameManager.Instance.CurrentPhase.Value == GameManager.MissionPhase.Ended) return;
 
-        // Auto-rescue nearby survivors
-        var colliders = Physics.OverlapSphere(transform.position, survivorRescueRadius);
+        var colliders = Physics.OverlapSphere(transform.position, rescueRadius);
+        int evidenceCount = 0;
+
         foreach (var col in colliders)
         {
             var survivor = col.GetComponentInParent<SurvivorController>();
             if (survivor != null && !survivor.IsRescued.Value)
                 survivor.MarkRescued();
+
+            var evidence = col.GetComponentInParent<EvidenceBoxItem>();
+            if (evidence != null && !evidence.IsDamaged.Value)
+                evidenceCount++;
         }
 
         GameManager.Instance.TriggerEvacuation(
-            GameManager.Instance.SurvivorsRescued.Value, 0);
+            GameManager.Instance.SurvivorsRescued.Value, evidenceCount);
     }
 }

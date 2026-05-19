@@ -107,4 +107,5 @@ public class CarrySystem : NetworkBehaviour
     }
 
     public bool IsCarrying => carriedObject != null;
+    public Carriable CarriedItem => carriedObject;
 }
