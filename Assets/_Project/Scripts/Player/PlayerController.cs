@@ -72,6 +72,9 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
+        if (WaterLevelManager.Instance != null)
+            SpeedMultiplier = WaterLevelManager.Instance.GetSpeedModifierForHeight(transform.position.y);
+
         HandleMovement();
         HandleStamina();
     }

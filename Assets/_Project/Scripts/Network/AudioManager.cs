@@ -34,10 +34,10 @@ public class AudioManager : MonoBehaviour
     }
 
     public void PlayRobotRam(Vector3 position)
-        => AudioSource.PlayClipAtPoint(robotRamClip, position);
+    { if (robotRamClip != null) AudioSource.PlayClipAtPoint(robotRamClip, position); }
 
     public void PlayPumpStartup(Vector3 position)
-        => AudioSource.PlayClipAtPoint(pumpStartupClip, position);
+    { if (pumpStartupClip != null) AudioSource.PlayClipAtPoint(pumpStartupClip, position); }
 
     public void PlaySurvivorCallout(Vector3 position)
     {
@@ -47,8 +47,8 @@ public class AudioManager : MonoBehaviour
     }
 
     public void PlaySurvivorCalm(Vector3 position)
-        => AudioSource.PlayClipAtPoint(survivorCalmClip, position);
+    { if (survivorCalmClip != null) AudioSource.PlayClipAtPoint(survivorCalmClip, position); }
 
     public void PlayEvacBroadcast()
-        => sfxSource.PlayOneShot(evacBroadcastClip);
+    { if (evacBroadcastClip != null && sfxSource != null) sfxSource.PlayOneShot(evacBroadcastClip); }
 }

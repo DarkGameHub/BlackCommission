@@ -11,10 +11,9 @@ public class GameManager : NetworkBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Mission Timing")]
-    [SerializeField] float phase1Duration = 300f;  // 0-5 min: controllable
-    [SerializeField] float phase2Duration = 300f;  // 5-10 min: deteriorating
-    [SerializeField] float phase3Duration = 300f;  // 10-15 min: chaos
-    [SerializeField] float forceEvacTime = 900f;   // 15 min: forced evacuation
+    [SerializeField] float phase1Duration = 60f;   // 1 min (test) — raise to 300 for real game
+    [SerializeField] float phase2Duration = 60f;   // 1 min (test)
+    [SerializeField] float forceEvacTime = 180f;   // 3 min (test) — raise to 900 for real game
 
     public enum MissionPhase { Preparation, Active, Escalating, Critical, ForcedEvac, Ended }
 
@@ -34,7 +33,6 @@ public class GameManager : NetworkBehaviour
 
     public event Action<MissionPhase> OnPhaseChanged;
     public event Action OnMissionComplete;
-    public event Action OnMissionFailed;
 
     void Awake()
     {
@@ -58,7 +56,7 @@ public class GameManager : NetworkBehaviour
 
     void Update()
     {
-        if (!IsServer) return;
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
         if (CurrentPhase.Value == MissionPhase.Ended) return;
 
         MissionTimer.Value += Time.deltaTime;

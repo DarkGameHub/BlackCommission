@@ -17,13 +17,31 @@ public class PlayerCameraController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        var cam = GetComponentInChildren<Camera>(true);
+        var listener = GetComponentInChildren<AudioListener>(true);
+
         if (!IsOwner)
         {
-            // Disable camera for remote players — they have their own
-            GetComponentInChildren<Camera>().enabled = false;
+            if (cam != null) cam.enabled = false;
+            if (listener != null) listener.enabled = false;
             enabled = false;
             return;
         }
+
+        // Local owner: make sure camera is active and enabled
+        if (cam != null)
+        {
+            cam.gameObject.SetActive(true);
+            cam.enabled = true;
+        }
+        if (listener != null)
+        {
+            listener.gameObject.SetActive(true);
+            listener.enabled = true;
+        }
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         inputActions = new PlayerInputActions();
         inputActions.Enable();

@@ -35,7 +35,7 @@ public class MainMenuController : MonoBehaviour
 
         if (ConnectionManager.Instance != null)
         {
-            ConnectionManager.Instance.OnLobbyCodeGenerated += code =>
+            ConnectionManager.Instance.OnJoinCodeReady += code =>
             {
                 lobbyCodeDisplay.text = $"房间代码: {code}";
                 lobbyCodeDisplay.gameObject.SetActive(true);

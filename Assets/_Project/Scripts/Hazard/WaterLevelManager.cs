@@ -10,16 +10,16 @@ public class WaterLevelManager : NetworkBehaviour
     public static WaterLevelManager Instance { get; private set; }
 
     [Header("Water Rise Settings")]
-    [SerializeField] float startHeight = -3f;       // B2 floor level
-    [SerializeField] float maxHeight = 0.5f;        // above ankle — makes corridors dangerous
-    [SerializeField] float[] phaseRiseRates = { 0.002f, 0.008f, 0.02f, 0.04f };
+    [SerializeField] float startHeight = -0.1f;     // just below floor surface
+    [SerializeField] float maxHeight = 1.2f;        // waist height — dangerous
+    [SerializeField] float[] phaseRiseRates = { 0.03f, 0.08f, 0.15f, 0.3f };
 
     [Header("Zone Heights")]
     [SerializeField] float ankleTrigger = -2.5f;    // slow movement 10%
     [SerializeField] float kneeTrigger = -1.5f;     // slow movement 40%, electrics dangerous
     [SerializeField] float waistTrigger = -0.5f;    // slow movement 60%, can't carry heavy items
 
-    public NetworkVariable<float> CurrentWaterHeight = new(-3f,
+    public NetworkVariable<float> CurrentWaterHeight = new(-0.1f,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     void Awake()
@@ -28,9 +28,15 @@ public class WaterLevelManager : NetworkBehaviour
         Instance = this;
     }
 
+    public override void OnNetworkSpawn()
+    {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            CurrentWaterHeight.Value = startHeight;
+    }
+
     void Update()
     {
-        if (!IsServer) return;
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
         if (GameManager.Instance == null) return;
 
         var phase = GameManager.Instance.CurrentPhase.Value;
