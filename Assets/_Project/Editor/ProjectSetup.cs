@@ -41,14 +41,19 @@ public static class ProjectSetup
         var toolboxPrefab  = CreateToolboxPrefab();
         var batteryPrefab  = CreateBatteryPrefab();
         var evidencePrefab = CreateEvidenceBoxPrefab();
-        var doorPrefab     = CreateDoorPrefab();
+        var doorPumpRoomPrefab    = CreateDoorPrefabNamed("Door_PumpRoom",    DoorController.DoorType.Normal,       new Color(0.45f, 0.3f, 0.15f));
+        var doorPowerRoomPrefab   = CreateDoorPrefabNamed("Door_PowerRoom",   DoorController.DoorType.Normal,       new Color(0.45f, 0.3f, 0.15f));
+        var doorLockedPrefab      = CreateDoorPrefabNamed("Door_Locked",      DoorController.DoorType.Locked,       new Color(0.6f,  0.2f, 0.1f));
+        var doorShortcutPrefab    = CreateDoorPrefabNamed("Door_Shortcut",    DoorController.DoorType.Shortcut,     new Color(0.2f,  0.5f, 0.2f));
+        var doorWaterBlockedPrefab= CreateDoorPrefabNamed("Door_WaterBlocked",DoorController.DoorType.WaterBlocked, new Color(0.1f,  0.3f, 0.6f));
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
         SetupHQScene(playerPrefab);
         SetupMallScene(playerPrefab, pumpPrefab, evacPrefab, survivorLight, survivorHeavy, robotPrefab,
-            fusePrefab, toolboxPrefab, batteryPrefab, evidencePrefab, doorPrefab);
+            fusePrefab, toolboxPrefab, batteryPrefab, evidencePrefab,
+            doorPumpRoomPrefab, doorPowerRoomPrefab, doorLockedPrefab, doorShortcutPrefab, doorWaterBlockedPrefab);
 
         AddSceneToBuildSettings("Assets/_Project/Scenes/HQ.unity");
         AddSceneToBuildSettings("Assets/_Project/Scenes/Mall_B2.unity");
@@ -374,15 +379,22 @@ public static class ProjectSetup
         return prefab;
     }
 
-    // ─────────────────────────── Door Prefab ────────────────────────────────
+    // ─────────────────────────── Door Prefabs ───────────────────────────────────
+    // Each door in the scene MUST come from its own unique prefab file.
+    // NGO derives GlobalObjectIdHash from the prefab asset GUID, so two scene-placed
+    // instances of the same prefab always collide.
 
-    static GameObject CreateDoorPrefab()
+    static GameObject CreateDoorPrefabNamed(string doorName, DoorController.DoorType type, Color color)
     {
-        const string path = "Assets/_Project/Prefabs/Mission/Door.prefab";
+        string path = $"Assets/_Project/Prefabs/Mission/{doorName}.prefab";
 
-        var root = new GameObject("Door");
+        var root = new GameObject(doorName);
         root.AddComponent<NetworkObject>();
-        root.AddComponent<DoorController>();
+        var dc = root.AddComponent<DoorController>();
+
+        var so = new SerializedObject(dc);
+        var typeProp = so.FindProperty("doorType");
+        if (typeProp != null) { typeProp.enumValueIndex = (int)type; so.ApplyModifiedPropertiesWithoutUndo(); }
 
         var pivot = new GameObject("Pivot");
         pivot.transform.SetParent(root.transform);
@@ -393,11 +405,11 @@ public static class ProjectSetup
         doorBody.transform.SetParent(pivot.transform);
         doorBody.transform.localPosition = new Vector3(0.5f, 1.25f, 0);
         doorBody.transform.localScale = new Vector3(1f, 2.5f, 0.1f);
-        SetColor(doorBody, new Color(0.45f, 0.3f, 0.15f));
+        SetColor(doorBody, color);
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
-        Debug.Log($"[Setup] Door prefab → {path}");
+        Debug.Log($"[Setup] {doorName} prefab → {path}");
         return prefab;
     }
 
@@ -512,7 +524,9 @@ public static class ProjectSetup
     static void SetupMallScene(GameObject playerPrefab, GameObject pumpPrefab, GameObject evacPrefab,
         GameObject survivorLight, GameObject survivorHeavy, GameObject robotPrefab,
         GameObject fusePrefab, GameObject toolboxPrefab, GameObject batteryPrefab,
-        GameObject evidencePrefab, GameObject doorPrefab)
+        GameObject evidencePrefab,
+        GameObject doorPumpRoomPrefab, GameObject doorPowerRoomPrefab,
+        GameObject doorLockedPrefab, GameObject doorShortcutPrefab, GameObject doorWaterBlockedPrefab)
     {
         var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
@@ -600,54 +614,36 @@ public static class ProjectSetup
             evidence.transform.position = new Vector3(-8f, 0.5f, 3f); // Shop area
         }
 
-        // ── Doors ─────────────────────────────────────────────────
-        if (doorPrefab != null)
+        // ── Doors (each door is its own prefab asset — NGO requires unique GlobalObjectIdHash per scene instance) ──
+        if (doorPumpRoomPrefab != null)
         {
-            // Pump room entrance
-            var door1 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+            var door1 = (GameObject)PrefabUtility.InstantiatePrefab(doorPumpRoomPrefab);
             door1.name = "Door_PumpRoom";
             door1.transform.position = new Vector3(-6f, 0f, -12f);
-
-            // Power room entrance
-            var door2 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+        }
+        if (doorPowerRoomPrefab != null)
+        {
+            var door2 = (GameObject)PrefabUtility.InstantiatePrefab(doorPowerRoomPrefab);
             door2.name = "Door_PowerRoom";
             door2.transform.position = new Vector3(-7f, 0f, -6f);
-
-            // Shortcut door
-            var door3 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+        }
+        if (doorShortcutPrefab != null)
+        {
+            var door3 = (GameObject)PrefabUtility.InstantiatePrefab(doorShortcutPrefab);
             door3.name = "Door_Shortcut";
             door3.transform.position = new Vector3(0f, 0f, -5f);
-            var dc3 = door3.GetComponent<DoorController>();
-            if (dc3 != null)
-            {
-                var so3 = new SerializedObject(dc3);
-                var typeProp3 = so3.FindProperty("doorType");
-                if (typeProp3 != null) { typeProp3.enumValueIndex = (int)DoorController.DoorType.Shortcut; so3.ApplyModifiedPropertiesWithoutUndo(); }
-            }
-
-            // Water-blocked door
-            var door4 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+        }
+        if (doorWaterBlockedPrefab != null)
+        {
+            var door4 = (GameObject)PrefabUtility.InstantiatePrefab(doorWaterBlockedPrefab);
             door4.name = "Door_WaterBlocked";
             door4.transform.position = new Vector3(-3f, 0f, -10f);
-            var dc4 = door4.GetComponent<DoorController>();
-            if (dc4 != null)
-            {
-                var so4 = new SerializedObject(dc4);
-                var typeProp4 = so4.FindProperty("doorType");
-                if (typeProp4 != null) { typeProp4.enumValueIndex = (int)DoorController.DoorType.WaterBlocked; so4.ApplyModifiedPropertiesWithoutUndo(); }
-            }
-
-            // Locked door (needs toolbox)
-            var door5 = (GameObject)PrefabUtility.InstantiatePrefab(doorPrefab);
+        }
+        if (doorLockedPrefab != null)
+        {
+            var door5 = (GameObject)PrefabUtility.InstantiatePrefab(doorLockedPrefab);
             door5.name = "Door_Locked";
             door5.transform.position = new Vector3(6f, 0f, -8f);
-            var dc5 = door5.GetComponent<DoorController>();
-            if (dc5 != null)
-            {
-                var so5 = new SerializedObject(dc5);
-                var typeProp5 = so5.FindProperty("doorType");
-                if (typeProp5 != null) { typeProp5.enumValueIndex = (int)DoorController.DoorType.Locked; so5.ApplyModifiedPropertiesWithoutUndo(); }
-            }
         }
 
         // ── Patrol waypoints ──────────────────────────────────────

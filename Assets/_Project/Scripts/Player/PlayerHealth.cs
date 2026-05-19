@@ -86,7 +86,7 @@ public class PlayerHealth : NetworkBehaviour, IInteractable
         if (GameManager.Instance != null && GameManager.Instance.PumpRepaired.Value) return;
 
         float waterHeight = WaterLevelManager.Instance.CurrentWaterHeight.Value;
-        if (waterHeight > transform.position.y - 0.5f)
+        if (waterHeight > 0f)   // water must be above floor level before electrocution is possible
             TakeDamage(electrocutionDamageRate * Time.deltaTime);
     }
 
