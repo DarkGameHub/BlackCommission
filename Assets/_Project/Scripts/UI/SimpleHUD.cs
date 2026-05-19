@@ -18,38 +18,33 @@ public class SimpleHUD : MonoBehaviour
 
         panelBg = MakeTex(1, 1, new Color(0, 0, 0, 0.5f));
         endBg = MakeTex(1, 1, new Color(0.05f, 0.05f, 0.1f, 0.9f));
+        var font = UIFont.Get();
 
         labelStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 15,
-            richText = true,
+            font = font, fontSize = 15, richText = true,
             normal = { textColor = new Color(0.9f, 0.9f, 0.9f) },
             padding = new RectOffset(6, 6, 2, 2)
         };
 
         warningStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 20,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            richText = true,
+            font = font, fontSize = 20, fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter, richText = true,
             normal = { textColor = new Color(1f, 0.35f, 0.1f) }
         };
 
         endStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 24,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            richText = true,
+            font = font, fontSize = 24, fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter, richText = true,
             normal = { textColor = new Color(1f, 0.95f, 0.6f) },
             padding = new RectOffset(16, 16, 16, 16)
         };
 
         keyStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 11,
-            richText = true,
+            font = font, fontSize = 11, richText = true,
             normal = { textColor = new Color(0.55f, 0.55f, 0.6f) },
             padding = new RectOffset(4, 4, 1, 1)
         };

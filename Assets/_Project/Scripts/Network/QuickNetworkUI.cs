@@ -23,10 +23,11 @@ public class QuickNetworkUI : MonoBehaviour
         btnHover = MakeTex(1, 1, new Color(0.25f, 0.55f, 0.82f, 1f));
         btnActive = MakeTex(1, 1, new Color(0.12f, 0.35f, 0.6f, 1f));
 
+        var font = UIFont.Get();
+
         titleStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 18,
-            fontStyle = FontStyle.Bold,
+            font = font, fontSize = 20, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             normal = { textColor = new Color(0.95f, 0.85f, 0.4f) },
             padding = new RectOffset(0, 0, 8, 4)
@@ -34,8 +35,7 @@ public class QuickNetworkUI : MonoBehaviour
 
         buttonStyle = new GUIStyle(GUI.skin.button)
         {
-            fontSize = 15,
-            fontStyle = FontStyle.Bold,
+            font = font, fontSize = 16, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             normal = { background = btnNormal, textColor = Color.white },
             hover = { background = btnHover, textColor = Color.white },
@@ -46,7 +46,7 @@ public class QuickNetworkUI : MonoBehaviour
 
         hintStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 12,
+            font = font, fontSize = 13,
             alignment = TextAnchor.MiddleCenter,
             wordWrap = true,
             normal = { textColor = new Color(0.6f, 0.6f, 0.65f) },
@@ -55,8 +55,7 @@ public class QuickNetworkUI : MonoBehaviour
 
         statusStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 14,
-            fontStyle = FontStyle.Bold,
+            font = font, fontSize = 14, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleLeft,
             normal = { textColor = new Color(0.5f, 0.9f, 0.5f) },
             padding = new RectOffset(10, 10, 6, 6)
