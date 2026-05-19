@@ -7,8 +7,24 @@ public class HQSpawnManager : MonoBehaviour
 
     void Start()
     {
-        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        if (NetworkManager.Singleton == null) return;
+
+        if (NetworkManager.Singleton.IsListening)
             Invoke(nameof(TeleportAllPlayers), 0.2f);
+
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+    }
+
+    void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+    }
+
+    void OnClientConnected(ulong clientId)
+    {
+        if (!NetworkManager.Singleton.IsServer) return;
+        Invoke(nameof(TeleportAllPlayers), 0.3f);
     }
 
     void TeleportAllPlayers()

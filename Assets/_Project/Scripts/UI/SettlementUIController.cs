@@ -39,22 +39,21 @@ public class SettlementUIController : MonoBehaviour
 
         GUILayout.BeginArea(new Rect(px + 20, py + 20, pw - 40, ph - 40));
 
-        var font = UIFont.Get();
         var titleStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 22,
+            fontSize = 22,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
             normal = { textColor = Color.white }
         };
         var labelStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 15,
+            fontSize = 15,
             normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
         };
         var profitStyle = new GUIStyle(labelStyle)
         {
-            font = font, fontSize = 18,
+            fontSize = 18,
             fontStyle = FontStyle.Bold,
             normal = { textColor = _data.Net >= 0 ? new Color(0.2f, 0.95f, 0.3f) : Color.red }
         };
@@ -86,7 +85,7 @@ public class SettlementUIController : MonoBehaviour
 
         var btnStyle = new GUIStyle(GUI.skin.button)
         {
-            font = font, fontSize = 16,
+            fontSize = 16,
             fixedHeight = 36
         };
         bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
@@ -96,7 +95,7 @@ public class SettlementUIController : MonoBehaviour
         {
             GUILayout.Label("等待主机返回...", new GUIStyle(GUI.skin.label)
             {
-                font = font, fontSize = 14,
+                fontSize = 14,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.gray }
             });

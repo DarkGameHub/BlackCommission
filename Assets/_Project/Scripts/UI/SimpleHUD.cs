@@ -18,25 +18,24 @@ public class SimpleHUD : MonoBehaviour
 
         panelBg = MakeTex(1, 1, new Color(0, 0, 0, 0.5f));
         endBg = MakeTex(1, 1, new Color(0.05f, 0.05f, 0.1f, 0.9f));
-        var font = UIFont.Get();
 
         labelStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 15, richText = true,
+            fontSize = 15, richText = true,
             normal = { textColor = new Color(0.9f, 0.9f, 0.9f) },
             padding = new RectOffset(6, 6, 2, 2)
         };
 
         warningStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 20, fontStyle = FontStyle.Bold,
+            fontSize = 20, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter, richText = true,
             normal = { textColor = new Color(1f, 0.35f, 0.1f) }
         };
 
         endStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 24, fontStyle = FontStyle.Bold,
+            fontSize = 24, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter, richText = true,
             normal = { textColor = new Color(1f, 0.95f, 0.6f) },
             padding = new RectOffset(16, 16, 16, 16)
@@ -44,7 +43,7 @@ public class SimpleHUD : MonoBehaviour
 
         keyStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 11, richText = true,
+            fontSize = 11, richText = true,
             normal = { textColor = new Color(0.55f, 0.55f, 0.6f) },
             padding = new RectOffset(4, 4, 1, 1)
         };
@@ -136,6 +135,36 @@ public class SimpleHUD : MonoBehaviour
                 string stColor = pc.Stamina > 30 ? "#88ff88" : "#ffcc00";
                 GUI.Label(new Rect(10, y, 250, 22),
                     $"体力  <color={stColor}>{pc.Stamina:F0}/100</color>", labelStyle); y += 22;
+            }
+        }
+
+        // ── Objectives hint (top-right, first 30s) ─────────
+        if (gm != null && gm.CurrentPhase.Value == GameManager.MissionPhase.Active)
+        {
+            float elapsed = gm.MissionTimer.Value;
+            if (elapsed < 25f)
+            {
+                float alpha = elapsed < 20f ? 1f : Mathf.Clamp01((25f - elapsed) / 5f);
+                var prevColor = GUI.color;
+                GUI.color = new Color(1, 1, 1, alpha);
+                float ox = Screen.width - 310;
+                GUI.DrawTexture(new Rect(ox - 4, 6, 306, 110), panelBg);
+                var objTitle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 15, fontStyle = FontStyle.Bold,
+                    normal = { textColor = new Color(0.95f, 0.85f, 0.4f) }
+                };
+                var objLabel = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 13,
+                    normal = { textColor = new Color(0.85f, 0.85f, 0.85f) }
+                };
+                GUI.Label(new Rect(ox, 10, 300, 20), "OBJECTIVES", objTitle);
+                GUI.Label(new Rect(ox, 30, 300, 18), "1. Find and rescue 2 survivors", objLabel);
+                GUI.Label(new Rect(ox, 48, 300, 18), "2. Repair the water pump", objLabel);
+                GUI.Label(new Rect(ox, 66, 300, 18), "3. Evacuate before lockdown", objLabel);
+                GUI.Label(new Rect(ox, 88, 300, 18), "Watch out for cleaning robots!", objLabel);
+                GUI.color = prevColor;
             }
         }
 

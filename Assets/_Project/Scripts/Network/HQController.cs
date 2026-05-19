@@ -14,15 +14,14 @@ public class HQController : MonoBehaviour
         panelBg.SetPixel(0, 0, new Color(0, 0, 0, 0.6f));
         panelBg.Apply();
 
-        var font = UIFont.Get();
         labelStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 14,
+            fontSize = 14,
             normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
         };
         headerStyle = new GUIStyle(GUI.skin.label)
         {
-            font = font, fontSize = 16, fontStyle = FontStyle.Bold,
+            fontSize = 16, fontStyle = FontStyle.Bold,
             normal = { textColor = new Color(0.95f, 0.85f, 0.4f) }
         };
     }
