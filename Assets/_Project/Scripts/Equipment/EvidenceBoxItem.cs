@@ -24,7 +24,7 @@ public class EvidenceBoxItem : Carriable
     [ClientRpc]
     void DamagedClientRpc()
     {
-        var rend = GetComponent<Renderer>();
+        var rend = GetComponentInChildren<Renderer>();
         if (rend != null) rend.material.color = new Color(0.4f, 0.3f, 0.2f);
     }
 }
