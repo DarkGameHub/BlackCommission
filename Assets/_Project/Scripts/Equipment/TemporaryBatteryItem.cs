@@ -24,7 +24,7 @@ public class TemporaryBatteryItem : Carriable
     [ClientRpc]
     void DestroyedClientRpc()
     {
-        var rend = GetComponent<Renderer>();
+        var rend = GetComponentInChildren<Renderer>();
         if (rend != null) rend.material.color = Color.gray;
     }
 

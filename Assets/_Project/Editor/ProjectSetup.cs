@@ -10,6 +10,7 @@ using UnityEngine.Rendering.Universal;
 
 public static class ProjectSetup
 {
+    static Material _baseMat;
     [MenuItem("Tools/Accident Squad/Setup All (Run This First!)")]
     static void SetupAll()
     {
@@ -31,6 +32,7 @@ public static class ProjectSetup
 
         EnsureFolders();
         EnsureURPPipeline();
+        EnsureBaseMaterial();
 
         var playerPrefab   = CreatePlayerPrefab();
         if (playerPrefab == null) { Debug.LogError("Player prefab creation failed."); return; }
@@ -120,6 +122,29 @@ public static class ProjectSetup
         QualitySettings.renderPipeline = pipelineAsset;
         AssetDatabase.SaveAssets();
         Debug.Log("[Setup] URP Pipeline configured.");
+    }
+
+    // ─────────────────────────────── Base Material ─────────────────────────────
+
+    static void EnsureBaseMaterial()
+    {
+        const string matPath = "Assets/Settings/URP-BaseLit.mat";
+        _baseMat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (_baseMat != null) return;
+
+        var shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null) shader = Shader.Find("Lit");
+        if (shader != null)
+        {
+            _baseMat = new Material(shader);
+            AssetDatabase.CreateAsset(_baseMat, matPath);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[Setup] Created base URP material.");
+        }
+        else
+        {
+            Debug.LogWarning("[Setup] Could not find URP Lit shader for base material.");
+        }
     }
 
     // ─────────────────────────────── Player Prefab ───────────────────────────
@@ -256,6 +281,7 @@ public static class ProjectSetup
 
         var root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         root.name = "SurvivorLight";
+        root.transform.localScale = new Vector3(0.6f, 1f, 0.6f);
         SetColor(root, new Color(1f, 0.9f, 0.1f));
         Object.DestroyImmediate(root.GetComponent<CapsuleCollider>());
 
@@ -263,13 +289,31 @@ public static class ProjectSetup
         root.AddComponent<NavMeshAgent>();
 
         var col = root.AddComponent<BoxCollider>();
-        col.size   = new Vector3(0.8f, 2f, 0.8f);
+        col.size   = new Vector3(1.2f, 2f, 1.2f);
         col.center = new Vector3(0f, 1f, 0f);
 
         var sc = root.AddComponent<SurvivorController>();
         var so = new SerializedObject(sc);
         var injuryProp = so.FindProperty("injuryLevel");
         if (injuryProp != null) { injuryProp.enumValueIndex = (int)SurvivorController.InjuryLevel.Light; so.ApplyModifiedPropertiesWithoutUndo(); }
+
+        var beacon = new GameObject("Beacon");
+        beacon.transform.SetParent(root.transform);
+        beacon.transform.localPosition = new Vector3(0, 1.5f, 0);
+        var bl = beacon.AddComponent<Light>();
+        bl.type = LightType.Point;
+        bl.range = 5f;
+        bl.intensity = 1.2f;
+        bl.color = new Color(1f, 0.9f, 0.2f);
+
+        var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        marker.name = "Marker";
+        marker.transform.SetParent(root.transform);
+        marker.transform.localPosition = new Vector3(0, 2.5f, 0);
+        marker.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+        marker.transform.localRotation = Quaternion.Euler(45, 45, 0);
+        SetColor(marker, new Color(1f, 0.95f, 0.2f));
+        Object.DestroyImmediate(marker.GetComponent<BoxCollider>());
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
@@ -285,6 +329,7 @@ public static class ProjectSetup
 
         var root = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         root.name = "SurvivorHeavy";
+        root.transform.localScale = new Vector3(0.6f, 1f, 0.6f);
         SetColor(root, new Color(1f, 0.4f, 0.1f));
         Object.DestroyImmediate(root.GetComponent<CapsuleCollider>());
 
@@ -292,13 +337,31 @@ public static class ProjectSetup
         root.AddComponent<NavMeshAgent>();
 
         var col = root.AddComponent<BoxCollider>();
-        col.size   = new Vector3(0.8f, 2f, 0.8f);
+        col.size   = new Vector3(1.2f, 2f, 1.2f);
         col.center = new Vector3(0f, 1f, 0f);
 
         var sc = root.AddComponent<SurvivorController>();
         var so = new SerializedObject(sc);
         var injuryProp = so.FindProperty("injuryLevel");
         if (injuryProp != null) { injuryProp.enumValueIndex = (int)SurvivorController.InjuryLevel.Heavy; so.ApplyModifiedPropertiesWithoutUndo(); }
+
+        var beacon = new GameObject("Beacon");
+        beacon.transform.SetParent(root.transform);
+        beacon.transform.localPosition = new Vector3(0, 1.5f, 0);
+        var bl = beacon.AddComponent<Light>();
+        bl.type = LightType.Point;
+        bl.range = 5f;
+        bl.intensity = 1.2f;
+        bl.color = new Color(1f, 0.5f, 0.1f);
+
+        var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        marker.name = "Marker";
+        marker.transform.SetParent(root.transform);
+        marker.transform.localPosition = new Vector3(0, 2.5f, 0);
+        marker.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+        marker.transform.localRotation = Quaternion.Euler(45, 45, 0);
+        SetColor(marker, new Color(1f, 0.5f, 0.1f));
+        Object.DestroyImmediate(marker.GetComponent<BoxCollider>());
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
@@ -339,18 +402,47 @@ public static class ProjectSetup
     {
         const string path = "Assets/_Project/Prefabs/Mission/Fuse.prefab";
 
-        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        root.name = "Fuse";
-        root.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
-        SetColor(root, new Color(1f, 0.95f, 0.2f));
-        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
-
+        var root = new GameObject("Fuse");
         root.AddComponent<NetworkObject>();
         var rb = root.AddComponent<Rigidbody>();
         rb.mass = 0.5f;
         var col = root.AddComponent<BoxCollider>();
-        col.size = Vector3.one;
+        col.size = new Vector3(0.1f, 0.15f, 0.1f);
+        col.center = new Vector3(0, 0.075f, 0);
         root.AddComponent<FuseItem>();
+
+        var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        body.name = "Body";
+        body.transform.SetParent(root.transform);
+        body.transform.localPosition = new Vector3(0, 0.075f, 0);
+        body.transform.localScale = new Vector3(0.08f, 0.075f, 0.08f);
+        SetColor(body, new Color(1f, 0.95f, 0.2f));
+        Object.DestroyImmediate(body.GetComponent<CapsuleCollider>());
+
+        var cap1 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cap1.name = "Cap1";
+        cap1.transform.SetParent(root.transform);
+        cap1.transform.localPosition = new Vector3(0, 0.155f, 0);
+        cap1.transform.localScale = new Vector3(0.04f, 0.02f, 0.04f);
+        SetColor(cap1, new Color(0.75f, 0.75f, 0.78f));
+        Object.DestroyImmediate(cap1.GetComponent<BoxCollider>());
+
+        var cap2 = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cap2.name = "Cap2";
+        cap2.transform.SetParent(root.transform);
+        cap2.transform.localPosition = new Vector3(0, -0.005f, 0);
+        cap2.transform.localScale = new Vector3(0.04f, 0.02f, 0.04f);
+        SetColor(cap2, new Color(0.75f, 0.75f, 0.78f));
+        Object.DestroyImmediate(cap2.GetComponent<BoxCollider>());
+
+        var glow = new GameObject("Glow");
+        glow.transform.SetParent(root.transform);
+        glow.transform.localPosition = new Vector3(0, 0.1f, 0);
+        var gl = glow.AddComponent<Light>();
+        gl.type = LightType.Point;
+        gl.range = 2f;
+        gl.intensity = 0.5f;
+        gl.color = new Color(1f, 0.95f, 0.3f);
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
@@ -364,18 +456,39 @@ public static class ProjectSetup
     {
         const string path = "Assets/_Project/Prefabs/Mission/Toolbox.prefab";
 
-        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        root.name = "Toolbox";
-        root.transform.localScale = new Vector3(0.3f, 0.2f, 0.2f);
-        SetColor(root, new Color(0.9f, 0.15f, 0.1f));
-        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
-
+        var root = new GameObject("Toolbox");
         root.AddComponent<NetworkObject>();
         var rb = root.AddComponent<Rigidbody>();
         rb.mass = 2f;
         var col = root.AddComponent<BoxCollider>();
-        col.size = Vector3.one;
+        col.size = new Vector3(0.35f, 0.2f, 0.2f);
+        col.center = new Vector3(0, 0.1f, 0);
         root.AddComponent<ToolboxItem>();
+
+        var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        box.name = "Box";
+        box.transform.SetParent(root.transform);
+        box.transform.localPosition = new Vector3(0, 0.1f, 0);
+        box.transform.localScale = new Vector3(0.35f, 0.2f, 0.2f);
+        SetColor(box, new Color(0.9f, 0.15f, 0.1f));
+        Object.DestroyImmediate(box.GetComponent<BoxCollider>());
+
+        var handle = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        handle.name = "Handle";
+        handle.transform.SetParent(root.transform);
+        handle.transform.localPosition = new Vector3(0, 0.22f, 0);
+        handle.transform.localScale = new Vector3(0.25f, 0.03f, 0.03f);
+        SetColor(handle, new Color(0.3f, 0.3f, 0.32f));
+        Object.DestroyImmediate(handle.GetComponent<BoxCollider>());
+
+        var glow = new GameObject("Glow");
+        glow.transform.SetParent(root.transform);
+        glow.transform.localPosition = new Vector3(0, 0.15f, 0);
+        var gl = glow.AddComponent<Light>();
+        gl.type = LightType.Point;
+        gl.range = 2.5f;
+        gl.intensity = 0.4f;
+        gl.color = new Color(1f, 0.4f, 0.3f);
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
@@ -389,22 +502,51 @@ public static class ProjectSetup
     {
         const string path = "Assets/_Project/Prefabs/Mission/TemporaryBattery.prefab";
 
-        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        root.name = "TemporaryBattery";
-        root.transform.localScale = new Vector3(0.4f, 0.3f, 0.3f);
-        SetColor(root, new Color(0.2f, 0.5f, 0.9f));
-        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
-
+        var root = new GameObject("TemporaryBattery");
         root.AddComponent<NetworkObject>();
         var rb = root.AddComponent<Rigidbody>();
         rb.mass = 5f;
         var col = root.AddComponent<BoxCollider>();
-        col.size = Vector3.one;
+        col.size = new Vector3(0.45f, 0.3f, 0.3f);
+        col.center = new Vector3(0, 0.15f, 0);
         var battery = root.AddComponent<TemporaryBatteryItem>();
 
         var so = new SerializedObject(battery);
         var heavyProp = so.FindProperty("isHeavy");
         if (heavyProp != null) { heavyProp.boolValue = true; so.ApplyModifiedPropertiesWithoutUndo(); }
+
+        var body = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        body.name = "Body";
+        body.transform.SetParent(root.transform);
+        body.transform.localPosition = new Vector3(0, 0.15f, 0);
+        body.transform.localScale = new Vector3(0.45f, 0.3f, 0.3f);
+        SetColor(body, new Color(0.15f, 0.35f, 0.7f));
+        Object.DestroyImmediate(body.GetComponent<BoxCollider>());
+
+        var term1 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        term1.name = "Terminal1";
+        term1.transform.SetParent(root.transform);
+        term1.transform.localPosition = new Vector3(-0.1f, 0.32f, 0);
+        term1.transform.localScale = new Vector3(0.05f, 0.02f, 0.05f);
+        SetColor(term1, new Color(0.75f, 0.75f, 0.78f));
+        Object.DestroyImmediate(term1.GetComponent<CapsuleCollider>());
+
+        var term2 = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        term2.name = "Terminal2";
+        term2.transform.SetParent(root.transform);
+        term2.transform.localPosition = new Vector3(0.1f, 0.32f, 0);
+        term2.transform.localScale = new Vector3(0.05f, 0.02f, 0.05f);
+        SetColor(term2, new Color(0.75f, 0.75f, 0.78f));
+        Object.DestroyImmediate(term2.GetComponent<CapsuleCollider>());
+
+        var glow = new GameObject("Glow");
+        glow.transform.SetParent(root.transform);
+        glow.transform.localPosition = new Vector3(0, 0.2f, 0);
+        var gl = glow.AddComponent<Light>();
+        gl.type = LightType.Point;
+        gl.range = 3f;
+        gl.intensity = 0.5f;
+        gl.color = new Color(0.3f, 0.5f, 1f);
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
@@ -418,18 +560,39 @@ public static class ProjectSetup
     {
         const string path = "Assets/_Project/Prefabs/Mission/EvidenceBox.prefab";
 
-        var root = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        root.name = "EvidenceBox";
-        root.transform.localScale = new Vector3(0.3f, 0.25f, 0.25f);
-        SetColor(root, new Color(0.55f, 0.35f, 0.15f));
-        Object.DestroyImmediate(root.GetComponent<BoxCollider>());
-
+        var root = new GameObject("EvidenceBox");
         root.AddComponent<NetworkObject>();
         var rb = root.AddComponent<Rigidbody>();
         rb.mass = 1.5f;
         var col = root.AddComponent<BoxCollider>();
-        col.size = Vector3.one;
+        col.size = new Vector3(0.35f, 0.25f, 0.25f);
+        col.center = new Vector3(0, 0.125f, 0);
         root.AddComponent<EvidenceBoxItem>();
+
+        var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        box.name = "Box";
+        box.transform.SetParent(root.transform);
+        box.transform.localPosition = new Vector3(0, 0.11f, 0);
+        box.transform.localScale = new Vector3(0.35f, 0.22f, 0.25f);
+        SetColor(box, new Color(0.55f, 0.35f, 0.15f));
+        Object.DestroyImmediate(box.GetComponent<BoxCollider>());
+
+        var lid = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        lid.name = "Lid";
+        lid.transform.SetParent(root.transform);
+        lid.transform.localPosition = new Vector3(0, 0.235f, 0);
+        lid.transform.localScale = new Vector3(0.37f, 0.03f, 0.27f);
+        SetColor(lid, new Color(0.65f, 0.45f, 0.2f));
+        Object.DestroyImmediate(lid.GetComponent<BoxCollider>());
+
+        var glow = new GameObject("Glow");
+        glow.transform.SetParent(root.transform);
+        glow.transform.localPosition = new Vector3(0, 0.15f, 0);
+        var gl = glow.AddComponent<Light>();
+        gl.type = LightType.Point;
+        gl.range = 2f;
+        gl.intensity = 0.4f;
+        gl.color = new Color(1f, 0.9f, 0.7f);
 
         var prefab = PrefabUtility.SaveAsPrefabAsset(root, path);
         Object.DestroyImmediate(root);
@@ -627,7 +790,10 @@ public static class ProjectSetup
         CreateBox("Wall_E",         new Vector3(15,  2.5f,   0),    new Vector3(0.5f, 5, 30));
         CreateBox("Wall_W",         new Vector3(-15, 2.5f,   0),    new Vector3(0.5f, 5, 30));
         CreateBox("Ceiling",        new Vector3(0,   5.1f,   0),    new Vector3(30, 0.2f, 30));
-        CreateBox("Divider_Center", new Vector3(0,   2.5f,   0),    new Vector3(0.5f, 5, 20));
+
+        // Center divider split into two segments with gap at z=-5 for Shortcut door
+        CreateBox("Divider_Upper",  new Vector3(0, 2.5f, 3f),      new Vector3(0.5f, 5, 14));   // z=-4 to z=10
+        CreateBox("Divider_Lower",  new Vector3(0, 2.5f, -8f),     new Vector3(0.5f, 5, 4));    // z=-10 to z=-6
 
         for (int i = -2; i <= 2; i++)
         {
@@ -635,12 +801,36 @@ public static class ProjectSetup
             CreateBox($"Shop_R_{i}", new Vector3( 7, 1.5f, i * 4), new Vector3(4, 3, 3));
         }
 
-        CreateBox("PumpRoom_Wall",   new Vector3(-10, 2.5f, -12), new Vector3(8, 5, 0.5f));
-        CreateBox("PumpRoom_Wall_L", new Vector3(-14, 2.5f,  -9), new Vector3(0.5f, 5, 6));
+        // Pump room walls — split south wall for door gap at x=-6
+        CreateBox("PumpRoom_Wall_W", new Vector3(-11.5f, 2.5f, -12), new Vector3(5, 5, 0.5f));  // x=-14 to x=-9
+        CreateBox("PumpRoom_Wall_E", new Vector3(-4f, 2.5f, -12),    new Vector3(2, 5, 0.5f));  // x=-5 to x=-3
+        CreateBox("PumpRoom_Wall_L", new Vector3(-14, 2.5f,  -9),    new Vector3(0.5f, 5, 6));
 
-        // Power control room area
-        CreateBox("PowerRoom_Wall",   new Vector3(-10, 2.5f, -6), new Vector3(6, 5, 0.5f));
-        CreateBox("PowerRoom_Wall_R", new Vector3(-7, 2.5f, -9), new Vector3(0.5f, 5, 6));
+        // Power control room — split wall for door gap at x=-7
+        CreateBox("PowerRoom_Wall_W", new Vector3(-11.5f, 2.5f, -6), new Vector3(5, 5, 0.5f));  // x=-14 to x=-9
+        CreateBox("PowerRoom_Wall_E", new Vector3(-4.5f, 2.5f, -6),  new Vector3(3, 5, 0.5f));  // x=-6 to x=-3
+        CreateBox("PowerRoom_Wall_R", new Vector3(-7, 2.5f, -9),     new Vector3(0.5f, 5, 6));
+
+        // Corridor walls for WaterBlocked door at (-3, 0, -10)
+        CreateBox("Corridor_W",     new Vector3(-5.5f, 2.5f, -10),   new Vector3(3, 5, 0.5f));
+        CreateBox("Corridor_E",     new Vector3(-0.5f, 2.5f, -10),   new Vector3(3, 5, 0.5f));
+
+        // Storage room walls for Locked door at (6, 0, -8)
+        CreateBox("Storage_S",      new Vector3(6, 2.5f, -10),       new Vector3(8, 5, 0.5f));
+        CreateBox("Storage_W",      new Vector3(2.25f, 2.5f, -9),    new Vector3(0.5f, 5, 2));
+        CreateBox("Storage_N_W",    new Vector3(3.5f, 2.5f, -8),     new Vector3(2, 5, 0.5f));
+        CreateBox("Storage_N_E",    new Vector3(8.5f, 2.5f, -8),     new Vector3(3, 5, 0.5f));
+
+        // Parking pillars for atmosphere
+        Color pillarColor = new Color(0.35f, 0.35f, 0.38f);
+        Vector3[] pillarPositions = {
+            new Vector3(-5, 2.5f, -4), new Vector3(-5, 2.5f, -9),
+            new Vector3( 5, 2.5f, -4), new Vector3( 5, 2.5f, -9),
+            new Vector3(-5, 2.5f,  4), new Vector3(-5, 2.5f,  9),
+            new Vector3( 5, 2.5f,  4), new Vector3( 5, 2.5f,  9),
+        };
+        for (int i = 0; i < pillarPositions.Length; i++)
+            CreateBoxColored($"Pillar_{i}", pillarPositions[i], new Vector3(0.5f, 5, 0.5f), pillarColor);
 
         // ── Water surface ─────────────────────────────────────────
         var waterPlane = GameObject.CreatePrimitive(PrimitiveType.Plane);
@@ -680,25 +870,25 @@ public static class ProjectSetup
         if (fusePrefab != null)
         {
             var fuse = (GameObject)PrefabUtility.InstantiatePrefab(fusePrefab);
-            fuse.transform.position = new Vector3(-9f, 0.5f, -8f); // Power control room
+            fuse.transform.position = new Vector3(-9f, 0.3f, -8f); // Power control room
         }
 
         if (toolboxPrefab != null)
         {
             var toolbox = (GameObject)PrefabUtility.InstantiatePrefab(toolboxPrefab);
-            toolbox.transform.position = new Vector3(3f, 0.5f, -3f); // Shop area
+            toolbox.transform.position = new Vector3(3f, 0.3f, -3f); // Shop area
         }
 
         if (batteryPrefab != null)
         {
             var battery = (GameObject)PrefabUtility.InstantiatePrefab(batteryPrefab);
-            battery.transform.position = new Vector3(5f, 0.5f, -8f); // Storage area
+            battery.transform.position = new Vector3(5f, 0.3f, -9f); // Storage room
         }
 
         if (evidencePrefab != null)
         {
             var evidence = (GameObject)PrefabUtility.InstantiatePrefab(evidencePrefab);
-            evidence.transform.position = new Vector3(-8f, 0.5f, 3f); // Shop area
+            evidence.transform.position = new Vector3(-8f, 0.3f, 3f); // Shop area
         }
 
         // ── Doors (each door is its own prefab asset — NGO requires unique GlobalObjectIdHash per scene instance) ──
@@ -731,6 +921,25 @@ public static class ProjectSetup
             var door5 = (GameObject)PrefabUtility.InstantiatePrefab(doorLockedPrefab);
             door5.name = "Door_Locked";
             door5.transform.position = new Vector3(6f, 0f, -8f);
+        }
+
+        // ── Door area lights ──────────────────────────────────────
+        Vector3[] doorLightPositions = {
+            new Vector3(-6f, 3f, -12f),  // PumpRoom
+            new Vector3(-7f, 3f, -6f),   // PowerRoom
+            new Vector3(0f, 3f, -5f),    // Shortcut
+            new Vector3(-3f, 3f, -10f),  // WaterBlocked
+            new Vector3(6f, 3f, -8f),    // Locked
+        };
+        for (int i = 0; i < doorLightPositions.Length; i++)
+        {
+            var dl = new GameObject($"DoorLight_{i}");
+            dl.transform.position = doorLightPositions[i];
+            var dLight = dl.AddComponent<Light>();
+            dLight.type = LightType.Point;
+            dLight.range = 4f;
+            dLight.intensity = 0.3f;
+            dLight.color = new Color(1f, 0.7f, 0.4f);
         }
 
         // ── Patrol waypoints ──────────────────────────────────────
@@ -859,14 +1068,28 @@ public static class ProjectSetup
     {
         var rend = go.GetComponent<Renderer>();
         if (rend == null) return;
-        var urpShader = Shader.Find("Universal Render Pipeline/Lit");
-        if (urpShader == null) urpShader = Shader.Find("Lit");
-        if (urpShader == null)
+
+        Material mat;
+        if (_baseMat == null)
+            _baseMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Settings/URP-BaseLit.mat");
+
+        if (_baseMat != null)
         {
-            rend.sharedMaterial = new Material(rend.sharedMaterial) { color = color };
-            return;
+            mat = new Material(_baseMat);
         }
-        var mat = new Material(urpShader);
+        else
+        {
+            var urpShader = Shader.Find("Universal Render Pipeline/Lit");
+            if (urpShader == null) urpShader = Shader.Find("Lit");
+            if (urpShader != null)
+                mat = new Material(urpShader);
+            else
+            {
+                rend.sharedMaterial = new Material(rend.sharedMaterial) { color = color };
+                return;
+            }
+        }
+
         mat.SetColor("_BaseColor", color);
         if (color.a < 1f)
         {
