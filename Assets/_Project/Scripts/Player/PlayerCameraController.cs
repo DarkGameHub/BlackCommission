@@ -55,6 +55,7 @@ public class PlayerCameraController : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
+        if (Cursor.lockState != CursorLockMode.Locked) return;
 
         var look = inputActions.Player.Look.ReadValue<Vector2>();
         float mouseX = look.x * mouseSensitivity;

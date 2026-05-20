@@ -32,6 +32,7 @@ public static class ProjectSetup
 
         EnsureFolders();
         EnsureURPPipeline();
+        AssetDatabase.Refresh();
         EnsureBaseMaterial();
 
         var playerPrefab   = CreatePlayerPrefab();
@@ -130,20 +131,61 @@ public static class ProjectSetup
     {
         const string matPath = "Assets/Settings/URP-BaseLit.mat";
         _baseMat = AssetDatabase.LoadAssetAtPath<Material>(matPath);
-        if (_baseMat != null) return;
+        if (_baseMat != null && _baseMat.shader != null && _baseMat.shader.name != "Hidden/InternalErrorShader")
+            return;
 
-        var shader = Shader.Find("Universal Render Pipeline/Lit");
+        // Delete broken material asset if it exists
+        if (AssetDatabase.LoadAssetAtPath<Object>(matPath) != null)
+            AssetDatabase.DeleteAsset(matPath);
+
+        Shader shader = null;
+
+        // 1) Load directly from URP package path — most reliable in Unity 6
+        shader = AssetDatabase.LoadAssetAtPath<Shader>(
+            "Packages/com.unity.render-pipelines.universal/Shaders/Lit.shader");
+        if (shader != null)
+            Debug.Log($"[Setup] Found shader via package path: {shader.name}");
+
+        // 2) Get shader from pipeline's default material
+        if (shader == null)
+        {
+            var pipeline = GraphicsSettings.defaultRenderPipeline as UniversalRenderPipelineAsset;
+            if (pipeline != null)
+            {
+                var defMat = pipeline.defaultMaterial;
+                if (defMat != null && defMat.shader != null)
+                {
+                    shader = defMat.shader;
+                    Debug.Log($"[Setup] Found shader via pipeline default material: {shader.name}");
+                }
+            }
+        }
+
+        // 3) Try SimpleLit from package
+        if (shader == null)
+        {
+            shader = AssetDatabase.LoadAssetAtPath<Shader>(
+                "Packages/com.unity.render-pipelines.universal/Shaders/SimpleLit.shader");
+            if (shader != null)
+                Debug.Log($"[Setup] Found SimpleLit shader: {shader.name}");
+        }
+
+        // 4) Classic Shader.Find as last resort
+        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Simple Lit");
         if (shader == null) shader = Shader.Find("Lit");
+
         if (shader != null)
         {
             _baseMat = new Material(shader);
             AssetDatabase.CreateAsset(_baseMat, matPath);
             AssetDatabase.SaveAssets();
-            Debug.Log("[Setup] Created base URP material.");
+            Debug.Log($"[Setup] Base URP material created with shader: {shader.name}");
         }
         else
         {
-            Debug.LogWarning("[Setup] Could not find URP Lit shader for base material.");
+            Debug.LogError("[Setup] FAILED to find any URP shader. All objects will be purple.\n" +
+                "Try: Window > Package Manager > Universal RP > Reimport");
         }
     }
 
@@ -299,18 +341,18 @@ public static class ProjectSetup
 
         var beacon = new GameObject("Beacon");
         beacon.transform.SetParent(root.transform);
-        beacon.transform.localPosition = new Vector3(0, 1.5f, 0);
+        beacon.transform.localPosition = new Vector3(0, 2f, 0);
         var bl = beacon.AddComponent<Light>();
         bl.type = LightType.Point;
-        bl.range = 5f;
-        bl.intensity = 1.2f;
+        bl.range = 8f;
+        bl.intensity = 2f;
         bl.color = new Color(1f, 0.9f, 0.2f);
 
         var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
         marker.name = "Marker";
         marker.transform.SetParent(root.transform);
-        marker.transform.localPosition = new Vector3(0, 2.5f, 0);
-        marker.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+        marker.transform.localPosition = new Vector3(0, 2.8f, 0);
+        marker.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
         marker.transform.localRotation = Quaternion.Euler(45, 45, 0);
         SetColor(marker, new Color(1f, 0.95f, 0.2f));
         Object.DestroyImmediate(marker.GetComponent<BoxCollider>());
@@ -347,18 +389,18 @@ public static class ProjectSetup
 
         var beacon = new GameObject("Beacon");
         beacon.transform.SetParent(root.transform);
-        beacon.transform.localPosition = new Vector3(0, 1.5f, 0);
+        beacon.transform.localPosition = new Vector3(0, 2f, 0);
         var bl = beacon.AddComponent<Light>();
         bl.type = LightType.Point;
-        bl.range = 5f;
-        bl.intensity = 1.2f;
+        bl.range = 8f;
+        bl.intensity = 2f;
         bl.color = new Color(1f, 0.5f, 0.1f);
 
         var marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
         marker.name = "Marker";
         marker.transform.SetParent(root.transform);
-        marker.transform.localPosition = new Vector3(0, 2.5f, 0);
-        marker.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+        marker.transform.localPosition = new Vector3(0, 2.8f, 0);
+        marker.transform.localScale = new Vector3(0.25f, 0.25f, 0.25f);
         marker.transform.localRotation = Quaternion.Euler(45, 45, 0);
         SetColor(marker, new Color(1f, 0.5f, 0.1f));
         Object.DestroyImmediate(marker.GetComponent<BoxCollider>());
@@ -1069,25 +1111,23 @@ public static class ProjectSetup
         var rend = go.GetComponent<Renderer>();
         if (rend == null) return;
 
-        Material mat;
-        if (_baseMat == null)
+        if (_baseMat == null || _baseMat.shader == null || _baseMat.shader.name == "Hidden/InternalErrorShader")
+        {
             _baseMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Settings/URP-BaseLit.mat");
+            if (_baseMat == null || _baseMat.shader == null || _baseMat.shader.name == "Hidden/InternalErrorShader")
+                EnsureBaseMaterial();
+        }
 
-        if (_baseMat != null)
+        Material mat;
+        if (_baseMat != null && _baseMat.shader != null && _baseMat.shader.name != "Hidden/InternalErrorShader")
         {
             mat = new Material(_baseMat);
         }
         else
         {
-            var urpShader = Shader.Find("Universal Render Pipeline/Lit");
-            if (urpShader == null) urpShader = Shader.Find("Lit");
-            if (urpShader != null)
-                mat = new Material(urpShader);
-            else
-            {
-                rend.sharedMaterial = new Material(rend.sharedMaterial) { color = color };
-                return;
-            }
+            Debug.LogWarning($"[Setup] No valid URP shader for {go.name}, using fallback color.");
+            rend.sharedMaterial = new Material(Shader.Find("Standard") ?? rend.sharedMaterial) { color = color };
+            return;
         }
 
         mat.SetColor("_BaseColor", color);
