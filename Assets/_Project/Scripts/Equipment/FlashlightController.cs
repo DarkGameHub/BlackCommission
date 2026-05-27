@@ -66,11 +66,20 @@ public class FlashlightController : NetworkBehaviour
     {
         if (inputActions == null) return;
 
+        if (GetComponent<PlayerHotbar>() != null) return;
+
         if (inputActions.Player.RadioTalk.WasPressedThisFrame())
             ToggleFlashlightServerRpc();
-
         if (inputActions.Player.UseItem.WasPressedThisFrame())
             UseStrongLightServerRpc();
+    }
+
+    public bool TryToggleFromHotbar()
+    {
+        if (!IsServer) return false;
+        if (battery <= 0 && !IsOn.Value) return false;
+        IsOn.Value = !IsOn.Value;
+        return true;
     }
 
     [ServerRpc]

@@ -29,6 +29,12 @@ public class PlayerInteraction : NetworkBehaviour
 
     void Update()
     {
+        if (IsDowned())
+        {
+            ClearCurrentInteraction();
+            return;
+        }
+
         FindTarget();
         HandleInput();
     }
@@ -57,6 +63,17 @@ public class PlayerInteraction : NetworkBehaviour
             }
             currentTarget = nearest;
         }
+    }
+
+    bool IsDowned() => TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value;
+
+    void ClearCurrentInteraction()
+    {
+        if (isInteracting && currentTarget != null)
+            currentTarget.OnInteractEnd(player);
+
+        isInteracting = false;
+        currentTarget = null;
     }
 
     void HandleInput()

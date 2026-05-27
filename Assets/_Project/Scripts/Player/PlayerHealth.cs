@@ -100,6 +100,21 @@ public class PlayerHealth : NetworkBehaviour, IInteractable
             EnterDowned();
     }
 
+    public void Heal(float amount)
+    {
+        if (!IsServer) return;
+        if (amount <= 0) return;
+
+        CurrentHP.Value = Mathf.Min(maxHP, CurrentHP.Value + amount);
+        if (CurrentHP.Value > 0 && IsDowned.Value)
+        {
+            IsDowned.Value = false;
+            reviveProgress = 0;
+            reviverActive = false;
+            RevivedClientRpc();
+        }
+    }
+
     void EnterDowned()
     {
         IsDowned.Value = true;

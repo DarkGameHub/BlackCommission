@@ -1,0 +1,525 @@
+using System.Collections.Generic;
+using Unity.Netcode;
+using Unity.Netcode.Components;
+using UnityEditor;
+using UnityEditor.AI;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEngine.SceneManagement;
+
+public static class MvpProjectSetup
+{
+    const string HqScenePath = "Assets/_Project/Scenes/HQ.unity";
+    const string SchoolScenePath = "Assets/_Project/Scenes/School_LostItem_01.unity";
+    const string TaskAssetPath = "Assets/_Project/Settings/Tasks/MissingHomeworkNotebook.asset";
+    const string PlayerPrefabPath = "Assets/_Project/Prefabs/Player/Player.prefab";
+    const string MaterialFolder = "Assets/_Project/Settings/Materials";
+
+    static readonly Dictionary<string, Material> MaterialCache = new Dictionary<string, Material>();
+
+    [MenuItem("Tools/Accident Squad/MVP/Setup School MVP")]
+    public static void SetupSchoolMvp()
+    {
+        if (EditorApplication.isPlaying)
+        {
+            EditorUtility.DisplayDialog("请先停止运行", "请先退出 Play 模式，再运行 MVP Setup。", "OK");
+            return;
+        }
+
+        EnsureFolders();
+        OfficeTaskDefinition task = EnsureMissingHomeworkTask();
+        PatchPlayerPrefab();
+        SetupHq(task);
+        SetupSchoolScene();
+        UpdateBuildSettings();
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        EditorSceneManager.OpenScene(HqScenePath);
+
+        EditorUtility.DisplayDialog(
+            "MVP 场景已配置",
+            "已生成学校找回作业本 MVP。\n\n测试流程:\n1. 打开 HQ 场景并 Play\n2. 点 Start Host\n3. 靠近电脑按 E 接任务\n4. 在学校找到作业本\n5. 躲开怪物回到校门\n6. 回事务所按 E 领取奖励",
+            "开始测试");
+    }
+
+    static void EnsureFolders()
+    {
+        EnsureFolder("Assets/_Project", "Settings");
+        EnsureFolder("Assets/_Project/Settings", "Tasks");
+        EnsureFolder("Assets/_Project/Settings", "Materials");
+        EnsureFolder("Assets/_Project", "Scenes");
+    }
+
+    static OfficeTaskDefinition EnsureMissingHomeworkTask()
+    {
+        var task = AssetDatabase.LoadAssetAtPath<OfficeTaskDefinition>(TaskAssetPath);
+        if (task == null)
+        {
+            task = ScriptableObject.CreateInstance<OfficeTaskDefinition>();
+            AssetDatabase.CreateAsset(task, TaskAssetPath);
+        }
+
+        task.taskId = "lost_homework_01";
+        task.title = "找回被遗忘的作业本";
+        task.category = MvpTaskCategory.LostItemRecovery;
+        task.client = "焦急的家长";
+        task.description = "孩子说作业本落在学校了，但晚上校园里好像还有东西在巡逻。找回作业本并安全撤离。";
+        task.locationName = "废弃学校";
+        task.sceneName = "School_LostItem_01";
+        task.recommendedPlayersMin = 1;
+        task.recommendedPlayersMax = 4;
+        task.requiredOfficeLevel = 1;
+        task.minimumReputation = -100;
+        task.moneyReward = 300;
+        task.reputationReward = 5;
+        task.experienceReward = 80;
+        task.failureConsolationMoney = 20;
+        task.failureReputationPenalty = -2;
+        task.failureExperience = 0;
+        EditorUtility.SetDirty(task);
+        return task;
+    }
+
+    static void PatchPlayerPrefab()
+    {
+        var root = PrefabUtility.LoadPrefabContents(PlayerPrefabPath);
+        if (root == null)
+        {
+            Debug.LogWarning($"[MVP Setup] Player prefab not found at {PlayerPrefabPath}. Run Setup All first.");
+            return;
+        }
+
+        if (root.GetComponent<ClientNetworkTransform>() == null)
+        {
+            var netTransform = root.AddComponent<ClientNetworkTransform>();
+            netTransform.SyncPositionX = true;
+            netTransform.SyncPositionY = true;
+            netTransform.SyncPositionZ = true;
+            netTransform.SyncRotAngleY = true;
+            netTransform.SyncRotAngleX = false;
+            netTransform.SyncRotAngleZ = false;
+            netTransform.SyncScaleX = false;
+            netTransform.SyncScaleY = false;
+            netTransform.SyncScaleZ = false;
+        }
+
+        if (root.GetComponent<PlayerHotbar>() == null)
+            root.AddComponent<PlayerHotbar>();
+
+        PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
+        PrefabUtility.UnloadPrefabContents(root);
+        Debug.Log("[MVP Setup] Player prefab patched with MVP hotbar and network transform.");
+    }
+
+    static void SetupHq(OfficeTaskDefinition task)
+    {
+        var scene = EditorSceneManager.OpenScene(HqScenePath, OpenSceneMode.Single);
+        EnsureMvpHud();
+
+        GameObject computer = GameObject.Find("MVP_OfficeComputer");
+        if (computer == null)
+        {
+            computer = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            computer.name = "MVP_OfficeComputer";
+            computer.transform.position = new Vector3(-1.2f, 1.05f, 2.4f);
+            computer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            computer.transform.localScale = new Vector3(1.2f, 0.7f, 0.2f);
+            ApplyMaterial(computer, "office_computer_case", new Color(0.06f, 0.07f, 0.08f));
+
+            var screen = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            screen.name = "GreenScreen";
+            screen.transform.SetParent(computer.transform);
+            screen.transform.localPosition = new Vector3(0f, 0.06f, -0.56f);
+            screen.transform.localScale = new Vector3(0.8f, 0.55f, 0.04f);
+            ApplyMaterial(screen, "office_monitor_green", new Color(0.05f, 0.85f, 0.42f));
+            Object.DestroyImmediate(screen.GetComponent<BoxCollider>());
+
+            var glow = new GameObject("ScreenGlow");
+            glow.transform.SetParent(computer.transform);
+            glow.transform.localPosition = new Vector3(0f, 0.1f, -0.9f);
+            var light = glow.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.range = 3.5f;
+            light.intensity = 1.4f;
+            light.color = new Color(0.35f, 1f, 0.65f);
+
+            CreateText("电脑: 委托终端", computer.transform.position + new Vector3(0f, 0.9f, -0.05f),
+                Quaternion.Euler(65f, 180f, 0f), 0.16f, Color.white).transform.SetParent(computer.transform);
+        }
+
+        if (computer.GetComponent<NetworkObject>() == null)
+            computer.AddComponent<NetworkObject>();
+
+        var officeComputer = computer.GetComponent<OfficeComputer>();
+        if (officeComputer == null)
+            officeComputer = computer.AddComponent<OfficeComputer>();
+
+        SetObjectReference(officeComputer, "demoTask", task);
+        SetString(officeComputer, "returnOfficeScene", "HQ");
+        SetBool(officeComputer, "allowNonNetworkSoloStart", false);
+
+        PatchNetworkManagerPlayerPrefab();
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+    }
+
+    static void SetupSchoolScene()
+    {
+        Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.12f, 0.14f, 0.16f);
+        RenderSettings.fog = true;
+        RenderSettings.fogColor = new Color(0.05f, 0.08f, 0.09f);
+        RenderSettings.fogDensity = 0.025f;
+
+        var root = new GameObject("MVP_School_LostItem_01");
+
+        CreateDirectionalLight();
+        CreateSchoolGeometry(root.transform);
+        CreateSchoolProps(root.transform);
+        CreateMissionObjects(root.transform);
+        EnsureMvpHud();
+
+        try
+        {
+            UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"[MVP Setup] NavMesh bake skipped: {ex.Message}");
+        }
+
+        EditorSceneManager.SaveScene(scene, SchoolScenePath);
+        Debug.Log($"[MVP Setup] School scene saved: {SchoolScenePath}");
+    }
+
+    static void CreateSchoolGeometry(Transform parent)
+    {
+        CreateBox("Floor_MainHall", new Vector3(0f, -0.05f, 0f), new Vector3(24f, 0.1f, 18f),
+            new Color(0.22f, 0.24f, 0.25f), parent);
+        CreateBox("Ceiling_Shadow", new Vector3(0f, 3.25f, 0f), new Vector3(24f, 0.12f, 18f),
+            new Color(0.08f, 0.09f, 0.1f), parent, false);
+
+        CreateBox("Wall_North", new Vector3(0f, 1.55f, 9f), new Vector3(24f, 3.1f, 0.3f),
+            new Color(0.34f, 0.37f, 0.36f), parent);
+        CreateBox("Wall_South", new Vector3(0f, 1.55f, -9f), new Vector3(24f, 3.1f, 0.3f),
+            new Color(0.31f, 0.34f, 0.33f), parent);
+        CreateBox("Wall_West", new Vector3(-12f, 1.55f, 0f), new Vector3(0.3f, 3.1f, 18f),
+            new Color(0.31f, 0.34f, 0.33f), parent);
+        CreateBox("Wall_East", new Vector3(12f, 1.55f, 0f), new Vector3(0.3f, 3.1f, 18f),
+            new Color(0.31f, 0.34f, 0.33f), parent);
+
+        CreateBox("Left_Classroom_Wall", new Vector3(-5.7f, 1.55f, 1.6f), new Vector3(0.25f, 3.1f, 9f),
+            new Color(0.39f, 0.42f, 0.4f), parent);
+        CreateBox("Right_Classroom_Wall", new Vector3(5.7f, 1.55f, 1.6f), new Vector3(0.25f, 3.1f, 9f),
+            new Color(0.39f, 0.42f, 0.4f), parent);
+        CreateBox("Back_Classroom_Wall", new Vector3(0f, 1.55f, 5.9f), new Vector3(11.6f, 3.1f, 0.25f),
+            new Color(0.39f, 0.42f, 0.4f), parent);
+
+        CreateBox("Entrance_Mat", new Vector3(0f, 0.01f, -7.6f), new Vector3(5f, 0.04f, 1.6f),
+            new Color(0.08f, 0.32f, 0.22f), parent, false);
+        CreateBox("Classroom_Door_Frame_Left", new Vector3(-2.4f, 1.6f, 1.6f), new Vector3(0.25f, 3.2f, 0.25f),
+            new Color(0.15f, 0.18f, 0.17f), parent);
+        CreateBox("Classroom_Door_Frame_Right", new Vector3(2.4f, 1.6f, 1.6f), new Vector3(0.25f, 3.2f, 0.25f),
+            new Color(0.15f, 0.18f, 0.17f), parent);
+    }
+
+    static void CreateSchoolProps(Transform parent)
+    {
+        for (int row = 0; row < 3; row++)
+        {
+            for (int col = 0; col < 4; col++)
+            {
+                float x = -3.6f + col * 2.4f;
+                float z = 2.7f + row * 1.15f;
+                CreateDesk(new Vector3(x, 0.42f, z), parent);
+            }
+        }
+
+        CreateBox("Blackboard", new Vector3(0f, 1.55f, 5.72f), new Vector3(4.8f, 1.5f, 0.08f),
+            new Color(0.02f, 0.2f, 0.12f), parent, false);
+        CreateText("HOMEWORK DUE", new Vector3(0f, 1.75f, 5.62f), Quaternion.Euler(0f, 180f, 0f),
+            0.18f, new Color(0.9f, 0.95f, 0.9f)).transform.SetParent(parent);
+
+        for (int i = 0; i < 6; i++)
+        {
+            CreateBox($"Locker_{i + 1}", new Vector3(-10.8f, 0.95f, -4.7f + i * 1.25f),
+                new Vector3(0.45f, 1.9f, 0.95f), new Color(0.12f, 0.25f, 0.38f), parent);
+        }
+
+        CreateBox("Flicker_Lamp_01", new Vector3(-3.8f, 3.05f, -2.5f), new Vector3(0.2f, 0.08f, 1.6f),
+            new Color(0.8f, 0.84f, 0.72f), parent, false);
+        CreateBox("Flicker_Lamp_02", new Vector3(4.2f, 3.05f, 3.2f), new Vector3(0.2f, 0.08f, 1.6f),
+            new Color(0.8f, 0.84f, 0.72f), parent, false);
+
+        var lampGlow = new GameObject("ColdSchoolLights");
+        lampGlow.transform.SetParent(parent);
+        lampGlow.transform.position = new Vector3(0f, 2.7f, 0f);
+        var light = lampGlow.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.range = 16f;
+        light.intensity = 2.5f;
+        light.color = new Color(0.65f, 0.9f, 1f);
+
+        var redGlow = new GameObject("MonsterWarningLight");
+        redGlow.transform.SetParent(parent);
+        redGlow.transform.position = new Vector3(8f, 1.8f, 4f);
+        var red = redGlow.AddComponent<Light>();
+        red.type = LightType.Point;
+        red.range = 8f;
+        red.intensity = 1.7f;
+        red.color = new Color(1f, 0.18f, 0.12f);
+    }
+
+    static void CreateMissionObjects(Transform parent)
+    {
+        var spawn = new GameObject("PlayerSpawnPoint");
+        spawn.transform.SetParent(parent);
+        spawn.transform.SetPositionAndRotation(new Vector3(0f, 0.1f, -6.8f), Quaternion.Euler(0f, 0f, 0f));
+
+        var spawnManager = new GameObject("SchoolSpawnManager");
+        spawnManager.transform.SetParent(parent);
+        var manager = spawnManager.AddComponent<HQSpawnManager>();
+        SetObjectReference(manager, "spawnPoint", spawn.transform);
+
+        var missionManager = new GameObject("LostItemMissionManager");
+        missionManager.transform.SetParent(parent);
+        missionManager.AddComponent<NetworkObject>();
+        missionManager.AddComponent<LostItemMissionManager>();
+
+        var notebook = CreateBox("LostHomeworkNotebook", new Vector3(3.6f, 0.72f, 5.05f), new Vector3(0.6f, 0.08f, 0.42f),
+            new Color(1f, 0.88f, 0.28f), parent, false);
+        notebook.AddComponent<NetworkObject>();
+        notebook.AddComponent<LostHomeworkItem>();
+        var notebookGlow = new GameObject("NotebookGlow");
+        notebookGlow.transform.SetParent(notebook.transform);
+        notebookGlow.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+        var glow = notebookGlow.AddComponent<Light>();
+        glow.type = LightType.Point;
+        glow.range = 3f;
+        glow.intensity = 1.2f;
+        glow.color = new Color(1f, 0.85f, 0.2f);
+
+        var exit = CreateBox("SchoolExitPoint", new Vector3(0f, 0.08f, -7.6f), new Vector3(4.4f, 0.16f, 1.8f),
+            new Color(0.1f, 0.75f, 0.38f), parent, false);
+        exit.AddComponent<NetworkObject>();
+        var exitCollider = exit.GetComponent<BoxCollider>();
+        if (exitCollider != null) exitCollider.isTrigger = true;
+        exit.AddComponent<SchoolExitPoint>();
+        CreateText("事务所传送出口", new Vector3(0f, 0.65f, -7.6f), Quaternion.Euler(70f, 0f, 0f),
+            0.2f, Color.white).transform.SetParent(parent);
+
+        Transform[] patrol = CreatePatrolPoints(parent);
+        var monster = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        monster.name = "HomeworkDebtCollector";
+        monster.transform.SetParent(parent);
+        monster.transform.position = new Vector3(8.5f, 1f, 4f);
+        monster.transform.localScale = new Vector3(0.85f, 1.4f, 0.85f);
+        ApplyMaterial(monster, "monster_redcoat", new Color(0.55f, 0.08f, 0.07f));
+        monster.AddComponent<NetworkObject>();
+        monster.AddComponent<NetworkTransform>();
+        var agent = monster.AddComponent<NavMeshAgent>();
+        agent.speed = 3.8f;
+        agent.angularSpeed = 240f;
+        agent.acceleration = 12f;
+        agent.radius = 0.45f;
+        agent.height = 2.2f;
+        var ai = monster.AddComponent<SchoolMonsterAI>();
+        SetObjectArray(ai, "patrolPoints", patrol);
+    }
+
+    static Transform[] CreatePatrolPoints(Transform parent)
+    {
+        Vector3[] positions =
+        {
+            new Vector3(8.5f, 0.05f, 4.2f),
+            new Vector3(8.8f, 0.05f, -3.8f),
+            new Vector3(-8.2f, 0.05f, -3.6f),
+            new Vector3(-2.8f, 0.05f, 4.7f)
+        };
+
+        Transform[] points = new Transform[positions.Length];
+        for (int i = 0; i < positions.Length; i++)
+        {
+            var point = new GameObject($"MonsterPatrolPoint_{i + 1}");
+            point.transform.SetParent(parent);
+            point.transform.position = positions[i];
+            points[i] = point.transform;
+        }
+
+        return points;
+    }
+
+    static void CreateDesk(Vector3 position, Transform parent)
+    {
+        CreateBox("DeskTop", position, new Vector3(1.15f, 0.12f, 0.7f),
+            new Color(0.42f, 0.28f, 0.16f), parent, false);
+        CreateBox("DeskChair", position + new Vector3(0f, -0.1f, -0.75f), new Vector3(0.6f, 0.55f, 0.18f),
+            new Color(0.16f, 0.19f, 0.21f), parent, false);
+    }
+
+    static GameObject CreateBox(string name, Vector3 position, Vector3 scale, Color color, Transform parent, bool navStatic = true)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        go.transform.SetParent(parent);
+        go.transform.position = position;
+        go.transform.localScale = scale;
+        ApplyMaterial(go, name.ToLowerInvariant(), color);
+        if (navStatic)
+            GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.NavigationStatic);
+        return go;
+    }
+
+    static GameObject CreateText(string text, Vector3 position, Quaternion rotation, float characterSize, Color color)
+    {
+        var go = new GameObject($"Text_{text}");
+        go.transform.SetPositionAndRotation(position, rotation);
+        var mesh = go.AddComponent<TextMesh>();
+        mesh.text = text;
+        mesh.anchor = TextAnchor.MiddleCenter;
+        mesh.alignment = TextAlignment.Center;
+        mesh.characterSize = characterSize;
+        mesh.fontSize = 48;
+        mesh.color = color;
+        return go;
+    }
+
+    static void CreateDirectionalLight()
+    {
+        var lightGo = new GameObject("MoonlitDirectionalLight");
+        lightGo.transform.rotation = Quaternion.Euler(50f, -25f, 0f);
+        var light = lightGo.AddComponent<Light>();
+        light.type = LightType.Directional;
+        light.intensity = 0.35f;
+        light.color = new Color(0.65f, 0.82f, 1f);
+    }
+
+    static void EnsureMvpHud()
+    {
+        if (Object.FindFirstObjectByType<MvpHud>() != null) return;
+        var hud = new GameObject("MVP_HUD");
+        hud.AddComponent<MvpHud>();
+    }
+
+    static void PatchNetworkManagerPlayerPrefab()
+    {
+        var networkManager = Object.FindFirstObjectByType<NetworkManager>();
+        var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerPrefabPath);
+        if (networkManager == null || playerPrefab == null) return;
+
+        networkManager.NetworkConfig.PlayerPrefab = playerPrefab;
+        networkManager.NetworkConfig.ConnectionApproval = true;
+        if (networkManager.GetComponent<MvpConnectionLimiter>() == null)
+            networkManager.gameObject.AddComponent<MvpConnectionLimiter>();
+        EditorUtility.SetDirty(networkManager);
+    }
+
+    static void UpdateBuildSettings()
+    {
+        var orderedPaths = new List<string> { HqScenePath, SchoolScenePath, "Assets/_Project/Scenes/Mall_B2.unity" };
+        var scenes = new List<EditorBuildSettingsScene>();
+
+        foreach (string path in orderedPaths)
+        {
+            if (!System.IO.File.Exists(path)) continue;
+            scenes.Add(new EditorBuildSettingsScene(path, true));
+        }
+
+        foreach (var existing in EditorBuildSettings.scenes)
+        {
+            if (existing == null || string.IsNullOrEmpty(existing.path)) continue;
+            if (orderedPaths.Contains(existing.path)) continue;
+            scenes.Add(existing);
+        }
+
+        EditorBuildSettings.scenes = scenes.ToArray();
+    }
+
+    static void EnsureFolder(string parent, string child)
+    {
+        string path = $"{parent}/{child}";
+        if (!AssetDatabase.IsValidFolder(path))
+            AssetDatabase.CreateFolder(parent, child);
+    }
+
+    static void ApplyMaterial(GameObject go, string materialKey, Color color)
+    {
+        if (!go.TryGetComponent<Renderer>(out var renderer)) return;
+        renderer.sharedMaterial = GetMaterial(materialKey, color);
+    }
+
+    static Material GetMaterial(string key, Color color)
+    {
+        if (MaterialCache.TryGetValue(key, out var cached) && cached != null)
+            return cached;
+
+        string safeKey = key.Replace(" ", "_").Replace("/", "_");
+        string path = $"{MaterialFolder}/MVP_{safeKey}.mat";
+        var material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+            material = new Material(shader);
+            AssetDatabase.CreateAsset(material, path);
+        }
+
+        if (material.HasProperty("_BaseColor"))
+            material.SetColor("_BaseColor", color);
+        else
+            material.color = color;
+
+        EditorUtility.SetDirty(material);
+        MaterialCache[key] = material;
+        return material;
+    }
+
+    static void SetObjectReference(Object target, string propertyName, Object value)
+    {
+        var so = new SerializedObject(target);
+        SerializedProperty prop = so.FindProperty(propertyName);
+        if (prop != null)
+        {
+            prop.objectReferenceValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
+    static void SetObjectArray(Object target, string propertyName, Object[] values)
+    {
+        var so = new SerializedObject(target);
+        SerializedProperty prop = so.FindProperty(propertyName);
+        if (prop != null && prop.isArray)
+        {
+            prop.arraySize = values.Length;
+            for (int i = 0; i < values.Length; i++)
+                prop.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
+    static void SetString(Object target, string propertyName, string value)
+    {
+        var so = new SerializedObject(target);
+        SerializedProperty prop = so.FindProperty(propertyName);
+        if (prop != null)
+        {
+            prop.stringValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
+    static void SetBool(Object target, string propertyName, bool value)
+    {
+        var so = new SerializedObject(target);
+        SerializedProperty prop = so.FindProperty(propertyName);
+        if (prop != null)
+        {
+            prop.boolValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+}

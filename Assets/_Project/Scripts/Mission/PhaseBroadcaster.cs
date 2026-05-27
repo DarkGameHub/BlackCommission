@@ -9,8 +9,8 @@ public class PhaseBroadcaster : NetworkBehaviour
     {
         "地下二层排水系统异常。",
         "水位持续上涨，请勿进入低洼区域。",
-        "停车场闸门将在3分钟后封闭。",
-        "警告！闸门即将关闭，所有人立即撤离！",
+        "撤离通道将在3分钟后封闭。",
+        "警告！撤离通道即将关闭，所有人立即撤离！",
     };
 
     string currentMessage = "";
