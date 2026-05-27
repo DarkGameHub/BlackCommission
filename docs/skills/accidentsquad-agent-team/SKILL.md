@@ -29,15 +29,15 @@ First playable loop:
 
 ```text
 Solo Host / Create Host / Join Host
--> Rundown Office
--> Office Computer
--> Accept "Missing Homework Notebook"
--> School Mission
--> Find Homework Notebook
--> Avoid Monster
--> Exit
--> Return to Office
--> Claim Pending Rewards From Office Computer
+-> Rundown Office (HQ scene)
+-> Office Computer [E]
+-> Accept "找回被遗忘的作业本"
+-> School Mission (School_LostItem_01 scene)
+-> Find Homework Notebook [E]
+-> Avoid Monster (HomeworkDebtCollector)
+-> Green Exit [E]  ← only notebook carrier can complete this
+-> Return to Office (HQ scene)
+-> Claim Pending Rewards from Office Computer [E]
 -> Buy Gear / Complete Tutorial Acquisition Hook
 ```
 
@@ -46,17 +46,114 @@ MVP job:
 | Field | Value |
 |---|---|
 | Category | Lost Item Recovery |
-| Job | Missing Homework Notebook |
-| Client | Worried Parent |
-| Location | School |
+| Job | 找回被遗忘的作业本 |
+| Client | 焦急的家长 |
+| Location | 废弃学校 |
 | Objective | Find the notebook and return to the exit |
-| Threat | One school anomaly that patrols and chases players within range |
-| Reward | Money, reputation, experience |
+| Threat | One school anomaly (HomeworkDebtCollector) that patrols and chases players within range |
+| Reward | +300G, +5 rep, +80 XP |
+| Failure | +20G consolation, -2 rep, +35 hostile pressure |
 | Player count | 1-4 |
 
-The office starts at `-300G` funds / `300G` debt. After two successful lost-item jobs, the office computer should offer a one-time tutorial acquisition of a level 0 office. In the MVP the target is valued at `100G`, costs `150G`, requires hostile takeover pressure below `70`, raises the office to level 2, and marks the second task category as unlocked future content.
+The office starts at `-300G` funds / `300G` debt. After two successful lost-item jobs, the office computer offers a one-time tutorial acquisition of a level 0 office (costs `150G`, requires hostile takeover pressure below `70`), raising the office to level 2.
 
-If all players are downed, the mission fails and the team returns to the office. Failed jobs add hostile takeover pressure. If pressure reaches `100/100` while funds and reputation are both negative, the first trigger issues a final warning; the next failed job under the same bad conditions lets a competitor forcibly restructure the office, increasing debt and rolling back progress without ending the save.
+If all players are downed, the mission fails. Failed jobs add hostile takeover pressure. At `100/100` pressure with funds and reputation both negative: first trigger issues a final warning; the next failed job under the same bad conditions forces a hostile restructure (debt +500G, office level drops, progress resets) without a hard game-over.
+
+## Implementation Status
+
+All MVP scripts are implemented and wired. Run `Tools > Accident Squad > Setup All` — it now automatically runs the school MVP setup as part of the same pass.
+
+### Scripts — all present
+
+| Script | Path | Status |
+|---|---|---|
+| `OfficeTaskDefinition` | `Scripts/Office/` | ✅ ScriptableObject, task reward fields |
+| `OfficeComputer` | `Scripts/Office/` | ✅ Pending reward, acquisition hook, NGO sync |
+| `MvpMissionRuntime` | `Scripts/Office/` | ✅ Static handoff for active task + return scene |
+| `MvpPendingReward` | `Scripts/Office/` | ✅ One-shot apply, idempotent claim |
+| `LostItemMissionManager` | `Scripts/MVP/` | ✅ Searching→ReturnToExit→Completed/Failed state machine |
+| `LostHomeworkItem` | `Scripts/MVP/` | ✅ IInteractable, server-validated pickup radius |
+| `SchoolExitPoint` | `Scripts/MVP/` | ✅ IInteractable, carrier-only exit enforcement |
+| `SchoolMonsterAI` | `Scripts/MVP/` | ✅ Patrol / Chase / Stunned / Distracted states |
+| `PlayerHotbar` | `Scripts/MVP/` | ✅ 5 slots, medkit/stun spray/decoy/flashlight |
+| `MvpHud` | `Scripts/MVP/` | ✅ Office panel + mission panel + bottom hotbar |
+| `MvpConnectionLimiter` | `Scripts/Network/` | ✅ Caps at 4 players via connection approval |
+| `CompanyData` / `CompanyState` | `Scripts/Settlement/SettlementManager.cs` | ✅ Full economy: funds, debt, rep, XP, pressure |
+| `MvpProjectSetup` | `Editor/` | ✅ Generates School_LostItem_01 scene, patches player prefab |
+| `MvpProjectValidator` | `Editor/` | ✅ Validates scene assets and network hookups |
+
+### Economy rules (implemented)
+
+| Rule | Value |
+|---|---|
+| Starting funds | -300G |
+| Starting debt | 300G |
+| Starting reputation | 0 |
+| Office level | 1 |
+| Homework job reward | +300G, +5 rep, +80 XP |
+| Failure consolation | +20G, -2 rep |
+| Hostile pressure per failure | +35 (more if funds/rep negative) |
+| Tutorial acquisition cost | 150G (100G valuation × 1.5) |
+| Tutorial acquisition requirement | pressure < 70, completed ≥ 2 lost-item jobs |
+| Forced restructure trigger | pressure = 100 AND funds < 0 AND rep < 0, after ultimatum |
+
+### Player hotbar (5 slots, starter loadout)
+
+| Slot | Item | Key | Effect |
+|---|---|---|---|
+| 1 | 回血药 (Medkit) | 1 + LMB | Heal 30 HP, consumed |
+| 2 | 定身喷雾 (Stun Spray) | 2 + LMB | Stun nearest monster 2.5s within 6m, consumed |
+| 3 | 诱饵 (Decoy) | 3 + LMB | Distract nearest monster 4s within 12m, consumed |
+| 4 | 手电 (Flashlight) | 4 + LMB | Toggle — not consumed |
+| 5 | (empty) | 5 | — |
+
+## One-Click Setup
+
+```
+Tools > Accident Squad > Setup All
+```
+
+This creates all prefabs, HQ scene, Mall_B2 prototype, AND School_LostItem_01 MVP scene in a single pass. No separate MVP setup step needed.
+
+After running: open **HQ.unity** → Play → Start Host → approach the office computer → press E.
+
+To validate before Play: `Tools > Accident Squad > MVP > Validate School MVP`
+
+## Test Procedure
+
+### Solo happy path
+`HQ` → Start Host → Office Computer [E] → School → Notebook [E] → Avoid monster → Green exit [E] → HQ → Computer [E] → Reward claimed.
+
+### Solo failure path
+Enter school, let the monster kill you, confirm all-downed triggers failure, confirm return to HQ with failure penalty and pressure increase.
+
+### Hotbar path
+- Slot 1 (Medkit): take damage, use → HP recovers, slot empties
+- Slot 2 (Stun Spray): use near monster → monster enters Stunned state for ~2.5s
+- Slot 3 (Decoy): use near monster → monster moves toward decoy position for ~4s
+- Slot 4 (Flashlight): use → toggles light, slot NOT consumed
+
+### Two-client smoke
+Host starts mission, second player joins before launch, both load school, one collects notebook, only notebook carrier can complete exit.
+
+### Reward idempotency
+Return to HQ, press E on computer repeatedly → reward applies exactly once.
+
+### Progression hook
+Complete 2 successful lost-item jobs, open computer → acquisition offer appears at 150G. Accept → office level becomes 2, second job category marked as future content.
+
+## QA Go/No-Go Criteria
+
+1. Solo host can complete the full loop: office → school → notebook → exit → claim reward.
+2. Four players can join one host and load into school together.
+3. All players see the same notebook pickup state (it disappears for everyone when collected).
+4. Monster chases host and clients consistently (server-authoritative NavMesh AI).
+5. Only the notebook carrier can complete the exit interaction.
+6. Returning to the office applies rewards exactly once.
+7. Each player has five hotbar slots; consumable use does not affect other players.
+8. All-downed triggers mission failure and returns to HQ.
+9. Hostile takeover pressure increases after failures; ultimatum and restructure fire at the right thresholds.
+10. Tutorial acquisition correctly costs 150G and raises office to level 2.
 
 ## Coordination Workflow
 
@@ -68,34 +165,22 @@ If all players are downed, the mission fails and the team returns to the office.
 
 ## Role Prompts
 
-Use these prompts as templates when spawning or briefing specialist agents.
-
 ### Zeno: Creative / Game Design Director
 
 ```text
 You are Zeno, the Creative / Game Design Director for AccidentSquad.
-The PM is Yan Dai, and the main coordinator will consolidate your output with other agents.
+PM: Yan Dai. Coordinator will consolidate your output.
 
 Current MVP:
-- 1-4 players start as a nearly bankrupt commission office.
-- Players use the office computer to accept jobs.
-- Demo job: Lost Item Recovery, school scene, worried parent asks the team to recover a homework notebook.
-- One school anomaly patrols and chases players within range.
-- Players return to the office and claim money, reputation, and experience.
-- Money buys equipment, recovery items, office decoration, and future office acquisitions.
-- After two successful lost-item jobs, a tutorial level 0 office acquisition becomes available.
-- Reputation affects which clients and job categories appear.
-- Office level ranges from 1 to 8.
+- 1-4 players run a nearly bankrupt commission office.
+- Office computer accepts jobs; demo job: Lost Item Recovery, school scene, worried parent asks for homework notebook.
+- One school anomaly (HomeworkDebtCollector) patrols and chases players.
+- Players return to office and claim money, reputation, and experience.
+- After two successful lost-item jobs, a tutorial level 0 office acquisition becomes available (150G, pressure < 70).
+- Reputation affects which clients and job categories appear; office level ranges from 1 to 8.
+- Hostile takeover pressure rises with failures; at 100 with funds/rep negative, forced restructure.
 
-Output:
-1. Story and tone recommendation.
-2. Mechanic strengths.
-3. Mechanic risks or contradictions.
-4. MVP scope cuts.
-5. Task category ideas.
-6. Money/reputation/level/acquisition rule suggestions.
-7. Interfaces needed from multiplayer, UI, art, and QA.
-
+Output: story/tone, mechanic strengths, risks, scope cuts, task category ideas, economy rule suggestions.
 Do not edit files unless explicitly asked.
 ```
 
@@ -103,26 +188,15 @@ Do not edit files unless explicitly asked.
 
 ```text
 You are Laplace, the Steam / Multiplayer Technical Agent for AccidentSquad.
-The PM is Yan Dai, and the main coordinator will consolidate your output with other agents.
+PM: Yan Dai. Coordinator will consolidate your output.
 
-Focus on:
-- Solo host, create host, join host.
-- Maximum 4 players.
-- Office scene as lobby.
-- Host starts mission from the office computer.
-- All players load into the school mission.
-- Server-authoritative notebook state, monster state, exit state, and reward state.
-- Returning to office and claiming pending rewards.
-- Future Steam Lobby + current Unity Relay path.
+Stack: Unity 6000.4.7f1, NGO 2.11.2, Unity Relay, CharacterController first-person.
+Key pattern: NetworkManager.Singleton.IsServer for non-NetworkBehaviour scripts.
+Scenes: HQ (lobby) -> School_LostItem_01 (mission) -> HQ (return), loaded via NGO SceneManager.
 
-Output:
-1. Reusable technical architecture.
-2. Existing systems that can be reused.
-3. Systems that must be replaced or frozen.
-4. P0 networking risks.
-5. Two-week implementation tasks.
-6. Required UI and QA interfaces.
+Focus: host/join flow, server-authoritative mission state, notebook/exit/reward sync, 4-player cap (MvpConnectionLimiter).
 
+Output: architecture notes, reuse opportunities, P0 risks, two-week tasks, UI/QA interfaces.
 Do not edit files unless explicitly asked.
 ```
 
@@ -130,27 +204,13 @@ Do not edit files unless explicitly asked.
 
 ```text
 You are Hilbert, the UI/UX Agent for AccidentSquad.
-The PM is Yan Dai, and the main coordinator will consolidate your output with other agents.
+PM: Yan Dai. Coordinator will consolidate your output.
 
-Focus on:
-- Main menu: solo host, create host, join host, settings, quit.
-- Rundown office computer as the central UI.
-- Computer tabs: Tasks, Pending Rewards, Shop, Equipment, Office, Acquisition.
-- Task selection for "Missing Homework Notebook".
-- Four-player ready/status display.
-- Five-slot hotbar.
-- School mission HUD.
-- Return-to-office reward claiming.
-- Simplified acquisition hook.
+All UI is OnGUI (no Canvas/TMPro). MvpHud shows: office panel (company state) or mission panel (objective, carrier, monster status) + bottom hotbar. OfficeComputer is IInteractable with E.
 
-Output:
-1. MVP UI flow.
-2. Office computer information architecture.
-3. Mission HUD layout.
-4. Hotbar rules.
-5. Settlement/reward flow.
-6. UI acceptance criteria and edge cases.
+Focus: office computer IA (Tasks/Pending Rewards/Shop/Equipment/Office/Acquisition tabs future), hotbar rules (5 slots, flashlight non-consumable), settlement flow, acquisition hook UX.
 
+Output: MVP UI flow, information architecture, mission HUD layout, hotbar rules, settlement flow, acceptance criteria.
 Do not edit files unless explicitly asked.
 ```
 
@@ -158,24 +218,14 @@ Do not edit files unless explicitly asked.
 
 ```text
 You are Banach, the Art Direction Agent for AccidentSquad.
-The PM is Yan Dai, and the main coordinator will consolidate your output with other agents.
+PM: Yan Dai. Coordinator will consolidate your output.
 
-Focus on:
-- Rundown commission office: broken furniture, debt notices, old computer, equipment shelf.
-- Night school mission: hallway, classrooms, office, storage room, exit.
-- Homework notebook objective: readable and memorable.
-- School anomaly monster: clear silhouette, chase state, danger readability.
-- Visual style: cheap-office comedy plus light school horror, not pure horror and not too cartoonish.
+Current visuals: primitive geometry with URP Lit materials. School scene has hallway, classrooms, desks, lockers, flickering lamps. Monster (HomeworkDebtCollector) is a red capsule. Notebook is a yellow flat box with glow light.
 
-Output:
-1. Visual direction.
-2. Minimal art asset list for MVP.
-3. Office asset list.
-4. School asset list.
-5. Monster and notebook direction.
-6. Two-week asset priorities.
-7. UI and QA visual-readability requirements.
+Focus: rundown commission office aesthetic, school horror atmosphere, monster silhouette readability, notebook visibility.
+Style: cheap-office comedy plus light school horror — not pure horror, not cartoonish.
 
+Output: visual direction, minimal asset list, office asset list, school asset list, monster/notebook direction, two-week priorities.
 Do not edit files unless explicitly asked.
 ```
 
@@ -183,26 +233,18 @@ Do not edit files unless explicitly asked.
 
 ```text
 You are Sagan, the QA Agent for AccidentSquad.
-The PM is Yan Dai, and the main coordinator will consolidate your output with other agents.
+PM: Yan Dai. Coordinator will consolidate your output.
 
-Focus on proving this loop:
-Create/join room -> office -> accept school task -> school -> find notebook -> monster chase -> exit -> return office -> claim rewards -> money/reputation/experience update -> after two successful jobs, tutorial acquisition unlocks office level 2.
+Core loop to prove:
+Create/join room → office → computer [E] → school → find notebook [E] → monster chase → exit [E] → return office → claim reward [E] → money/rep/XP update → after two jobs, tutorial acquisition available.
 
-Output:
-1. P0 smoke test checklist.
-2. Multiplayer test matrix for 1/2/4 players.
-3. Task success and failure cases.
-4. Reward anti-duplication tests.
-5. Hotbar and item-use tests.
-6. Office computer and acquisition-hook tests.
-7. Go/no-go criteria.
+Key server invariants: only notebook carrier completes exit; rewards apply once; all-downed = failure; 4-player cap enforced.
 
+Output: P0 smoke checklist, 1/2/4 player matrix, success/failure cases, reward anti-duplication, hotbar tests, acquisition hook tests, go/no-go criteria.
 Do not edit files unless explicitly asked.
 ```
 
 ## Default Backlog Shape
-
-When consolidating agent output, produce backlog items in this shape:
 
 ```text
 Title:
@@ -217,14 +259,26 @@ Risks:
 
 ## MVP Guardrails
 
-- Single-player should still use host mode for the first playable build.
-- The homework notebook is a mission objective and does not occupy a hotbar slot.
-- Notebook pickup and mission exit must be validated on the server by player identity, distance, and alive/downed state.
+- Single-player uses host mode. No offline non-network mode.
+- Homework notebook is a mission objective; it does NOT occupy a hotbar slot.
+- Notebook pickup and mission exit validated on server: player identity, distance, alive/downed state.
 - Only the notebook carrier can complete the mission exit.
 - Hotbar has exactly five slots for equipment/consumables.
-- Every visible hotbar item must have a real gameplay effect.
+- Flashlight slot is never consumed on use.
+- Every visible hotbar item has a real gameplay effect.
 - Only the host starts missions and performs office acquisition decisions.
-- Rewards are pending after mission return and are claimed from the office computer.
-- Do not expand all eight job categories before the first school mission is playable.
-- Do not build a full vehicle system for MVP; the mission exit is a simple return-to-office trigger.
-- Do not build full Steam achievements, Steam Cloud, or public matchmaking in MVP.
+- Rewards are pending after mission return; claimed from the office computer (idempotent).
+- Do not expand all eight job categories before the first school mission is stable.
+- No vehicle system for MVP; mission exit is a simple return-to-office trigger.
+- No Steam achievements, Steam Cloud, or public matchmaking in MVP.
+
+## Scope Cuts For MVP
+
+Not built in the first slice:
+- Full vehicle system
+- Full eight-category content
+- Full acquisition strategy layer
+- Full decoration catalog
+- Steam achievements / Cloud / public matchmaking
+- Complex backpack inventory
+- Multiple monster types

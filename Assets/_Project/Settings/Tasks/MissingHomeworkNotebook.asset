@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d1a7e60ef846d785533fd019ae4600, type: 3}
+  m_Name: MissingHomeworkNotebook
+  m_EditorClassIdentifier: Assembly-CSharp::OfficeTaskDefinition
+  taskId: lost_homework_01
+  title: "\u627E\u56DE\u88AB\u9057\u5FD8\u7684\u4F5C\u4E1A\u672C"
+  category: 0
+  client: "\u7126\u6025\u7684\u5BB6\u957F"
+  description: "\u5B69\u5B50\u8BF4\u4F5C\u4E1A\u672C\u843D\u5728\u5B66\u6821\u4E86\uFF0C\u4F46\u665A\u4E0A\u6821\u56ED\u91CC\u597D\u50CF\u8FD8\u6709\u4E1C\u897F\u5728\u5DE1\u903B\u3002\u627E\u56DE\u4F5C\u4E1A\u672C\u5E76\u5B89\u5168\u64A4\u79BB\u3002"
+  locationName: "\u5E9F\u5F03\u5B66\u6821"
+  sceneName: School_LostItem_01
+  recommendedPlayersMin: 1
+  recommendedPlayersMax: 4
+  requiredOfficeLevel: 1
+  minimumReputation: -100
+  moneyReward: 300
+  reputationReward: 5
+  experienceReward: 80
+  failureConsolationMoney: 20
+  failureReputationPenalty: -2
+  failureExperience: 0
