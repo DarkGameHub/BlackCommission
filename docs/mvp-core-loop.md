@@ -12,6 +12,18 @@ The office starts at level 1: broken furniture, debt notices, a second-hand comp
 
 The joke is that even a tiny job can become absurdly dangerous. The long-term satire is that the company can grow by staying reputable and taking slower, cleaner work, or by chasing money and reputation collapse until only darker clients remain.
 
+## Visual Direction
+
+The MVP style is "outsourced civic horror": a cheap debt-soaked office connected to cold public-service spaces. Both the office and school should use the same language:
+
+- Green terminal glow for anything controlled by the company computer.
+- Red takeover / overdue-warning signage for pressure, danger, and hostile acquisition.
+- Cheap gray-green institutional surfaces, second-hand furniture, paper notices, exposed utility lighting, and cluttered shelves.
+- Equipment should look like improvised office purchases, not fantasy loot: pharmacy box, cheap flashlight, aerosol spray, noisy decoy.
+- Monsters read as bureaucratic threats made physical. The first school monster is a homework debt collector: red coat, ledger, long arms, glowing warning eyes.
+
+Avoid clean sci-fi, cozy office decor, or generic school grayboxes. The world should feel like a city has outsourced responsibility until the paperwork started hunting people.
+
 ## MVP Player Flow
 
 ```mermaid
@@ -23,7 +35,8 @@ flowchart TD
     B2 --> C
 
     C --> D["办公室电脑"]
-    D --> E["接取任务: 找回作业本"]
+    D --> D1["电脑商店采购道具\nF1 回血药 / F2 诱饵 / F3 喷雾 / F4 手电"]
+    D1 --> E["接取任务: 找回作业本"]
     E --> F["直接进入学校任务场景"]
 
     F --> G["寻找作业本"]
@@ -62,6 +75,7 @@ Main Menu
   -> Solo Host / Create Host / Join Host
   -> Rundown Office
   -> Office Computer
+  -> Buy Gear From Computer
   -> Accept "Missing Homework Notebook"
   -> School Mission
   -> Find Homework Notebook
@@ -71,6 +85,43 @@ Main Menu
   -> Claim Pending Rewards From Office Computer
   -> Buy Gear / Handle Acquisition Hooks
 ```
+
+## Office Computer UX
+
+The office computer is the MVP hub. It should behave like a compact diegetic terminal rather than a full management screen: one interaction point, clear keyboard commands, no nested economy menus, and no mouse-only flow. In the office, pressing `E` on the computer performs the highest-priority action in this order: claim pending reward, accept the available lost-item job, or accept the tutorial acquisition when it is unlocked and affordable. Gear purchasing is available only while near the computer and only when no pending reward is waiting: `F1` medkit, `F2` decoy, `F3` stun spray, `F4` flashlight.
+
+The computer panel must always show funds/debt, reputation, office level/XP, hostile takeover pressure, current lost-item progress, the next available computer action, and shop commands. Purchased gear must immediately appear in the five-slot hotbar with an icon and quantity; unpurchased gear must not appear. The mission item never occupies a hotbar slot.
+
+Acceptance criteria: after returning from a mission, the computer clearly blocks shopping until the pending settlement is claimed; pressing `E` applies reward or failure results exactly once; insufficient funds produces readable feedback and does not change the hotbar; after two successful lost-item jobs the acquisition prompt appears only when pressure is below `70`, costs `150G`, and raises the office to level 2.
+
+## HQ And Map Design Framework
+
+HQ is a dense physical menu, not an exploration map. It should stay small and immediately readable.
+
+| HQ Zone | Purpose |
+|---|---|
+| Entry / rally area | Player spawn, join flow, team gathering, "broke company clocking in" tone |
+| Office computer | Task start, reward claim, gear shop, acquisition prompt, company state |
+| Equipment shelf | Physical reminder that gear is bought before jobs and appears in the hotbar |
+| Company status wall | Debt, reputation, hostile takeover pressure, locked categories, acquisition hints |
+| Upgrade display area | Small visible progression hooks: repaired furniture, new shelf space, better lighting |
+
+School and future maps should use three reusable spatial rules:
+
+1. Main spine plus side loops: players understand the route quickly, but have chase choices.
+2. Risk gradient rooms: low-risk rooms teach layout, medium-risk rooms hold clues/consumables, high-risk rooms hold the real objective.
+3. Objective and exit separation: finding the item starts the second pressure phase rather than ending the job.
+
+Future map archetypes should be defined by one spatial gimmick before content production:
+
+| Map | Spatial Gimmick |
+|---|---|
+| Abandoned school | Corridor loops, classrooms, lockers, objective-to-exit retreat |
+| Underground mall | Shutters and flooded service routes change paths |
+| Old apartment block | Vertical stairs/elevator risk and floor-by-floor searching |
+| Night office floor | Cubicle maze, access cards, temporary power cuts |
+| Hospital back-of-house | Curtains, carts, beds, light/noise management |
+| Logistics warehouse | Long shelf aisles, roll-up doors, large carried objectives |
 
 ## First Mission
 
@@ -158,6 +209,8 @@ Current script slice:
 | `Assets/_Project/Scripts/MVP/SchoolExitPoint.cs` | Mission exit / return-to-office point |
 | `Assets/_Project/Scripts/MVP/SchoolMonsterAI.cs` | Server-authoritative school monster chase behavior |
 | `Assets/_Project/Scripts/MVP/PlayerHotbar.cs` | Five-slot player equipment/consumable hotbar |
+| `Assets/_Project/Scripts/MVP/PlayerFirstPersonRig.cs` | Local first-person hands and held-item models |
+| `Assets/_Project/Scripts/MVP/MvpSceneStyleDirector.cs` | Runtime office/school style pass for MVP visual cohesion |
 | `Assets/_Project/Scripts/MVP/MvpHud.cs` | Temporary MVP HUD for office state, mission objective, monster status, and hotbar |
 | `Assets/_Project/Scripts/Network/MvpConnectionLimiter.cs` | Connection approval guard that caps MVP sessions at 4 players |
 | `Assets/_Project/Editor/MvpProjectSetup.cs` | One-click Unity editor setup for the school MVP scene and office hookup |
@@ -170,7 +223,7 @@ Run `Tools > Accident Squad > MVP > Setup School MVP` after the base project set
 1. Creates `Assets/_Project/Settings/Tasks/MissingHomeworkNotebook.asset`.
 2. Adds a new `MVP_OfficeComputer` to `HQ.unity` and assigns the task asset.
 3. Adds `MvpHud` to HQ and the school scene.
-4. Adds `PlayerHotbar` and `ClientNetworkTransform` to the player prefab if missing.
+4. Adds `PlayerHotbar`, `PlayerFirstPersonRig`, and `ClientNetworkTransform` to the player prefab if missing.
 5. Enables Netcode connection approval and adds `MvpConnectionLimiter` to cap sessions at 4 players.
 6. Generates `Assets/_Project/Scenes/School_LostItem_01.unity`.
 7. Builds a simple school graybox with classroom, desks, lockers, lighting, notebook, exit marker, and monster.
@@ -192,7 +245,8 @@ The first playable MVP is not accepted until these pass:
 4. The monster chases host and clients consistently.
 5. Returning to the office applies rewards once, not repeatedly.
 6. Each player has five hotbar slots and item use does not affect other players incorrectly.
-7. Host-only actions are enforced for starting missions and acquisition decisions.
+7. Purchased gear appears as hotbar icons and as first-person held-item models; unpurchased gear stays absent.
+8. Host-only actions are enforced for starting missions and acquisition decisions.
 
 ## MVP Test Procedure
 
@@ -200,7 +254,7 @@ Run these after `Setup School MVP` and `Validate School MVP`:
 
 1. Solo host happy path: `HQ -> Start Host -> Office Computer -> School -> Notebook -> Exit -> HQ -> Claim Reward`.
 2. Solo host failure path: enter school, let the monster down the player, confirm return to HQ with failure reward/penalty and hostile takeover pressure.
-3. Hotbar path: use `1-5` to select slots, use a medkit after taking damage, use stun spray near the monster and confirm chase pauses, use a decoy and confirm the monster is distracted, then select the flashlight slot and confirm it toggles without being consumed.
+3. Shop and hotbar path: in HQ, stand near the computer and buy gear with `F1-F4`; confirm only purchased gear appears in the icon hotbar and first-person hand model, then use `1-5` to select slots. Use a medkit after taking damage, use stun spray near the monster and confirm chase pauses, use a decoy and confirm the monster is distracted, then select the flashlight slot and confirm it toggles without being consumed.
 4. Two-client smoke: host starts mission, second player joins before mission start, both load into school, one collects notebook, and only the notebook carrier can complete the exit interaction.
 5. Reward idempotency: after returning to HQ, press `E` on the computer repeatedly and confirm the pending reward is applied only once.
 6. Progression hook: complete two successful lost-item jobs, press `E` on the office computer, and confirm the level 0 acquisition costs `150G` and raises the office to level 2.

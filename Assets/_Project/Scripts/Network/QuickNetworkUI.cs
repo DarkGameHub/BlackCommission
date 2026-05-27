@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 
 public class QuickNetworkUI : MonoBehaviour
@@ -12,6 +13,10 @@ public class QuickNetworkUI : MonoBehaviour
     Texture2D btnHover;
     Texture2D btnActive;
     bool stylesReady;
+    string connectAddress = "127.0.0.1";
+    string connectPort = "7778";
+    string networkMessage = "";
+    ushort lastHostPort = 7778;
 
     void InitStyles()
     {
@@ -80,12 +85,13 @@ public class QuickNetworkUI : MonoBehaviour
         {
             int clients = NetworkManager.Singleton.ConnectedClientsIds.Count;
             string role = NetworkManager.Singleton.IsHost ? "房主" : "客户端";
+            string portText = NetworkManager.Singleton.IsHost ? $"  |  端口: {lastHostPort}" : "";
             GUI.Label(new Rect(8, 8, 320, 28),
-                $"[已联机]  {role}  |  玩家: {clients}", statusStyle);
+                $"[已联机]  {role}  |  玩家: {clients}{portText}", statusStyle);
             return;
         }
 
-        float pw = 280, ph = 200;
+        float pw = 320, ph = 276;
         float px = (Screen.width - pw) / 2f;
         float py = (Screen.height - ph) / 2f;
 
@@ -98,14 +104,68 @@ public class QuickNetworkUI : MonoBehaviour
         GUI.Label(new Rect(cx, cy, bw, 36), "外包事故组", titleStyle);
         cy += 42;
 
+        GUI.Label(new Rect(cx, cy, bw, 20), "直连地址 / 端口", hintStyle);
+        cy += 24;
+        connectAddress = GUI.TextField(new Rect(cx, cy, bw - 78, 30), connectAddress);
+        connectPort = GUI.TextField(new Rect(cx + bw - 70, cy, 70, 30), connectPort);
+        cy += 40;
+
         if (GUI.Button(new Rect(cx, cy, bw, 42), "单人游玩 / 创建主机", buttonStyle))
-            NetworkManager.Singleton.StartHost();
+            StartHostWithFreshPort();
         cy += 52;
 
         if (GUI.Button(new Rect(cx, cy, bw, 42), "加入房间", buttonStyle))
-            NetworkManager.Singleton.StartClient();
+            StartClientWithEndpoint();
         cy += 52;
 
-        GUI.Label(new Rect(cx, cy, bw, 36), "主机最多 4 人。进入事务所后走到电脑前按 E 接单。", hintStyle);
+        string hint = string.IsNullOrEmpty(networkMessage)
+            ? "主机最多 4 人。进入事务所后走到电脑前按 E 接单。"
+            : networkMessage;
+        GUI.Label(new Rect(cx, cy, bw, 42), hint, hintStyle);
+    }
+
+    void StartHostWithFreshPort()
+    {
+        if (!NetworkManager.Singleton.TryGetComponent<UnityTransport>(out var transport))
+        {
+            bool startedWithoutTransport = NetworkManager.Singleton.StartHost();
+            networkMessage = startedWithoutTransport ? "主机已启动。" : "创建主机失败: 缺少 UnityTransport。";
+            return;
+        }
+
+        ushort nextBasePort = 7778;
+        for (int attempt = 0; attempt < 4; attempt++)
+        {
+            ushort port = AutoPort.AssignFreePort(transport, nextBasePort);
+            lastHostPort = port;
+            connectPort = port.ToString();
+
+            if (NetworkManager.Singleton.StartHost())
+            {
+                connectAddress = "127.0.0.1";
+                networkMessage = $"主机已启动: {connectAddress}:{port}";
+                return;
+            }
+
+            NetworkManager.Singleton.Shutdown();
+            nextBasePort = (ushort)Mathf.Min(ushort.MaxValue - 1, port + 1);
+        }
+
+        networkMessage = "创建主机失败: 端口仍被占用，请关闭旧 Play/Build 后重试。";
+    }
+
+    void StartClientWithEndpoint()
+    {
+        if (!ushort.TryParse(connectPort, out ushort port))
+        {
+            networkMessage = "加入失败: 端口必须是 0-65535 的数字。";
+            return;
+        }
+
+        if (NetworkManager.Singleton.TryGetComponent<UnityTransport>(out var transport))
+            transport.SetConnectionData(connectAddress, port);
+
+        bool started = NetworkManager.Singleton.StartClient();
+        networkMessage = started ? $"正在加入 {connectAddress}:{port}..." : "加入失败: NetworkManager 未能启动客户端。";
     }
 }

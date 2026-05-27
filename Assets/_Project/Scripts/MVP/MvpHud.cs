@@ -1,8 +1,11 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class MvpHud : MonoBehaviour
 {
+    const float OfficeComputerShopDistance = 3.4f;
+
     [SerializeField] int panelWidth = 390;
     [SerializeField] bool showNetworkHint = true;
 
@@ -17,6 +20,49 @@ public class MvpHud : MonoBehaviour
     Texture2D panelTexture;
     Texture2D slotTexture;
     Texture2D selectedSlotTexture;
+    Texture2D emptyIcon;
+    Texture2D medkitIcon;
+    Texture2D sprayIcon;
+    Texture2D decoyIcon;
+    Texture2D flashlightIcon;
+    string shopMessage;
+    float shopMessageUntil;
+
+    void Update()
+    {
+        if (LostItemMissionManager.Instance != null) return;
+        if (MvpPendingReward.HasPending) return;
+
+        var keyboard = Keyboard.current;
+        if (keyboard == null) return;
+
+        PlayerHotbar hotbar = FindLocalHotbar();
+        if (hotbar == null || !IsNearOfficeComputer(hotbar.transform.position)) return;
+
+        if (keyboard.f1Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.Medkit);
+        if (keyboard.f2Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.Decoy);
+        if (keyboard.f3Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.StunSpray);
+        if (keyboard.f4Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.Flashlight);
+    }
+
+    void TryBuy(PlayerHotbar hotbar, MvpHotbarItemId itemId)
+    {
+        int cost = PlayerHotbar.GetItemCost(itemId);
+        if (CompanyData.Current.Funds < cost)
+        {
+            SetShopMessage($"资金不足: {GetShopItemLabel(itemId)} 需要 {cost}G。");
+            return;
+        }
+
+        hotbar.TryPurchaseItem(itemId);
+        SetShopMessage($"购买请求: {GetShopItemLabel(itemId)} -{cost}G。");
+    }
+
+    void SetShopMessage(string message)
+    {
+        shopMessage = message;
+        shopMessageUntil = Time.time + 2.5f;
+    }
 
     void OnGUI()
     {
@@ -39,7 +85,10 @@ public class MvpHud : MonoBehaviour
     void DrawOfficePanel()
     {
         CompanyState company = CompanyData.Current;
-        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 330), GUIContent.none, panelStyle);
+        PlayerHotbar localHotbar = FindLocalHotbar();
+        bool nearShop = localHotbar != null && IsNearOfficeComputer(localHotbar.transform.position);
+
+        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 430), GUIContent.none, panelStyle);
         GUILayout.Label("Accident Squad 破产事务所", titleStyle);
         GUILayout.Space(8);
         GUILayout.Label($"资金: {company.Funds} G    债务: {company.Debt} G", company.Funds < 0 ? warningStyle : labelStyle);
@@ -90,8 +139,34 @@ public class MvpHud : MonoBehaviour
         }
 
         GUILayout.Space(8);
+        DrawOfficeShop(nearShop);
+        GUILayout.Space(8);
         GUILayout.Label("当前 MVP 目标: 接任务 -> 到学校 -> 拾取作业本 -> 躲开追击 -> 撤离回事务所 -> 领取奖励。", mutedStyle);
         GUILayout.EndArea();
+    }
+
+    void DrawOfficeShop(bool nearShop)
+    {
+        GUILayout.Label("电脑商店", accentStyle);
+        if (MvpPendingReward.HasPending)
+        {
+            GUILayout.Label("先在电脑上领取本次委托结算，之后才能采购下一单道具。", mutedStyle);
+            return;
+        }
+
+        GUILayout.Label(nearShop
+            ? "按 F1-F4 购买，买到的道具才会进入快捷栏。"
+            : "靠近办公室电脑后可以采购任务道具。", mutedStyle);
+        GUILayout.Label(
+            $"F1 回血药 {PlayerHotbar.GetItemCost(MvpHotbarItemId.Medkit)}G    " +
+            $"F2 诱饵 {PlayerHotbar.GetItemCost(MvpHotbarItemId.Decoy)}G",
+            nearShop ? labelStyle : mutedStyle);
+        GUILayout.Label(
+            $"F3 定身喷雾 {PlayerHotbar.GetItemCost(MvpHotbarItemId.StunSpray)}G    " +
+            $"F4 手电 {PlayerHotbar.GetItemCost(MvpHotbarItemId.Flashlight)}G",
+            nearShop ? labelStyle : mutedStyle);
+        if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
+            GUILayout.Label(shopMessage, shopMessage.Contains("不足") ? warningStyle : accentStyle);
     }
 
     void DrawMissionPanel()
@@ -129,11 +204,12 @@ public class MvpHud : MonoBehaviour
             Rect rect = new Rect(startX + i * (slotSize + gap), y, slotSize, 70);
             GUI.Label(rect, GUIContent.none, selected ? selectedSlotStyle : slotStyle);
 
-            string itemName = slot == null || slot.IsEmpty ? "空" : GetItemName(slot.itemId);
             string qty = slot == null || slot.IsEmpty ? "" : $" x{slot.quantity}";
             GUI.Label(new Rect(rect.x + 8, rect.y + 8, rect.width - 16, 18), $"{i + 1}", mutedStyle);
-            GUI.Label(new Rect(rect.x + 8, rect.y + 30, rect.width - 16, 22), itemName, selected ? accentStyle : labelStyle);
-            GUI.Label(new Rect(rect.x + 8, rect.y + 50, rect.width - 16, 16), qty, mutedStyle);
+            GUI.DrawTexture(new Rect(rect.x + 24, rect.y + 14, 44, 40),
+                GetItemIcon(slot == null || slot.IsEmpty ? MvpHotbarItemId.None : slot.itemId),
+                ScaleMode.ScaleToFit, true);
+            GUI.Label(new Rect(rect.x + 58, rect.y + 48, rect.width - 66, 16), qty, mutedStyle);
         }
     }
 
@@ -196,20 +272,50 @@ public class MvpHud : MonoBehaviour
         return hotbars.Length > 0 ? hotbars[0] : null;
     }
 
-    static string GetItemName(MvpHotbarItemId itemId)
+    static bool IsNearOfficeComputer(Vector3 position)
+    {
+        OfficeComputer[] computers = FindObjectsByType<OfficeComputer>(FindObjectsSortMode.None);
+        foreach (var computer in computers)
+        {
+            if (computer == null) continue;
+            if (Vector3.Distance(position, computer.transform.position) <= OfficeComputerShopDistance)
+                return true;
+        }
+
+        return false;
+    }
+
+    Texture2D GetItemIcon(MvpHotbarItemId itemId)
+    {
+        switch (itemId)
+        {
+            case MvpHotbarItemId.Medkit:
+                return medkitIcon;
+            case MvpHotbarItemId.StunSpray:
+                return sprayIcon;
+            case MvpHotbarItemId.Decoy:
+                return decoyIcon;
+            case MvpHotbarItemId.Flashlight:
+                return flashlightIcon;
+            default:
+                return emptyIcon;
+        }
+    }
+
+    static string GetShopItemLabel(MvpHotbarItemId itemId)
     {
         switch (itemId)
         {
             case MvpHotbarItemId.Medkit:
                 return "回血药";
-            case MvpHotbarItemId.StunSpray:
-                return "定身喷雾";
             case MvpHotbarItemId.Decoy:
                 return "诱饵";
+            case MvpHotbarItemId.StunSpray:
+                return "定身喷雾";
             case MvpHotbarItemId.Flashlight:
                 return "手电";
             default:
-                return "空";
+                return "道具";
         }
     }
 
@@ -226,6 +332,7 @@ public class MvpHud : MonoBehaviour
         panelTexture = MakeTexture(new Color(0.03f, 0.035f, 0.04f, 0.82f));
         slotTexture = MakeTexture(new Color(0.05f, 0.06f, 0.07f, 0.78f));
         selectedSlotTexture = MakeTexture(new Color(0.16f, 0.22f, 0.20f, 0.9f));
+        EnsureIcons();
 
         panelStyle = new GUIStyle(GUI.skin.box)
         {
@@ -269,6 +376,84 @@ public class MvpHud : MonoBehaviour
             fontStyle = FontStyle.Bold,
             normal = { textColor = new Color(1f, 0.5f, 0.42f) }
         };
+    }
+
+    void EnsureIcons()
+    {
+        emptyIcon = MakeIcon(new Color(0.07f, 0.08f, 0.08f, 0.9f), new Color(0.24f, 0.28f, 0.26f), Color.clear, 0);
+        medkitIcon = MakeIcon(new Color(0.88f, 0.87f, 0.78f), new Color(0.78f, 0.06f, 0.04f), Color.white, 1);
+        decoyIcon = MakeIcon(new Color(0.95f, 0.63f, 0.16f), new Color(0.38f, 0.18f, 0.04f), new Color(0.9f, 0.08f, 0.05f), 2);
+        sprayIcon = MakeIcon(new Color(0.13f, 0.62f, 0.72f), new Color(0.02f, 0.08f, 0.1f), new Color(0.8f, 0.95f, 1f), 3);
+        flashlightIcon = MakeIcon(new Color(0.18f, 0.2f, 0.19f), new Color(1f, 0.86f, 0.25f), new Color(0.03f, 0.035f, 0.04f), 4);
+    }
+
+    static Texture2D MakeIcon(Color baseColor, Color accentColor, Color markColor, int kind)
+    {
+        const int size = 48;
+        var texture = new Texture2D(size, size);
+        texture.filterMode = FilterMode.Point;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+                texture.SetPixel(x, y, baseColor);
+        }
+
+        switch (kind)
+        {
+            case 1:
+                FillRect(texture, 9, 14, 30, 20, Color.white);
+                FillRect(texture, 22, 18, 4, 12, accentColor);
+                FillRect(texture, 18, 22, 12, 4, accentColor);
+                break;
+            case 2:
+                FillCircle(texture, 24, 23, 14, accentColor);
+                FillRect(texture, 21, 34, 6, 7, markColor);
+                break;
+            case 3:
+                FillRect(texture, 17, 10, 14, 29, accentColor);
+                FillRect(texture, 15, 7, 18, 5, markColor);
+                FillRect(texture, 20, 15, 8, 16, baseColor);
+                break;
+            case 4:
+                FillRect(texture, 13, 20, 24, 10, markColor);
+                FillRect(texture, 30, 17, 9, 16, accentColor);
+                FillRect(texture, 9, 23, 6, 4, accentColor);
+                break;
+            default:
+                FillRect(texture, 12, 22, 24, 4, accentColor);
+                break;
+        }
+
+        texture.Apply();
+        return texture;
+    }
+
+    static void FillRect(Texture2D texture, int x, int y, int width, int height, Color color)
+    {
+        for (int yy = y; yy < y + height; yy++)
+        {
+            for (int xx = x; xx < x + width; xx++)
+            {
+                if (xx >= 0 && yy >= 0 && xx < texture.width && yy < texture.height)
+                    texture.SetPixel(xx, yy, color);
+            }
+        }
+    }
+
+    static void FillCircle(Texture2D texture, int cx, int cy, int radius, Color color)
+    {
+        int r2 = radius * radius;
+        for (int y = cy - radius; y <= cy + radius; y++)
+        {
+            for (int x = cx - radius; x <= cx + radius; x++)
+            {
+                int dx = x - cx;
+                int dy = y - cy;
+                if (dx * dx + dy * dy <= r2 && x >= 0 && y >= 0 && x < texture.width && y < texture.height)
+                    texture.SetPixel(x, y, color);
+            }
+        }
     }
 
     static Texture2D MakeTexture(Color color)

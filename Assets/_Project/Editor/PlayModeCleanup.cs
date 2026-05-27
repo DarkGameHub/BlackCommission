@@ -1,6 +1,4 @@
-using System.Net.Sockets;
 using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,12 +12,6 @@ public static class PlayModeCleanup
 
     static void OnPlayModeStateChanged(PlayModeStateChange state)
     {
-        if (state == PlayModeStateChange.EnteredPlayMode)
-        {
-            AssignFreePort();
-            return;
-        }
-
         if (state != PlayModeStateChange.ExitingPlayMode) return;
 
         try
@@ -37,34 +29,5 @@ public static class PlayModeCleanup
         }
 
         UnityEngine.Debug.Log("[Cleanup] Network shutdown — port released.");
-    }
-
-    // Called at the start of every play session. Finds the first free UDP port
-    // starting from 7778 and updates the scene's UnityTransport before the host binds.
-    static void AssignFreePort()
-    {
-        var networkManager = Object.FindFirstObjectByType<NetworkManager>();
-        if (networkManager == null) return;
-
-        var transport = networkManager.GetComponent<UnityTransport>();
-        if (transport == null) return;
-
-        ushort port = FindFreeUdpPort(7778);
-        transport.SetConnectionData("127.0.0.1", port);
-        UnityEngine.Debug.Log($"[Cleanup] UTP bound to port {port}.");
-    }
-
-    static ushort FindFreeUdpPort(ushort startPort)
-    {
-        for (ushort port = startPort; port < startPort + 50; port++)
-        {
-            try
-            {
-                using var udp = new UdpClient(port);
-                return port;
-            }
-            catch { }
-        }
-        return startPort;
     }
 }

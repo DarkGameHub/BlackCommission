@@ -97,6 +97,7 @@ public static class MvpProjectValidator
         Require<PlayerInteraction>(prefab, "Player.prefab", ref errors);
         Require<PlayerHealth>(prefab, "Player.prefab", ref errors);
         Require<PlayerHotbar>(prefab, "Player.prefab", ref errors);
+        Require<PlayerFirstPersonRig>(prefab, "Player.prefab", ref errors);
     }
 
     static void CheckHqScene(ref int errors, ref int warnings)

@@ -42,6 +42,7 @@ public class SchoolMonsterAI : NetworkBehaviour
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        EnsureVisualModel();
     }
 
     public override void OnNetworkSpawn()
@@ -254,5 +255,83 @@ public class SchoolMonsterAI : NetworkBehaviour
         if (patrolPoints == null || patrolPoints.Length == 0 || !agent.isOnNavMesh) return;
         agent.SetDestination(patrolPoints[patrolIndex].position);
         patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
+    }
+
+    void EnsureVisualModel()
+    {
+        if (transform.Find("MVP_MonsterVisualRoot") != null) return;
+
+        Material coat = MakeVisualMaterial(new Color(0.44f, 0.03f, 0.025f));
+        Material shirt = MakeVisualMaterial(new Color(0.08f, 0.075f, 0.065f));
+        Material paper = MakeVisualMaterial(new Color(0.86f, 0.82f, 0.68f));
+        Material skin = MakeVisualMaterial(new Color(0.5f, 0.45f, 0.38f));
+        Material eye = MakeVisualMaterial(new Color(0.95f, 0.08f, 0.04f));
+
+        var root = new GameObject("MVP_MonsterVisualRoot");
+        root.transform.SetParent(transform, false);
+        root.transform.localPosition = new Vector3(0f, -0.65f, 0f);
+
+        CreateVisualPrimitive(PrimitiveType.Cube, "DebtCollector_Coat", root.transform,
+            new Vector3(0f, 0.95f, 0f), new Vector3(0.8f, 1.45f, 0.45f),
+            Quaternion.identity, coat);
+        CreateVisualPrimitive(PrimitiveType.Cube, "DebtCollector_Shirt", root.transform,
+            new Vector3(0f, 1.05f, -0.24f), new Vector3(0.42f, 0.95f, 0.05f),
+            Quaternion.identity, shirt);
+        CreateVisualPrimitive(PrimitiveType.Sphere, "DebtCollector_Head", root.transform,
+            new Vector3(0f, 1.85f, -0.02f), new Vector3(0.52f, 0.58f, 0.48f),
+            Quaternion.identity, skin);
+        CreateVisualPrimitive(PrimitiveType.Cube, "DebtCollector_LeftArm", root.transform,
+            new Vector3(-0.55f, 1.02f, -0.05f), new Vector3(0.16f, 1.2f, 0.16f),
+            Quaternion.Euler(0f, 0f, 12f), coat);
+        CreateVisualPrimitive(PrimitiveType.Cube, "DebtCollector_RightArm", root.transform,
+            new Vector3(0.55f, 1.02f, -0.05f), new Vector3(0.16f, 1.2f, 0.16f),
+            Quaternion.Euler(0f, 0f, -12f), coat);
+        CreateVisualPrimitive(PrimitiveType.Cube, "OverdueLedger", root.transform,
+            new Vector3(0.2f, 1.08f, -0.34f), new Vector3(0.42f, 0.28f, 0.04f),
+            Quaternion.Euler(8f, -8f, 0f), paper);
+        CreateVisualPrimitive(PrimitiveType.Sphere, "LeftEye", root.transform,
+            new Vector3(-0.11f, 1.9f, -0.25f), new Vector3(0.07f, 0.04f, 0.03f),
+            Quaternion.identity, eye);
+        CreateVisualPrimitive(PrimitiveType.Sphere, "RightEye", root.transform,
+            new Vector3(0.11f, 1.9f, -0.25f), new Vector3(0.07f, 0.04f, 0.03f),
+            Quaternion.identity, eye);
+
+        var eyeLight = new GameObject("EyeWarningLight");
+        eyeLight.transform.SetParent(root.transform, false);
+        eyeLight.transform.localPosition = new Vector3(0f, 1.9f, -0.38f);
+        var light = eyeLight.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.color = new Color(1f, 0.08f, 0.04f);
+        light.range = 2.5f;
+        light.intensity = 0.9f;
+    }
+
+    GameObject CreateVisualPrimitive(PrimitiveType type, string name, Transform parent,
+        Vector3 localPosition, Vector3 localScale, Quaternion localRotation, Material material)
+    {
+        GameObject go = GameObject.CreatePrimitive(type);
+        go.name = name;
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localPosition;
+        go.transform.localRotation = localRotation;
+        go.transform.localScale = localScale;
+        if (go.TryGetComponent<Collider>(out var collider))
+            Destroy(collider);
+        if (go.TryGetComponent<Renderer>(out var renderer))
+            renderer.sharedMaterial = material;
+        return go;
+    }
+
+    static Material MakeVisualMaterial(Color color)
+    {
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit")
+            ?? Shader.Find("Universal Render Pipeline/Simple Lit")
+            ?? Shader.Find("Standard");
+        var material = new Material(shader);
+        if (material.HasProperty("_BaseColor"))
+            material.SetColor("_BaseColor", color);
+        else
+            material.color = color;
+        return material;
     }
 }

@@ -113,6 +113,7 @@ GameObject:
   - component: {fileID: 2779008746678798707}
   - component: {fileID: 8417771090113601477}
   - component: {fileID: 4687816511022707713}
+  - component: {fileID: 7559180119187054012}
   - component: {fileID: 3729408567247584862}
   m_Layer: 0
   m_Name: Player
@@ -401,7 +402,6 @@ MonoBehaviour:
   - itemId: 0
     quantity: 0
   medkitHealAmount: 30
-  grantMvpStarterItems: 1
   stunSprayRadius: 6
   stunSprayDuration: 2.5
   decoyRadius: 12
@@ -411,6 +411,19 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
+--- !u!114 &7559180119187054012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476353687523599177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f5d2dc9e3794f88a68e6fc4eaad5721, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFirstPersonRig
+  rigLocalPosition: {x: 0, y: -0.2, z: 0.48}
 --- !u!114 &3729408567247584862
 MonoBehaviour:
   m_ObjectHideFlags: 0
