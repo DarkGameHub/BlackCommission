@@ -12,15 +12,15 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
         get
         {
             var manager = LostItemMissionManager.Instance;
-            if (manager == null) return "返回事务所";
-            if (!manager.LostItemCollected.Value) return "先找到作业本";
+            if (manager == null) return "上车返回事务所";
+            if (!manager.LostItemCollected.Value) return "先找到作业本，再回车上";
 
             ulong localClientId = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening
                 ? NetworkManager.Singleton.LocalClientId
                 : 0;
             return manager.CarrierClientId.Value == localClientId
-                ? "撤离返回事务所"
-                : "需要拿作业本的人撤离";
+                ? "上车撤离返回事务所"
+                : "需要拿作业本的人上车";
         }
     }
 

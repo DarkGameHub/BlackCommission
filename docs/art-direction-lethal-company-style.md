@@ -171,6 +171,26 @@ The HQ is the player's poor home base. It should be slightly funny, slightly sad
 - Keep one "hero wall" behind or near the computer for Steam screenshots: computer glow, warning board, boxes, equipment shelf.
 - Avoid cozy startup-office styling. No clean plants, glass walls, premium desks, or polished logo wall.
 
+### HQ Dispatch Garage And Transit Layer
+
+The office must not feel like a menu room disconnected from missions. HQ should have a visible dispatch layer: computer selects the job, equipment is bought in the office, then players physically walk to the garage vehicle to leave.
+
+MVP implementation:
+
+- Computer: claim rewards, buy equipment, lock the current commission.
+- Garage vehicle: start the selected commission and load the mission scene.
+- Mission return vehicle: every mission should place the same company vehicle at or near the entry/exit point, so extraction means physically returning to the van.
+- Garage bay: concrete floor, dented roll-up door, yellow-black floor warnings, oil stains, weak amber light, and company green beacon.
+- Company vehicle: ugly second-hand van, company green mark, red debt slash, roof rack, dirty glass, small interaction zone.
+
+This creates a ritual:
+
+```text
+Computer accepts work -> players buy gear -> cross the office -> board the van -> mission loads -> complete job -> return to the parked van -> office payout.
+```
+
+Do not build full driving first. Start with a parked dispatch vehicle and short loading ritual. Later upgrades can add selectable transport, route hazards, vehicle upgrades, or a short playable approach, but the first goal is continuity, not a vehicle simulator.
+
 ### HQ Prop Language
 
 Good:

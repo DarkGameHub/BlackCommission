@@ -224,10 +224,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SchoolMonsterAI
   ShowTopMostFoldoutHeaderGroup: 1
-  detectionRadius: 10
-  loseRadius: 16
+  detectionRadius: 5.5
+  loseRadius: 13
+  initialGraceSeconds: 8
   patrolSpeed: 1.8
-  chaseSpeed: 4.2
+  chaseSpeed: 3.55
   attackRange: 1.4
   attackDamage: 25
   attackCooldown: 1.5
