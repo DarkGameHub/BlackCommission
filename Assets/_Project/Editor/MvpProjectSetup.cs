@@ -19,6 +19,8 @@ public static class MvpProjectSetup
     static readonly Dictionary<string, Material> MaterialCache = new Dictionary<string, Material>();
 
     [MenuItem("Tools/Accident Squad/MVP/Setup School MVP")]
+    public static void SetupSchoolMvpMenu() => SetupSchoolMvp();
+
     public static void SetupSchoolMvp()
     {
         if (EditorApplication.isPlaying)
@@ -50,6 +52,7 @@ public static class MvpProjectSetup
         EnsureFolder("Assets/_Project/Settings", "Tasks");
         EnsureFolder("Assets/_Project/Settings", "Materials");
         EnsureFolder("Assets/_Project", "Scenes");
+        EnsureFolder("Assets/_Project/Prefabs", "Mission");
     }
 
     static OfficeTaskDefinition EnsureMissingHomeworkTask()
@@ -240,7 +243,7 @@ public static class MvpProjectSetup
 
         CreateBox("Blackboard", new Vector3(0f, 1.55f, 5.72f), new Vector3(4.8f, 1.5f, 0.08f),
             new Color(0.02f, 0.2f, 0.12f), parent, false);
-        CreateText("HOMEWORK DUE", new Vector3(0f, 1.75f, 5.62f), Quaternion.Euler(0f, 180f, 0f),
+        CreateText("HOMEWORK DUE", new Vector3(0f, 1.75f, 5.62f), Quaternion.Euler(0f, 0f, 0f),
             0.18f, new Color(0.9f, 0.95f, 0.9f)).transform.SetParent(parent);
 
         for (int i = 0; i < 6; i++)
@@ -277,57 +280,79 @@ public static class MvpProjectSetup
     {
         var spawn = new GameObject("PlayerSpawnPoint");
         spawn.transform.SetParent(parent);
-        spawn.transform.SetPositionAndRotation(new Vector3(0f, 0.1f, -6.8f), Quaternion.Euler(0f, 0f, 0f));
+        spawn.transform.SetPositionAndRotation(new Vector3(0f, 0.1f, -6.8f), Quaternion.identity);
 
         var spawnManager = new GameObject("SchoolSpawnManager");
         spawnManager.transform.SetParent(parent);
         var manager = spawnManager.AddComponent<HQSpawnManager>();
         SetObjectReference(manager, "spawnPoint", spawn.transform);
 
-        var missionManager = new GameObject("LostItemMissionManager");
-        missionManager.transform.SetParent(parent);
-        missionManager.AddComponent<NetworkObject>();
-        missionManager.AddComponent<LostItemMissionManager>();
+        // Each scene-placed NetworkObject must be saved as a unique prefab asset.
+        // NGO derives GlobalObjectIdHash from the prefab GUID — plain GameObjects all hash to 0.
+        var missionManagerSrc = new GameObject("LostItemMissionManager");
+        missionManagerSrc.AddComponent<NetworkObject>();
+        missionManagerSrc.AddComponent<LostItemMissionManager>();
+        MakePrefabInstance("LostItemMissionManager", missionManagerSrc, Vector3.zero, parent);
 
-        var notebook = CreateBox("LostHomeworkNotebook", new Vector3(3.6f, 0.72f, 5.05f), new Vector3(0.6f, 0.08f, 0.42f),
-            new Color(1f, 0.88f, 0.28f), parent, false);
-        notebook.AddComponent<NetworkObject>();
-        notebook.AddComponent<LostHomeworkItem>();
+        var notebookSrc = CreateBox("LostHomeworkNotebook", new Vector3(3.6f, 0.72f, 5.05f),
+            new Vector3(0.6f, 0.08f, 0.42f), new Color(1f, 0.88f, 0.28f), parent, false);
+        notebookSrc.AddComponent<NetworkObject>();
+        notebookSrc.AddComponent<LostHomeworkItem>();
         var notebookGlow = new GameObject("NotebookGlow");
-        notebookGlow.transform.SetParent(notebook.transform);
+        notebookGlow.transform.SetParent(notebookSrc.transform);
         notebookGlow.transform.localPosition = new Vector3(0f, 0.35f, 0f);
         var glow = notebookGlow.AddComponent<Light>();
         glow.type = LightType.Point;
         glow.range = 3f;
         glow.intensity = 1.2f;
         glow.color = new Color(1f, 0.85f, 0.2f);
+        MakePrefabInstance("LostHomeworkNotebook", notebookSrc, new Vector3(3.6f, 0.72f, 5.05f), parent);
 
-        var exit = CreateBox("SchoolExitPoint", new Vector3(0f, 0.08f, -7.6f), new Vector3(4.4f, 0.16f, 1.8f),
-            new Color(0.1f, 0.75f, 0.38f), parent, false);
-        exit.AddComponent<NetworkObject>();
-        var exitCollider = exit.GetComponent<BoxCollider>();
+        var exitSrc = CreateBox("SchoolExitPoint", new Vector3(0f, 0.08f, -7.6f),
+            new Vector3(4.4f, 0.16f, 1.8f), new Color(0.1f, 0.75f, 0.38f), parent, false);
+        exitSrc.AddComponent<NetworkObject>();
+        var exitCollider = exitSrc.GetComponent<BoxCollider>();
         if (exitCollider != null) exitCollider.isTrigger = true;
-        exit.AddComponent<SchoolExitPoint>();
+        exitSrc.AddComponent<SchoolExitPoint>();
+        MakePrefabInstance("SchoolExitPoint", exitSrc, new Vector3(0f, 0.08f, -7.6f), parent);
         CreateText("事务所传送出口", new Vector3(0f, 0.65f, -7.6f), Quaternion.Euler(70f, 0f, 0f),
             0.2f, Color.white).transform.SetParent(parent);
 
         Transform[] patrol = CreatePatrolPoints(parent);
-        var monster = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        monster.name = "HomeworkDebtCollector";
-        monster.transform.SetParent(parent);
-        monster.transform.position = new Vector3(8.5f, 1f, 4f);
-        monster.transform.localScale = new Vector3(0.85f, 1.4f, 0.85f);
-        ApplyMaterial(monster, "monster_redcoat", new Color(0.55f, 0.08f, 0.07f));
-        monster.AddComponent<NetworkObject>();
-        monster.AddComponent<NetworkTransform>();
-        var agent = monster.AddComponent<NavMeshAgent>();
+        var monsterSrc = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        monsterSrc.name = "HomeworkDebtCollector";
+        monsterSrc.transform.position = new Vector3(8.5f, 1f, 4f);
+        monsterSrc.transform.localScale = new Vector3(0.85f, 1.4f, 0.85f);
+        ApplyMaterial(monsterSrc, "monster_redcoat", new Color(0.55f, 0.08f, 0.07f));
+        monsterSrc.AddComponent<NetworkObject>();
+        monsterSrc.AddComponent<NetworkTransform>();
+        var agent = monsterSrc.AddComponent<NavMeshAgent>();
         agent.speed = 3.8f;
         agent.angularSpeed = 240f;
         agent.acceleration = 12f;
         agent.radius = 0.45f;
         agent.height = 2.2f;
-        var ai = monster.AddComponent<SchoolMonsterAI>();
-        SetObjectArray(ai, "patrolPoints", patrol);
+        monsterSrc.AddComponent<SchoolMonsterAI>();
+        // patrolPoints reference scene objects — set on the instance after prefab round-trip
+        var monsterInstance = MakePrefabInstance("HomeworkDebtCollector", monsterSrc,
+            new Vector3(8.5f, 1f, 4f), parent);
+        SetObjectArray(monsterInstance.GetComponent<SchoolMonsterAI>(), "patrolPoints", patrol);
+    }
+
+    // Saves `source` as a prefab asset (giving it a unique GUID for NGO hash),
+    // destroys the source, and returns the scene instance parented under `sceneParent`.
+    static GameObject MakePrefabInstance(string prefabName, GameObject source,
+        Vector3 worldPos, Transform sceneParent)
+    {
+        source.transform.SetParent(null, true);
+        source.transform.SetPositionAndRotation(worldPos, source.transform.rotation);
+        string path = $"Assets/_Project/Prefabs/Mission/{prefabName}.prefab";
+        var asset = PrefabUtility.SaveAsPrefabAsset(source, path);
+        Object.DestroyImmediate(source);
+        var instance = (GameObject)PrefabUtility.InstantiatePrefab(asset);
+        instance.transform.SetParent(sceneParent, true);
+        instance.transform.position = worldPos;
+        return instance;
     }
 
     static Transform[] CreatePatrolPoints(Transform parent)
@@ -461,9 +486,11 @@ public static class MvpProjectSetup
         var material = AssetDatabase.LoadAssetAtPath<Material>(path);
         if (material == null)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
-            material = new Material(shader);
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit")
+                ?? Shader.Find("Universal Render Pipeline/Simple Lit")
+                ?? Shader.Find("Universal Render Pipeline/Unlit")
+                ?? Shader.Find("Unlit/Color");
+            material = new Material(shader != null ? shader : Shader.Find("Standard"));
             AssetDatabase.CreateAsset(material, path);
         }
 

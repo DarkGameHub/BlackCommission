@@ -50,11 +50,19 @@ public class PlayerCameraController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         inputActions?.Disable();
+        inputActions = null;
+    }
+
+    void OnDestroy()
+    {
+        inputActions?.Disable();
+        inputActions = null;
     }
 
     void Update()
     {
         if (!IsOwner) return;
+        if (inputActions == null) return;
         if (Cursor.lockState != CursorLockMode.Locked) return;
 
         var look = inputActions.Player.Look.ReadValue<Vector2>();

@@ -55,6 +55,13 @@ public class PlayerHotbar : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         inputActions?.Disable();
+        inputActions = null;
+    }
+
+    void OnDestroy()
+    {
+        inputActions?.Disable();
+        inputActions = null;
     }
 
     void Update()
@@ -91,7 +98,7 @@ public class PlayerHotbar : NetworkBehaviour
 
     public void SelectSlot(int index)
     {
-        if (!IsValidSlot(index)) return;
+        if (!IsSpawned || !IsValidSlot(index)) return;
         SelectedSlot.Value = index;
     }
 

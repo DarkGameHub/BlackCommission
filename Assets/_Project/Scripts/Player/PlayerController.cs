@@ -67,7 +67,14 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
         inputActions?.Disable();
+        inputActions = null;
         Cursor.lockState = CursorLockMode.None;
+    }
+
+    void OnDestroy()
+    {
+        inputActions?.Disable();
+        inputActions = null;
     }
 
     void Update()
@@ -84,6 +91,7 @@ public class PlayerController : NetworkBehaviour
 
     void HandleMovement()
     {
+        if (inputActions == null) return;
         var moveInput = inputActions.Player.Move.ReadValue<Vector2>();
         bool sprintPressed = inputActions.Player.Sprint.IsPressed();
         bool crouchPressed = inputActions.Player.Crouch.WasPressedThisFrame();

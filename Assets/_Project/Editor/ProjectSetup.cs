@@ -66,9 +66,12 @@ public static class ProjectSetup
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        EditorSceneManager.OpenScene("Assets/_Project/Scenes/HQ.unity");
+
+        // Build the MVP school scene in the same run so users only need one click
+        MvpProjectSetup.SetupSchoolMvp();
+
         EditorUtility.DisplayDialog("完成!",
-            "配置完成!\n\n测试流程:\n1. 打开 HQ 场景 (已自动打开)\n2. 点 Play\n3. 点左上角 Start Host\n4. 走到桌上绿色屏幕按 [E] 接工单\n5. 自动进入任务场景", "开始!");
+            "配置完成！\n\n MVP 测试流程:\n1. HQ 场景已自动打开\n2. 点 Play → Start Host\n3. 靠近办公室电脑按 [E] 接取「找回作业本」委托\n4. 自动进入学校场景，找到作业本\n5. 躲开怪物，回到绿色出口按 [E] 撤离\n6. 回事务所按 [E] 领取奖励\n\n快捷栏: 1=回血药  2=定身喷  3=诱饵  4=手电", "开始测试!");
     }
 
     // ─────────────────────────────── Folders ─────────────────────────────────
@@ -173,6 +176,7 @@ public static class ProjectSetup
         // 4) Classic Shader.Find as last resort
         if (shader == null) shader = Shader.Find("Universal Render Pipeline/Lit");
         if (shader == null) shader = Shader.Find("Universal Render Pipeline/Simple Lit");
+        if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
         if (shader == null) shader = Shader.Find("Lit");
 
         if (shader != null)
@@ -702,29 +706,8 @@ public static class ProjectSetup
         CreateBoxColored("Wall_Front", new Vector3(0, 1.5f, 2.5f), new Vector3(6, 3, 0.15f), wallColor);
 
         // ── Furniture ─────────────────────────────────────────
-        // Desk (job board computer sits on this)
+        // Desk — MVP_OfficeComputer is placed here by MvpProjectSetup (runs automatically after)
         CreateBoxColored("Desk", new Vector3(0, 0.4f, -1.8f), new Vector3(1.6f, 0.8f, 0.7f), deskColor);
-        // Monitor on desk (the job board) — bright green, easy to spot
-        var jobBoardGO = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        jobBoardGO.name = "JobBoard_Screen";
-        jobBoardGO.transform.position = new Vector3(0, 0.95f, -1.95f);
-        jobBoardGO.transform.localScale = new Vector3(0.8f, 0.55f, 0.06f);
-        SetColor(jobBoardGO, new Color(0.05f, 0.9f, 0.2f));
-        Object.DestroyImmediate(jobBoardGO.GetComponent<BoxCollider>());
-        var jbCol = jobBoardGO.AddComponent<BoxCollider>();
-        jbCol.size = new Vector3(1.5f, 1.5f, 8f);
-        jbCol.isTrigger = true;
-        jobBoardGO.AddComponent<JobBoard>();
-
-        // Glow light on job board to make it obvious
-        var jbLight = new GameObject("JobBoardLight");
-        jbLight.transform.SetParent(jobBoardGO.transform);
-        jbLight.transform.localPosition = new Vector3(0, 0, 1f);
-        var jbl = jbLight.AddComponent<Light>();
-        jbl.type = LightType.Point;
-        jbl.range = 3f;
-        jbl.intensity = 0.8f;
-        jbl.color = new Color(0.2f, 1f, 0.4f);
 
         // Equipment shelf (right side)
         CreateBoxColored("Shelf", new Vector3(2.2f, 0.5f, -1.5f), new Vector3(1.2f, 1f, 0.5f), shelfColor);
@@ -1130,8 +1113,14 @@ public static class ProjectSetup
         }
         else
         {
-            Debug.LogWarning($"[Setup] No valid URP shader for {go.name}, using fallback color.");
-            rend.sharedMaterial = new Material(Shader.Find("Standard") ?? rend.sharedMaterial) { color = color };
+            Debug.LogWarning($"[Setup] No valid URP shader for {go.name}, using URP Unlit fallback.");
+            var fallbackShader = Shader.Find("Universal Render Pipeline/Unlit")
+                ?? Shader.Find("Unlit/Color")
+                ?? rend.sharedMaterial.shader;
+            var fallbackMat = new Material(fallbackShader);
+            if (fallbackMat.HasProperty("_BaseColor")) fallbackMat.SetColor("_BaseColor", color);
+            else if (fallbackMat.HasProperty("_Color")) fallbackMat.color = color;
+            rend.sharedMaterial = fallbackMat;
             return;
         }
 

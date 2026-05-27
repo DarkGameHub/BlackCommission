@@ -97,9 +97,7 @@ public class MvpHud : MonoBehaviour
     void DrawMissionPanel()
     {
         LostItemMissionManager mission = LostItemMissionManager.Instance;
-        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 230), GUIContent.none, panelStyle);
-        GUILayout.Label("学校委托: 找回作业本", titleStyle);
-        GUILayout.Space(8);
+        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 200), GUIContent.none, panelStyle);
         GUILayout.Label($"用时: {FormatTime(mission.MissionTimer.Value)}", labelStyle);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
         GUILayout.Label(GetCarrierText(mission), mutedStyle);
