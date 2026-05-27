@@ -26,11 +26,15 @@ public class PlayerController : NetworkBehaviour
 
     [Header("Camera")]
     [SerializeField] Transform cameraRoot;
+    [SerializeField] float crouchCameraDrop = 0.55f;
+    [SerializeField] float cameraCrouchLerpSpeed = 12f;
 
     CharacterController cc;
     PlayerHealth health;
     PlayerInputActions inputActions;
     Vector3 velocity;
+    Vector3 standCameraLocalPosition;
+    bool hasCameraStandPosition;
     bool isCrouching;
     bool isSprinting;
 
@@ -39,12 +43,15 @@ public class PlayerController : NetworkBehaviour
 
     // Synced over network for other players to read (animations, carry state, etc.)
     public NetworkVariable<bool> IsCarrying = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<bool> HiddenFromMonsters = new(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     void Awake()
     {
         cc = GetComponent<CharacterController>();
         TryGetComponent(out health);
         Stamina = maxStamina;
+        CacheCameraStandPosition();
     }
 
     public override void OnNetworkSpawn()
@@ -60,7 +67,11 @@ public class PlayerController : NetworkBehaviour
 
         // Activate local camera
         if (cameraRoot != null)
+        {
             cameraRoot.GetComponentInChildren<Camera>()?.gameObject.SetActive(true);
+            CacheCameraStandPosition();
+            UpdateCrouchCamera(true);
+        }
     }
 
     public override void OnNetworkDespawn()
@@ -71,7 +82,7 @@ public class PlayerController : NetworkBehaviour
         Cursor.lockState = CursorLockMode.None;
     }
 
-    void OnDestroy()
+    new void OnDestroy()
     {
         inputActions?.Disable();
         inputActions = null;
@@ -80,12 +91,29 @@ public class PlayerController : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
-        if (health != null && health.IsDowned.Value) return;
+        if (health != null && health.IsDowned.Value)
+        {
+            isSprinting = false;
+            return;
+        }
+        if (HiddenFromMonsters.Value)
+        {
+            isSprinting = false;
+            velocity = Vector3.zero;
+            return;
+        }
+        if (MvpHud.IsComputerOpen)
+        {
+            isSprinting = false;
+            velocity = Vector3.zero;
+            return;
+        }
 
         if (WaterLevelManager.Instance != null)
             SpeedMultiplier = WaterLevelManager.Instance.GetSpeedModifierForHeight(transform.position.y);
 
         HandleMovement();
+        UpdateCrouchCamera(false);
         HandleStamina();
     }
 
@@ -94,15 +122,24 @@ public class PlayerController : NetworkBehaviour
         if (inputActions == null) return;
         var moveInput = inputActions.Player.Move.ReadValue<Vector2>();
         bool sprintPressed = inputActions.Player.Sprint.IsPressed();
-        bool crouchPressed = inputActions.Player.Crouch.WasPressedThisFrame();
+        bool crouchHeld = inputActions.Player.Crouch.IsPressed();
         bool jumpPressed = inputActions.Player.Jump.WasPressedThisFrame();
 
-        // Crouch toggle
-        if (crouchPressed)
-            SetCrouch(!isCrouching);
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null)
+        {
+            sprintPressed |= keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed;
+            crouchHeld |= keyboard.leftCtrlKey.isPressed || keyboard.rightCtrlKey.isPressed;
+            jumpPressed |= keyboard.spaceKey.wasPressedThisFrame;
+        }
 
-        // Sprint only if not exhausted and not crouching
-        isSprinting = sprintPressed && !IsExhausted && !isCrouching && Stamina > 0;
+        bool hasMoveInput = moveInput.sqrMagnitude > 0.01f;
+        bool emergencySprint = SchoolMonsterAI.IsEmergencySprintAllowed(transform.position);
+
+        if (crouchHeld != isCrouching)
+            SetCrouch(crouchHeld);
+
+        isSprinting = sprintPressed && hasMoveInput && !isCrouching && (emergencySprint || (!IsExhausted && Stamina > 0));
 
         float currentSpeed = isCrouching ? crouchSpeed
                            : isSprinting ? sprintSpeed
@@ -112,23 +149,27 @@ public class PlayerController : NetworkBehaviour
         currentSpeed *= SpeedMultiplier;
 
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
-        cc.Move(move * currentSpeed * Time.deltaTime);
+        CollisionFlags horizontalFlags = cc.Move(move * currentSpeed * Time.deltaTime);
 
-        // Jump
-        if (cc.isGrounded)
+        bool grounded = cc.isGrounded || (horizontalFlags & CollisionFlags.Below) != 0;
+        if (grounded && velocity.y < 0f)
         {
             velocity.y = -2f;
-            if (jumpPressed && !isCrouching)
-                velocity.y = jumpForce;
         }
 
+        if (grounded && jumpPressed && !isCrouching)
+            velocity.y = jumpForce;
+
         velocity.y += gravity * Time.deltaTime;
-        cc.Move(velocity * Time.deltaTime);
+        CollisionFlags verticalFlags = cc.Move(velocity * Time.deltaTime);
+        if ((verticalFlags & CollisionFlags.Below) != 0 && velocity.y < 0f)
+            velocity.y = -2f;
     }
 
     void HandleStamina()
     {
-        if (isSprinting)
+        bool emergencySprint = SchoolMonsterAI.IsEmergencySprintAllowed(transform.position);
+        if (isSprinting && !emergencySprint)
         {
             Stamina = Mathf.Max(0, Stamina - staminaDrainRate * Time.deltaTime);
             if (Stamina <= 0) IsExhausted = true;
@@ -145,6 +186,32 @@ public class PlayerController : NetworkBehaviour
         isCrouching = crouch;
         cc.height = crouch ? crouchHeight : standHeight;
         cc.center = new Vector3(0, cc.height / 2f, 0);
+        UpdateCrouchCamera(false);
+    }
+
+    void CacheCameraStandPosition()
+    {
+        if (cameraRoot == null || hasCameraStandPosition) return;
+        standCameraLocalPosition = cameraRoot.localPosition;
+        hasCameraStandPosition = true;
+    }
+
+    void UpdateCrouchCamera(bool instant)
+    {
+        if (cameraRoot == null || !hasCameraStandPosition) return;
+
+        Vector3 target = standCameraLocalPosition;
+        if (isCrouching)
+            target.y -= crouchCameraDrop;
+
+        if (instant)
+        {
+            cameraRoot.localPosition = target;
+            return;
+        }
+
+        float t = 1f - Mathf.Exp(-cameraCrouchLerpSpeed * Time.deltaTime);
+        cameraRoot.localPosition = Vector3.Lerp(cameraRoot.localPosition, target, t);
     }
 
     // External systems multiply this to slow the player (water, carry weight, etc.)
@@ -152,4 +219,25 @@ public class PlayerController : NetworkBehaviour
 
     public bool IsSprinting => isSprinting;
     public bool IsCrouching => isCrouching;
+    public bool IsHiddenFromMonsters => HiddenFromMonsters.Value;
+
+    public void SetHiddenFromMonsters(bool hidden, Vector3 hidePosition, Quaternion hideRotation)
+    {
+        if (IsOwner)
+        {
+            transform.SetPositionAndRotation(hidePosition, hideRotation);
+            velocity = Vector3.zero;
+        }
+
+        if (IsServer)
+            HiddenFromMonsters.Value = hidden;
+        else
+            SetHiddenFromMonstersServerRpc(hidden);
+    }
+
+    [ServerRpc]
+    void SetHiddenFromMonstersServerRpc(bool hidden)
+    {
+        HiddenFromMonsters.Value = hidden;
+    }
 }

@@ -152,8 +152,6 @@ public static class MvpProjectSetup
             light.intensity = 1.4f;
             light.color = new Color(0.35f, 1f, 0.65f);
 
-            CreateText("电脑: 委托终端", computer.transform.position + new Vector3(0f, 0.9f, -0.05f),
-                Quaternion.Euler(65f, 180f, 0f), 0.16f, Color.white).transform.SetParent(computer.transform);
         }
 
         if (computer.GetComponent<NetworkObject>() == null)
@@ -247,9 +245,6 @@ public static class MvpProjectSetup
 
         CreateBox("Blackboard", new Vector3(0f, 1.55f, 5.72f), new Vector3(4.8f, 1.5f, 0.08f),
             new Color(0.02f, 0.2f, 0.12f), parent, false);
-        CreateText("HOMEWORK DUE", new Vector3(0f, 1.75f, 5.62f), Quaternion.Euler(0f, 0f, 0f),
-            0.18f, new Color(0.9f, 0.95f, 0.9f)).transform.SetParent(parent);
-
         for (int i = 0; i < 6; i++)
         {
             CreateBox($"Locker_{i + 1}", new Vector3(-10.8f, 0.95f, -4.7f + i * 1.25f),
@@ -319,9 +314,6 @@ public static class MvpProjectSetup
         if (exitCollider != null) exitCollider.isTrigger = true;
         exitSrc.AddComponent<SchoolExitPoint>();
         MakePrefabInstance("SchoolExitPoint", exitSrc, new Vector3(0f, 0.08f, -7.6f), parent);
-        CreateText("事务所传送出口", new Vector3(0f, 0.65f, -7.6f), Quaternion.Euler(70f, 0f, 0f),
-            0.2f, Color.white).transform.SetParent(parent);
-
         Transform[] patrol = CreatePatrolPoints(parent);
         var monsterSrc = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         monsterSrc.name = "HomeworkDebtCollector";

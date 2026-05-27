@@ -9,10 +9,11 @@ using UnityEngine.AI;
 public class SchoolMonsterAI : NetworkBehaviour
 {
     [Header("Detection")]
-    [SerializeField] float detectionRadius = 10f;
-    [SerializeField] float loseRadius = 16f;
+    [SerializeField] float detectionRadius = 5.5f;
+    [SerializeField] float loseRadius = 13f;
+    [SerializeField] float initialGraceSeconds = 8f;
     [SerializeField] float patrolSpeed = 1.8f;
-    [SerializeField] float chaseSpeed = 4.2f;
+    [SerializeField] float chaseSpeed = 3.55f;
 
     [Header("Attack")]
     [SerializeField] float attackRange = 1.4f;
@@ -33,6 +34,7 @@ public class SchoolMonsterAI : NetworkBehaviour
     float nextAttackTime;
     float stunnedUntil;
     float distractedUntil;
+    float detectionEnabledAt;
     Vector3 distractionPosition;
 
     public bool IsChasing => state.Value == MonsterState.Chasing;
@@ -42,6 +44,8 @@ public class SchoolMonsterAI : NetworkBehaviour
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+        if (NavMesh.CalculateTriangulation().vertices.Length == 0)
+            agent.enabled = false;
         EnsureVisualModel();
     }
 
@@ -53,7 +57,10 @@ public class SchoolMonsterAI : NetworkBehaviour
             return;
         }
 
-        agent.speed = patrolSpeed;
+        EnsureAgentOnNavMesh();
+        if (CanUseAgent())
+            agent.speed = patrolSpeed;
+        detectionEnabledAt = Time.time + initialGraceSeconds;
         GoToNextPatrolPoint();
     }
 
@@ -80,8 +87,9 @@ public class SchoolMonsterAI : NetworkBehaviour
 
     void UpdatePatrol()
     {
-        agent.speed = patrolSpeed;
-        Transform nearest = FindNearestPlayer(detectionRadius);
+        if (CanUseAgent())
+            agent.speed = patrolSpeed;
+        Transform nearest = Time.time >= detectionEnabledAt ? FindNearestPlayer(detectionRadius) : null;
         if (nearest != null)
         {
             target = nearest;
@@ -89,7 +97,7 @@ public class SchoolMonsterAI : NetworkBehaviour
             return;
         }
 
-        if (patrolPoints != null && patrolPoints.Length > 0 && agent.isOnNavMesh && !agent.pathPending && agent.remainingDistance < 0.5f)
+        if (patrolPoints != null && patrolPoints.Length > 0 && CanUseAgent() && !agent.pathPending && agent.remainingDistance < 0.5f)
             GoToNextPatrolPoint();
     }
 
@@ -113,9 +121,15 @@ public class SchoolMonsterAI : NetworkBehaviour
             return;
         }
 
-        agent.speed = chaseSpeed;
-        if (agent.isOnNavMesh)
+        if (CanUseAgent())
+        {
+            agent.speed = chaseSpeed;
             agent.SetDestination(target.position);
+        }
+        else
+        {
+            MoveDirectlyToward(target.position, chaseSpeed);
+        }
 
         float distance = Vector3.Distance(transform.position, target.position);
         if (distance <= attackRange && Time.time >= nextAttackTime)
@@ -142,16 +156,23 @@ public class SchoolMonsterAI : NetworkBehaviour
     void UpdateStunned()
     {
         if (Time.time < stunnedUntil) return;
-        agent.isStopped = false;
+        if (CanUseAgent())
+            agent.isStopped = false;
         state.Value = MonsterState.Patrolling;
         GoToNextPatrolPoint();
     }
 
     void UpdateDistracted()
     {
-        agent.speed = patrolSpeed;
-        if (agent.isOnNavMesh)
+        if (CanUseAgent())
+        {
+            agent.speed = patrolSpeed;
             agent.SetDestination(distractionPosition);
+        }
+        else
+        {
+            MoveDirectlyToward(distractionPosition, patrolSpeed);
+        }
 
         if (Time.time < distractedUntil) return;
         state.Value = MonsterState.Patrolling;
@@ -164,7 +185,7 @@ public class SchoolMonsterAI : NetworkBehaviour
         stunnedUntil = Time.time + Mathf.Max(0.1f, duration);
         target = null;
         state.Value = MonsterState.Stunned;
-        if (agent.enabled && agent.isOnNavMesh)
+        if (CanUseAgent())
         {
             agent.ResetPath();
             agent.isStopped = true;
@@ -178,7 +199,7 @@ public class SchoolMonsterAI : NetworkBehaviour
         distractedUntil = Time.time + Mathf.Max(0.1f, duration);
         target = null;
         state.Value = MonsterState.Distracted;
-        if (agent.enabled && agent.isOnNavMesh)
+        if (CanUseAgent())
         {
             agent.isStopped = false;
             agent.SetDestination(distractionPosition);
@@ -238,6 +259,7 @@ public class SchoolMonsterAI : NetworkBehaviour
         foreach (var player in players)
         {
             if (player == null) continue;
+            if (player.IsHiddenFromMonsters) continue;
             if (player.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) continue;
             float distance = Vector3.Distance(transform.position, player.transform.position);
             if (distance <= nearestDistance)
@@ -252,9 +274,50 @@ public class SchoolMonsterAI : NetworkBehaviour
 
     void GoToNextPatrolPoint()
     {
-        if (patrolPoints == null || patrolPoints.Length == 0 || !agent.isOnNavMesh) return;
-        agent.SetDestination(patrolPoints[patrolIndex].position);
+        if (patrolPoints == null || patrolPoints.Length == 0) return;
+        if (CanUseAgent())
+            agent.SetDestination(patrolPoints[patrolIndex].position);
         patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
+    }
+
+    void EnsureAgentOnNavMesh()
+    {
+        if (agent == null || !agent.enabled || agent.isOnNavMesh) return;
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 6f, NavMesh.AllAreas))
+            agent.Warp(hit.position);
+        else
+            agent.enabled = false;
+    }
+
+    bool CanUseAgent()
+    {
+        return agent != null && agent.enabled && agent.isOnNavMesh;
+    }
+
+    void MoveDirectlyToward(Vector3 destination, float speed)
+    {
+        Vector3 current = transform.position;
+        Vector3 next = Vector3.MoveTowards(current, destination, speed * Time.deltaTime);
+        next.y = current.y;
+        transform.position = next;
+
+        Vector3 direction = destination - current;
+        direction.y = 0f;
+        if (direction.sqrMagnitude > 0.001f)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(direction), 360f * Time.deltaTime);
+    }
+
+    public static bool IsEmergencySprintAllowed(Vector3 position)
+    {
+        SchoolMonsterAI[] monsters = FindObjectsByType<SchoolMonsterAI>(FindObjectsSortMode.None);
+        foreach (var monster in monsters)
+        {
+            if (monster == null || !monster.IsChasing) continue;
+            if (Vector3.Distance(position, monster.transform.position) <= monster.loseRadius + 4f)
+                return true;
+        }
+
+        return false;
     }
 
     void EnsureVisualModel()

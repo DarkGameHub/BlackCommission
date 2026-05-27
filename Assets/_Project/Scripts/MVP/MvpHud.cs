@@ -5,9 +5,11 @@ using UnityEngine.InputSystem;
 public class MvpHud : MonoBehaviour
 {
     const float OfficeComputerShopDistance = 3.4f;
+    static OfficeComputer activeComputer;
+    public static bool IsComputerOpen => activeComputer != null;
 
     [SerializeField] int panelWidth = 390;
-    [SerializeField] bool showNetworkHint = true;
+    [SerializeField] bool showNetworkHint = false;
 
     GUIStyle panelStyle;
     GUIStyle titleStyle;
@@ -28,21 +30,55 @@ public class MvpHud : MonoBehaviour
     string shopMessage;
     float shopMessageUntil;
 
+    void Awake()
+    {
+        activeComputer = null;
+        showNetworkHint = false;
+        if (LostItemMissionManager.Instance != null)
+            RestoreGameplayCursor();
+    }
+
     void Update()
     {
         if (LostItemMissionManager.Instance != null) return;
-        if (MvpPendingReward.HasPending) return;
 
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
-        PlayerHotbar hotbar = FindLocalHotbar();
-        if (hotbar == null || !IsNearOfficeComputer(hotbar.transform.position)) return;
+        if (activeComputer != null)
+        {
+            if (keyboard.escapeKey.wasPressedThisFrame)
+            {
+                CloseComputer();
+                return;
+            }
 
-        if (keyboard.f1Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.Medkit);
-        if (keyboard.f2Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.Decoy);
-        if (keyboard.f3Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.StunSpray);
-        if (keyboard.f4Key.wasPressedThisFrame) TryBuy(hotbar, MvpHotbarItemId.Flashlight);
+            if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
+            {
+                OfficeComputer computer = activeComputer;
+                CloseComputer();
+                if (computer != null)
+                    computer.ExecuteComputerAction(FindLocalPlayer());
+                return;
+            }
+
+            if (!MvpPendingReward.HasPending)
+            {
+                PlayerHotbar activeHotbar = FindLocalHotbar();
+                if (activeHotbar != null)
+                {
+                    if (keyboard.f1Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Medkit);
+                    if (keyboard.f2Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Decoy);
+                    if (keyboard.f3Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.StunSpray);
+                    if (keyboard.f4Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Flashlight);
+                }
+            }
+
+            return;
+        }
+
+        if (keyboard.escapeKey.wasPressedThisFrame)
+            CloseComputer();
     }
 
     void TryBuy(PlayerHotbar hotbar, MvpHotbarItemId itemId)
@@ -87,9 +123,28 @@ public class MvpHud : MonoBehaviour
         CompanyState company = CompanyData.Current;
         PlayerHotbar localHotbar = FindLocalHotbar();
         bool nearShop = localHotbar != null && IsNearOfficeComputer(localHotbar.transform.position);
+        bool computerOpen = activeComputer != null;
 
-        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 430), GUIContent.none, panelStyle);
-        GUILayout.Label("Accident Squad 破产事务所", titleStyle);
+        if (!computerOpen)
+        {
+            GUILayout.BeginArea(new Rect(18, 18, 320, 74), GUIContent.none, panelStyle);
+            GUILayout.Label("Accident Squad", titleStyle);
+            string officeStatus = MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null
+                ? $"委托已装车: {MvpMissionRuntime.SelectedTask.title}。去车库上车。"
+                : nearShop ? "按 [E] 使用办公室电脑。" : "找到办公室电脑查看委托。";
+            GUILayout.Label(officeStatus, accentStyle);
+            GUILayout.EndArea();
+            return;
+        }
+
+        Rect rect = computerOpen
+            ? new Rect((Screen.width - 680) * 0.5f, 42, 680, Mathf.Min(560, Screen.height - 84))
+            : new Rect(18, 18, panelWidth, 430);
+
+        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
+        GUILayout.Label(computerOpen ? "ACCIDENT SQUAD 委托终端" : "Accident Squad 破产事务所", titleStyle);
+        if (computerOpen)
+            GUILayout.Label("[Enter] 锁定委托/结算    [F1-F4] 采购道具    [Esc] 离开电脑", accentStyle);
         GUILayout.Space(8);
         GUILayout.Label($"资金: {company.Funds} G    债务: {company.Debt} G", company.Funds < 0 ? warningStyle : labelStyle);
         GUILayout.Label($"声望: {company.Reputation}    等级: {company.OfficeLevel}    经验: {company.Experience}/{company.ExperienceForNextLevel}", labelStyle);
@@ -134,14 +189,20 @@ public class MvpHud : MonoBehaviour
         }
         else
         {
-            GUILayout.Label("靠近办公室电脑按 [E] 接取家长委托。", accentStyle);
-            GUILayout.Label("第一个任务: 去学校找回被遗忘的作业本。", mutedStyle);
+            if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
+            {
+                GUILayout.Label($"已锁定委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
+                GUILayout.Label("采购完道具后，去车库的公司车按 [E] 出发。", mutedStyle);
+            }
+            else
+            {
+                GUILayout.Label("靠近办公室电脑按 [E] 接取家长委托。", accentStyle);
+                GUILayout.Label("第一个任务: 去学校找回被遗忘的作业本。锁定后从车库上车出发。", mutedStyle);
+            }
         }
 
         GUILayout.Space(8);
-        DrawOfficeShop(nearShop);
-        GUILayout.Space(8);
-        GUILayout.Label("当前 MVP 目标: 接任务 -> 到学校 -> 拾取作业本 -> 躲开追击 -> 撤离回事务所 -> 领取奖励。", mutedStyle);
+        DrawOfficeShop(computerOpen || nearShop);
         GUILayout.EndArea();
     }
 
@@ -172,17 +233,16 @@ public class MvpHud : MonoBehaviour
     void DrawMissionPanel()
     {
         LostItemMissionManager mission = LostItemMissionManager.Instance;
-        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 200), GUIContent.none, panelStyle);
+        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 150), GUIContent.none, panelStyle);
         GUILayout.Label($"用时: {FormatTime(mission.MissionTimer.Value)}", labelStyle);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
-        GUILayout.Label(GetCarrierText(mission), mutedStyle);
 
         string monsterText = GetMonsterStatus();
         if (!string.IsNullOrEmpty(monsterText))
             GUILayout.Label(monsterText, monsterText.Contains("追击") ? warningStyle : mutedStyle);
 
         GUILayout.Space(8);
-        GUILayout.Label("交互 [E]    使用道具 [Mouse Left]    快捷栏 [1-5]", mutedStyle);
+        GUILayout.Label("[E] 交互    [LMB] 使用道具    [1-5] 快捷栏", mutedStyle);
         GUILayout.EndArea();
     }
 
@@ -226,7 +286,7 @@ public class MvpHud : MonoBehaviour
             case LostItemMissionManager.MissionPhase.Searching:
                 return "目标: 在教室里找到作业本。";
             case LostItemMissionManager.MissionPhase.ReturnToExit:
-                return "目标: 带着作业本回到校门安全区。";
+                return "目标: 带着作业本回到校门口的车上。";
             case LostItemMissionManager.MissionPhase.Completed:
                 return "目标: 委托完成，返回事务所领取奖励。";
             case LostItemMissionManager.MissionPhase.Failed:
@@ -270,6 +330,37 @@ public class MvpHud : MonoBehaviour
         }
 
         return hotbars.Length > 0 ? hotbars[0] : null;
+    }
+
+    static PlayerController FindLocalPlayer()
+    {
+        PlayerController[] players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        foreach (var player in players)
+        {
+            if (player != null && player.IsOwner)
+                return player;
+        }
+
+        return players.Length > 0 ? players[0] : null;
+    }
+
+    public static void OpenComputer(OfficeComputer computer)
+    {
+        activeComputer = computer;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    static void CloseComputer()
+    {
+        activeComputer = null;
+        RestoreGameplayCursor();
+    }
+
+    static void RestoreGameplayCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     static bool IsNearOfficeComputer(Vector3 position)

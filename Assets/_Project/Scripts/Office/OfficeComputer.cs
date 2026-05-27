@@ -10,6 +10,8 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     [SerializeField] bool allowNonNetworkSoloStart = false;
 
     bool missionLaunching;
+    public bool HasSelectedDemoTask => demoTask != null && MvpMissionRuntime.SelectedTask == demoTask;
+    public string DemoTaskTitle => demoTask != null ? demoTask.title : "被遗忘的作业本";
 
     public override void OnNetworkSpawn()
     {
@@ -30,6 +32,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         {
             if (MvpPendingReward.HasPending) return IsClientOnly ? "等待房主领取结算" : "领取委托奖励";
             if (missionLaunching) return "任务启动中...";
+            if (HasSelectedDemoTask) return $"已锁定委托: {DemoTaskTitle}，去车库上车";
             if (CompanyData.Current.CanAffordTutorialAcquisition)
             {
                 if (IsClientOnly)
@@ -50,6 +53,11 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     public void OnInteractStart(PlayerController player)
     {
+        MvpHud.OpenComputer(this);
+    }
+
+    public void ExecuteComputerAction(PlayerController player)
+    {
         if (missionLaunching) return;
         if (MvpPendingReward.HasPending)
         {
@@ -69,6 +77,26 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
             if (allowNonNetworkSoloStart && CanStartDemoTask())
+                QueueDemoTask();
+            return;
+        }
+
+        if (!CanStartDemoTask()) return;
+
+        if (NetworkManager.Singleton.IsHost)
+            QueueDemoTask();
+    }
+
+    public void OnInteractEnd(PlayerController player) { }
+
+    public void LaunchSelectedMissionFromVehicle(PlayerController player)
+    {
+        if (missionLaunching) return;
+        if (!HasSelectedDemoTask) return;
+
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            if (allowNonNetworkSoloStart && CanStartDemoTask())
                 StartMissionLocal();
             return;
         }
@@ -79,7 +107,12 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             StartMissionServerSide();
     }
 
-    public void OnInteractEnd(PlayerController player) { }
+    void QueueDemoTask()
+    {
+        if (demoTask == null) return;
+        if (!CanStartDemoTask()) return;
+        MvpMissionRuntime.SelectMission(demoTask, returnOfficeScene);
+    }
 
     void StartMissionLocal()
     {

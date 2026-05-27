@@ -63,7 +63,12 @@ public class PlayerCameraController : NetworkBehaviour
     {
         if (!IsOwner) return;
         if (inputActions == null) return;
-        if (Cursor.lockState != CursorLockMode.Locked) return;
+        if (MvpHud.IsComputerOpen) return;
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
 
         var look = inputActions.Player.Look.ReadValue<Vector2>();
         float mouseX = look.x * mouseSensitivity;

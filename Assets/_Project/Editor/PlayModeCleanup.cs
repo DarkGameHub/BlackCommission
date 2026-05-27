@@ -14,20 +14,10 @@ public static class PlayModeCleanup
     {
         if (state != PlayModeStateChange.ExitingPlayMode) return;
 
-        try
-        {
-            // NetworkManager.Shutdown() already tears down UTP internally.
-            // Calling transport.Shutdown() separately triggers a second round of
-            // disconnect callbacks after UTP's internal state is gone → NullReferenceException.
-            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-                NetworkManager.Singleton.Shutdown();
-        }
-        catch (System.Exception e)
-        {
-            // UTP known bug: GetDisconnectEventMessage NRE during shutdown — safe to swallow.
-            UnityEngine.Debug.Log($"[Cleanup] Network shutdown (UTP internal exception suppressed): {e.Message}");
-        }
-
-        UnityEngine.Debug.Log("[Cleanup] Network shutdown — port released.");
+        // Let Netcode's own OnApplicationQuit/OnDestroy path perform shutdown.
+        // Calling Shutdown() here can dispose the scene manager, then Unity calls
+        // OnApplicationQuit and Netcode disposes it a second time.
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            UnityEngine.Debug.Log("[Cleanup] Play mode exiting; Netcode will release the port during its own shutdown.");
     }
 }
