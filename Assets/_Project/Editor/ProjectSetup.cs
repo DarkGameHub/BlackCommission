@@ -252,6 +252,7 @@ public static class ProjectSetup
 
         player.AddComponent<PlayerInteraction>();
         player.AddComponent<PlayerHealth>();
+        player.AddComponent<PlayerHotbar>();
         player.AddComponent<FlashlightController>();
 
         const string path = "Assets/_Project/Prefabs/Player/Player.prefab";
@@ -768,8 +769,10 @@ public static class ProjectSetup
         transport.SetConnectionData("127.0.0.1", 7778);
         nm.NetworkConfig.NetworkTransport = transport;
         nm.NetworkConfig.PlayerPrefab = playerPrefab;
+        nm.NetworkConfig.ConnectionApproval = true;
         nmGO.AddComponent<QuickNetworkUI>();
         nmGO.AddComponent<AutoPort>();
+        nmGO.AddComponent<MvpConnectionLimiter>();
 
         var cmGO = new GameObject("ConnectionManager");
         cmGO.AddComponent<ConnectionManager>();
@@ -1031,8 +1034,10 @@ public static class ProjectSetup
         transport.SetConnectionData("127.0.0.1", 7778);
         nm.NetworkConfig.NetworkTransport = transport;
         if (playerPrefab) nm.NetworkConfig.PlayerPrefab = playerPrefab;
+        nm.NetworkConfig.ConnectionApproval = true;
         nmGO.AddComponent<QuickNetworkUI>();
         nmGO.AddComponent<AutoPort>();
+        nmGO.AddComponent<MvpConnectionLimiter>();
 
         new GameObject("GameManager").AddComponent<GameManager>();
         new GameObject("WaterLevelManager").AddComponent<WaterLevelManager>();

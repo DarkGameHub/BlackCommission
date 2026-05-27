@@ -98,7 +98,7 @@ public class QuickNetworkUI : MonoBehaviour
         GUI.Label(new Rect(cx, cy, bw, 36), "外包事故组", titleStyle);
         cy += 42;
 
-        if (GUI.Button(new Rect(cx, cy, bw, 42), "创建房间", buttonStyle))
+        if (GUI.Button(new Rect(cx, cy, bw, 42), "单人游玩 / 创建主机", buttonStyle))
             NetworkManager.Singleton.StartHost();
         cy += 52;
 
@@ -106,6 +106,6 @@ public class QuickNetworkUI : MonoBehaviour
             NetworkManager.Singleton.StartClient();
         cy += 52;
 
-        GUI.Label(new Rect(cx, cy, bw, 36), "创建房间后走到桌上屏幕按 E 接单", hintStyle);
+        GUI.Label(new Rect(cx, cy, bw, 36), "主机最多 4 人。进入事务所后走到电脑前按 E 接单。", hintStyle);
     }
 }

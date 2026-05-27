@@ -59,12 +59,12 @@ public class SettlementManager : NetworkBehaviour
         float elapsed = gm.MissionTimer.Value;
 
         SendSettlementClientRpc(income, expenses, netResult, survivorsRescued,
-            evidenceCount, gm.PumpRepaired.Value, elapsed);
+            evidenceCount, gm.PumpRepaired.Value, gm.CanComplete, elapsed);
     }
 
     [ClientRpc]
     void SendSettlementClientRpc(int income, int expenses, int net,
-        int survivors, int evidence, bool pumpFixed, float timeElapsed)
+        int survivors, int evidence, bool pumpFixed, bool success, float timeElapsed)
     {
         SettlementUIController.Instance?.ShowSettlement(new SettlementData
         {
@@ -77,9 +77,10 @@ public class SettlementManager : NetworkBehaviour
             TimeElapsed = timeElapsed
         });
 
-        // Update persistent company funds (local for MVP, server-sync later)
-        CompanyData.Current.Funds += net;
-        CompanyData.Current.Reputation += net > 0 ? 1 : -1;
+        // Old prototype settlements now follow the MVP rule: rewards are pending
+        // until the team returns to the office computer.
+        MvpPendingReward.Set(net, net >= 0 ? 1 : -1, 0, success, timeElapsed,
+            countsTowardLostItemProgress: false);
     }
 }
 
@@ -98,7 +99,46 @@ public class SettlementData
 /// <summary>Persistent company state saved between missions.</summary>
 public static class CompanyData
 {
-    public static CompanyState Current = new CompanyState { Funds = 1000, Reputation = 0 };
+    public static CompanyState Current = new CompanyState
+    {
+        Funds = -300,
+        Reputation = 0,
+        OfficeLevel = 1,
+        Experience = 0,
+        Debt = 300
+    };
+
+    public static void ApplySnapshot(
+        int funds,
+        int reputation,
+        int officeLevel,
+        int experience,
+        int debt,
+        int completedLostItemJobs,
+        int failedJobs,
+        int hostileTakeoverPressure,
+        bool hasAcquiredTutorialOffice,
+        bool lastMissionSucceeded,
+        bool wasRecentlyHostileAcquired,
+        bool hasHostileTakeoverUltimatum,
+        bool wasRecentlyIssuedTakeoverUltimatum,
+        float lastMissionTimeSeconds)
+    {
+        Current.Funds = funds;
+        Current.Reputation = reputation;
+        Current.OfficeLevel = officeLevel;
+        Current.Experience = experience;
+        Current.Debt = debt;
+        Current.CompletedLostItemJobs = completedLostItemJobs;
+        Current.FailedJobs = failedJobs;
+        Current.HostileTakeoverPressure = hostileTakeoverPressure;
+        Current.HasAcquiredTutorialOffice = hasAcquiredTutorialOffice;
+        Current.LastMissionSucceeded = lastMissionSucceeded;
+        Current.WasRecentlyHostileAcquired = wasRecentlyHostileAcquired;
+        Current.HasHostileTakeoverUltimatum = hasHostileTakeoverUltimatum;
+        Current.WasRecentlyIssuedTakeoverUltimatum = wasRecentlyIssuedTakeoverUltimatum;
+        Current.LastMissionTimeSeconds = lastMissionTimeSeconds;
+    }
 }
 
 [System.Serializable]
@@ -106,5 +146,108 @@ public class CompanyState
 {
     public int Funds;
     public int Reputation;
+    public int OfficeLevel = 1;
+    public int Experience;
+    public int Debt;
+    public int CompletedLostItemJobs;
+    public int FailedJobs;
+    public int HostileTakeoverPressure;
+    public bool HasAcquiredTutorialOffice;
+    public bool LastMissionSucceeded;
+    public bool WasRecentlyHostileAcquired;
+    public bool HasHostileTakeoverUltimatum;
+    public bool WasRecentlyIssuedTakeoverUltimatum;
+    public float LastMissionTimeSeconds;
+
+    const int TutorialOfficeValuation = 100;
+    const int TutorialAcquisitionMultiplierNumerator = 3;
+    const int TutorialAcquisitionMultiplierDenominator = 2;
+
     public bool IsInDebt => Funds < 0;
+    public int ExperienceForNextLevel => Mathf.Max(100, OfficeLevel * 300);
+    public bool CanShowTutorialAcquisition => OfficeLevel == 1 && CompletedLostItemJobs >= 2 && !HasAcquiredTutorialOffice;
+    public int TutorialAcquisitionCost => TutorialOfficeValuation * TutorialAcquisitionMultiplierNumerator / TutorialAcquisitionMultiplierDenominator;
+    public bool CanAffordTutorialAcquisition => CanShowTutorialAcquisition && Funds >= TutorialAcquisitionCost && HostileTakeoverPressure < 70;
+    public int UnlockedCategoryCount => Mathf.Clamp(OfficeLevel, 1, 8);
+    public bool IsHostileTakeoverRisk => HasHostileTakeoverUltimatum || (HostileTakeoverPressure >= 70 && Funds < 0);
+
+    public void ApplyMissionResult(bool success, int money, int reputation, int experience, float elapsedSeconds,
+        bool countsTowardLostItemProgress = true)
+    {
+        Funds += money;
+        Reputation += reputation;
+        Experience += success ? experience : 0;
+        LastMissionSucceeded = success;
+        LastMissionTimeSeconds = elapsedSeconds;
+        WasRecentlyHostileAcquired = false;
+        WasRecentlyIssuedTakeoverUltimatum = false;
+
+        if (success)
+        {
+            if (countsTowardLostItemProgress)
+                CompletedLostItemJobs++;
+            HostileTakeoverPressure = Mathf.Max(0, HostileTakeoverPressure - 25);
+            if (HostileTakeoverPressure < 70)
+                HasHostileTakeoverUltimatum = false;
+        }
+        else
+        {
+            FailedJobs++;
+            int pressureGain = 35;
+            if (Funds < 0) pressureGain += 15;
+            if (Reputation < 0) pressureGain += 10;
+            HostileTakeoverPressure = Mathf.Min(100, HostileTakeoverPressure + pressureGain);
+            TryApplyHostileTakeover();
+        }
+
+        TryApplyLevelUps();
+    }
+
+    public void TryApplyLevelUps()
+    {
+        while (OfficeLevel < 8 && Experience >= ExperienceForNextLevel)
+        {
+            Experience -= ExperienceForNextLevel;
+            OfficeLevel++;
+        }
+    }
+
+    public bool TryAcquireTutorialOffice()
+    {
+        if (!CanAffordTutorialAcquisition) return false;
+
+        Funds -= TutorialAcquisitionCost;
+        HasAcquiredTutorialOffice = true;
+        OfficeLevel = Mathf.Max(OfficeLevel, 2);
+        Reputation += 1;
+        HostileTakeoverPressure = Mathf.Max(0, HostileTakeoverPressure - 20);
+        HasHostileTakeoverUltimatum = false;
+        WasRecentlyIssuedTakeoverUltimatum = false;
+        WasRecentlyHostileAcquired = false;
+        return true;
+    }
+
+    void TryApplyHostileTakeover()
+    {
+        if (HostileTakeoverPressure < 100) return;
+        if (Funds >= 0 || Reputation >= 0) return;
+        if (!HasHostileTakeoverUltimatum)
+        {
+            HasHostileTakeoverUltimatum = true;
+            WasRecentlyIssuedTakeoverUltimatum = true;
+            return;
+        }
+
+        WasRecentlyHostileAcquired = true;
+        HasHostileTakeoverUltimatum = false;
+        WasRecentlyIssuedTakeoverUltimatum = false;
+        OfficeLevel = Mathf.Max(1, OfficeLevel - 1);
+        Debt += 500;
+        Funds = Mathf.Min(Funds, -500);
+        Reputation = Mathf.Min(Reputation, -5);
+        Experience = 0;
+        CompletedLostItemJobs = 0;
+        HasAcquiredTutorialOffice = false;
+        HostileTakeoverPressure = 35;
+    }
 }
