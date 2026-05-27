@@ -25,10 +25,10 @@ public class HotbarSlot
 public class PlayerHotbar : NetworkBehaviour
 {
     public const int SlotCount = 5;
+    const float OfficeComputerPurchaseDistance = 3.4f;
 
     [SerializeField] HotbarSlot[] slots = new HotbarSlot[SlotCount];
     [SerializeField] float medkitHealAmount = 30f;
-    [SerializeField] bool grantMvpStarterItems = true;
     [SerializeField] float stunSprayRadius = 6f;
     [SerializeField] float stunSprayDuration = 2.5f;
     [SerializeField] float decoyRadius = 12f;
@@ -42,7 +42,6 @@ public class PlayerHotbar : NetworkBehaviour
     void Awake()
     {
         EnsureSlots();
-        GrantStarterItemsIfEmpty();
     }
 
     public override void OnNetworkSpawn()
@@ -114,6 +113,36 @@ public class PlayerHotbar : NetworkBehaviour
         UseSlotServerRpc(index, slots[index].itemId);
     }
 
+    public void TryPurchaseItem(MvpHotbarItemId itemId)
+    {
+        if (!IsOwner || itemId == MvpHotbarItemId.None) return;
+
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            TryPurchaseLocal(itemId);
+            return;
+        }
+
+        PurchaseItemServerRpc(itemId);
+    }
+
+    public static int GetItemCost(MvpHotbarItemId itemId)
+    {
+        switch (itemId)
+        {
+            case MvpHotbarItemId.Medkit:
+                return 80;
+            case MvpHotbarItemId.Decoy:
+                return 60;
+            case MvpHotbarItemId.StunSpray:
+                return 120;
+            case MvpHotbarItemId.Flashlight:
+                return 100;
+            default:
+                return 0;
+        }
+    }
+
     [ServerRpc]
     void UseSlotServerRpc(int index, MvpHotbarItemId itemId)
     {
@@ -156,6 +185,28 @@ public class PlayerHotbar : NetworkBehaviour
         }
     }
 
+    [ServerRpc]
+    void PurchaseItemServerRpc(MvpHotbarItemId itemId)
+    {
+        EnsureSlots();
+        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return;
+        if (!IsNearOfficeComputer()) return;
+
+        int cost = GetItemCost(itemId);
+        if (cost <= 0) return;
+        if (CompanyData.Current.Funds < cost) return;
+        if (!TryAddItem(itemId, 1)) return;
+
+        CompanyData.Current.Funds -= cost;
+        SyncHotbarAndFundsClientRpc(
+            GetItemId(0), slots[0].quantity,
+            GetItemId(1), slots[1].quantity,
+            GetItemId(2), slots[2].quantity,
+            GetItemId(3), slots[3].quantity,
+            GetItemId(4), slots[4].quantity,
+            CompanyData.Current.Funds);
+    }
+
     [ClientRpc]
     void SlotConsumedClientRpc(int index, int remainingQuantity)
     {
@@ -163,6 +214,100 @@ public class PlayerHotbar : NetworkBehaviour
         if (!IsValidSlot(index)) return;
         slots[index].quantity = remainingQuantity;
         if (remainingQuantity <= 0)
+            slots[index].itemId = MvpHotbarItemId.None;
+    }
+
+    [ClientRpc]
+    void SyncHotbarAndFundsClientRpc(
+        int item0, int qty0,
+        int item1, int qty1,
+        int item2, int qty2,
+        int item3, int qty3,
+        int item4, int qty4,
+        int funds)
+    {
+        EnsureSlots();
+        SetSlotFromNetwork(0, item0, qty0);
+        SetSlotFromNetwork(1, item1, qty1);
+        SetSlotFromNetwork(2, item2, qty2);
+        SetSlotFromNetwork(3, item3, qty3);
+        SetSlotFromNetwork(4, item4, qty4);
+        CompanyData.Current.Funds = funds;
+    }
+
+    bool TryPurchaseLocal(MvpHotbarItemId itemId)
+    {
+        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
+        if (!IsNearOfficeComputer()) return false;
+
+        int cost = GetItemCost(itemId);
+        if (cost <= 0 || CompanyData.Current.Funds < cost) return false;
+        if (!TryAddItem(itemId, 1)) return false;
+        CompanyData.Current.Funds -= cost;
+        return true;
+    }
+
+    bool TryAddItem(MvpHotbarItemId itemId, int quantity)
+    {
+        if (itemId == MvpHotbarItemId.None || quantity <= 0) return false;
+
+        if (itemId == MvpHotbarItemId.Flashlight && HasItem(MvpHotbarItemId.Flashlight))
+            return false;
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (!slots[i].IsEmpty && slots[i].itemId == itemId && itemId != MvpHotbarItemId.Flashlight)
+            {
+                slots[i].quantity += quantity;
+                return true;
+            }
+        }
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i].IsEmpty)
+            {
+                slots[i].itemId = itemId;
+                slots[i].quantity = quantity;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool HasItem(MvpHotbarItemId itemId)
+    {
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (!slots[i].IsEmpty && slots[i].itemId == itemId)
+                return true;
+        }
+
+        return false;
+    }
+
+    bool IsNearOfficeComputer()
+    {
+        OfficeComputer[] computers = FindObjectsByType<OfficeComputer>(FindObjectsSortMode.None);
+        foreach (var computer in computers)
+        {
+            if (computer == null) continue;
+            if (Vector3.Distance(transform.position, computer.transform.position) <= OfficeComputerPurchaseDistance)
+                return true;
+        }
+
+        return false;
+    }
+
+    int GetItemId(int index) => IsValidSlot(index) ? (int)slots[index].itemId : 0;
+
+    void SetSlotFromNetwork(int index, int itemId, int quantity)
+    {
+        if (!IsValidSlot(index)) return;
+        slots[index].itemId = (MvpHotbarItemId)Mathf.Clamp(itemId, 0, (int)MvpHotbarItemId.Flashlight);
+        slots[index].quantity = Mathf.Max(0, quantity);
+        if (slots[index].quantity <= 0)
             slots[index].itemId = MvpHotbarItemId.None;
     }
 
@@ -176,32 +321,6 @@ public class PlayerHotbar : NetworkBehaviour
             if (slots[i] == null)
                 slots[i] = new HotbarSlot();
         }
-    }
-
-    void GrantStarterItemsIfEmpty()
-    {
-        if (!grantMvpStarterItems) return;
-
-        bool hasAnyItem = false;
-        for (int i = 0; i < slots.Length; i++)
-        {
-            if (!slots[i].IsEmpty)
-            {
-                hasAnyItem = true;
-                break;
-            }
-        }
-
-        if (hasAnyItem) return;
-
-        slots[0].itemId = MvpHotbarItemId.Medkit;
-        slots[0].quantity = 1;
-        slots[1].itemId = MvpHotbarItemId.StunSpray;
-        slots[1].quantity = 1;
-        slots[2].itemId = MvpHotbarItemId.Decoy;
-        slots[2].quantity = 1;
-        slots[3].itemId = MvpHotbarItemId.Flashlight;
-        slots[3].quantity = 1;
     }
 
     static bool IsValidSlot(int index) => index >= 0 && index < SlotCount;

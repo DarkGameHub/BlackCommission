@@ -108,12 +108,16 @@ public static class MvpProjectSetup
             netTransform.SyncScaleZ = false;
         }
 
-        if (root.GetComponent<PlayerHotbar>() == null)
-            root.AddComponent<PlayerHotbar>();
+        var hotbar = root.GetComponent<PlayerHotbar>();
+        if (hotbar == null)
+            hotbar = root.AddComponent<PlayerHotbar>();
+
+        if (root.GetComponent<PlayerFirstPersonRig>() == null)
+            root.AddComponent<PlayerFirstPersonRig>();
 
         PrefabUtility.SaveAsPrefabAsset(root, PlayerPrefabPath);
         PrefabUtility.UnloadPrefabContents(root);
-        Debug.Log("[MVP Setup] Player prefab patched with MVP hotbar and network transform.");
+        Debug.Log("[MVP Setup] Player prefab patched with MVP hotbar, first-person rig, and network transform.");
     }
 
     static void SetupHq(OfficeTaskDefinition task)

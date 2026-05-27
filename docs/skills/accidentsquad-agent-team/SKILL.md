@@ -31,6 +31,7 @@ First playable loop:
 Solo Host / Create Host / Join Host
 -> Rundown Office (HQ scene)
 -> Office Computer [E]
+-> Buy Gear from Office Computer [F1-F4]
 -> Accept "找回被遗忘的作业本"
 -> School Mission (School_LostItem_01 scene)
 -> Find Homework Notebook [E]
@@ -76,7 +77,9 @@ All MVP scripts are implemented and wired. Run `Tools > Accident Squad > Setup A
 | `SchoolExitPoint` | `Scripts/MVP/` | ✅ IInteractable, carrier-only exit enforcement |
 | `SchoolMonsterAI` | `Scripts/MVP/` | ✅ Patrol / Chase / Stunned / Distracted states |
 | `PlayerHotbar` | `Scripts/MVP/` | ✅ 5 slots, medkit/stun spray/decoy/flashlight |
-| `MvpHud` | `Scripts/MVP/` | ✅ Office panel + mission panel + bottom hotbar |
+| `MvpHud` | `Scripts/MVP/` | ✅ Office panel + mission panel + computer shop + icon hotbar |
+| `PlayerFirstPersonRig` | `Scripts/MVP/` | ✅ First-person hands, held-item models, and remote player visual |
+| `MvpSceneStyleDirector` | `Scripts/MVP/` | ✅ Runtime office/school style dressing for MVP cohesion |
 | `MvpConnectionLimiter` | `Scripts/Network/` | ✅ Caps at 4 players via connection approval |
 | `CompanyData` / `CompanyState` | `Scripts/Settlement/SettlementManager.cs` | ✅ Full economy: funds, debt, rep, XP, pressure |
 | `MvpProjectSetup` | `Editor/` | ✅ Generates School_LostItem_01 scene, patches player prefab |
@@ -97,15 +100,32 @@ All MVP scripts are implemented and wired. Run `Tools > Accident Squad > Setup A
 | Tutorial acquisition requirement | pressure < 70, completed ≥ 2 lost-item jobs |
 | Forced restructure trigger | pressure = 100 AND funds < 0 AND rep < 0, after ultimatum |
 
-### Player hotbar (5 slots, starter loadout)
+### Player hotbar (5 slots, computer-purchased gear)
 
-| Slot | Item | Key | Effect |
-|---|---|---|---|
-| 1 | 回血药 (Medkit) | 1 + LMB | Heal 30 HP, consumed |
-| 2 | 定身喷雾 (Stun Spray) | 2 + LMB | Stun nearest monster 2.5s within 6m, consumed |
-| 3 | 诱饵 (Decoy) | 3 + LMB | Distract nearest monster 4s within 12m, consumed |
-| 4 | 手电 (Flashlight) | 4 + LMB | Toggle — not consumed |
-| 5 | (empty) | 5 | — |
+Players no longer receive a free starter loadout. Gear is bought near the office computer before launching a mission.
+
+| Purchase Key | Item | Cost | Hotbar Use | Effect |
+|---|---|---:|---|---|
+| F1 | 回血药 (Medkit) | 80G | Slot key + LMB | Heal 30 HP, consumed |
+| F2 | 诱饵 (Decoy) | 60G | Slot key + LMB | Distract nearest monster 4s within 12m, consumed |
+| F3 | 定身喷雾 (Stun Spray) | 120G | Slot key + LMB | Stun nearest monster 2.5s within 6m, consumed |
+| F4 | 手电 (Flashlight) | 100G | Slot key + LMB | Toggle — not consumed |
+
+The bottom hotbar uses icons, not item-name text. Only purchased items appear. First-person hands show the currently selected purchased item model.
+
+## Visual Reference Direction
+
+Primary visual reference: `Lethal Company` style low-cost co-op horror staging: readable silhouettes, aggressive darkness, simple geometry, and terminal-driven preparation.
+
+Supporting references:
+- `Buckshot Roulette`: dense dirty-room atmosphere, grimy props, hard tabletop/terminal focus.
+- `The Stanley Parable`: absurd office spaces and corporate signage.
+- `Control`: bureaucratic supernatural mood, red warnings, concrete/records/containment language.
+- `Phasmophobia`: readable real-world map layouts and equipment-led preparation.
+- `The Exit 8` / `I'm on Observation Duty`: ordinary spaces with small wrong details.
+- `GTFO`: later-game industrial map zoning, terminal/door/resource tension.
+
+Do not copy specific assets, enemies, UI, or level layouts from references. Extract methods: lighting, density, readable routes, signage, and low-poly material discipline.
 
 ## One-Click Setup
 
@@ -115,7 +135,7 @@ Tools > Accident Squad > Setup All
 
 This creates all prefabs, HQ scene, Mall_B2 prototype, AND School_LostItem_01 MVP scene in a single pass. No separate MVP setup step needed.
 
-After running: open **HQ.unity** → Play → Start Host → approach the office computer → press E.
+After running: open **HQ.unity** → Play → Start Host → approach the office computer → buy optional gear with F1-F4 → press E.
 
 To validate before Play: `Tools > Accident Squad > MVP > Validate School MVP`
 
@@ -127,11 +147,15 @@ To validate before Play: `Tools > Accident Squad > MVP > Validate School MVP`
 ### Solo failure path
 Enter school, let the monster kill you, confirm all-downed triggers failure, confirm return to HQ with failure penalty and pressure increase.
 
-### Hotbar path
-- Slot 1 (Medkit): take damage, use → HP recovers, slot empties
-- Slot 2 (Stun Spray): use near monster → monster enters Stunned state for ~2.5s
-- Slot 3 (Decoy): use near monster → monster moves toward decoy position for ~4s
-- Slot 4 (Flashlight): use → toggles light, slot NOT consumed
+### Shop and hotbar path
+- In HQ, approach the office computer.
+- Try buying with insufficient funds → HUD shows a funds warning and no item appears.
+- Buy gear with F1-F4 when funds are available → purchased item appears as an icon in the hotbar.
+- Select purchased gear with 1-5; first-person hands show the held item model.
+- Medkit: take damage, use → HP recovers, item quantity decreases.
+- Stun Spray: use near monster → monster enters Stunned state for ~2.5s.
+- Decoy: use near monster → monster moves toward decoy position for ~4s.
+- Flashlight: use → toggles light, slot is NOT consumed.
 
 ### Two-client smoke
 Host starts mission, second player joins before launch, both load school, one collects notebook, only notebook carrier can complete exit.
@@ -264,6 +288,9 @@ Risks:
 - Notebook pickup and mission exit validated on server: player identity, distance, alive/downed state.
 - Only the notebook carrier can complete the mission exit.
 - Hotbar has exactly five slots for equipment/consumables.
+- Gear must be purchased from the office computer; no free starter loadout.
+- Hotbar display uses icons rather than item-name text.
+- First-person view shows hands and the selected held item when a purchased item is selected.
 - Flashlight slot is never consumed on use.
 - Every visible hotbar item has a real gameplay effect.
 - Only the host starts missions and performs office acquisition decisions.
