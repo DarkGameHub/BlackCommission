@@ -18,3 +18,9 @@ Unity setup:
 2. Run `Tools > Accident Squad > MVP > Setup School MVP`.
 3. Run `Tools > Accident Squad > MVP > Validate School MVP`.
 4. Open `HQ`, press Play, click `Start Host`, then use the office computer to enter the school mission.
+
+Generated art workflow:
+
+1. On Windows with Blender installed, run `blender --background --factory-startup --python D:/AccidentSquad/docs/art/blender_outsourced_civic_commercial_v4.py`.
+2. In Unity, run `Tools > Accident Squad > Art > Import Generated Blender Kit`.
+3. The imported prefabs are generated under `Assets/_Project/Prefabs/Art`.
