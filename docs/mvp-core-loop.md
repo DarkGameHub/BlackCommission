@@ -14,6 +14,49 @@ The joke is that even a tiny job can become absurdly dangerous. The long-term sa
 
 ## MVP Player Flow
 
+```mermaid
+flowchart TD
+    A["主菜单"] --> B{"选择模式"}
+    B --> B1["单人游玩 / 创建主机"]
+    B --> B2["加入主机"]
+    B1 --> C["破旧事务所"]
+    B2 --> C
+
+    C --> D["办公室电脑"]
+    D --> E["接取任务: 找回作业本"]
+    E --> F["直接进入学校任务场景"]
+
+    F --> G["寻找作业本"]
+    G --> H{"任务中发生什么?"}
+    H -->|找到作业本| I["作业本携带者前往校门撤离点"]
+    H -->|被怪物追击| J["用走位 / 喷雾 / 诱饵 / 回血药求生"]
+    J --> G
+    H -->|全员倒地| K["任务失败"]
+
+    I --> L["任务成功"]
+    K --> M["返回事务所"]
+    L --> M
+    M --> N["办公室电脑领取结算"]
+
+    N --> O{"结算结果"}
+    O -->|成功| P["获得金钱 / 声望 / 经验"]
+    O -->|失败| Q["少量安慰金 / 声望下降 / 吞并压力上升"]
+
+    P --> R{"完成 2 个失物任务\n且资金 >= 150G\n且吞并压力 < 70?"}
+    R -->|是| S["吞并 0 级事务所\n事务所升到 2 级"]
+    R -->|否| D
+    S --> D
+
+    Q --> T{"吞并压力 100\n且资金/声望仍为负?"}
+    T -->|第一次| U["收到竞对最后通牒"]
+    T -->|再次失败| V["被竞对吞并重组\n债务增加，进度回退"]
+    T -->|否| D
+    U --> D
+    V --> D
+```
+
+The MVP has no vehicle step: the office computer loads the selected mission directly, and the school exit returns the team directly to the office.
+
 ```text
 Main Menu
   -> Solo Host / Create Host / Join Host
