@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 public static class MvpSceneStyleDirector
 {
-    const string OfficeRootName = "MVP_RuntimeStyle_Office";
+    const string OfficeRootName = "MVP_RuntimeStyle_Office_ExteriorDispatch";
     const string SchoolRootName = "MVP_RuntimeStyle_School";
 
     enum OfficePattern
@@ -46,9 +46,18 @@ public static class MvpSceneStyleDirector
     static void BuildOfficeStyle()
     {
         RemoveGeneratedWorldText();
-        if (GameObject.Find(OfficeRootName) != null) return;
+        ClearExistingOfficeStyleRoots();
 
         var root = new GameObject(OfficeRootName);
+        EnsureHqMenuCamera(root.transform);
+        OpenOriginalBackWallForExteriorExit();
+        HideOriginalOfficeBlockoutProps();
+        CreateWalkableCollider("HQExteriorSafetyGround", root.transform,
+            new Vector3(1.8f, -0.12f, -4.2f), new Vector3(10f, 0.24f, 11.5f));
+        CreateWalkableCollider("GarageExitWalkableThreshold", root.transform,
+            new Vector3(2.45f, -0.04f, -3.35f), new Vector3(3.45f, 0.18f, 2.15f));
+        CreateWalkableCollider("ExteriorDispatchYardWalkable", root.transform,
+            new Vector3(2.45f, -0.04f, -6.2f), new Vector3(5.45f, 0.18f, 4.35f));
         ApplyOfficeAtmosphere();
         Material stainedWall = MakeOfficeMaterial("Office_StainedWall", new Color(0.42f, 0.49f, 0.39f), new Color(0.2f, 0.24f, 0.18f), OfficePattern.Grime);
         Material dirtyFloor = MakeOfficeMaterial("Office_WornFloor", new Color(0.16f, 0.18f, 0.15f), new Color(0.36f, 0.31f, 0.22f), OfficePattern.Tile);
@@ -76,6 +85,12 @@ public static class MvpSceneStyleDirector
         Material rubber = MakeMaterial(new Color(0.008f, 0.009f, 0.008f));
         Material headlight = MakeEmissiveMaterial(new Color(0.8f, 0.72f, 0.38f), new Color(1f, 0.86f, 0.38f), 1.2f);
 
+        BuildCleanReadableOfficeAndExterior(root.transform, stainedWall, dirtyFloor, paper, warningRed,
+            terminalGreen, darkMetal, tiredFabric, cardboard, wood, garageConcrete, bayDoor, hazardStripe,
+            vanBody, vanGlass, rubber, headlight);
+#pragma warning disable CS0162
+        return;
+
         CreateBox("OfficeFloorSkin", root.transform, new Vector3(0f, 0.012f, 0f),
             new Vector3(9.6f, 0.025f, 7.6f), dirtyFloor);
         CreateDispatchStationBase(root.transform, garageConcrete, darkMetal, hazardStripe, terminalGreen);
@@ -87,8 +102,12 @@ public static class MvpSceneStyleDirector
             new Vector3(0.035f, 2.9f, 7.1f), stainedWall);
         CreateBox("RightWallStainPanel", root.transform, new Vector3(4.965f, 1.55f, 0f),
             new Vector3(0.035f, 2.9f, 7.1f), stainedWall);
-        CreateBox("SouthWallStainPanel", root.transform, new Vector3(0f, 1.55f, -3.765f),
-            new Vector3(9.4f, 2.9f, 0.035f), stainedWall);
+        CreateBox("SouthWallStainPanel_LeftOfExit", root.transform, new Vector3(-2.05f, 1.55f, -3.765f),
+            new Vector3(5.05f, 2.9f, 0.035f), stainedWall);
+        CreateBox("SouthWallStainPanel_RightOfExit", root.transform, new Vector3(4.65f, 1.55f, -3.765f),
+            new Vector3(0.85f, 2.9f, 0.035f), stainedWall);
+        CreateBox("SouthWallExitHeader", root.transform, new Vector3(2.35f, 2.62f, -3.765f),
+            new Vector3(3.3f, 0.62f, 0.04f), stainedWall);
         CreateBox("BackWallBottomMold", root.transform, new Vector3(0f, 0.33f, 2.925f),
             new Vector3(9.35f, 0.12f, 0.05f), darkMetal);
         CreateBox("RightWallBottomMold", root.transform, new Vector3(4.925f, 0.33f, 0f),
@@ -194,17 +213,300 @@ public static class MvpSceneStyleDirector
         var light = lightGo.AddComponent<Light>();
         light.type = LightType.Point;
         light.color = new Color(0.2f, 1f, 0.55f);
-        light.intensity = 1.1f;
-        light.range = 4f;
+        light.intensity = 1.45f;
+        light.range = 4.8f;
 
         var warmLightGo = new GameObject("OfficeSicklyOverhead");
         warmLightGo.transform.SetParent(root.transform, false);
         warmLightGo.transform.position = new Vector3(0.2f, 2.65f, 0.1f);
         var warmLight = warmLightGo.AddComponent<Light>();
         warmLight.type = LightType.Point;
-        warmLight.color = new Color(0.9f, 0.8f, 0.55f);
-        warmLight.intensity = 0.55f;
-        warmLight.range = 5.5f;
+        warmLight.color = new Color(1f, 0.88f, 0.62f);
+        warmLight.intensity = 1.45f;
+        warmLight.range = 7.2f;
+
+        var roomFillGo = new GameObject("OfficeReadableFillLight");
+        roomFillGo.transform.SetParent(root.transform, false);
+        roomFillGo.transform.position = new Vector3(0f, 2.35f, -1.75f);
+        var roomFill = roomFillGo.AddComponent<Light>();
+        roomFill.type = LightType.Point;
+        roomFill.color = new Color(0.75f, 0.92f, 0.78f);
+        roomFill.intensity = 0.8f;
+        roomFill.range = 8.5f;
+#pragma warning restore CS0162
+    }
+
+    static void BuildCleanReadableOfficeAndExterior(
+        Transform root,
+        Material wall,
+        Material floor,
+        Material paper,
+        Material warningRed,
+        Material terminalGreen,
+        Material darkMetal,
+        Material fabric,
+        Material cardboard,
+        Material wood,
+        Material concrete,
+        Material bayDoor,
+        Material hazardStripe,
+        Material vanBody,
+        Material vanGlass,
+        Material rubber,
+        Material headlight)
+    {
+        Material exitGreen = MakeEmissiveMaterial(new Color(0.05f, 0.55f, 0.22f), new Color(0.3f, 1f, 0.55f), 0.9f);
+        Material lightPanel = MakeEmissiveMaterial(new Color(0.82f, 0.78f, 0.58f), new Color(1f, 0.92f, 0.62f), 0.55f);
+        Material asphalt = MakeOfficeMaterial("Office_CleanExteriorAsphalt", new Color(0.11f, 0.12f, 0.115f), new Color(0.21f, 0.22f, 0.2f), OfficePattern.Grime);
+
+        CreateBox("HQReadableInteriorFloor", root, new Vector3(0f, 0.025f, 0f),
+            new Vector3(6.15f, 0.04f, 5.1f), floor);
+        CreateBox("HQReadableNorthWall", root, new Vector3(0f, 1.45f, 2.55f),
+            new Vector3(6.15f, 2.85f, 0.08f), wall);
+        CreateBox("HQReadableLeftWall", root, new Vector3(-3.05f, 1.45f, 0f),
+            new Vector3(0.08f, 2.85f, 5.1f), wall);
+        CreateBox("HQReadableRightWall", root, new Vector3(3.05f, 1.45f, 0.65f),
+            new Vector3(0.08f, 2.85f, 3.65f), wall);
+        CreateBox("HQReadableCeiling", root, new Vector3(0f, 2.88f, 0f),
+            new Vector3(6.1f, 0.06f, 5.05f), MakeOfficeMaterial("Office_CleanCeiling", new Color(0.38f, 0.4f, 0.35f), new Color(0.22f, 0.24f, 0.2f), OfficePattern.Tile));
+
+        CreateBox("HQExitHeader", root, new Vector3(2.1f, 2.55f, -2.55f),
+            new Vector3(2.9f, 0.6f, 0.1f), wall);
+        CreateBox("HQExitFrameLeft", root, new Vector3(0.62f, 1.22f, -2.62f),
+            new Vector3(0.14f, 2.35f, 0.18f), darkMetal);
+        CreateBox("HQExitFrameRight", root, new Vector3(3.58f, 1.22f, -2.62f),
+            new Vector3(0.14f, 2.35f, 0.18f), darkMetal);
+        CreateBox("HQExitThresholdHazard", root, new Vector3(2.1f, 0.07f, -2.82f),
+            new Vector3(3.05f, 0.035f, 0.36f), hazardStripe);
+        CreateBox("HQExitSignPanel", root, new Vector3(2.1f, 2.23f, -2.64f),
+            new Vector3(1.35f, 0.28f, 0.035f), exitGreen);
+        CreateBox("HQExitIconLeftStroke", root, new Vector3(1.82f, 2.23f, -2.69f),
+            new Vector3(0.44f, 0.055f, 0.025f), darkMetal).transform.rotation = Quaternion.Euler(0f, 0f, 28f);
+        CreateBox("HQExitIconRightStroke", root, new Vector3(2.38f, 2.23f, -2.69f),
+            new Vector3(0.44f, 0.055f, 0.025f), darkMetal).transform.rotation = Quaternion.Euler(0f, 0f, -28f);
+
+        CreateBox("HQExteriorParkingPad", root, new Vector3(2.45f, 0.03f, -6.15f),
+            new Vector3(5.45f, 0.045f, 4.45f), asphalt);
+        CreateBox("HQExteriorConcreteApron", root, new Vector3(2.1f, 0.045f, -3.65f),
+            new Vector3(3.3f, 0.025f, 0.72f), concrete);
+        CreateBox("HQParkingLeftLine", root, new Vector3(1.2f, 0.08f, -6.15f),
+            new Vector3(0.08f, 0.018f, 3.45f), paper);
+        CreateBox("HQParkingRightLine", root, new Vector3(4.0f, 0.08f, -6.15f),
+            new Vector3(0.08f, 0.018f, 3.45f), paper);
+
+        CreateBox("HQRouteLineInside", root, new Vector3(2.08f, 0.075f, -1.25f),
+            new Vector3(0.16f, 0.02f, 2.05f), terminalGreen);
+        CreateBox("HQRouteLineOutside", root, new Vector3(2.45f, 0.08f, -4.95f),
+            new Vector3(0.18f, 0.02f, 2.85f), terminalGreen);
+        GameObject insideArrowLeft = CreateBox("HQRouteArrowInsideLeft", root, new Vector3(2.08f, 0.09f, -2.12f),
+            new Vector3(0.64f, 0.02f, 0.12f), terminalGreen);
+        insideArrowLeft.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
+        GameObject insideArrowRight = CreateBox("HQRouteArrowInsideRight", root, new Vector3(2.08f, 0.09f, -2.12f),
+            new Vector3(0.64f, 0.02f, 0.12f), terminalGreen);
+        insideArrowRight.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
+        GameObject outsideArrowLeft = CreateBox("HQRouteArrowOutsideLeft", root, new Vector3(2.45f, 0.09f, -6.35f),
+            new Vector3(0.7f, 0.02f, 0.12f), terminalGreen);
+        outsideArrowLeft.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
+        GameObject outsideArrowRight = CreateBox("HQRouteArrowOutsideRight", root, new Vector3(2.45f, 0.09f, -6.35f),
+            new Vector3(0.7f, 0.02f, 0.12f), terminalGreen);
+        outsideArrowRight.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
+
+        CreateBox("HQDispatchDeskTop", root, new Vector3(-1.35f, 0.66f, 1.62f),
+            new Vector3(1.55f, 0.12f, 0.64f), wood);
+        CreateBox("HQDispatchDeskLeftLeg", root, new Vector3(-1.98f, 0.34f, 1.62f),
+            new Vector3(0.1f, 0.62f, 0.52f), darkMetal);
+        CreateBox("HQDispatchDeskRightLeg", root, new Vector3(-0.72f, 0.34f, 1.62f),
+            new Vector3(0.1f, 0.62f, 0.52f), darkMetal);
+        CreateReadableComputerTerminal(root, darkMetal, terminalGreen, paper, lightPanel);
+
+        CreateBox("HQDebtBoard", root, new Vector3(-2.45f, 1.65f, 2.49f),
+            new Vector3(0.95f, 0.72f, 0.04f), warningRed);
+        CreateBox("HQDebtBoardHeader", root, new Vector3(-2.45f, 1.92f, 2.455f),
+            new Vector3(0.8f, 0.1f, 0.025f), darkMetal);
+        CreateBox("HQDebtBoardTallyA", root, new Vector3(-2.68f, 1.58f, 2.445f),
+            new Vector3(0.045f, 0.42f, 0.025f), paper);
+        CreateBox("HQDebtBoardTallyB", root, new Vector3(-2.52f, 1.58f, 2.445f),
+            new Vector3(0.045f, 0.42f, 0.025f), paper);
+        CreateBox("HQDebtBoardTallyC", root, new Vector3(-2.36f, 1.58f, 2.445f),
+            new Vector3(0.045f, 0.42f, 0.025f), paper);
+        CreateBox("HQDebtBoardTallySlash", root, new Vector3(-2.52f, 1.58f, 2.44f),
+            new Vector3(0.045f, 0.56f, 0.025f), paper).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
+        for (int i = 0; i < 4; i++)
+            CreateBox($"HQSimpleNotice_{i + 1}", root, new Vector3(-1.08f + i * 0.32f, 1.58f, 2.49f),
+                new Vector3(0.22f, 0.28f, 0.03f), i == 1 ? warningRed : paper);
+
+        CreateBox("HQEquipmentShelfFrame", root, new Vector3(2.55f, 1f, 1.8f),
+            new Vector3(0.85f, 1.55f, 0.28f), darkMetal);
+        CreateBox("HQMedkitBox", root, new Vector3(2.22f, 1.37f, 1.58f),
+            new Vector3(0.32f, 0.2f, 0.16f), paper);
+        CreateBox("HQToolBox", root, new Vector3(2.58f, 0.86f, 1.58f),
+            new Vector3(0.36f, 0.2f, 0.18f), warningRed);
+        CreateBox("HQCardboardSupplyBox", root, new Vector3(2.88f, 0.22f, 1.72f),
+            new Vector3(0.28f, 0.18f, 0.22f), cardboard);
+        CreateBox("HQSofaSeat", root, new Vector3(1.05f, 0.42f, 2.18f),
+            new Vector3(1.1f, 0.32f, 0.5f), fabric);
+        CreateBox("HQSofaBack", root, new Vector3(1.05f, 0.74f, 2.43f),
+            new Vector3(1.1f, 0.62f, 0.16f), fabric);
+
+        CreateBox("HQOfficeMainLightPanel", root, new Vector3(0f, 2.82f, 0.75f),
+            new Vector3(1.9f, 0.045f, 0.2f), lightPanel);
+        CreateBox("HQExitLightPanel", root, new Vector3(2.1f, 2.72f, -2.05f),
+            new Vector3(1.25f, 0.045f, 0.2f), lightPanel);
+        CreateBox("HQParkingBayDoorRolledUp", root, new Vector3(2.1f, 2.55f, -2.85f),
+            new Vector3(3.1f, 0.28f, 0.12f), bayDoor);
+
+        if (!CreateGeneratedDispatchVanIfAvailable(root, terminalGreen))
+            CreateCleanFallbackExteriorVan(root, vanBody, vanGlass, rubber, darkMetal, terminalGreen, warningRed, paper, headlight);
+
+        var officeLightGo = new GameObject("HQReadableOfficeLight");
+        officeLightGo.transform.SetParent(root, false);
+        officeLightGo.transform.position = new Vector3(0f, 2.35f, 0.55f);
+        var officeLight = officeLightGo.AddComponent<Light>();
+        officeLight.type = LightType.Point;
+        officeLight.color = new Color(1f, 0.9f, 0.68f);
+        officeLight.intensity = 1.85f;
+        officeLight.range = 7f;
+
+        var exitLightGo = new GameObject("HQReadableExitLight");
+        exitLightGo.transform.SetParent(root, false);
+        exitLightGo.transform.position = new Vector3(2.1f, 2f, -2.25f);
+        var exitLight = exitLightGo.AddComponent<Light>();
+        exitLight.type = LightType.Point;
+        exitLight.color = new Color(0.45f, 1f, 0.62f);
+        exitLight.intensity = 1.25f;
+        exitLight.range = 4.8f;
+
+        var yardLightGo = new GameObject("HQReadableYardLight");
+        yardLightGo.transform.SetParent(root, false);
+        yardLightGo.transform.position = new Vector3(2.5f, 3f, -5.75f);
+        var yardLight = yardLightGo.AddComponent<Light>();
+        yardLight.type = LightType.Point;
+        yardLight.color = new Color(1f, 0.78f, 0.45f);
+        yardLight.intensity = 1.4f;
+        yardLight.range = 6f;
+    }
+
+    static void CreateReadableComputerTerminal(
+        Transform root,
+        Material darkMetal,
+        Material terminalGreen,
+        Material paper,
+        Material lightPanel)
+    {
+        OfficeComputer computer = Object.FindAnyObjectByType<OfficeComputer>();
+        if (computer == null) return;
+
+        if (computer.TryGetComponent<Renderer>(out var renderer))
+            renderer.enabled = false;
+
+        if (computer.TryGetComponent<BoxCollider>(out var collider))
+        {
+            collider.isTrigger = true;
+            collider.center = Vector3.zero;
+            collider.size = new Vector3(2.1f, 1.45f, 3.5f);
+        }
+
+        Vector3 p = computer.transform.position;
+        Vector3 screenCenter = new Vector3(p.x, 1.2f, 1.84f);
+
+        CreateBox("HQComputerMonitorShell", root, screenCenter + new Vector3(0f, 0f, 0.08f),
+            new Vector3(1.05f, 0.68f, 0.16f), darkMetal);
+        CreateBox("HQComputerScreenGlass", root, screenCenter,
+            new Vector3(0.82f, 0.48f, 0.035f), terminalGreen);
+        CreateBox("HQComputerScreenScanlineA", root, screenCenter + new Vector3(0f, 0.1f, -0.025f),
+            new Vector3(0.72f, 0.035f, 0.02f), paper);
+        CreateBox("HQComputerScreenScanlineB", root, screenCenter + new Vector3(-0.08f, -0.03f, -0.025f),
+            new Vector3(0.55f, 0.028f, 0.02f), paper);
+        CreateBox("HQComputerScreenCursor", root, screenCenter + new Vector3(0.28f, -0.14f, -0.025f),
+            new Vector3(0.08f, 0.08f, 0.02f), lightPanel);
+
+        CreateBox("HQComputerNeck", root, new Vector3(p.x, 0.89f, 1.98f),
+            new Vector3(0.16f, 0.36f, 0.14f), darkMetal);
+        CreateBox("HQComputerBase", root, new Vector3(p.x, 0.74f, 1.88f),
+            new Vector3(0.68f, 0.08f, 0.38f), darkMetal);
+        CreateBox("HQComputerKeyboardDeck", root, new Vector3(p.x, 0.86f, 1.33f),
+            new Vector3(0.94f, 0.055f, 0.32f), darkMetal);
+
+        for (int i = 0; i < 4; i++)
+            CreateBox($"HQComputerKeyRow_{i + 1}", root, new Vector3(p.x - 0.3f + i * 0.2f, 0.895f, 1.24f),
+                new Vector3(0.12f, 0.018f, 0.08f), paper);
+
+        CreateBox("HQComputerMousePad", root, new Vector3(p.x + 0.68f, 0.86f, 1.34f),
+            new Vector3(0.34f, 0.025f, 0.28f), darkMetal);
+        CreateBox("HQComputerMouse", root, new Vector3(p.x + 0.68f, 0.895f, 1.34f),
+            new Vector3(0.16f, 0.055f, 0.22f), terminalGreen);
+        CreateBox("HQComputerStatusLight", root, new Vector3(p.x - 0.54f, 1.53f, 1.76f),
+            new Vector3(0.12f, 0.12f, 0.025f), lightPanel);
+
+        var glowGo = new GameObject("HQComputerReadableScreenGlow");
+        glowGo.transform.SetParent(root, false);
+        glowGo.transform.position = screenCenter + new Vector3(0f, 0f, -0.25f);
+        var glow = glowGo.AddComponent<Light>();
+        glow.type = LightType.Point;
+        glow.color = new Color(0.32f, 1f, 0.58f);
+        glow.intensity = 1.35f;
+        glow.range = 3.2f;
+    }
+
+    static void CreateCleanFallbackExteriorVan(
+        Transform root,
+        Material vanBody,
+        Material vanGlass,
+        Material rubber,
+        Material darkMetal,
+        Material terminalGreen,
+        Material warningRed,
+        Material paper,
+        Material headlight)
+    {
+        Vector3 center = new Vector3(2.65f, 0.82f, -6.35f);
+        CreateBox("FallbackExteriorVanBody", root, center,
+            new Vector3(1.65f, 1.05f, 2.45f), vanBody);
+        CreateBox("FallbackExteriorVanNose", root, center + new Vector3(0f, -0.18f, -1.24f),
+            new Vector3(1.48f, 0.68f, 0.72f), vanBody);
+        CreateBox("FallbackExteriorVanCabRoof", root, center + new Vector3(0f, 0.58f, -0.62f),
+            new Vector3(1.45f, 0.32f, 0.85f), vanBody);
+        CreateBox("FallbackExteriorVanWindshield", root, center + new Vector3(0f, 0.22f, -1.65f),
+            new Vector3(1.12f, 0.38f, 0.04f), vanGlass);
+        CreateBox("FallbackExteriorVanLeftWindow", root, center + new Vector3(-0.84f, 0.18f, -0.72f),
+            new Vector3(0.04f, 0.36f, 0.62f), vanGlass);
+        CreateBox("FallbackExteriorVanRightWindow", root, center + new Vector3(0.84f, 0.18f, -0.72f),
+            new Vector3(0.04f, 0.36f, 0.62f), vanGlass);
+        CreateBox("FallbackExteriorVanRearDoorA", root, center + new Vector3(-0.42f, 0.05f, 1.25f),
+            new Vector3(0.04f, 0.78f, 0.58f), darkMetal);
+        CreateBox("FallbackExteriorVanRearDoorB", root, center + new Vector3(0.42f, 0.05f, 1.25f),
+            new Vector3(0.04f, 0.78f, 0.58f), darkMetal);
+        CreateBox("FallbackExteriorVanBumper", root, center + new Vector3(0f, -0.47f, -1.67f),
+            new Vector3(1.65f, 0.17f, 0.14f), darkMetal);
+        CreateBox("FallbackExteriorVanPlate", root, center + new Vector3(0f, -0.3f, -1.75f),
+            new Vector3(0.62f, 0.16f, 0.035f), paper);
+        CreateBox("FallbackExteriorVanHeadlightL", root, center + new Vector3(-0.5f, -0.18f, -1.72f),
+            new Vector3(0.28f, 0.16f, 0.04f), headlight);
+        CreateBox("FallbackExteriorVanHeadlightR", root, center + new Vector3(0.5f, -0.18f, -1.72f),
+            new Vector3(0.28f, 0.16f, 0.04f), headlight);
+
+        CreateCylinder("FallbackExteriorVanWheelFL", root, center + new Vector3(-0.93f, -0.48f, -0.88f),
+            Quaternion.Euler(0f, 0f, 90f), new Vector3(0.34f, 0.18f, 0.34f), rubber);
+        CreateCylinder("FallbackExteriorVanWheelFR", root, center + new Vector3(0.93f, -0.48f, -0.88f),
+            Quaternion.Euler(0f, 0f, 90f), new Vector3(0.34f, 0.18f, 0.34f), rubber);
+        CreateCylinder("FallbackExteriorVanWheelBL", root, center + new Vector3(-0.93f, -0.48f, 0.78f),
+            Quaternion.Euler(0f, 0f, 90f), new Vector3(0.34f, 0.18f, 0.34f), rubber);
+        CreateCylinder("FallbackExteriorVanWheelBR", root, center + new Vector3(0.93f, -0.48f, 0.78f),
+            Quaternion.Euler(0f, 0f, 90f), new Vector3(0.34f, 0.18f, 0.34f), rubber);
+
+        CreateBox("FallbackExteriorVanLogoTop", root, center + new Vector3(-0.85f, 0.28f, 0.12f),
+            new Vector3(0.04f, 0.08f, 0.6f), terminalGreen);
+        CreateBox("FallbackExteriorVanLogoLeft", root, center + new Vector3(-0.86f, 0.1f, 0.12f),
+            new Vector3(0.04f, 0.42f, 0.08f), terminalGreen);
+        CreateBox("FallbackExteriorVanLogoRight", root, center + new Vector3(-0.86f, 0.1f, 0.68f),
+            new Vector3(0.04f, 0.42f, 0.08f), terminalGreen);
+        GameObject slash = CreateBox("FallbackExteriorVanDebtSlash", root, center + new Vector3(-0.87f, 0.1f, 0.4f),
+            new Vector3(0.045f, 0.52f, 0.08f), warningRed);
+        slash.transform.rotation = Quaternion.Euler(0f, 0f, -25f);
+
+        GameObject trigger = CreateInteractionTrigger("FallbackExteriorVanDepartureTrigger", root,
+            center + new Vector3(0f, 0.1f, 0f), new Vector3(2.65f, 1.85f, 3.35f));
+        trigger.AddComponent<OfficeDepartureVan>();
     }
 
     static void BuildSchoolStyle()
@@ -300,6 +602,34 @@ public static class MvpSceneStyleDirector
         collider.isTrigger = true;
         collider.size = size;
         return go;
+    }
+
+    static GameObject CreateWalkableCollider(string name, Transform parent, Vector3 position, Vector3 size)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = position;
+        var collider = go.AddComponent<BoxCollider>();
+        collider.size = size;
+        return go;
+    }
+
+    static void EnsureHqMenuCamera(Transform root)
+    {
+        if (Camera.main != null) return;
+
+        var cameraGo = new GameObject("HQMenuCamera");
+        cameraGo.transform.SetParent(root, false);
+        cameraGo.transform.SetPositionAndRotation(new Vector3(0f, 1.55f, 1.25f), Quaternion.Euler(6f, 180f, 0f));
+        cameraGo.tag = "MainCamera";
+
+        var camera = cameraGo.AddComponent<Camera>();
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(0.018f, 0.022f, 0.02f);
+        camera.depth = -10f;
+        camera.fieldOfView = 62f;
+        camera.nearClipPlane = 0.05f;
+        camera.farClipPlane = 80f;
     }
 
     static GameObject CreateText(string text, Transform parent, Vector3 position, Quaternion rotation, float characterSize, Color color)
@@ -626,15 +956,15 @@ public static class MvpSceneStyleDirector
     {
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
-        RenderSettings.fogColor = new Color(0.045f, 0.06f, 0.05f);
-        RenderSettings.fogDensity = 0.018f;
-        RenderSettings.ambientLight = new Color(0.035f, 0.044f, 0.038f);
+        RenderSettings.fogColor = new Color(0.13f, 0.16f, 0.14f);
+        RenderSettings.fogDensity = 0.006f;
+        RenderSettings.ambientLight = new Color(0.22f, 0.24f, 0.20f);
 
         foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
         {
             if (light == null || light.name != "OfficeLight") continue;
-            light.intensity = Mathf.Min(light.intensity, 0.35f);
-            light.color = new Color(0.72f, 0.78f, 0.58f);
+            light.intensity = Mathf.Max(light.intensity, 1.15f);
+            light.color = new Color(1f, 0.92f, 0.7f);
         }
     }
 
@@ -668,13 +998,26 @@ public static class MvpSceneStyleDirector
         CreateBox("GarageOilPool_B", root, new Vector3(3.05f, 0.099f, -2.8f),
             new Vector3(0.62f, 0.012f, 0.3f), darkMetal);
 
-        for (int i = 0; i < 6; i++)
+        CreateBox("ExteriorDispatchYardConcrete", root, new Vector3(2.45f, 0.065f, -6.2f),
+            new Vector3(5.35f, 0.028f, 4.25f), concrete);
+        CreateBox("ExteriorCurbLeft", root, new Vector3(-0.25f, 0.18f, -5.95f),
+            new Vector3(0.14f, 0.18f, 3.6f), darkMetal);
+        CreateBox("ExteriorCurbRight", root, new Vector3(5.1f, 0.18f, -5.95f),
+            new Vector3(0.14f, 0.18f, 3.6f), darkMetal);
+        CreateBox("ExteriorStreetEdge", root, new Vector3(2.45f, 0.18f, -8.25f),
+            new Vector3(5.45f, 0.18f, 0.12f), darkMetal);
+
+        for (int i = 0; i < 3; i++)
         {
-            CreateBox($"GarageBayDoorPanel_{i + 1}", root, new Vector3(2.45f, 0.82f + i * 0.31f, -3.715f),
+            CreateBox($"GarageBayDoorRolledUpPanel_{i + 1}", root, new Vector3(2.45f, 2.28f + i * 0.16f, -3.715f),
                 new Vector3(3.35f, 0.23f, 0.055f), bayDoor);
-            CreateBox($"GarageBayDoorSeam_{i + 1}", root, new Vector3(2.45f, 0.67f + i * 0.31f, -3.755f),
+            CreateBox($"GarageBayDoorRolledUpSeam_{i + 1}", root, new Vector3(2.45f, 2.17f + i * 0.16f, -3.755f),
                 new Vector3(3.45f, 0.035f, 0.035f), darkMetal);
         }
+        CreateBox("GarageOpenDoorDarkInterior", root, new Vector3(2.45f, 1.18f, -3.79f),
+            new Vector3(3.24f, 1.9f, 0.03f), MakeMaterial(new Color(0.015f, 0.02f, 0.018f)));
+        CreateBox("GarageExitThreshold", root, new Vector3(2.45f, 0.13f, -3.86f),
+            new Vector3(3.2f, 0.045f, 0.24f), hazardStripe);
 
         CreateBox("GarageBayLeftPost", root, new Vector3(0.62f, 1.5f, -3.67f),
             new Vector3(0.16f, 2.45f, 0.16f), darkMetal);
@@ -703,12 +1046,25 @@ public static class MvpSceneStyleDirector
             new Vector3(0.12f, 0.016f, 2.0f), terminalGreen);
         CreateBox("DispatchRoutePaint_B", root, new Vector3(0.72f, 0.115f, -1.08f),
             new Vector3(1.95f, 0.016f, 0.12f), terminalGreen);
+        CreateBox("DispatchRoutePaint_ToDoor", root, new Vector3(2.45f, 0.13f, -2.55f),
+            new Vector3(0.16f, 0.018f, 2.55f), terminalGreen);
+        CreateBox("ExteriorDispatchRoutePaint", root, new Vector3(2.45f, 0.095f, -5.45f),
+            new Vector3(0.18f, 0.018f, 2.45f), terminalGreen);
         GameObject arrowLeft = CreateBox("DispatchRouteArrow_L", root, new Vector3(1.65f, 0.12f, -1.08f),
             new Vector3(0.62f, 0.018f, 0.12f), terminalGreen);
         arrowLeft.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
         GameObject arrowRight = CreateBox("DispatchRouteArrow_R", root, new Vector3(1.65f, 0.12f, -1.08f),
             new Vector3(0.62f, 0.018f, 0.12f), terminalGreen);
         arrowRight.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
+        GameObject exteriorArrowLeft = CreateBox("ExteriorDispatchRouteArrow_L", root, new Vector3(2.45f, 0.1f, -6.48f),
+            new Vector3(0.55f, 0.018f, 0.12f), terminalGreen);
+        exteriorArrowLeft.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
+        GameObject exteriorArrowRight = CreateBox("ExteriorDispatchRouteArrow_R", root, new Vector3(2.45f, 0.1f, -6.48f),
+            new Vector3(0.55f, 0.018f, 0.12f), terminalGreen);
+        exteriorArrowRight.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
+
+        if (CreateGeneratedDispatchVanIfAvailable(root, terminalGreen))
+            return;
 
         CreateBox("DispatchVan_Body", root, new Vector3(2.65f, 0.82f, -2.35f),
             new Vector3(1.65f, 1.08f, 2.45f), vanBody);
@@ -771,6 +1127,112 @@ public static class MvpSceneStyleDirector
         bayLight.color = new Color(1f, 0.74f, 0.32f);
         bayLight.intensity = 0.75f;
         bayLight.range = 4.5f;
+    }
+
+    static bool CreateGeneratedDispatchVanIfAvailable(Transform root, Material terminalGreen)
+    {
+#pragma warning disable CS0162
+        return false;
+
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_PlayableDepartureVan");
+        if (prefab == null) return false;
+
+        GameObject van = Object.Instantiate(prefab, root);
+        van.name = "DispatchVan_ASV4_PlayableGenerated";
+        van.transform.localPosition = new Vector3(2.65f, 0.08f, -6.35f);
+        van.transform.localRotation = Quaternion.identity;
+        van.transform.localScale = Vector3.one;
+
+        GameObject trigger = CreateInteractionTrigger("DispatchVanASV4DepartureTrigger", root,
+            new Vector3(2.65f, 0.92f, -6.35f), new Vector3(2.8f, 1.9f, 3.5f));
+        trigger.AddComponent<OfficeDepartureVan>();
+
+        var beaconGo = new GameObject("DispatchVanASV4SicklyBeacon");
+        beaconGo.transform.SetParent(root, false);
+        beaconGo.transform.position = new Vector3(2.65f, 1.72f, -6.35f);
+        var beacon = beaconGo.AddComponent<Light>();
+        beacon.type = LightType.Point;
+        beacon.color = new Color(0.25f, 1f, 0.55f);
+        beacon.intensity = 0.65f;
+        beacon.range = 3.1f;
+
+        var bayLightGo = new GameObject("GarageAmberBayLight");
+        bayLightGo.transform.SetParent(root, false);
+        bayLightGo.transform.position = new Vector3(2.55f, 2.48f, -3.85f);
+        var bayLight = bayLightGo.AddComponent<Light>();
+        bayLight.type = LightType.Point;
+        bayLight.color = new Color(1f, 0.74f, 0.32f);
+        bayLight.intensity = 0.75f;
+        bayLight.range = 4.5f;
+
+        CreateBox("DispatchVanASV4GroundGlow", root, new Vector3(2.65f, 0.1f, -6.35f),
+            new Vector3(2.1f, 0.018f, 3.1f), terminalGreen);
+        return true;
+#pragma warning restore CS0162
+    }
+
+    static bool CreateGeneratedOfficeVisualIfAvailable(Transform root)
+    {
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_HQ_RundownCommissionOffice");
+        if (prefab == null) return false;
+
+        GameObject office = Object.Instantiate(prefab, root);
+        office.name = "HQ_ASV4_BlenderOfficeVisual";
+        office.transform.localPosition = new Vector3(0f, 0.035f, 0f);
+        office.transform.localRotation = Quaternion.identity;
+        office.transform.localScale = Vector3.one;
+
+        foreach (Collider collider in office.GetComponentsInChildren<Collider>())
+            collider.enabled = false;
+
+        return true;
+    }
+
+    static void ClearExistingOfficeStyleRoots()
+    {
+        GameObject[] objects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include);
+        foreach (GameObject obj in objects)
+        {
+            if (!obj.name.StartsWith("MVP_RuntimeStyle_Office")) continue;
+            obj.SetActive(false);
+            Object.Destroy(obj);
+        }
+    }
+
+    static void OpenOriginalBackWallForExteriorExit()
+    {
+        GameObject backWall = GameObject.Find("Wall_Back");
+        if (backWall == null) return;
+
+        foreach (Collider collider in backWall.GetComponentsInChildren<Collider>())
+            collider.enabled = false;
+        foreach (Renderer renderer in backWall.GetComponentsInChildren<Renderer>())
+            renderer.enabled = false;
+    }
+
+    static void HideOriginalOfficeBlockoutProps()
+    {
+        string[] names =
+        {
+            "Desk",
+            "Shelf",
+            "Shelf_Top",
+            "Whiteboard",
+            "Sign_ZeroAccident",
+            "OldFan",
+            "DoorFrame"
+        };
+
+        foreach (string name in names)
+        {
+            GameObject obj = GameObject.Find(name);
+            if (obj == null) continue;
+
+            foreach (Collider collider in obj.GetComponentsInChildren<Collider>())
+                collider.enabled = false;
+            foreach (Renderer renderer in obj.GetComponentsInChildren<Renderer>())
+                renderer.enabled = false;
+        }
     }
 
     static void RemoveGeneratedWorldText()

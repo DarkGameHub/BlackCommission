@@ -53,15 +53,6 @@ public class MvpHud : MonoBehaviour
                 return;
             }
 
-            if (keyboard.enterKey.wasPressedThisFrame || keyboard.numpadEnterKey.wasPressedThisFrame)
-            {
-                OfficeComputer computer = activeComputer;
-                CloseComputer();
-                if (computer != null)
-                    computer.ExecuteComputerAction(FindLocalPlayer());
-                return;
-            }
-
             if (!MvpPendingReward.HasPending)
             {
                 PlayerHotbar activeHotbar = FindLocalHotbar();
@@ -130,28 +121,34 @@ public class MvpHud : MonoBehaviour
             GUILayout.BeginArea(new Rect(18, 18, 320, 74), GUIContent.none, panelStyle);
             GUILayout.Label("Accident Squad", titleStyle);
             string officeStatus = MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null
-                ? $"委托已装车: {MvpMissionRuntime.SelectedTask.title}。去车库上车。"
-                : nearShop ? "按 [E] 使用办公室电脑。" : "找到办公室电脑查看委托。";
+                ? $"委托已接受: {MvpMissionRuntime.SelectedTask.title}。去外面的公司车出发。"
+                : nearShop ? "办公室电脑已连接。" : "事务所待机中。";
             GUILayout.Label(officeStatus, accentStyle);
             GUILayout.EndArea();
             return;
         }
 
-        Rect rect = computerOpen
-            ? new Rect((Screen.width - 680) * 0.5f, 42, 680, Mathf.Min(560, Screen.height - 84))
-            : new Rect(18, 18, panelWidth, 430);
+        OfficeComputer computer = activeComputer;
+        Rect rect = new Rect((Screen.width - 720) * 0.5f, 42, 720, Mathf.Min(600, Screen.height - 84));
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
-        GUILayout.Label(computerOpen ? "ACCIDENT SQUAD 委托终端" : "Accident Squad 破产事务所", titleStyle);
-        if (computerOpen)
-            GUILayout.Label("[Enter] 锁定委托/结算    [F1-F4] 采购道具    [Esc] 离开电脑", accentStyle);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("ACCIDENT SQUAD 委托终端", titleStyle);
+        if (GUILayout.Button("关闭电脑", GUILayout.Width(96), GUILayout.Height(30)))
+        {
+            CloseComputer();
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+            return;
+        }
+        GUILayout.EndHorizontal();
         GUILayout.Space(8);
         GUILayout.Label($"资金: {company.Funds} G    债务: {company.Debt} G", company.Funds < 0 ? warningStyle : labelStyle);
         GUILayout.Label($"声望: {company.Reputation}    等级: {company.OfficeLevel}    经验: {company.Experience}/{company.ExperienceForNextLevel}", labelStyle);
         GUILayout.Label($"已解锁委托类别: {company.UnlockedCategoryCount}/8", labelStyle);
         GUILayout.Label($"被吞并压力: {company.HostileTakeoverPressure}/100", company.IsHostileTakeoverRisk ? warningStyle : labelStyle);
         GUILayout.Label($"找回失物委托: {company.CompletedLostItemJobs}/2", labelStyle);
-        GUILayout.Space(8);
+        GUILayout.Space(12);
 
         if (company.WasRecentlyHostileAcquired)
         {
@@ -173,14 +170,21 @@ public class MvpHud : MonoBehaviour
             string result = MvpPendingReward.Success ? "完成" : "失败";
             int displayedExperience = MvpPendingReward.Success ? MvpPendingReward.Experience : 0;
             GUILayout.Label($"待领取奖励: {result}  金钱 {MvpPendingReward.Money} / 声望 {MvpPendingReward.Reputation} / 经验 {displayedExperience}", accentStyle);
-            GUILayout.Label("靠近办公室电脑按 [E] 结算。", mutedStyle);
+            if (computer != null && GUILayout.Button("领取结算", GUILayout.Height(34)))
+                computer.ExecuteComputerAction(FindLocalPlayer());
         }
         else if (company.CanShowTutorialAcquisition)
         {
             GUILayout.Label($"新手扩张: 可吞并 0 级事务所，费用 {company.TutorialAcquisitionCost}G。", company.CanAffordTutorialAcquisition ? accentStyle : warningStyle);
-            GUILayout.Label(company.CanAffordTutorialAcquisition
-                ? "靠近办公室电脑按 [E] 完成第一次吞并。"
-                : "需要足够资金，并且被吞并压力低于 70。", mutedStyle);
+            if (company.CanAffordTutorialAcquisition && computer != null)
+            {
+                if (GUILayout.Button("确认收购", GUILayout.Height(34)))
+                    computer.ExecuteComputerAction(FindLocalPlayer());
+            }
+            else
+            {
+                GUILayout.Label("需要足够资金，并且被吞并压力低于 70。", mutedStyle);
+            }
         }
         else if (company.HasAcquiredTutorialOffice)
         {
@@ -191,19 +195,52 @@ public class MvpHud : MonoBehaviour
         {
             if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
             {
-                GUILayout.Label($"已锁定委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
-                GUILayout.Label("采购完道具后，去车库的公司车按 [E] 出发。", mutedStyle);
+                GUILayout.Label($"已接受委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
+                GUILayout.Label("采购完道具后，去外面的公司车出发。", mutedStyle);
             }
             else
             {
-                GUILayout.Label("靠近办公室电脑按 [E] 接取家长委托。", accentStyle);
-                GUILayout.Label("第一个任务: 去学校找回被遗忘的作业本。锁定后从车库上车出发。", mutedStyle);
+                DrawDemoTaskCard(computer);
             }
         }
 
-        GUILayout.Space(8);
+        GUILayout.Space(12);
         DrawOfficeShop(computerOpen || nearShop);
         GUILayout.EndArea();
+    }
+
+    void DrawDemoTaskCard(OfficeComputer computer)
+    {
+        if (computer == null)
+        {
+            GUILayout.Label("委托终端未连接。", warningStyle);
+            return;
+        }
+
+        GUILayout.Label("可用委托", accentStyle);
+        GUILayout.BeginVertical(slotStyle);
+        GUILayout.Label(computer.DemoTaskTitle, titleStyle);
+        GUILayout.Label($"委托人: {computer.DemoTaskClient}    地点: {computer.DemoTaskLocation}", labelStyle);
+        GUILayout.Label(computer.DemoTaskDescription, mutedStyle);
+        GUILayout.Label($"报酬: {computer.DemoTaskMoneyReward} G    声望 +{computer.DemoTaskReputationReward}    经验 +{computer.DemoTaskExperienceReward}", labelStyle);
+        GUILayout.Space(8);
+
+        bool hostReady = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && NetworkManager.Singleton.IsHost;
+        if (hostReady)
+        {
+            if (GUILayout.Button("接受委托", GUILayout.Height(36)))
+                computer.ExecuteComputerAction(FindLocalPlayer());
+        }
+        else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            GUILayout.Label("等待房主选择委托。", mutedStyle);
+        }
+        else
+        {
+            GUILayout.Label("主机启动后可接受委托。", mutedStyle);
+        }
+
+        GUILayout.EndVertical();
     }
 
     void DrawOfficeShop(bool nearShop)
@@ -215,19 +252,28 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        GUILayout.Label(nearShop
-            ? "按 F1-F4 购买，买到的道具才会进入快捷栏。"
-            : "靠近办公室电脑后可以采购任务道具。", mutedStyle);
-        GUILayout.Label(
-            $"F1 回血药 {PlayerHotbar.GetItemCost(MvpHotbarItemId.Medkit)}G    " +
-            $"F2 诱饵 {PlayerHotbar.GetItemCost(MvpHotbarItemId.Decoy)}G",
-            nearShop ? labelStyle : mutedStyle);
-        GUILayout.Label(
-            $"F3 定身喷雾 {PlayerHotbar.GetItemCost(MvpHotbarItemId.StunSpray)}G    " +
-            $"F4 手电 {PlayerHotbar.GetItemCost(MvpHotbarItemId.Flashlight)}G",
-            nearShop ? labelStyle : mutedStyle);
+        PlayerHotbar activeHotbar = FindLocalHotbar();
+        bool canBuy = activeHotbar != null && nearShop;
+
+        GUILayout.BeginHorizontal();
+        DrawShopButton(activeHotbar, MvpHotbarItemId.Medkit, "回血药", canBuy);
+        DrawShopButton(activeHotbar, MvpHotbarItemId.Decoy, "诱饵", canBuy);
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        DrawShopButton(activeHotbar, MvpHotbarItemId.StunSpray, "定身喷雾", canBuy);
+        DrawShopButton(activeHotbar, MvpHotbarItemId.Flashlight, "手电", canBuy);
+        GUILayout.EndHorizontal();
+
         if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
             GUILayout.Label(shopMessage, shopMessage.Contains("不足") ? warningStyle : accentStyle);
+    }
+
+    void DrawShopButton(PlayerHotbar hotbar, MvpHotbarItemId itemId, string label, bool canBuy)
+    {
+        GUI.enabled = canBuy;
+        if (GUILayout.Button($"{label}  {PlayerHotbar.GetItemCost(itemId)}G", GUILayout.Height(30)))
+            TryBuy(hotbar, itemId);
+        GUI.enabled = true;
     }
 
     void DrawMissionPanel()
@@ -241,8 +287,6 @@ public class MvpHud : MonoBehaviour
         if (!string.IsNullOrEmpty(monsterText))
             GUILayout.Label(monsterText, monsterText.Contains("追击") ? warningStyle : mutedStyle);
 
-        GUILayout.Space(8);
-        GUILayout.Label("[E] 交互    [LMB] 使用道具    [1-5] 快捷栏", mutedStyle);
         GUILayout.EndArea();
     }
 
