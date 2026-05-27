@@ -8,7 +8,10 @@ public class QuickNetworkUI : MonoBehaviour
     GUIStyle buttonStyle;
     GUIStyle hintStyle;
     GUIStyle statusStyle;
+    GUIStyle fieldStyle;
     Texture2D bgTex;
+    Texture2D screenTex;
+    Texture2D fieldTex;
     Texture2D btnNormal;
     Texture2D btnHover;
     Texture2D btnActive;
@@ -23,17 +26,19 @@ public class QuickNetworkUI : MonoBehaviour
         if (stylesReady) return;
         stylesReady = true;
 
-        bgTex = MakeTex(1, 1, new Color(0.08f, 0.08f, 0.12f, 0.92f));
-        btnNormal = MakeTex(1, 1, new Color(0.18f, 0.45f, 0.72f, 1f));
-        btnHover = MakeTex(1, 1, new Color(0.25f, 0.55f, 0.82f, 1f));
-        btnActive = MakeTex(1, 1, new Color(0.12f, 0.35f, 0.6f, 1f));
+        screenTex = MakeTex(1, 1, new Color(0.012f, 0.016f, 0.014f, 1f));
+        bgTex = MakeTex(1, 1, new Color(0.035f, 0.045f, 0.04f, 0.96f));
+        fieldTex = MakeTex(1, 1, new Color(0.012f, 0.018f, 0.016f, 1f));
+        btnNormal = MakeTex(1, 1, new Color(0.05f, 0.42f, 0.22f, 1f));
+        btnHover = MakeTex(1, 1, new Color(0.09f, 0.55f, 0.30f, 1f));
+        btnActive = MakeTex(1, 1, new Color(0.03f, 0.28f, 0.16f, 1f));
 
 
         titleStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 20, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.95f, 0.85f, 0.4f) },
+            normal = { textColor = new Color(0.58f, 1f, 0.72f) },
             padding = new RectOffset(0, 0, 8, 4)
         };
 
@@ -53,7 +58,7 @@ public class QuickNetworkUI : MonoBehaviour
             fontSize = 13,
             alignment = TextAnchor.MiddleCenter,
             wordWrap = true,
-            normal = { textColor = new Color(0.6f, 0.6f, 0.65f) },
+            normal = { textColor = new Color(0.62f, 0.70f, 0.64f) },
             padding = new RectOffset(8, 8, 4, 4)
         };
 
@@ -61,8 +66,17 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 14, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color(0.5f, 0.9f, 0.5f) },
+            normal = { textColor = new Color(0.52f, 1f, 0.68f) },
             padding = new RectOffset(10, 10, 6, 6)
+        };
+
+        fieldStyle = new GUIStyle(GUI.skin.textField)
+        {
+            fontSize = 14,
+            alignment = TextAnchor.MiddleLeft,
+            normal = { background = fieldTex, textColor = new Color(0.78f, 0.9f, 0.78f) },
+            focused = { background = fieldTex, textColor = Color.white },
+            padding = new RectOffset(8, 8, 5, 5)
         };
     }
 
@@ -85,13 +99,15 @@ public class QuickNetworkUI : MonoBehaviour
         {
             int clients = NetworkManager.Singleton.ConnectedClientsIds.Count;
             string role = NetworkManager.Singleton.IsHost ? "房主" : "客户端";
-            string portText = NetworkManager.Singleton.IsHost ? $"  |  端口: {lastHostPort}" : "";
+            string portText = NetworkManager.Singleton.IsHost ? $"  端口 {lastHostPort}" : "";
             GUI.Label(new Rect(8, 8, 320, 28),
-                $"[已联机]  {role}  |  玩家: {clients}{portText}", statusStyle);
+                $"已联机  {role}  玩家 {clients}  {portText}", statusStyle);
             return;
         }
 
-        float pw = 320, ph = 276;
+        GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), screenTex);
+
+        float pw = 360, ph = 280;
         float px = (Screen.width - pw) / 2f;
         float py = (Screen.height - ph) / 2f;
 
@@ -101,25 +117,25 @@ public class QuickNetworkUI : MonoBehaviour
         float cy = py + 10;
         float bw = pw - 40;
 
-        GUI.Label(new Rect(cx, cy, bw, 36), "外包事故组", titleStyle);
+        GUI.Label(new Rect(cx, cy, bw, 36), "Accident Squad", titleStyle);
         cy += 42;
 
-        GUI.Label(new Rect(cx, cy, bw, 20), "直连地址 / 端口", hintStyle);
+        GUI.Label(new Rect(cx, cy, bw, 20), "事务所连接终端", hintStyle);
         cy += 24;
-        connectAddress = GUI.TextField(new Rect(cx, cy, bw - 78, 30), connectAddress);
-        connectPort = GUI.TextField(new Rect(cx + bw - 70, cy, 70, 30), connectPort);
+        connectAddress = GUI.TextField(new Rect(cx, cy, bw - 86, 30), connectAddress, fieldStyle);
+        connectPort = GUI.TextField(new Rect(cx + bw - 78, cy, 78, 30), connectPort, fieldStyle);
         cy += 40;
 
-        if (GUI.Button(new Rect(cx, cy, bw, 42), "单人游玩 / 创建主机", buttonStyle))
+        if (GUI.Button(new Rect(cx, cy, bw, 42), "创建事务所", buttonStyle))
             StartHostWithFreshPort();
         cy += 52;
 
-        if (GUI.Button(new Rect(cx, cy, bw, 42), "加入房间", buttonStyle))
+        if (GUI.Button(new Rect(cx, cy, bw, 42), "接入事务所", buttonStyle))
             StartClientWithEndpoint();
         cy += 52;
 
         string hint = string.IsNullOrEmpty(networkMessage)
-            ? "主机最多 4 人。进入事务所后走到电脑前按 E 接单。"
+            ? "创建后进入事务所，通过办公室电脑查看委托。"
             : networkMessage;
         GUI.Label(new Rect(cx, cy, bw, 42), hint, hintStyle);
     }

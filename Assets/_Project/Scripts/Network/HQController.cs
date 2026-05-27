@@ -39,8 +39,8 @@ public class HQController : MonoBehaviour
         GUILayout.Label($"资金: ¥{CompanyData.Current.Funds}", labelStyle);
         GUILayout.Label($"声誉: {CompanyData.Current.Reputation}", labelStyle);
         GUILayout.Space(4);
-        GUILayout.Label("走到工单板按 [E] 接受任务", labelStyle);
-        GUILayout.Label("走到装备架按 [F] 拿取装备", labelStyle);
+        GUILayout.Label("办公室电脑可查看委托", labelStyle);
+        GUILayout.Label("装备架可补充任务道具", labelStyle);
         GUILayout.EndArea();
     }
 }

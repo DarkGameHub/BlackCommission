@@ -12,6 +12,12 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     bool missionLaunching;
     public bool HasSelectedDemoTask => demoTask != null && MvpMissionRuntime.SelectedTask == demoTask;
     public string DemoTaskTitle => demoTask != null ? demoTask.title : "被遗忘的作业本";
+    public string DemoTaskClient => demoTask != null ? demoTask.client : "家长";
+    public string DemoTaskDescription => demoTask != null ? demoTask.description : "去学校找回被遗忘的作业本，然后安全撤离。";
+    public string DemoTaskLocation => demoTask != null ? demoTask.locationName : "学校";
+    public int DemoTaskMoneyReward => demoTask != null ? demoTask.moneyReward : 0;
+    public int DemoTaskReputationReward => demoTask != null ? demoTask.reputationReward : 0;
+    public int DemoTaskExperienceReward => demoTask != null ? demoTask.experienceReward : 0;
 
     public override void OnNetworkSpawn()
     {
@@ -26,30 +32,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
     }
 
-    public string InteractHint
-    {
-        get
-        {
-            if (MvpPendingReward.HasPending) return IsClientOnly ? "等待房主领取结算" : "领取委托奖励";
-            if (missionLaunching) return "任务启动中...";
-            if (HasSelectedDemoTask) return $"已锁定委托: {DemoTaskTitle}，去车库上车";
-            if (CompanyData.Current.CanAffordTutorialAcquisition)
-            {
-                if (IsClientOnly)
-                    return "等待房主吞并 0 级事务所";
-                return $"吞并 0 级事务所 ({CompanyData.Current.TutorialAcquisitionCost}G)";
-            }
-            string title = demoTask != null ? demoTask.title : "被遗忘的作业本";
-            if ((NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) && !allowNonNetworkSoloStart)
-                return "先创建主机或开始单人主机";
-            if (!CanStartDemoTask()) return "事务所等级或声望不足";
-            if (IsClientOnly)
-                return $"查看委托: {title} (等待房主开始)";
-            if (CompanyData.Current.CanShowTutorialAcquisition)
-                return $"接受委托: {title} (吞并需 {CompanyData.Current.TutorialAcquisitionCost}G/压力<70)";
-            return $"接受委托: {title}";
-        }
-    }
+    public string InteractHint => "";
 
     public void OnInteractStart(PlayerController player)
     {

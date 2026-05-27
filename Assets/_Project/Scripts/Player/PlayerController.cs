@@ -1,6 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// First-person player movement. Only runs logic on the owning client.
@@ -109,6 +110,12 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        if (transform.position.y < -6f)
+        {
+            RecoverFromFall();
+            return;
+        }
+
         if (WaterLevelManager.Instance != null)
             SpeedMultiplier = WaterLevelManager.Instance.GetSpeedModifierForHeight(transform.position.y);
 
@@ -164,6 +171,18 @@ public class PlayerController : NetworkBehaviour
         CollisionFlags verticalFlags = cc.Move(velocity * Time.deltaTime);
         if ((verticalFlags & CollisionFlags.Below) != 0 && velocity.y < 0f)
             velocity.y = -2f;
+    }
+
+    void RecoverFromFall()
+    {
+        Vector3 safePosition = SceneManager.GetActiveScene().name == "HQ"
+            ? new Vector3(0f, 1.15f, 0f)
+            : new Vector3(transform.position.x, 1.15f, transform.position.z);
+
+        cc.enabled = false;
+        transform.position = safePosition;
+        cc.enabled = true;
+        velocity = Vector3.zero;
     }
 
     void HandleStamina()

@@ -2,9 +2,15 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+[InitializeOnLoad]
 public static class GeneratedArtImporter
 {
     const string PrefabFolder = "Assets/_Project/Prefabs/Art";
+    const string ResourcesGeneratedArtFolder = "Assets/Resources/GeneratedArt";
+    const string PlayableVanPrefabPath = "Assets/_Project/Prefabs/Art/ASV4_PlayableDepartureVan.prefab";
+    const string PlayableVanResourcesPath = "Assets/Resources/GeneratedArt/ASV4_PlayableDepartureVan.prefab";
+    const string VanModelPath = "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Second_Hand_Dispatch_Van.fbx";
+    const string AutoSetupDoneKey = "AccidentSquad.GeneratedArt.ASV4AutoSetupDone.v1";
 
     struct AssetSpec
     {
@@ -49,6 +55,24 @@ public static class GeneratedArtImporter
             "ASV4_SecondHandDispatchVan",
             new Vector3(6f, 0f, -4f)),
     };
+
+    static GeneratedArtImporter()
+    {
+        EditorApplication.delayCall += AutoSetupGeneratedArtForPlay;
+    }
+
+    [MenuItem("Tools/Accident Squad/Art/Setup ASV4 Art For Play")]
+    public static void SetupGeneratedArtForPlayMenu()
+    {
+        SetupGeneratedArtForPlay(showDialogs: true);
+    }
+
+    public static void SetupGeneratedArtForPlayBatch()
+    {
+        bool ok = SetupGeneratedArtForPlay(showDialogs: false);
+        if (!ok)
+            throw new System.InvalidOperationException("ASV4 generated art setup failed. Check missing FBX paths in Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4.");
+    }
 
     [MenuItem("Tools/Accident Squad/Art/Import Generated Blender Kit")]
     public static void ImportGeneratedBlenderKit()
@@ -104,6 +128,66 @@ public static class GeneratedArtImporter
         Selection.activeGameObject = root;
     }
 
+    [MenuItem("Tools/Accident Squad/Art/Create Playable ASV4 Departure Van Prefab")]
+    public static void CreatePlayableDepartureVanPrefab()
+    {
+        bool created = CreatePlayableDepartureVanPrefabAssets();
+
+        EditorUtility.DisplayDialog(
+            "Playable van prefab",
+            created
+                ? $"Created:\n{PlayableVanPrefabPath}\n{PlayableVanResourcesPath}\n\nHQ Play Mode will auto-load the Resources copy."
+                : $"Could not create playable van prefab. Missing model:\n{VanModelPath}",
+            "OK");
+    }
+
+    static void AutoSetupGeneratedArtForPlay()
+    {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+        if (EditorPrefs.GetBool(AutoSetupDoneKey, false)) return;
+        if (AssetImporter.GetAtPath(VanModelPath) == null) return;
+
+        bool ok = SetupGeneratedArtForPlay(showDialogs: false);
+        if (ok)
+            EditorPrefs.SetBool(AutoSetupDoneKey, true);
+    }
+
+    static bool SetupGeneratedArtForPlay(bool showDialogs)
+    {
+        EnsureFolder(PrefabFolder);
+        EnsureFolder(ResourcesGeneratedArtFolder);
+
+        var missing = new List<string>();
+        foreach (AssetSpec spec in Specs)
+            ConfigureModelImporter(spec.ModelPath, missing);
+
+        AssetDatabase.Refresh();
+
+        int created = 0;
+        foreach (AssetSpec spec in Specs)
+        {
+            if (CreatePrefabWrapper(spec))
+                created++;
+        }
+
+        bool playableVanCreated = CreatePlayableDepartureVanPrefabAssets();
+
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        if (showDialogs)
+        {
+            string message = missing.Count == 0
+                ? $"Ready for Play Mode.\nCreated/updated {created} art prefabs and playable departure van resources."
+                : $"Created/updated {created} art prefabs. Missing FBX files:\n{string.Join("\n", missing)}";
+            if (!playableVanCreated)
+                message += $"\n\nPlayable van was not created. Missing:\n{VanModelPath}";
+            EditorUtility.DisplayDialog("ASV4 art setup", message, "OK");
+        }
+
+        return missing.Count == 0 && playableVanCreated;
+    }
+
     static void ConfigureModelImporter(string modelPath, List<string> missing)
     {
         var importer = AssetImporter.GetAtPath(modelPath) as ModelImporter;
@@ -121,7 +205,7 @@ public static class GeneratedArtImporter
         importer.importCameras = false;
         importer.importLights = false;
         importer.importVisibility = false;
-        importer.generateSecondaryUV = true;
+        importer.generateSecondaryUV = false;
         importer.meshCompression = ModelImporterMeshCompression.Off;
         importer.weldVertices = true;
         importer.globalScale = 1f;
@@ -152,6 +236,49 @@ public static class GeneratedArtImporter
         }
 
         PrefabUtility.SaveAsPrefabAsset(wrapper, spec.PrefabPath);
+        PrefabUtility.SaveAsPrefabAsset(wrapper, $"{ResourcesGeneratedArtFolder}/{spec.PrefabName}.prefab");
+        Object.DestroyImmediate(wrapper);
+        return true;
+    }
+
+    static bool CreatePlayableDepartureVanPrefabAssets()
+    {
+        EnsureFolder(PrefabFolder);
+        EnsureFolder(ResourcesGeneratedArtFolder);
+
+        var missing = new List<string>();
+        ConfigureModelImporter(VanModelPath, missing);
+        AssetDatabase.Refresh();
+
+        var model = AssetDatabase.LoadAssetAtPath<GameObject>(VanModelPath);
+        if (model == null) return false;
+
+        var wrapper = new GameObject("ASV4_PlayableDepartureVan");
+        var modelInstance = PrefabUtility.InstantiatePrefab(model) as GameObject;
+        if (modelInstance == null)
+            modelInstance = Object.Instantiate(model);
+
+        modelInstance.name = "ASV4_PlayableDepartureVan_Model";
+        modelInstance.transform.SetParent(wrapper.transform, false);
+        modelInstance.transform.localPosition = Vector3.zero;
+        modelInstance.transform.localRotation = Quaternion.identity;
+        modelInstance.transform.localScale = Vector3.one;
+
+        var trigger = wrapper.AddComponent<BoxCollider>();
+        trigger.isTrigger = true;
+        trigger.center = new Vector3(0f, 0.9f, 0f);
+        trigger.size = new Vector3(4.4f, 2.0f, 2.4f);
+
+        wrapper.AddComponent<OfficeDepartureVan>();
+
+        foreach (var renderer in wrapper.GetComponentsInChildren<Renderer>())
+        {
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            renderer.receiveShadows = true;
+        }
+
+        PrefabUtility.SaveAsPrefabAsset(wrapper, PlayableVanPrefabPath);
+        PrefabUtility.SaveAsPrefabAsset(wrapper, PlayableVanResourcesPath);
         Object.DestroyImmediate(wrapper);
         return true;
     }
