@@ -63,7 +63,7 @@ public class PlayerCameraController : NetworkBehaviour
     {
         if (!IsOwner) return;
         if (inputActions == null) return;
-        if (MvpHud.IsComputerOpen) return;
+        if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
         if (Cursor.lockState != CursorLockMode.Locked)
         {
             Cursor.lockState = CursorLockMode.Locked;

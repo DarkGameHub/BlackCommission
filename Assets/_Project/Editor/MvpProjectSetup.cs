@@ -68,7 +68,7 @@ public static class MvpProjectSetup
         task.title = "找回被遗忘的作业本";
         task.category = MvpTaskCategory.LostItemRecovery;
         task.client = "焦急的家长";
-        task.description = "孩子说作业本落在学校了，但晚上校园里好像还有东西在巡逻。找回作业本并安全撤离。";
+        task.description = "孩子说作业本落在学校了，但晚上校园里好像还有东西在巡逻。找回作业本并安全撤离；记录室里的逾期登记簿可拍照留证，能多拿一点外快。";
         task.locationName = "废弃学校";
         task.sceneName = "School_LostItem_01";
         task.recommendedPlayersMin = 1;
@@ -229,6 +229,17 @@ public static class MvpProjectSetup
             new Color(0.15f, 0.18f, 0.17f), parent);
         CreateBox("Classroom_Door_Frame_Right", new Vector3(2.4f, 1.6f, 1.6f), new Vector3(0.25f, 3.2f, 0.25f),
             new Color(0.15f, 0.18f, 0.17f), parent);
+
+        CreateBox("AdminRecords_LeftWall", new Vector3(-8.45f, 1.05f, 1.15f), new Vector3(0.25f, 2.1f, 4.4f),
+            new Color(0.28f, 0.34f, 0.33f), parent);
+        CreateBox("AdminRecords_BackWall", new Vector3(-7.0f, 1.05f, 3.2f), new Vector3(2.75f, 2.1f, 0.25f),
+            new Color(0.28f, 0.34f, 0.33f), parent);
+        CreateBox("AdminRecords_Counter", new Vector3(-7.25f, 0.55f, -0.45f), new Vector3(2.3f, 1.1f, 0.38f),
+            new Color(0.09f, 0.11f, 0.1f), parent);
+        CreateBox("OverdueShelf_A", new Vector3(7.2f, 0.82f, -3.3f), new Vector3(3.1f, 1.64f, 0.34f),
+            new Color(0.1f, 0.12f, 0.11f), parent);
+        CreateBox("OverdueShelf_B", new Vector3(9.15f, 0.82f, -1.25f), new Vector3(0.34f, 1.64f, 3.0f),
+            new Color(0.1f, 0.12f, 0.11f), parent);
     }
 
     static void CreateSchoolProps(Transform parent)
@@ -261,18 +272,18 @@ public static class MvpProjectSetup
         lampGlow.transform.position = new Vector3(0f, 2.7f, 0f);
         var light = lampGlow.AddComponent<Light>();
         light.type = LightType.Point;
-        light.range = 16f;
-        light.intensity = 2.5f;
-        light.color = new Color(0.65f, 0.9f, 1f);
+        light.range = 10.5f;
+        light.intensity = 1.15f;
+        light.color = new Color(0.58f, 0.74f, 0.68f);
 
         var redGlow = new GameObject("MonsterWarningLight");
         redGlow.transform.SetParent(parent);
         redGlow.transform.position = new Vector3(8f, 1.8f, 4f);
         var red = redGlow.AddComponent<Light>();
         red.type = LightType.Point;
-        red.range = 8f;
-        red.intensity = 1.7f;
-        red.color = new Color(1f, 0.18f, 0.12f);
+        red.range = 4.5f;
+        red.intensity = 0.55f;
+        red.color = new Color(0.82f, 0.18f, 0.12f);
     }
 
     static void CreateMissionObjects(Transform parent)
@@ -306,6 +317,19 @@ public static class MvpProjectSetup
         glow.intensity = 1.2f;
         glow.color = new Color(1f, 0.85f, 0.2f);
         MakePrefabInstance("LostHomeworkNotebook", notebookSrc, new Vector3(3.6f, 0.72f, 5.05f), parent);
+
+        var bonusEvidence = CreateBox("OverdueLedgerEvidence", new Vector3(-7.55f, 0.96f, 1.38f),
+            new Vector3(0.7f, 0.08f, 0.48f), new Color(0.86f, 0.78f, 0.55f), parent, false);
+        var bonusCollider = bonusEvidence.GetComponent<BoxCollider>();
+        if (bonusCollider != null)
+        {
+            bonusCollider.isTrigger = true;
+            bonusCollider.size = new Vector3(2.6f, 16f, 3f);
+            bonusCollider.center = new Vector3(0f, 7f, 0f);
+        }
+        bonusEvidence.AddComponent<SchoolBonusEvidenceItem>();
+        CreateBox("OverdueLedgerStamp", new Vector3(-7.39f, 1.03f, 1.33f),
+            new Vector3(0.24f, 0.025f, 0.16f), new Color(0.8f, 0.08f, 0.04f), parent, false);
 
         var exitSrc = CreateBox("SchoolExitPoint", new Vector3(0f, 0.08f, -7.6f),
             new Vector3(4.4f, 0.16f, 1.8f), new Color(0.1f, 0.75f, 0.38f), parent, false);

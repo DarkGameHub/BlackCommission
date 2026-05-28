@@ -38,8 +38,8 @@ The shared takeaway is: fewer assets, stronger rules. Every prop should either g
 1. **Outsourced Civic Horror**  
    Spaces feel public, cheap, neglected, and over-paperworked: schools, offices, apartments, clinics, warehouses, subway service areas, local government basements.
 
-2. **Debt Has A Color**  
-   Company tools and legitimate progress glow terminal green. Debt, hostile takeover, overdue warnings, and active danger use red. Cold public spaces sit in gray-green and blue-green.
+2. **Municipal Debt Noir**
+   The base palette is civic teal, dead rubber, aged paper, dirty bone, and sodium amber. Dispatch green and stamp red are sparse semantic accents, not the whole art style.
 
 3. **Primitive But Designed**  
    Cubes, capsules, cylinders, planes, and TextMesh are allowed to be obvious, but composition must be intentional. Low cost is the style, not an excuse for random grayboxes.
@@ -58,7 +58,7 @@ The shared takeaway is: fewer assets, stronger rules. Every prop should either g
 - Public institutions: rectangular, modular, repetitive, fluorescent, low ceiling, cheap partitions.
 - Threats: tall, thin, vertical, slightly too long, with one strong red readable feature.
 - Objective items: compact, bright, flat, and label-like; they should stand out without looking magical.
-- Exit/safety objects: broad green planes, clear arrows, stable light.
+- Exit/safety objects: muted dispatch-green planes, clear arrows, stable light.
 
 ### Color Tokens
 
@@ -66,16 +66,18 @@ Use these as a consistent palette. Exact RGB can drift slightly per scene, but s
 
 | Token | Suggested color | Meaning |
 |---|---|---|
-| Terminal Green | `#14D965` | Office computer, approved tasks, claim reward, company systems |
-| Exit Green | `#19BF61` | Return point, safe extraction, valid completion |
-| Debt Red | `#9E0A08` | Overdue notices, hostile acquisition, monster warning, critical danger |
+| Civic Teal | `#2F4F4B` | Walls, old civic paint, company van, institutional panels |
+| Deep Civic Teal | `#172422` | Fog, grime, shadowed wall sections |
+| Dead Rubber | `#111413` | Old computer, shelves, lockers, equipment cases, tires |
+| Aged Paper | `#D6C89B` | Notices, worksheets, homework clutter, labels |
+| Dispatch Green | `#7BCF8A` | Office computer, approved tasks, route marks, company systems |
+| Stamp Red | `#C23A2B` | Overdue stamps, hostile acquisition, monster warning, critical danger |
 | Monster Eye Red | `#F2140A` | Active threat focus, chase readability |
-| School Cold Cyan | `#8FEADD` | Fluorescent school spill, cold mission lighting |
-| Institutional Wall | `#4D5A58` | School walls, public-service surfaces |
-| Dirty Paper | `#D1CDAE` | Notices, worksheets, homework clutter |
-| Cheap Cardboard | `#78572E` | Office boxes, improvised props |
-| Dead Metal | `#0D0E0E` | Old computer, shelves, lockers, equipment cases |
-| Tired Fabric | `#2E3029` | Sofa, chairs, cheap office textile |
+| Sodium Amber | `#D99A31` | Garage fixtures, old work lights, warning beacon |
+| Dirty Bone | `#C9C2AA` | Old plastic, light panels, worn helmet, fabric wear |
+| Cheap Cardboard | `#73502A` | Office boxes, improvised props |
+| Second-Hand Wood | `#4A3119` | Desks, counters, cheap school furniture |
+| Tired Fabric | `#2C322B` | Sofa, chairs, cheap office textile |
 
 ### Material Rules
 
@@ -92,8 +94,8 @@ Use URP Lit or Simple Lit by default. Avoid imported texture dependency for MVP 
 
 Lighting carries the horror load more than geometry.
 
-- HQ: warm, weak overhead light plus green computer spill. It should feel poor but safe.
-- School: cold cyan/blue-green fluorescent light, low ambient, fog allowed, with red threat accents.
+- HQ: warm, weak overhead light plus small dispatch-green computer spill. It should feel poor but safe.
+- School: cold civic fluorescent light, low ambient, fog allowed, with stamp-red threat accents.
 - Monster areas: red point lights or red eye light should reveal threat direction without filling the whole room.
 - Exits: stable green light. Safety must be visually calmer than the monster.
 - Darkness should create uncertainty, not hide navigation. Keep doorways, exits, and primary corridors legible.
@@ -102,9 +104,9 @@ Suggested scene lighting:
 
 | Scene type | Ambient | Key light | Accent |
 |---|---|---|---|
-| HQ | Warm low gray/tan | Soft warm overhead | Terminal green near computer, red debt board |
-| School | Low cold gray | Cyan fluorescent strips | Red monster warning, green exit |
-| Future civic maps | Low neutral/cold | Practical fixtures | One map-specific color plus shared green/red language |
+| HQ | Warm low teal/rubber | Soft sodium overhead | Dispatch green near computer, stamp-red debt board |
+| School | Low cold teal | Dirty-bone fluorescent strips | Stamp-red monster warning, muted green exit |
+| Future civic maps | Low neutral/cold | Practical fixtures | One map-specific color plus shared semantic accents |
 
 ## Low-Cost Primitive Implementation Strategy
 
@@ -183,7 +185,7 @@ MVP implementation:
 - Garage vehicle: start the selected commission and load the mission scene.
 - Mission return vehicle: every mission should place the same company vehicle at or near the entry/exit point, so extraction means physically returning to the van.
 - Garage bay: concrete floor, dented roll-up door, yellow-black floor warnings, oil stains, weak amber light, and company green beacon.
-- Company vehicle: ugly second-hand van, company green mark, red debt slash, roof rack, dirty glass, small interaction zone.
+- Company vehicle: ugly second-hand civic fleet van, dispatch-green AS mark, stamp-red debt slash, roof rack, dirty glass, small interaction zone.
 
 This creates a ritual:
 
@@ -248,7 +250,7 @@ The player should learn the map fast enough to panic-run back to the exit.
 | Lockers | Repeated tall cubes with small handle strips and red overdue stickers. |
 | Homework clutter | Thin paper cubes, stacks, forms, books, bags. |
 | Room identity | TextMesh room numbers, colored door plates, wall arrows. |
-| Exit point | Broad green floor/door marker plus stable green light and readable text. |
+| Exit point | Broad muted dispatch-green floor/door marker plus stable light and readable text. |
 | Fluorescent lamps | Thin cyan cubes with point lights under ceiling. |
 | Risk room | Red banner/sign, denser paper clutter, monster crossing path. |
 
@@ -260,7 +262,7 @@ The player should learn the map fast enough to panic-run back to the exit.
 - Papers: dirty cream.
 - Notebook: yellow or yellow-orange, reserved for mission objective.
 - Monster: deep red coat/body with red eyes.
-- Exit: green, separate from terminal green but still semantic safety.
+- Exit: muted dispatch green, separate from the computer screen but still semantic safety.
 
 ### Search Readability
 
@@ -352,7 +354,7 @@ Every map needs:
 2. A clear entry/exit safety language.
 3. One map-specific job object.
 4. One map-specific threat or anomaly rule.
-5. Red debt/danger language and green company/safety language.
+5. Stamp-red debt/danger language and dispatch-green company/safety language.
 6. Repeated low-cost props with one unique hero prop.
 
 ### Category Visual Seeds
@@ -426,7 +428,7 @@ The two-week target is a style-complete MVP slice, not final asset production.
 
 - Do not chase realistic asset packs before the MVP loop is validated.
 - Do not add decorative clutter that breaks NavMesh, interaction, or player movement.
-- Do not create a one-note dark blue horror palette. AccidentSquad needs green company systems, red debt, dirty paper, and institutional gray-green.
+- Do not create a one-note dark blue horror palette or a neon red/green game. AccidentSquad needs civic teal, dead rubber, aged paper, sodium light, dispatch-green systems, and stamp-red debt.
 - Do not copy any reference game's exact monster, terminal, room layout, logo, or gameplay-facing iconography.
 - Do not make the office aspirational too early. Its brokenness is the progression baseline.
 - Do not make the school pure haunted-house horror. It is a civic/institutional job site that has become absurdly dangerous.

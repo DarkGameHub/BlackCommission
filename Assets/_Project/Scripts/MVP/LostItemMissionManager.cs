@@ -13,6 +13,7 @@ public class LostItemMissionManager : NetworkBehaviour
         Searching,
         ReturnToExit,
         Completed,
+        ReturnedEarly,
         Failed
     }
 
@@ -20,6 +21,12 @@ public class LostItemMissionManager : NetworkBehaviour
     [SerializeField] int fallbackMoneyReward = 300;
     [SerializeField] int fallbackReputationReward = 5;
     [SerializeField] int fallbackExperienceReward = 80;
+    [SerializeField] int fallbackPartialMoneyReward = 60;
+    [SerializeField] int fallbackPartialReputationReward = 0;
+    [SerializeField] int fallbackPartialExperienceReward = 15;
+    [SerializeField] int bonusEvidenceMoneyReward = 90;
+    [SerializeField] int bonusEvidenceReputationReward = 1;
+    [SerializeField] int bonusEvidenceExperienceReward = 20;
     [SerializeField] int fallbackFailureMoney = 20;
     [SerializeField] int fallbackFailureReputation = -2;
     [SerializeField] int fallbackFailureExperience = 0;
@@ -34,6 +41,9 @@ public class LostItemMissionManager : NetworkBehaviour
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public NetworkVariable<ulong> CarrierClientId = new(ulong.MaxValue,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<bool> BonusEvidenceCollected = new(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public NetworkVariable<bool> RewardsGranted = new(false,
@@ -54,6 +64,7 @@ public class LostItemMissionManager : NetworkBehaviour
         CurrentPhase.Value = MissionPhase.Searching;
         LostItemCollected.Value = false;
         CarrierClientId.Value = ulong.MaxValue;
+        BonusEvidenceCollected.Value = false;
         RewardsGranted.Value = false;
         MissionTimer.Value = 0f;
     }
@@ -61,7 +72,9 @@ public class LostItemMissionManager : NetworkBehaviour
     void Update()
     {
         if (!HasMissionAuthority) return;
-        if (CurrentPhase.Value == MissionPhase.Completed || CurrentPhase.Value == MissionPhase.Failed) return;
+        if (CurrentPhase.Value == MissionPhase.Completed ||
+            CurrentPhase.Value == MissionPhase.ReturnedEarly ||
+            CurrentPhase.Value == MissionPhase.Failed) return;
 
         MissionTimer.Value += Time.deltaTime;
         CheckAllPlayersDowned();
@@ -80,49 +93,92 @@ public class LostItemMissionManager : NetworkBehaviour
             HideCollectedItemClientRpc(itemRef, clientId);
     }
 
-    public void TryExitMission(ulong requestingClientId, Vector3 exitPosition, float requiredDistance)
+    public void RequestCollectBonusEvidence(Vector3 evidencePosition, float requiredDistance = 3f)
+    {
+        if (!HasMissionAuthority && NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            RequestCollectBonusEvidenceServerRpc(evidencePosition, requiredDistance);
+            return;
+        }
+
+        TryCollectBonusEvidence(0, evidencePosition, requiredDistance);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void RequestCollectBonusEvidenceServerRpc(Vector3 evidencePosition, float requiredDistance, ServerRpcParams rpcParams = default)
+    {
+        TryCollectBonusEvidence(rpcParams.Receive.SenderClientId, evidencePosition, requiredDistance);
+    }
+
+    void TryCollectBonusEvidence(ulong clientId, Vector3 evidencePosition, float requiredDistance)
     {
         if (!HasMissionAuthority) return;
-        if (!LostItemCollected.Value) return;
-        if (CurrentPhase.Value == MissionPhase.Completed || CurrentPhase.Value == MissionPhase.Failed) return;
-        if (CarrierClientId.Value != requestingClientId) return;
+        if (BonusEvidenceCollected.Value) return;
+        if (CurrentPhase.Value == MissionPhase.Completed ||
+            CurrentPhase.Value == MissionPhase.ReturnedEarly ||
+            CurrentPhase.Value == MissionPhase.Failed) return;
+        if (!IsPlayerNearExit(clientId, evidencePosition, requiredDistance)) return;
+
+        BonusEvidenceCollected.Value = true;
+    }
+
+    public void TryExitMission(ulong requestingClientId, Vector3 exitPosition, float requiredDistance, float returnTransitSeconds = 6f)
+    {
+        if (!HasMissionAuthority) return;
+        if (CurrentPhase.Value == MissionPhase.Completed ||
+            CurrentPhase.Value == MissionPhase.ReturnedEarly ||
+            CurrentPhase.Value == MissionPhase.Failed) return;
         if (!IsPlayerNearExit(requestingClientId, exitPosition, requiredDistance)) return;
 
-        CurrentPhase.Value = MissionPhase.Completed;
-        GrantRewardsAndReturn(true);
+        if (LostItemCollected.Value)
+        {
+            if (CarrierClientId.Value != requestingClientId) return;
+            CurrentPhase.Value = MissionPhase.Completed;
+            GrantRewardsAndReturn(true, MvpMissionResultKind.Success, returnTransitSeconds);
+            return;
+        }
+
+        CurrentPhase.Value = MissionPhase.ReturnedEarly;
+        GrantRewardsAndReturn(false, MvpMissionResultKind.Partial, returnTransitSeconds);
     }
 
     public void FailMission()
     {
         if (!HasMissionAuthority) return;
-        if (CurrentPhase.Value == MissionPhase.Completed || CurrentPhase.Value == MissionPhase.Failed) return;
+        if (CurrentPhase.Value == MissionPhase.Completed ||
+            CurrentPhase.Value == MissionPhase.ReturnedEarly ||
+            CurrentPhase.Value == MissionPhase.Failed) return;
 
         CurrentPhase.Value = MissionPhase.Failed;
-        GrantRewardsAndReturn(false);
+        GrantRewardsAndReturn(false, MvpMissionResultKind.Failed, 2.5f);
     }
 
-    void GrantRewardsAndReturn(bool success)
+    void GrantRewardsAndReturn(bool success, MvpMissionResultKind resultKind, float returnTransitSeconds)
     {
         if (RewardsGranted.Value) return;
         RewardsGranted.Value = true;
 
         OfficeTaskDefinition task = MvpMissionRuntime.ActiveTask;
-        int money = success ? GetMoneyReward(task) : GetFailureMoney(task);
-        int reputation = success ? GetReputationReward(task) : GetFailureReputation(task);
-        int experience = success ? GetExperienceReward(task) : GetFailureExperience(task);
+        int money = GetMoneyForResult(task, resultKind);
+        int reputation = GetReputationForResult(task, resultKind);
+        int experience = GetExperienceForResult(task, resultKind);
         string officeScene = MvpMissionRuntime.HasActiveTask ? MvpMissionRuntime.ReturnOfficeScene : fallbackOfficeScene;
+        string taskTitle = task != null ? task.title : "委托";
+        string locationName = task != null ? task.locationName : "任务地点";
 
         if (IsServer)
         {
             RestorePlayersForOffice();
-            SetPendingRewardClientRpc(money, reputation, experience, success, MissionTimer.Value);
-            StartCoroutine(LoadOfficeAfterRewardDispatch(officeScene));
+            ShowReturnTransitClientRpc(taskTitle, locationName, Mathf.Max(1.5f, returnTransitSeconds));
+            SetPendingRewardClientRpc(money, reputation, experience, success, MissionTimer.Value, (int)resultKind);
+            StartCoroutine(LoadOfficeAfterRewardDispatch(officeScene, Mathf.Max(1.5f, returnTransitSeconds)));
         }
         else
         {
-            MvpPendingReward.Set(money, reputation, experience, success, MissionTimer.Value);
-            MvpMissionRuntime.Clear();
-            SceneManager.LoadScene(officeScene);
+            VanTransitOverlay.ShowReturn(taskTitle, locationName, Mathf.Max(1.5f, returnTransitSeconds));
+            MvpPendingReward.Set(money, reputation, experience, success, MissionTimer.Value,
+                resultKind == MvpMissionResultKind.Success, resultKind);
+            StartCoroutine(LoadOfficeLocalAfterTransit(officeScene, Mathf.Max(1.5f, returnTransitSeconds)));
         }
     }
 
@@ -148,14 +204,90 @@ public class LostItemMissionManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    void SetPendingRewardClientRpc(int money, int reputation, int experience, bool success, float elapsedSeconds)
+    void ShowReturnTransitClientRpc(string taskTitle, string locationName, float durationSeconds)
     {
-        MvpPendingReward.Set(money, reputation, experience, success, elapsedSeconds);
+        MvpMissionRuntime.Clear();
+        VanTransitOverlay.ShowReturn(taskTitle, locationName, durationSeconds);
+    }
+
+    [ClientRpc]
+    void SetPendingRewardClientRpc(int money, int reputation, int experience, bool success, float elapsedSeconds, int resultKind)
+    {
+        MvpMissionResultKind kind = (MvpMissionResultKind)Mathf.Clamp(resultKind, 0, (int)MvpMissionResultKind.Failed);
+        MvpPendingReward.Set(money, reputation, experience, success, elapsedSeconds,
+            kind == MvpMissionResultKind.Success, kind);
+    }
+
+    int GetMoneyForResult(OfficeTaskDefinition task, MvpMissionResultKind resultKind)
+    {
+        int reward;
+        switch (resultKind)
+        {
+            case MvpMissionResultKind.Success:
+                reward = GetMoneyReward(task);
+                break;
+            case MvpMissionResultKind.Partial:
+                reward = GetPartialMoney(task);
+                break;
+            default:
+                return GetFailureMoney(task);
+        }
+
+        return reward + GetBonusMoneyForResult(resultKind);
+    }
+
+    int GetReputationForResult(OfficeTaskDefinition task, MvpMissionResultKind resultKind)
+    {
+        int reward;
+        switch (resultKind)
+        {
+            case MvpMissionResultKind.Success:
+                reward = GetReputationReward(task);
+                break;
+            case MvpMissionResultKind.Partial:
+                reward = GetPartialReputation(task);
+                break;
+            default:
+                return GetFailureReputation(task);
+        }
+
+        return reward + GetBonusReputationForResult(resultKind);
+    }
+
+    int GetExperienceForResult(OfficeTaskDefinition task, MvpMissionResultKind resultKind)
+    {
+        int reward;
+        switch (resultKind)
+        {
+            case MvpMissionResultKind.Success:
+                reward = GetExperienceReward(task);
+                break;
+            case MvpMissionResultKind.Partial:
+                reward = GetPartialExperience(task);
+                break;
+            default:
+                return GetFailureExperience(task);
+        }
+
+        return reward + GetBonusExperienceForResult(resultKind);
     }
 
     int GetMoneyReward(OfficeTaskDefinition task) => task != null ? task.moneyReward : fallbackMoneyReward;
     int GetReputationReward(OfficeTaskDefinition task) => task != null ? task.reputationReward : fallbackReputationReward;
     int GetExperienceReward(OfficeTaskDefinition task) => task != null ? task.experienceReward : fallbackExperienceReward;
+    int GetPartialMoney(OfficeTaskDefinition task) => task != null
+        ? Mathf.Max(task.failureConsolationMoney, Mathf.RoundToInt(task.moneyReward * 0.22f))
+        : fallbackPartialMoneyReward;
+    int GetPartialReputation(OfficeTaskDefinition task) => task != null ? 0 : fallbackPartialReputationReward;
+    int GetPartialExperience(OfficeTaskDefinition task) => task != null
+        ? Mathf.Max(0, Mathf.RoundToInt(task.experienceReward * 0.2f))
+        : fallbackPartialExperienceReward;
+    int GetBonusMoneyForResult(MvpMissionResultKind resultKind) =>
+        BonusEvidenceCollected.Value && resultKind != MvpMissionResultKind.Failed ? bonusEvidenceMoneyReward : 0;
+    int GetBonusReputationForResult(MvpMissionResultKind resultKind) =>
+        BonusEvidenceCollected.Value && resultKind == MvpMissionResultKind.Success ? bonusEvidenceReputationReward : 0;
+    int GetBonusExperienceForResult(MvpMissionResultKind resultKind) =>
+        BonusEvidenceCollected.Value && resultKind != MvpMissionResultKind.Failed ? bonusEvidenceExperienceReward : 0;
     int GetFailureMoney(OfficeTaskDefinition task) => task != null ? task.failureConsolationMoney : fallbackFailureMoney;
     int GetFailureReputation(OfficeTaskDefinition task) => task != null ? task.failureReputationPenalty : fallbackFailureReputation;
     int GetFailureExperience(OfficeTaskDefinition task) => task != null ? task.failureExperience : fallbackFailureExperience;
@@ -187,14 +319,21 @@ public class LostItemMissionManager : NetworkBehaviour
         }
     }
 
-    IEnumerator LoadOfficeAfterRewardDispatch(string officeScene)
+    IEnumerator LoadOfficeAfterRewardDispatch(string officeScene, float delaySeconds)
     {
-        yield return new WaitForSeconds(0.25f);
+        yield return new WaitForSecondsRealtime(delaySeconds);
         MvpMissionRuntime.Clear();
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
             NetworkManager.Singleton.SceneManager.LoadScene(officeScene, LoadSceneMode.Single);
         else
             SceneManager.LoadScene(officeScene);
+    }
+
+    IEnumerator LoadOfficeLocalAfterTransit(string officeScene, float delaySeconds)
+    {
+        yield return new WaitForSecondsRealtime(delaySeconds);
+        MvpMissionRuntime.Clear();
+        SceneManager.LoadScene(officeScene);
     }
 }

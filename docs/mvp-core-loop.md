@@ -36,17 +36,21 @@ flowchart TD
 
     C --> D["办公室电脑"]
     D --> D1["电脑商店采购道具\nF1 回血药 / F2 诱饵 / F3 喷雾 / F4 手电"]
-    D1 --> E["接取任务: 找回作业本"]
-    E --> F["直接进入学校任务场景"]
+    D1 --> E["锁定任务: 找回作业本"]
+    E --> E2["全员进入事务所面包车"]
+    E2 --> F["车内等待转场\n到达学校门口"]
 
-    F --> G["寻找作业本"]
+    F --> G["寻找作业本 / 可选登记簿"]
     G --> H{"任务中发生什么?"}
-    H -->|找到作业本| I["作业本携带者前往校门撤离点"]
+    H -->|找到作业本| I["作业本携带者前往校门事故车"]
+    H -->|找到登记簿| H2["拍照留证\n增加外快"]
     H -->|被怪物追击| J["用走位 / 喷雾 / 诱饵 / 回血药求生"]
+    H -->|主动止损| M["事故车提前返程\n部分结算"]
+    H2 --> G
     J --> G
     H -->|全员倒地| K["任务失败"]
 
-    I --> L["任务成功"]
+    I --> L["事故车完整返程\n任务成功"]
     K --> M["返回事务所"]
     L --> M
     M --> N["办公室电脑领取结算"]
@@ -68,7 +72,11 @@ flowchart TD
     V --> D
 ```
 
-The MVP has no vehicle step: the office computer loads the selected mission directly, and the school exit returns the team directly to the office.
+The MVP now uses the dispatch van as a physical mission gate. The office
+computer locks the commission, but the team must gather in the van before the
+host can drive. A short in-van transit overlay covers scene loading: players see
+the back seats, driver silhouette, and passing civic scenery before arriving at
+the mission entrance.
 
 ```text
 Main Menu
@@ -77,14 +85,22 @@ Main Menu
   -> Office Computer
   -> Buy Gear From Computer
   -> Accept "Missing Homework Notebook"
-  -> School Mission
+  -> Gather In Dispatch Van
+  -> Host Drives / In-Van Transit
+  -> School Gate Van
   -> Find Homework Notebook
   -> Avoid Monster
-  -> Exit
+  -> Return To Van
   -> Return to Office
   -> Claim Pending Rewards From Office Computer
   -> Buy Gear / Handle Acquisition Hooks
 ```
+
+The return van is not only a success gate. Players may return early even before
+all objectives are complete. A full objective return grants the normal reward;
+an early return grants a partial settlement and raises takeover pressure only
+lightly. Total failure, such as everyone being downed, still uses the failure
+settlement path.
 
 ## Office Computer UX
 
@@ -103,6 +119,7 @@ HQ is a dense physical menu, not an exploration map. It should stay small and im
 | Entry / rally area | Player spawn, join flow, team gathering, "broke company clocking in" tone |
 | Office computer | Task start, reward claim, gear shop, acquisition prompt, company state |
 | Equipment shelf | Physical reminder that gear is bought before jobs and appears in the hotbar |
+| Dispatch van | Team rally point, drive confirmation, loading ritual, return/partial settlement anchor |
 | Company status wall | Debt, reputation, hostile takeover pressure, locked categories, acquisition hints |
 | Upgrade display area | Small visible progression hooks: repaired furniture, new shelf space, better lighting |
 
@@ -131,14 +148,14 @@ Future map archetypes should be defined by one spatial gimmick before content pr
 | Job | Missing Homework Notebook |
 | Client | Worried Parent |
 | Location | School |
-| Objective | Find the notebook and return to the exit |
+| Objective | Find the notebook and return to the van; optional: photograph the overdue ledger in the records room |
 | Threat | One school anomaly that patrols and chases players within range |
 | Reward | Money, reputation, experience |
 | Player count | 1-4 |
 
-The mission item does not occupy a hotbar slot. The hotbar is reserved for equipment and consumables.
+The mission item does not occupy a hotbar slot. The optional overdue ledger is a quick evidence interaction, not an inventory item. The hotbar is reserved for equipment and consumables.
 
-Notebook pickup and exit completion are server-validated. The server checks the acting player, distance, alive/downed state, and notebook carrier identity so a client cannot remotely pick up the objective or let a non-carrier finish the job.
+Notebook pickup, optional evidence pickup, and exit completion are server-validated. The server checks the acting player, distance, alive/downed state, and notebook carrier identity so a client cannot remotely pick up the objective or let a non-carrier finish the job.
 
 ## Progression Model
 
@@ -174,14 +191,14 @@ The current virtual team is:
 | Agent | Role | Responsibility |
 |---|---|---|
 | Zeno | Creative / Game Design Director | Story, core loop, progression, category logic, mechanic sanity checks |
-| Laplace | Steam / Multiplayer Technical Agent | Host/join flow, mission scene sync, network state, Steam/Relay path |
+| Laplace | Unity Multiplayer Technical Agent | Host/join flow, mission scene sync, network state, Steam/Relay transport path |
 | Hilbert | UI/UX Agent | Office computer, task selection, hotbar, settlement, shop, acquisition UI |
 | Banach | Art Direction Agent | Rundown office, school scene, monster, notebook, visual readability |
 | Sagan | QA Agent | Multiplayer smoke tests, mission completion/failure, rewards, hotbar, acquisition validation |
 
 PM owner: Yan Dai.
 
-Reusable agent prompts live in [docs/skills/accidentsquad-agent-team/SKILL.md](skills/accidentsquad-agent-team/SKILL.md).
+Project-specific Codex custom agents live in `.codex/agents/`. Longer-term product direction lives in [AccidentSquad Long-Term Roadmap](accidentsquad-long-term-roadmap.md).
 
 ## First Implementation Slice
 
@@ -201,12 +218,13 @@ Current script slice:
 | Script | Purpose |
 |---|---|
 | `Assets/_Project/Scripts/Office/OfficeTaskDefinition.cs` | ScriptableObject definition for office jobs |
-| `Assets/_Project/Scripts/Office/OfficeComputer.cs` | Interactable office computer that starts the selected mission |
+| `Assets/_Project/Scripts/Office/OfficeComputer.cs` | Interactable office computer that selects jobs and dispatches the van |
 | `Assets/_Project/Scripts/Office/MvpMissionRuntime.cs` | Runtime handoff from office scene to mission scene |
 | `Assets/_Project/Scripts/Office/MvpPendingReward.cs` | One-shot pending reward handoff for office-computer claiming |
 | `Assets/_Project/Scripts/MVP/LostItemMissionManager.cs` | School lost-item mission state, reward grant, return-to-office flow |
 | `Assets/_Project/Scripts/MVP/LostHomeworkItem.cs` | Interactable homework notebook objective |
-| `Assets/_Project/Scripts/MVP/SchoolExitPoint.cs` | Mission exit / return-to-office point |
+| `Assets/_Project/Scripts/MVP/SchoolExitPoint.cs` | Mission van rear cabin, shared locker, and return-to-office point |
+| `Assets/_Project/Scripts/MVP/VanTransitOverlay.cs` | In-van outbound/return transition overlay during scene loads |
 | `Assets/_Project/Scripts/MVP/SchoolMonsterAI.cs` | Server-authoritative school monster chase behavior |
 | `Assets/_Project/Scripts/MVP/PlayerHotbar.cs` | Five-slot player equipment/consumable hotbar |
 | `Assets/_Project/Scripts/MVP/PlayerFirstPersonRig.cs` | Local first-person hands and held-item models |
@@ -226,7 +244,7 @@ Run `Tools > Accident Squad > MVP > Setup School MVP` after the base project set
 4. Adds `PlayerHotbar`, `PlayerFirstPersonRig`, and `ClientNetworkTransform` to the player prefab if missing.
 5. Enables Netcode connection approval and adds `MvpConnectionLimiter` to cap sessions at 4 players.
 6. Generates `Assets/_Project/Scenes/School_LostItem_01.unity`.
-7. Builds a simple school graybox with classroom, desks, lockers, lighting, notebook, exit marker, and monster.
+7. Builds a school graybox with classroom, side record office, shelf obstacles, lockers, lighting, notebook, optional overdue ledger evidence, exit van marker, and monster.
 8. Adds `LostItemMissionManager`, `LostHomeworkItem`, `SchoolExitPoint`, and `SchoolMonsterAI` scene objects.
 9. Bakes NavMesh for the school scene when Unity's NavMesh builder is available.
 10. Updates Build Settings to `HQ -> School_LostItem_01 -> Mall_B2`.
@@ -252,19 +270,20 @@ The first playable MVP is not accepted until these pass:
 
 Run these after `Setup School MVP` and `Validate School MVP`:
 
-1. Solo host happy path: `HQ -> Start Host -> Office Computer -> School -> Notebook -> Exit -> HQ -> Claim Reward`.
+1. Solo host happy path: `HQ -> Start Host -> Office Computer -> Board Van -> School -> Optional Ledger -> Notebook -> Return Van -> HQ -> Claim Reward`.
 2. Solo host failure path: enter school, let the monster down the player, confirm return to HQ with failure reward/penalty and hostile takeover pressure.
 3. Shop and hotbar path: in HQ, stand near the computer and buy gear with `F1-F4`; confirm only purchased gear appears in the icon hotbar and first-person hand model, then use `1-5` to select slots. Use a medkit after taking damage, use stun spray near the monster and confirm chase pauses, use a decoy and confirm the monster is distracted, then select the flashlight slot and confirm it toggles without being consumed.
-4. Two-client smoke: host starts mission, second player joins before mission start, both load into school, one collects notebook, and only the notebook carrier can complete the exit interaction.
-5. Reward idempotency: after returning to HQ, press `E` on the computer repeatedly and confirm the pending reward is applied only once.
-6. Progression hook: complete two successful lost-item jobs, press `E` on the office computer, and confirm the level 0 acquisition costs `150G` and raises the office to level 2.
-7. Build Settings check: `HQ` is first, `School_LostItem_01` is second, and `Mall_B2` remains available for the older rescue prototype.
+4. Two-client smoke: host starts mission, second player joins before mission start, both board the dispatch van, both load into school, one collects notebook, and only the notebook carrier can trigger full-success return.
+5. Partial-return smoke: host starts mission, opens the school return van before collecting the notebook, clicks once to arm the warning, clicks again to return, and confirms partial settlement.
+6. Reward idempotency: after returning to HQ, press `E` on the computer repeatedly and confirm the pending reward is applied only once.
+7. Progression hook: complete two successful lost-item jobs, press `E` on the office computer, and confirm the level 0 acquisition costs `150G` and raises the office to level 2.
+8. Build Settings check: `HQ` is first, `School_LostItem_01` is second, and `Mall_B2` remains available for the older rescue prototype.
 
 ## Scope Cuts For MVP
 
 Do not build these in the first slice:
 
-- Full vehicle system.
+- Full drivable vehicle simulation. The MVP keeps the dispatch van as a boarding, transit, supply, and return ritual.
 - Full eight-category content.
 - Full acquisition strategy layer.
 - Full decoration catalog.
@@ -274,4 +293,4 @@ Do not build these in the first slice:
 
 The MVP should prove the office-to-mission-to-office loop first.
 
-The mission exit is a simple return-to-office trigger for MVP; no car or vehicle interaction is planned in this slice.
+The mission exit is the parked dispatch van rear cabin: players can take limited supplies, return early for partial settlement, or return with the objective for full settlement.

@@ -1,3 +1,10 @@
+public enum MvpMissionResultKind
+{
+    Success,
+    Partial,
+    Failed
+}
+
 public static class MvpPendingReward
 {
     public static bool HasPending { get; private set; }
@@ -7,9 +14,32 @@ public static class MvpPendingReward
     public static bool Success { get; private set; }
     public static float ElapsedSeconds { get; private set; }
     public static bool CountsTowardLostItemProgress { get; private set; }
+    public static MvpMissionResultKind ResultKind { get; private set; } = MvpMissionResultKind.Failed;
+    public static string ResultLabel
+    {
+        get
+        {
+            switch (ResultKind)
+            {
+                case MvpMissionResultKind.Success:
+                    return "完成";
+                case MvpMissionResultKind.Partial:
+                    return "部分结算";
+                default:
+                    return "失败";
+            }
+        }
+    }
 
     public static void Set(int money, int reputation, int experience, bool success, float elapsedSeconds,
         bool countsTowardLostItemProgress = true)
+    {
+        Set(money, reputation, experience, success, elapsedSeconds, countsTowardLostItemProgress,
+            success ? MvpMissionResultKind.Success : MvpMissionResultKind.Failed);
+    }
+
+    public static void Set(int money, int reputation, int experience, bool success, float elapsedSeconds,
+        bool countsTowardLostItemProgress, MvpMissionResultKind resultKind)
     {
         HasPending = true;
         Money = money;
@@ -18,6 +48,7 @@ public static class MvpPendingReward
         Success = success;
         ElapsedSeconds = elapsedSeconds;
         CountsTowardLostItemProgress = countsTowardLostItemProgress;
+        ResultKind = resultKind;
     }
 
     public static bool Claim()
@@ -30,7 +61,8 @@ public static class MvpPendingReward
             Reputation,
             Experience,
             ElapsedSeconds,
-            CountsTowardLostItemProgress);
+            CountsTowardLostItemProgress,
+            ResultKind);
 
         Clear();
         return true;
@@ -45,5 +77,6 @@ public static class MvpPendingReward
         Success = false;
         ElapsedSeconds = 0f;
         CountsTowardLostItemProgress = false;
+        ResultKind = MvpMissionResultKind.Failed;
     }
 }

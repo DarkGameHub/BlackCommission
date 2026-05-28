@@ -66,6 +66,7 @@ public class PlayerHotbar : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
+        if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
 
         if (Keyboard.current != null)
         {
@@ -113,17 +114,81 @@ public class PlayerHotbar : NetworkBehaviour
         UseSlotServerRpc(index, slots[index].itemId);
     }
 
-    public void TryPurchaseItem(MvpHotbarItemId itemId)
+    public bool TryPurchaseItem(MvpHotbarItemId itemId)
     {
-        if (!IsOwner || itemId == MvpHotbarItemId.None) return;
+        if (!IsOwner || itemId == MvpHotbarItemId.None) return false;
+        if (!CanReceiveItem(itemId, out _)) return false;
 
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
             TryPurchaseLocal(itemId);
-            return;
+            return true;
         }
 
         PurchaseItemServerRpc(itemId);
+        return true;
+    }
+
+    public bool TryReceiveLocalItem(MvpHotbarItemId itemId, int quantity)
+    {
+        EnsureSlots();
+        if (itemId == MvpHotbarItemId.None || quantity <= 0) return false;
+        if (!CanReceiveItem(itemId, out _)) return false;
+        bool added = TryAddItem(itemId, quantity);
+        if (added && IsSpawned && IsServer)
+            SyncHotbarClientRpc(
+                GetItemId(0), slots[0].quantity,
+                GetItemId(1), slots[1].quantity,
+                GetItemId(2), slots[2].quantity,
+                GetItemId(3), slots[3].quantity,
+                GetItemId(4), slots[4].quantity);
+        return added;
+    }
+
+    public bool GrantItemServer(MvpHotbarItemId itemId, int quantity)
+    {
+        if (!IsServer) return false;
+        EnsureSlots();
+        if (itemId == MvpHotbarItemId.None || quantity <= 0) return false;
+        if (!CanReceiveItem(itemId, out _)) return false;
+        if (!TryAddItem(itemId, quantity)) return false;
+
+        SyncHotbarClientRpc(
+            GetItemId(0), slots[0].quantity,
+            GetItemId(1), slots[1].quantity,
+            GetItemId(2), slots[2].quantity,
+            GetItemId(3), slots[3].quantity,
+            GetItemId(4), slots[4].quantity);
+        return true;
+    }
+
+    public bool CanReceiveItem(MvpHotbarItemId itemId, out string reason)
+    {
+        EnsureSlots();
+        reason = "";
+
+        if (itemId == MvpHotbarItemId.None)
+        {
+            reason = "无效道具。";
+            return false;
+        }
+
+        if (itemId == MvpHotbarItemId.Flashlight && HasItem(MvpHotbarItemId.Flashlight))
+        {
+            reason = "已经有一支手电。";
+            return false;
+        }
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i].IsEmpty)
+                return true;
+            if (slots[i].itemId == itemId && itemId != MvpHotbarItemId.Flashlight)
+                return true;
+        }
+
+        reason = "热栏已满。";
+        return false;
     }
 
     public static int GetItemCost(MvpHotbarItemId itemId)
@@ -233,6 +298,22 @@ public class PlayerHotbar : NetworkBehaviour
         SetSlotFromNetwork(3, item3, qty3);
         SetSlotFromNetwork(4, item4, qty4);
         CompanyData.Current.Funds = funds;
+    }
+
+    [ClientRpc]
+    void SyncHotbarClientRpc(
+        int item0, int qty0,
+        int item1, int qty1,
+        int item2, int qty2,
+        int item3, int qty3,
+        int item4, int qty4)
+    {
+        EnsureSlots();
+        SetSlotFromNetwork(0, item0, qty0);
+        SetSlotFromNetwork(1, item1, qty1);
+        SetSlotFromNetwork(2, item2, qty2);
+        SetSlotFromNetwork(3, item3, qty3);
+        SetSlotFromNetwork(4, item4, qty4);
     }
 
     bool TryPurchaseLocal(MvpHotbarItemId itemId)

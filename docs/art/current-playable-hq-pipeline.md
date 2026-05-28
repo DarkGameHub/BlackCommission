@@ -15,6 +15,14 @@ Style source of truth: [AccidentSquad Style Lock v1](accidentsquad-style-lock-v1
 3. `GeneratedArtImporter` creates ASV4 prefabs from Blender FBX files.
 4. The dispatch van can load `Resources/GeneratedArt/ASV4_PlayableDepartureVan`
    in Play Mode. If that prefab is missing, the runtime fallback van is used.
+5. `OfficeDepartureVan` now treats the van trigger as the boarding area: the
+   host can drive only after all connected players are inside the van bounds.
+   The selected job is synced to clients, and `VanTransitOverlay` covers the
+   scene load with an in-van ride view.
+6. `MvpSceneStyleDirector.BuildSchoolStyle()` also strengthens the playable
+   school at runtime: it adds record-room obstacles, the optional overdue
+   ledger evidence pickup, readable return-van dressing, and extra debt-office
+   set dressing even if the saved school scene is still a simple MVP layout.
 
 `CreateGeneratedOfficeVisualIfAvailable()` exists, but it is not called by the
 current HQ flow. Regenerating the Blender HQ model will not change the playable
@@ -32,8 +40,11 @@ as an asset reference:
 
 AccidentSquad's own identity anchors are:
 
-- terminal-green company systems;
-- red debt and hostile-takeover pressure;
-- the green AS mark crossed by a red debt slash;
-- a cheap dispatch van as the mission gateway;
-- office equipment that looks bought second-hand under pressure.
+- civic-teal municipal surfaces and a dirty paper/dead-rubber base palette;
+- small dispatch-green system accents for computer, route, and extraction;
+- stamp-red debt and hostile-takeover pressure;
+- the AS dispatch seal crossed by a stamp-red debt slash;
+- a cheap civic fleet dispatch van as the mission gateway;
+- a four-slot mission van locker for shared medkit/decoy/spray/flashlight
+  supplies;
+- grounded office equipment that looks bought second-hand under pressure.

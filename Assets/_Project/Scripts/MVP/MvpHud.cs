@@ -6,7 +6,9 @@ public class MvpHud : MonoBehaviour
 {
     const float OfficeComputerShopDistance = 3.4f;
     static OfficeComputer activeComputer;
+    static SchoolExitPoint activeMissionVan;
     public static bool IsComputerOpen => activeComputer != null;
+    public static bool IsBlockingPanelOpen => activeComputer != null || activeMissionVan != null;
 
     [SerializeField] int panelWidth = 390;
     [SerializeField] bool showNetworkHint = false;
@@ -29,10 +31,15 @@ public class MvpHud : MonoBehaviour
     Texture2D flashlightIcon;
     string shopMessage;
     float shopMessageUntil;
+    string missionMessage;
+    float missionMessageUntil;
+    static SchoolExitPoint partialReturnConfirmVan;
+    static float partialReturnConfirmUntil;
 
     void Awake()
     {
         activeComputer = null;
+        activeMissionVan = null;
         showNetworkHint = false;
         if (LostItemMissionManager.Instance != null)
             RestoreGameplayCursor();
@@ -40,10 +47,17 @@ public class MvpHud : MonoBehaviour
 
     void Update()
     {
-        if (LostItemMissionManager.Instance != null) return;
-
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
+
+        if (activeMissionVan != null)
+        {
+            if (keyboard.escapeKey.wasPressedThisFrame)
+                CloseMissionVan();
+            return;
+        }
+
+        if (LostItemMissionManager.Instance != null) return;
 
         if (activeComputer != null)
         {
@@ -81,8 +95,16 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        hotbar.TryPurchaseItem(itemId);
-        SetShopMessage($"购买请求: {GetShopItemLabel(itemId)} -{cost}G。");
+        if (!hotbar.CanReceiveItem(itemId, out string reason))
+        {
+            SetShopMessage($"{GetShopItemLabel(itemId)}无法入库: {reason}");
+            return;
+        }
+
+        if (hotbar.TryPurchaseItem(itemId))
+            SetShopMessage($"采购申请已盖章: {GetShopItemLabel(itemId)} -{cost}G。");
+        else
+            SetShopMessage($"{GetShopItemLabel(itemId)}采购失败。");
     }
 
     void SetShopMessage(string message)
@@ -98,6 +120,8 @@ public class MvpHud : MonoBehaviour
         if (LostItemMissionManager.Instance != null)
         {
             DrawMissionPanel();
+            if (activeMissionVan != null)
+                DrawMissionVanPanel();
             DrawHotbar();
         }
         else
@@ -129,7 +153,8 @@ public class MvpHud : MonoBehaviour
         }
 
         OfficeComputer computer = activeComputer;
-        Rect rect = new Rect((Screen.width - 720) * 0.5f, 42, 720, Mathf.Min(600, Screen.height - 84));
+        float computerWidth = Mathf.Clamp(Screen.width - 36f, 360f, 720f);
+        Rect rect = new Rect((Screen.width - computerWidth) * 0.5f, 42, computerWidth, Mathf.Min(600, Screen.height - 84));
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
@@ -167,11 +192,16 @@ public class MvpHud : MonoBehaviour
         }
         else if (MvpPendingReward.HasPending)
         {
-            string result = MvpPendingReward.Success ? "完成" : "失败";
-            int displayedExperience = MvpPendingReward.Success ? MvpPendingReward.Experience : 0;
+            string result = MvpPendingReward.ResultLabel;
+            int displayedExperience = MvpPendingReward.ResultKind == MvpMissionResultKind.Failed ? 0 : MvpPendingReward.Experience;
             GUILayout.Label($"待领取奖励: {result}  金钱 {MvpPendingReward.Money} / 声望 {MvpPendingReward.Reputation} / 经验 {displayedExperience}", accentStyle);
-            if (computer != null && GUILayout.Button("领取结算", GUILayout.Height(34)))
+            bool hostCanClaim = IsLocalHostOrSolo();
+            GUI.enabled = hostCanClaim;
+            if (computer != null && GUILayout.Button(hostCanClaim ? "领取结算" : "等待房主领取结算", GUILayout.Height(34)))
                 computer.ExecuteComputerAction(FindLocalPlayer());
+            GUI.enabled = true;
+            if (!hostCanClaim)
+                GUILayout.Label("结算盖章只能由房主确认，确认后全队同步。", mutedStyle);
         }
         else if (company.CanShowTutorialAcquisition)
         {
@@ -279,14 +309,87 @@ public class MvpHud : MonoBehaviour
     void DrawMissionPanel()
     {
         LostItemMissionManager mission = LostItemMissionManager.Instance;
-        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 150), GUIContent.none, panelStyle);
+        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 190), GUIContent.none, panelStyle);
         GUILayout.Label($"用时: {FormatTime(mission.MissionTimer.Value)}", labelStyle);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
+        GUILayout.Label(GetCarrierText(mission), mission.LostItemCollected.Value ? accentStyle : mutedStyle);
+        GUILayout.Label(GetBonusEvidenceText(mission), mission.BonusEvidenceCollected.Value ? accentStyle : mutedStyle);
 
         string monsterText = GetMonsterStatus();
         if (!string.IsNullOrEmpty(monsterText))
             GUILayout.Label(monsterText, monsterText.Contains("追击") ? warningStyle : mutedStyle);
+        if (!string.IsNullOrEmpty(missionMessage) && Time.time < missionMessageUntil)
+            GUILayout.Label(missionMessage, missionMessage.Contains("警告") ? warningStyle : accentStyle);
 
+        GUILayout.EndArea();
+    }
+
+    void DrawMissionVanPanel()
+    {
+        SchoolExitPoint van = activeMissionVan;
+        if (van == null) return;
+
+        float width = Mathf.Clamp(Screen.width - 36f, 320f, 560f);
+        float height = Mathf.Clamp(Screen.height - 112f, 300f, 500f);
+        Rect rect = new Rect((Screen.width - width) * 0.5f, 56, width, height);
+        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("事故车后舱", titleStyle);
+        if (GUILayout.Button("关上车门", GUILayout.Width(96), GUILayout.Height(30)))
+        {
+            CloseMissionVan();
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+            return;
+        }
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(8);
+        GUILayout.Label(van.GetReturnSummary(), accentStyle);
+        GUILayout.Label("车载物资柜是团队共享补给。拿完再决定继续进场，或直接返程结算。", mutedStyle);
+        GUILayout.Space(10);
+
+        PlayerHotbar localHotbar = FindLocalHotbar();
+        for (int i = 0; i < SchoolExitPoint.LockerSlotCount; i++)
+        {
+            GUILayout.BeginHorizontal(slotStyle);
+            MvpHotbarItemId itemId = van.GetLockerItemId(i);
+            int quantity = van.GetLockerQuantity(i);
+            GUILayout.Label($"{i + 1}. {GetShopItemLabel(itemId)}  x{quantity}", labelStyle);
+            bool canReceive = localHotbar != null && localHotbar.CanReceiveItem(itemId, out string lockerReason);
+            GUI.enabled = quantity > 0 && canReceive;
+            if (GUILayout.Button("取出", GUILayout.Width(88), GUILayout.Height(28)))
+            {
+                van.TryTakeLockerItem(i);
+                SetMissionMessage($"车载物资申请: {GetShopItemLabel(itemId)}。");
+            }
+            GUI.enabled = true;
+            if (quantity > 0 && localHotbar != null && !canReceive)
+                GUILayout.Label(lockerReason, warningStyle);
+            GUILayout.EndHorizontal();
+        }
+
+        GUILayout.Space(12);
+        bool canReturn = van.CanLocalPlayerRequestReturn();
+        GUI.enabled = canReturn;
+        if (GUILayout.Button(van.GetReturnButtonLabel(), GUILayout.Height(36)))
+        {
+            if (van.IsPartialReturnRequest() && !IsPartialReturnConfirmed(van))
+            {
+                partialReturnConfirmVan = van;
+                partialReturnConfirmUntil = Time.unscaledTime + 4f;
+                SetMissionMessage("警告: 再次点击会让全队提前返程，只做部分结算。");
+                GUI.enabled = true;
+                GUILayout.EndArea();
+                return;
+            }
+
+            van.RequestReturnToOffice(FindLocalPlayer());
+            CloseMissionVan();
+        }
+        GUI.enabled = true;
+        if (!canReturn)
+            GUILayout.Label(van.GetReturnBlockedReason(), warningStyle);
         GUILayout.EndArea();
     }
 
@@ -295,8 +398,10 @@ public class MvpHud : MonoBehaviour
         PlayerHotbar hotbar = FindLocalHotbar();
         if (hotbar == null) return;
 
-        const int slotSize = 92;
-        const int gap = 8;
+        int slotSize = Mathf.Clamp((Screen.width - 56) / PlayerHotbar.SlotCount, 62, 92);
+        int gap = Mathf.Clamp(slotSize / 11, 5, 8);
+        int slotHeight = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.76f), 52, 70);
+        int iconSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.48f), 32, 44);
         int totalWidth = PlayerHotbar.SlotCount * slotSize + (PlayerHotbar.SlotCount - 1) * gap;
         float startX = (Screen.width - totalWidth) * 0.5f;
         float y = Screen.height - 92f;
@@ -305,15 +410,15 @@ public class MvpHud : MonoBehaviour
         {
             HotbarSlot slot = hotbar.GetSlot(i);
             bool selected = hotbar.SelectedSlot.Value == i;
-            Rect rect = new Rect(startX + i * (slotSize + gap), y, slotSize, 70);
+            Rect rect = new Rect(startX + i * (slotSize + gap), y, slotSize, slotHeight);
             GUI.Label(rect, GUIContent.none, selected ? selectedSlotStyle : slotStyle);
 
             string qty = slot == null || slot.IsEmpty ? "" : $" x{slot.quantity}";
             GUI.Label(new Rect(rect.x + 8, rect.y + 8, rect.width - 16, 18), $"{i + 1}", mutedStyle);
-            GUI.DrawTexture(new Rect(rect.x + 24, rect.y + 14, 44, 40),
+            GUI.DrawTexture(new Rect(rect.x + (rect.width - iconSize) * 0.5f, rect.y + 16, iconSize, iconSize),
                 GetItemIcon(slot == null || slot.IsEmpty ? MvpHotbarItemId.None : slot.itemId),
                 ScaleMode.ScaleToFit, true);
-            GUI.Label(new Rect(rect.x + 58, rect.y + 48, rect.width - 66, 16), qty, mutedStyle);
+            GUI.Label(new Rect(rect.x + rect.width - 38, rect.y + rect.height - 22, 34, 16), qty, mutedStyle);
         }
     }
 
@@ -328,11 +433,13 @@ public class MvpHud : MonoBehaviour
         switch (mission.CurrentPhase.Value)
         {
             case LostItemMissionManager.MissionPhase.Searching:
-                return "目标: 在教室里找到作业本。";
+                return "目标: 找到盖章作业本；记录室里有可选登记簿。";
             case LostItemMissionManager.MissionPhase.ReturnToExit:
                 return "目标: 带着作业本回到校门口的车上。";
             case LostItemMissionManager.MissionPhase.Completed:
                 return "目标: 委托完成，返回事务所领取奖励。";
+            case LostItemMissionManager.MissionPhase.ReturnedEarly:
+                return "目标: 已提前返程，回事务所做部分结算。";
             case LostItemMissionManager.MissionPhase.Failed:
                 return "目标: 委托失败，返回事务所复盘。";
             default:
@@ -347,6 +454,13 @@ public class MvpHud : MonoBehaviour
         return mission.CarrierClientId.Value == localId
             ? "作业本状态: 你拿到了，快回校门。"
             : $"作业本状态: 队友 {mission.CarrierClientId.Value} 拿到了。";
+    }
+
+    static string GetBonusEvidenceText(LostItemMissionManager mission)
+    {
+        return mission.BonusEvidenceCollected.Value
+            ? "可选证据: 逾期登记簿已拍照。"
+            : "可选证据: 记录室登记簿尚未拍照。";
     }
 
     static string GetMonsterStatus()
@@ -390,7 +504,16 @@ public class MvpHud : MonoBehaviour
 
     public static void OpenComputer(OfficeComputer computer)
     {
+        activeMissionVan = null;
         activeComputer = computer;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public static void OpenMissionVan(SchoolExitPoint van)
+    {
+        activeComputer = null;
+        activeMissionVan = van;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -398,6 +521,13 @@ public class MvpHud : MonoBehaviour
     static void CloseComputer()
     {
         activeComputer = null;
+        RestoreGameplayCursor();
+    }
+
+    static void CloseMissionVan()
+    {
+        activeMissionVan = null;
+        partialReturnConfirmVan = null;
         RestoreGameplayCursor();
     }
 
@@ -418,6 +548,23 @@ public class MvpHud : MonoBehaviour
         }
 
         return false;
+    }
+
+    void SetMissionMessage(string message)
+    {
+        missionMessage = message;
+        missionMessageUntil = Time.time + 3f;
+    }
+
+    bool IsPartialReturnConfirmed(SchoolExitPoint van)
+    {
+        return partialReturnConfirmVan == van && Time.unscaledTime <= partialReturnConfirmUntil;
+    }
+
+    static bool IsLocalHostOrSolo()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        return network == null || !network.IsListening || network.IsHost;
     }
 
     Texture2D GetItemIcon(MvpHotbarItemId itemId)

@@ -174,20 +174,36 @@ public class CompanyState
     public void ApplyMissionResult(bool success, int money, int reputation, int experience, float elapsedSeconds,
         bool countsTowardLostItemProgress = true)
     {
+        ApplyMissionResult(success, money, reputation, experience, elapsedSeconds, countsTowardLostItemProgress,
+            success ? MvpMissionResultKind.Success : MvpMissionResultKind.Failed);
+    }
+
+    public void ApplyMissionResult(bool success, int money, int reputation, int experience, float elapsedSeconds,
+        bool countsTowardLostItemProgress, MvpMissionResultKind resultKind)
+    {
         Funds += money;
         Reputation += reputation;
-        Experience += success ? experience : 0;
+        Experience += resultKind == MvpMissionResultKind.Failed ? 0 : experience;
         LastMissionSucceeded = success;
         LastMissionTimeSeconds = elapsedSeconds;
         WasRecentlyHostileAcquired = false;
         WasRecentlyIssuedTakeoverUltimatum = false;
 
-        if (success)
+        if (resultKind == MvpMissionResultKind.Success)
         {
             if (countsTowardLostItemProgress)
                 CompletedLostItemJobs++;
             HostileTakeoverPressure = Mathf.Max(0, HostileTakeoverPressure - 25);
             if (HostileTakeoverPressure < 70)
+                HasHostileTakeoverUltimatum = false;
+        }
+        else if (resultKind == MvpMissionResultKind.Partial)
+        {
+            int pressureGain = 12;
+            if (Funds < 0) pressureGain += 5;
+            if (Reputation < 0) pressureGain += 5;
+            HostileTakeoverPressure = Mathf.Min(100, HostileTakeoverPressure + pressureGain);
+            if (HostileTakeoverPressure < 100)
                 HasHostileTakeoverUltimatum = false;
         }
         else

@@ -29,6 +29,12 @@ public class PlayerInteraction : NetworkBehaviour
 
     void Update()
     {
+        if (VanTransitOverlay.IsActive || MvpHud.IsBlockingPanelOpen)
+        {
+            ClearCurrentInteraction();
+            return;
+        }
+
         if (IsDowned())
         {
             ClearCurrentInteraction();
