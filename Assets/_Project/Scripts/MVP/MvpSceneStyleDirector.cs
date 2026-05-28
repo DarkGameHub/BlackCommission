@@ -448,6 +448,10 @@ public static class MvpSceneStyleDirector
             new Vector3(2.35f, 0.045f, 0.16f), lightPanel);
         CreateBox("HQYardFloodLightHousing", root, new Vector3(2.45f, 2.82f, -4.02f),
             new Vector3(1.15f, 0.12f, 0.18f), darkMetal);
+        CreateBox("HQVanOverheadLightPanel", root, new Vector3(2.65f, 2.64f, -6.25f),
+            new Vector3(2.55f, 0.05f, 0.28f), lightPanel);
+        CreateBox("HQVanRearWorkLightPanel", root, new Vector3(2.65f, 2.16f, -7.72f),
+            new Vector3(1.45f, 0.05f, 0.18f), lightPanel);
 
         if (!CreateGeneratedDispatchVanIfAvailable(root, terminalGreen))
             CreateCleanFallbackExteriorVan(root, vanBody, vanGlass, rubber, darkMetal, terminalGreen, warningRed, paper, headlight);
@@ -471,15 +475,19 @@ public static class MvpSceneStyleDirector
         exitLight.range = 3.6f;
 
         CreateSpotLight("HQGarageWorkLight", root, new Vector3(2.1f, 2.35f, -3.1f),
-            new Vector3(2.1f, 0.08f, -4.1f), SodiumAmberPale, 2.35f, 6.8f, 84f);
+            new Vector3(2.1f, 0.08f, -4.1f), SodiumAmberPale, 3.8f, 9.2f, 86f);
+        CreateSpotLight("HQVanOverheadWorkLight", root, new Vector3(2.65f, 2.55f, -6.25f),
+            new Vector3(2.65f, 0.35f, -6.35f), SodiumAmberPale, 4.2f, 8.5f, 88f);
         CreatePointLight("HQGarageVehicleFillLight", root, new Vector3(2.55f, 1.55f, -5.85f),
-            SodiumAmberPale, 1.05f, 5.4f);
+            SodiumAmberPale, 3.2f, 8.6f);
+        CreatePointLight("HQGarageFloorBounceLight", root, new Vector3(2.65f, 0.85f, -6.45f),
+            SodiumAmber, 1.4f, 6.8f);
         CreatePointLight("HQGarageGreenServiceLamp", root, new Vector3(1.05f, 1.42f, -3.85f),
-            DispatchGreen, 0.55f, 3.5f);
+            DispatchGreen, 0.85f, 4.6f);
         CreateSpotLight("HQYardFloodLight", root, new Vector3(2.45f, 3.05f, -4.25f),
-            new Vector3(2.45f, 0.05f, -6.05f), SodiumAmber, 2.05f, 7.6f, 76f);
+            new Vector3(2.45f, 0.05f, -6.05f), SodiumAmber, 3.6f, 10.2f, 80f);
         CreateSpotLight("HQVanHeadlightCone", root, new Vector3(2.65f, 0.7f, -7.65f),
-            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 0.42f, 2.4f, 48f);
+            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 1.25f, 4.2f, 52f);
     }
 
     static void CreateReadableComputerTerminal(
@@ -498,8 +506,8 @@ public static class MvpSceneStyleDirector
         if (computer.TryGetComponent<BoxCollider>(out var collider))
         {
             collider.isTrigger = true;
-            collider.center = Vector3.zero;
-            collider.size = new Vector3(2.1f, 1.45f, 3.5f);
+            collider.center = new Vector3(0f, -0.05f, 3f);
+            collider.size = new Vector3(1.25f, 1.35f, 2.6f);
         }
 
         Vector3 p = computer.transform.position;
@@ -1562,13 +1570,17 @@ public static class MvpSceneStyleDirector
         beacon.range = 2.4f;
 
         CreateSpotLight("GarageAmberBayLight", root, new Vector3(2.55f, 2.48f, -3.85f),
-            new Vector3(2.55f, 0.12f, -5.75f), SodiumAmberPale, 2.2f, 7.0f, 84f);
+            new Vector3(2.55f, 0.12f, -5.75f), SodiumAmberPale, 4.0f, 9.5f, 86f);
+        CreateSpotLight("GarageVanOverheadWorkLight", root, new Vector3(2.65f, 2.55f, -6.25f),
+            new Vector3(2.65f, 0.35f, -6.35f), SodiumAmberPale, 4.4f, 8.5f, 88f);
         CreatePointLight("GarageVehicleFillLight", root, new Vector3(2.6f, 1.55f, -6.1f),
-            SodiumAmberPale, 1.2f, 5.4f);
+            SodiumAmberPale, 3.2f, 8.6f);
+        CreatePointLight("GarageVehicleFloorBounceLight", root, new Vector3(2.65f, 0.85f, -6.45f),
+            SodiumAmber, 1.4f, 6.8f);
         CreatePointLight("GarageDoorGreenWorkLight", root, new Vector3(1.15f, 1.35f, -4.1f),
-            DispatchGreen, 0.62f, 3.8f);
+            DispatchGreen, 0.9f, 4.6f);
         CreateSpotLight("DispatchVanASV4HeadlightCone", root, new Vector3(2.65f, 0.7f, -7.7f),
-            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 0.72f, 3.2f, 52f);
+            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 1.25f, 4.2f, 52f);
 
         CreateBox("DispatchVanASV4RoutePickupMark", root, new Vector3(2.65f, 0.1f, -6.35f),
             new Vector3(0.28f, 0.018f, 2.7f), terminalGreen);

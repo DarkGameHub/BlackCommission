@@ -5,10 +5,12 @@ using UnityEngine;
 public class PlayerInteraction : NetworkBehaviour
 {
     [SerializeField] float interactRange = 2.5f;
+    [SerializeField] float aimAssistRadius = 0.12f;
 
     PlayerController player;
     PlayerInputActions inputActions;
     IInteractable currentTarget;
+    Camera playerCamera;
     bool isInteracting;
     GUIStyle hintStyle;
     Texture2D hintBg;
@@ -20,6 +22,7 @@ public class PlayerInteraction : NetworkBehaviour
         if (!IsOwner) { enabled = false; return; }
         inputActions = new PlayerInputActions();
         inputActions.Enable();
+        playerCamera = GetComponentInChildren<Camera>(true);
     }
 
     public override void OnNetworkDespawn()
@@ -47,29 +50,47 @@ public class PlayerInteraction : NetworkBehaviour
 
     void FindTarget()
     {
-        var hits = Physics.OverlapSphere(transform.position, interactRange, ~0, QueryTriggerInteraction.Collide);
-        IInteractable nearest = null;
-        float nearestDist = float.MaxValue;
+        IInteractable aimedTarget = FindAimedTarget();
 
-        foreach (var hit in hits)
-        {
-            if (hit.transform.root == transform) continue;
-            var interactable = hit.GetComponentInParent<IInteractable>();
-            if (interactable == null) continue;
-            if (string.IsNullOrEmpty(interactable.InteractHint)) continue;
-            float dist = Vector3.Distance(transform.position, hit.transform.position);
-            if (dist < nearestDist) { nearest = interactable; nearestDist = dist; }
-        }
-
-        if (nearest != currentTarget)
+        if (aimedTarget != currentTarget)
         {
             if (isInteracting && currentTarget != null)
             {
                 currentTarget.OnInteractEnd(player);
                 isInteracting = false;
             }
-            currentTarget = nearest;
+            currentTarget = aimedTarget;
         }
+    }
+
+    IInteractable FindAimedTarget()
+    {
+        Transform aim = GetAimTransform();
+        Vector3 origin = aim.position;
+        Vector3 direction = aim.forward;
+
+        RaycastHit[] hits = aimAssistRadius > 0f
+            ? Physics.SphereCastAll(origin, aimAssistRadius, direction, interactRange, ~0, QueryTriggerInteraction.Collide)
+            : Physics.RaycastAll(origin, direction, interactRange, ~0, QueryTriggerInteraction.Collide);
+
+        System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+        foreach (var hit in hits)
+        {
+            if (hit.transform.root == transform) continue;
+            var interactable = hit.GetComponentInParent<IInteractable>();
+            if (interactable == null) continue;
+            if (string.IsNullOrEmpty(interactable.InteractHint)) continue;
+            return interactable;
+        }
+
+        return null;
+    }
+
+    Transform GetAimTransform()
+    {
+        if (playerCamera == null)
+            playerCamera = GetComponentInChildren<Camera>(true);
+        return playerCamera != null ? playerCamera.transform : transform;
     }
 
     bool IsDowned() => TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value;
