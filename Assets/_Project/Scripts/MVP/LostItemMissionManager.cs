@@ -220,7 +220,6 @@ public class LostItemMissionManager : NetworkBehaviour
 
         if (LostItemCollected.Value)
         {
-            if (CarrierClientId.Value != requestingClientId) return;
             CurrentPhase.Value = MissionPhase.Completed;
             GrantRewardsAndReturn(true, MvpMissionResultKind.Success, returnTransitSeconds);
             return;

@@ -13,7 +13,32 @@ public class PlayerCameraController : NetworkBehaviour
     [SerializeField] Transform playerBody;  // rotate body for left/right; rotate this for up/down
 
     PlayerInputActions inputActions;
+    Camera localCamera;
     float verticalAngle;
+
+    public static float HorizontalSensitivity
+    {
+        get => PlayerPrefs.GetFloat("AS.Camera.HorizontalSensitivity", 2f);
+        set => PlayerPrefs.SetFloat("AS.Camera.HorizontalSensitivity", Mathf.Clamp(value, 0.25f, 8f));
+    }
+
+    public static float VerticalSensitivity
+    {
+        get => PlayerPrefs.GetFloat("AS.Camera.VerticalSensitivity", 2f);
+        set => PlayerPrefs.SetFloat("AS.Camera.VerticalSensitivity", Mathf.Clamp(value, 0.25f, 8f));
+    }
+
+    public static bool InvertY
+    {
+        get => PlayerPrefs.GetInt("AS.Camera.InvertY", 0) != 0;
+        set => PlayerPrefs.SetInt("AS.Camera.InvertY", value ? 1 : 0);
+    }
+
+    public static float FieldOfView
+    {
+        get => PlayerPrefs.GetFloat("AS.Camera.FieldOfView", 68f);
+        set => PlayerPrefs.SetFloat("AS.Camera.FieldOfView", Mathf.Clamp(value, 55f, 95f));
+    }
 
     public override void OnNetworkSpawn()
     {
@@ -36,6 +61,8 @@ public class PlayerCameraController : NetworkBehaviour
         {
             cam.gameObject.SetActive(true);
             cam.enabled = true;
+            localCamera = cam;
+            ApplyFieldOfView();
         }
         if (listener != null)
         {
@@ -66,6 +93,7 @@ public class PlayerCameraController : NetworkBehaviour
     {
         if (!IsOwner) return;
         if (inputActions == null) return;
+        ApplyFieldOfView();
         if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
         if (Cursor.lockState != CursorLockMode.Locked)
         {
@@ -74,8 +102,11 @@ public class PlayerCameraController : NetworkBehaviour
         }
 
         var look = inputActions.Player.Look.ReadValue<Vector2>();
-        float mouseX = look.x * mouseSensitivity;
-        float mouseY = look.y * mouseSensitivity;
+        float fallbackSensitivity = Mathf.Max(0.01f, mouseSensitivity);
+        float mouseX = look.x * (HorizontalSensitivity / 2f) * fallbackSensitivity;
+        float mouseY = look.y * (VerticalSensitivity / 2f) * fallbackSensitivity;
+        if (InvertY)
+            mouseY = -mouseY;
 
         verticalAngle = Mathf.Clamp(verticalAngle - mouseY, -verticalClamp, verticalClamp);
         transform.localRotation = Quaternion.Euler(verticalAngle, 0f, 0f);
@@ -87,5 +118,13 @@ public class PlayerCameraController : NetworkBehaviour
     {
         // Called by stability system to add screen sway when stressed
         verticalAngle += Random.Range(-amount, amount) * 0.1f;
+    }
+
+    void ApplyFieldOfView()
+    {
+        if (localCamera == null)
+            localCamera = GetComponentInChildren<Camera>(true);
+        if (localCamera != null)
+            localCamera.fieldOfView = FieldOfView;
     }
 }

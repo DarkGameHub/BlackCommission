@@ -7,8 +7,9 @@ public class MvpHud : MonoBehaviour
     const float OfficeComputerShopDistance = 3.4f;
     static OfficeComputer activeComputer;
     static SchoolExitPoint activeMissionVan;
+    static bool settingsOpen;
     public static bool IsComputerOpen => activeComputer != null;
-    public static bool IsBlockingPanelOpen => activeComputer != null || activeMissionVan != null;
+    public static bool IsBlockingPanelOpen => activeComputer != null || activeMissionVan != null || settingsOpen;
 
     [SerializeField] int panelWidth = 390;
     [SerializeField] bool showNetworkHint = false;
@@ -34,14 +35,35 @@ public class MvpHud : MonoBehaviour
     string missionMessage;
     float missionMessageUntil;
     Vector2 officeScrollPosition;
+    Vector2 settingsScrollPosition;
     static SchoolExitPoint partialReturnConfirmVan;
     static float partialReturnConfirmUntil;
+
+    static int LanguageIndex
+    {
+        get => PlayerPrefs.GetInt("AS.Settings.Language", 0);
+        set => PlayerPrefs.SetInt("AS.Settings.Language", Mathf.Clamp(value, 0, 1));
+    }
+
+    static float MasterVolume
+    {
+        get => PlayerPrefs.GetFloat("AS.Audio.MasterVolume", 1f);
+        set
+        {
+            float volume = Mathf.Clamp01(value);
+            PlayerPrefs.SetFloat("AS.Audio.MasterVolume", volume);
+            AudioListener.volume = volume;
+        }
+    }
 
     void Awake()
     {
         activeComputer = null;
         activeMissionVan = null;
+        settingsOpen = false;
         showNetworkHint = false;
+        AudioListener.volume = MasterVolume;
+        ProximityVoiceChat.EnsureInstance();
         if (LostItemMissionManager.Instance != null)
             RestoreGameplayCursor();
     }
@@ -51,14 +73,19 @@ public class MvpHud : MonoBehaviour
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
+        if (settingsOpen)
+        {
+            if (keyboard.escapeKey.wasPressedThisFrame)
+                CloseSettings();
+            return;
+        }
+
         if (activeMissionVan != null)
         {
             if (keyboard.escapeKey.wasPressedThisFrame)
                 CloseMissionVan();
             return;
         }
-
-        if (LostItemMissionManager.Instance != null) return;
 
         if (activeComputer != null)
         {
@@ -85,7 +112,12 @@ public class MvpHud : MonoBehaviour
         }
 
         if (keyboard.escapeKey.wasPressedThisFrame)
-            CloseComputer();
+        {
+            OpenSettings();
+            return;
+        }
+
+        if (LostItemMissionManager.Instance != null) return;
     }
 
     void TryBuy(PlayerHotbar hotbar, MvpHotbarItemId itemId)
@@ -158,6 +190,91 @@ public class MvpHud : MonoBehaviour
 
         if (showNetworkHint)
             DrawFooterHint();
+        if (settingsOpen)
+            DrawSettingsPanel();
+    }
+
+    void DrawSettingsPanel()
+    {
+        float width = Mathf.Clamp(Screen.width - 36f, 360f, 620f);
+        float height = Mathf.Clamp(Screen.height - 80f, 420f, 660f);
+        Rect rect = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
+        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("暂停", titleStyle);
+        if (GUILayout.Button("继续", GUILayout.Width(72), GUILayout.Height(30)))
+        {
+            CloseSettings();
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+            return;
+        }
+        GUILayout.EndHorizontal();
+
+        settingsScrollPosition = GUILayout.BeginScrollView(settingsScrollPosition, false, true);
+        GUILayout.Space(8);
+        GUILayout.Label("游戏", accentStyle);
+        string[] languageLabels = { "简体中文", "English" };
+        GUILayout.Label($"语言: {languageLabels[LanguageIndex]}", labelStyle);
+        int selectedLanguage = GUILayout.SelectionGrid(LanguageIndex, languageLabels, 2);
+        if (selectedLanguage != LanguageIndex)
+            LanguageIndex = selectedLanguage;
+        GUILayout.Label($"主音量: {MasterVolume:0.00}", labelStyle);
+        MasterVolume = GUILayout.HorizontalSlider(MasterVolume, 0f, 1f);
+        showNetworkHint = GUILayout.Toggle(showNetworkHint, "显示网络提示");
+
+        GUILayout.Space(10);
+        GUILayout.Label("视角", accentStyle);
+        GUILayout.Label($"鼠标水平速度: {PlayerCameraController.HorizontalSensitivity:0.00}", labelStyle);
+        PlayerCameraController.HorizontalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.HorizontalSensitivity, 0.25f, 8f);
+        GUILayout.Label($"鼠标垂直速度: {PlayerCameraController.VerticalSensitivity:0.00}", labelStyle);
+        PlayerCameraController.VerticalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.VerticalSensitivity, 0.25f, 8f);
+        PlayerCameraController.InvertY = GUILayout.Toggle(PlayerCameraController.InvertY, "反转垂直视角");
+        GUILayout.Label($"视野范围: {PlayerCameraController.FieldOfView:0}", labelStyle);
+        PlayerCameraController.FieldOfView = GUILayout.HorizontalSlider(PlayerCameraController.FieldOfView, 55f, 95f);
+
+        GUILayout.Space(10);
+        GUILayout.Label("语音", accentStyle);
+        ProximityVoiceChat.VoiceEnabled = GUILayout.Toggle(ProximityVoiceChat.VoiceEnabled, "默认开启语音");
+        ProximityVoiceChat.Muted = GUILayout.Toggle(ProximityVoiceChat.Muted, "静音自己");
+        DrawMicrophoneSelector();
+        GUILayout.Label($"麦克风增益: {ProximityVoiceChat.MicGain:0.0}", labelStyle);
+        ProximityVoiceChat.MicGain = GUILayout.HorizontalSlider(ProximityVoiceChat.MicGain, 0f, 2f);
+        GUILayout.Label($"语音音量: {ProximityVoiceChat.OutputVolume:0.0}", labelStyle);
+        ProximityVoiceChat.OutputVolume = GUILayout.HorizontalSlider(ProximityVoiceChat.OutputVolume, 0f, 2f);
+        GUILayout.Label($"语音距离: {ProximityVoiceChat.MaxDistance:0} m", labelStyle);
+        ProximityVoiceChat.MaxDistance = GUILayout.HorizontalSlider(ProximityVoiceChat.MaxDistance, 4f, 40f);
+
+        GUILayout.Space(14);
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("恢复默认", GUILayout.Height(32)))
+            ResetSettingsDefaults();
+        if (GUILayout.Button("退出游戏", GUILayout.Height(32)))
+            QuitGame();
+        GUILayout.EndHorizontal();
+        GUILayout.EndScrollView();
+        GUILayout.EndArea();
+    }
+
+    void DrawMicrophoneSelector()
+    {
+        string[] devices = Microphone.devices;
+        bool hasDevices = devices != null && devices.Length > 0;
+        GUILayout.Label($"麦克风: {ProximityVoiceChat.SelectedMicrophoneDeviceName}", labelStyle);
+        GUILayout.BeginHorizontal();
+        GUI.enabled = hasDevices;
+        if (GUILayout.Button("上一个", GUILayout.Height(28)))
+        {
+            int count = devices.Length;
+            ProximityVoiceChat.MicrophoneDeviceIndex = (ProximityVoiceChat.MicrophoneDeviceIndex + count - 1) % count;
+        }
+        if (GUILayout.Button("下一个", GUILayout.Height(28)))
+        {
+            int count = devices.Length;
+            ProximityVoiceChat.MicrophoneDeviceIndex = (ProximityVoiceChat.MicrophoneDeviceIndex + 1) % count;
+        }
+        GUI.enabled = true;
+        GUILayout.EndHorizontal();
     }
 
     void DrawOfficePanel()
@@ -314,7 +431,11 @@ public class MvpHud : MonoBehaviour
         if (hostReady)
         {
             if (GUILayout.Button("接受委托", GUILayout.Height(36)))
+            {
                 computer.ExecuteComputerAction(FindLocalPlayer());
+                if (MvpMissionRuntime.HasSelectedTask)
+                    CloseComputer();
+            }
         }
         else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
@@ -410,12 +531,12 @@ public class MvpHud : MonoBehaviour
         if (van == null) return;
 
         float width = Mathf.Clamp(Screen.width - 36f, 320f, 560f);
-        float height = Mathf.Clamp(Screen.height - 112f, 300f, 500f);
+        float height = Mathf.Clamp(Screen.height - 112f, 360f, 560f);
         Rect rect = new Rect((Screen.width - width) * 0.5f, 56, width, height);
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
         GUILayout.Label("事故车后舱", titleStyle);
-        if (GUILayout.Button("关上车门", GUILayout.Width(96), GUILayout.Height(30)))
+        if (GUILayout.Button("关门", GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseMissionVan();
             GUILayout.EndHorizontal();
@@ -427,9 +548,17 @@ public class MvpHud : MonoBehaviour
         GUILayout.Space(8);
         GUILayout.Label(van.GetReturnSummary(), accentStyle);
         DrawVehicleClockBlock(LostItemMissionManager.Instance);
-        GUILayout.Label("车载物资柜是团队共享补给。拿完再决定继续进场，或直接返程结算。", mutedStyle);
+        GUILayout.Label("先决定是否返程；补给柜只是可选物资，不影响关门回事务所。", mutedStyle);
         GUILayout.Space(10);
 
+        if (DrawMissionVanReturnControls(van))
+        {
+            GUILayout.EndArea();
+            return;
+        }
+
+        GUILayout.Space(10);
+        GUILayout.Label("车载补给柜", accentStyle);
         PlayerHotbar localHotbar = FindLocalHotbar();
         for (int i = 0; i < SchoolExitPoint.LockerSlotCount; i++)
         {
@@ -459,28 +588,34 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        GUILayout.Space(4);
+        GUILayout.EndArea();
+    }
+
+    bool DrawMissionVanReturnControls(SchoolExitPoint van)
+    {
         bool canReturn = van.CanLocalPlayerRequestReturn();
         GUI.enabled = canReturn;
-        if (GUILayout.Button(van.GetReturnButtonLabel(), GUILayout.Height(36)))
+        if (GUILayout.Button(van.GetReturnButtonLabel(), GUILayout.Height(44)))
         {
             if (van.IsPartialReturnRequest() && !IsPartialReturnConfirmed(van))
             {
                 partialReturnConfirmVan = van;
                 partialReturnConfirmUntil = Time.unscaledTime + 4f;
-                SetMissionMessage("警告: 再次点击会让全队提前返程，只做部分结算。");
+                SetMissionMessage("警告: 再次点击返程会让全队提前回事务所，只做部分结算。");
                 GUI.enabled = true;
-                GUILayout.EndArea();
-                return;
+                return false;
             }
 
             van.RequestReturnToOffice(FindLocalPlayer());
             CloseMissionVan();
+            GUI.enabled = true;
+            return true;
         }
         GUI.enabled = true;
         if (!canReturn)
             GUILayout.Label(van.GetReturnBlockedReason(), warningStyle);
-        GUILayout.EndArea();
+
+        return false;
     }
 
     void DrawFieldClockLine(LostItemMissionManager mission)
@@ -587,7 +722,7 @@ public class MvpHud : MonoBehaviour
             case LostItemMissionManager.MissionPhase.Searching:
                 return "目标: 核对记录室登记簿，找到真正盖章作业本。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.ReturnToExit:
-                return "目标: 带着作业本回到校门口的车上。" + paperworkRisk;
+                return "目标: 带着作业本回到校门口的事故车尾，按 E 打开后舱返程。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.Completed:
                 return "目标: 委托完成，返回事务所领取奖励。";
             case LostItemMissionManager.MissionPhase.ReturnedEarly:
@@ -660,6 +795,7 @@ public class MvpHud : MonoBehaviour
     public static void OpenComputer(OfficeComputer computer)
     {
         activeMissionVan = null;
+        settingsOpen = false;
         activeComputer = computer;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -668,7 +804,17 @@ public class MvpHud : MonoBehaviour
     public static void OpenMissionVan(SchoolExitPoint van)
     {
         activeComputer = null;
+        settingsOpen = false;
         activeMissionVan = van;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    static void OpenSettings()
+    {
+        activeComputer = null;
+        activeMissionVan = null;
+        settingsOpen = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -684,6 +830,38 @@ public class MvpHud : MonoBehaviour
         activeMissionVan = null;
         partialReturnConfirmVan = null;
         RestoreGameplayCursor();
+    }
+
+    static void CloseSettings()
+    {
+        settingsOpen = false;
+        RestoreGameplayCursor();
+    }
+
+    static void ResetSettingsDefaults()
+    {
+        LanguageIndex = 0;
+        MasterVolume = 1f;
+        PlayerCameraController.HorizontalSensitivity = 2f;
+        PlayerCameraController.VerticalSensitivity = 2f;
+        PlayerCameraController.InvertY = false;
+        PlayerCameraController.FieldOfView = 68f;
+        ProximityVoiceChat.VoiceEnabled = true;
+        ProximityVoiceChat.Muted = false;
+        ProximityVoiceChat.MicGain = 1f;
+        ProximityVoiceChat.OutputVolume = 1f;
+        ProximityVoiceChat.MaxDistance = 18f;
+        ProximityVoiceChat.MicrophoneDeviceIndex = 0;
+    }
+
+    static void QuitGame()
+    {
+        PlayerPrefs.Save();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     static void RestoreGameplayCursor()
