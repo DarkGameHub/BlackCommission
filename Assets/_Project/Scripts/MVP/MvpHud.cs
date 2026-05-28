@@ -425,7 +425,7 @@ public class MvpHud : MonoBehaviour
 
     void DrawFooterHint()
     {
-        string text = "多人 MVP: Start Host 后接任务；1-5 切热栏，左键使用，HQ 内按 G 丢当前格到地上存放。";
+        string text = "多人 MVP: Start Host 后接任务；1-5 切热栏，左键/H 使用，HQ 内按 G 丢当前格到地上存放。";
         GUI.Label(new Rect(18, Screen.height - 30, 720, 24), text, mutedStyle);
     }
 

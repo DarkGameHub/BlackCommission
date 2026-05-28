@@ -17,6 +17,7 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] float crouchSpeed = 2f;
     [SerializeField] float crouchHeight = 1f;
     [SerializeField] float standHeight = 2f;
+    [SerializeField] float standClearancePadding = 0.04f;
     [SerializeField] float gravity = -20f;
     [SerializeField] float jumpForce = 5f;
 
@@ -171,13 +172,13 @@ public class PlayerController : NetworkBehaviour
         CollisionFlags verticalFlags = cc.Move(velocity * Time.deltaTime);
         if ((verticalFlags & CollisionFlags.Below) != 0 && velocity.y < 0f)
             velocity.y = -2f;
+        if ((verticalFlags & CollisionFlags.Above) != 0 && velocity.y > 0f)
+            velocity.y = 0f;
     }
 
     void RecoverFromFall()
     {
-        Vector3 safePosition = SceneManager.GetActiveScene().name == "HQ"
-            ? new Vector3(0f, 1.15f, 0f)
-            : new Vector3(transform.position.x, 1.15f, transform.position.z);
+        Vector3 safePosition = GetSceneSafePosition();
 
         cc.enabled = false;
         transform.position = safePosition;
@@ -202,10 +203,43 @@ public class PlayerController : NetworkBehaviour
 
     void SetCrouch(bool crouch)
     {
+        if (!crouch && !HasStandClearance())
+            return;
+
         isCrouching = crouch;
         cc.height = crouch ? crouchHeight : standHeight;
         cc.center = new Vector3(0, cc.height / 2f, 0);
         UpdateCrouchCamera(false);
+    }
+
+    bool HasStandClearance()
+    {
+        if (cc == null) return true;
+
+        float radius = Mathf.Max(0.05f, cc.radius + standClearancePadding);
+        Vector3 bottom = transform.position + Vector3.up * (crouchHeight + radius);
+        Vector3 top = transform.position + Vector3.up * (standHeight - radius);
+
+        bool wasEnabled = cc.enabled;
+        if (wasEnabled) cc.enabled = false;
+        bool blocked = Physics.CheckCapsule(bottom, top, radius, ~0, QueryTriggerInteraction.Ignore);
+        if (wasEnabled) cc.enabled = true;
+        return !blocked;
+    }
+
+    Vector3 GetSceneSafePosition()
+    {
+        GameObject spawn = GameObject.Find("PlayerSpawnPoint");
+        if (spawn != null)
+            return spawn.transform.position + Vector3.up * 0.05f;
+
+        string sceneName = SceneManager.GetActiveScene().name;
+        if (sceneName == "HQ")
+            return new Vector3(0f, 1.15f, 0f);
+        if (sceneName.Contains("School"))
+            return new Vector3(0f, 1.15f, -11.45f);
+
+        return new Vector3(0f, 1.15f, 0f);
     }
 
     void CacheCameraStandPosition()
