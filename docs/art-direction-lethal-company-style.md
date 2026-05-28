@@ -5,6 +5,8 @@ PM: Yan Dai
 Document scope: MVP visual direction for the rundown office, the school lost-item map, and future maps.  
 Current target: 1-4 player MVP loop, `HQ -> School_LostItem_01 -> HQ`, primitive geometry, URP Lit/Simple Lit materials, OnGUI HUD.
 
+Style lock: [AccidentSquad Style Lock v1](art/accidentsquad-style-lock-v1.md) is the current source of truth for production art decisions. This file remains the broader art bible, but the lock document decides naming, motifs, acceptance tests, and copy-risk boundaries.
+
 ## North Star
 
 AccidentSquad should look like a broke commission office taking tiny outsourced jobs in spaces that society has stopped caring for. The first mission is not "epic horror"; it is a parent's missing homework request that becomes dangerous because bureaucracy, debt, and neglected public spaces have turned hostile.
