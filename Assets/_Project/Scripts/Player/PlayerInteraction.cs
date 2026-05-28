@@ -77,7 +77,9 @@ public class PlayerInteraction : NetworkBehaviour
         foreach (var hit in hits)
         {
             if (hit.transform.root == transform) continue;
-            var interactable = hit.GetComponentInParent<IInteractable>();
+            var interactable = hit.collider != null
+                ? hit.collider.GetComponentInParent<IInteractable>()
+                : hit.transform.GetComponentInParent<IInteractable>();
             if (interactable == null) continue;
             if (string.IsNullOrEmpty(interactable.InteractHint)) continue;
             return interactable;
