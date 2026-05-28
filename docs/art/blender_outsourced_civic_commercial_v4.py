@@ -176,7 +176,7 @@ def prism(name: str, points: list[tuple[float, float]], half_width: float, mat, 
     for y in (-half_width, half_width):
         verts.extend((x, y, z) for x, z in points)
     n = len(points)
-    faces = [tuple(range(n)), tuple(range(n, n * 2))]
+    faces = [tuple(reversed(range(n))), tuple(range(n, n * 2))]
     for i in range(n):
         j = (i + 1) % n
         faces.append((i, j, j + n, i + n))
@@ -198,28 +198,28 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_right_wall", (5.2, 0.4, 1.48), (0.08, 3.4, 1.48), m["wall_shadow"], coll, edge=0.008)
     cube("hq_ceiling_tiles", (0, 0, 2.92), (5.12, 3.72, 0.035), m["metal"], coll, edge=0.003)
 
-    cube("hq_counter_front", (-1.35, 2.72, 0.40), (1.45, 0.32, 0.32), m["wood"], coll, edge=0.008)
-    cube("hq_counter_top", (-1.35, 2.40, 0.76), (1.52, 0.14, 0.045), m["metal"], coll, edge=0.004)
-    cube("hq_crt_body", (-1.35, 2.22, 1.10), (0.44, 0.28, 0.24), m["metal"], coll, edge=0.012)
-    cube("hq_crt_screen", (-1.35, 1.92, 1.10), (0.32, 0.022, 0.15), m["terminal"], coll, edge=0.004)
-    txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.895, 1.24), (math.radians(90), 0, 0), 0.072, m["terminal"], coll)
-    cube("hq_keyboard_keys", (-1.35, 2.16, 0.84), (0.52, 0.16, 0.020), m["black"], coll, edge=0.002)
+    cube("hq_counter_front", (-1.35, 2.72, 0.31), (1.45, 0.32, 0.58), m["wood"], coll, edge=0.008)
+    cube("hq_counter_top", (-1.35, 2.40, 0.62), (1.52, 0.14, 0.055), m["metal"], coll, edge=0.004)
+    cube("hq_crt_body", (-1.35, 2.22, 0.91), (0.42, 0.26, 0.22), m["metal"], coll, edge=0.012)
+    cube("hq_crt_screen", (-1.35, 1.93, 0.91), (0.30, 0.022, 0.13), m["terminal"], coll, edge=0.004)
+    txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.905, 1.02), (math.radians(90), 0, 0), 0.064, m["terminal"], coll)
+    cube("hq_keyboard_keys", (-1.35, 2.16, 0.68), (0.48, 0.15, 0.018), m["black"], coll, edge=0.002)
     for i in range(6):
-        cube(f"hq_keyboard_key_row_{i}", (-1.58 + i * 0.09, 2.02, 0.865), (0.025, 0.012, 0.006), m["paper_dark"], coll, edge=0)
+        cube(f"hq_keyboard_key_row_{i}", (-1.56 + i * 0.082, 2.02, 0.705), (0.022, 0.011, 0.005), m["paper_dark"], coll, edge=0)
 
     cube("hq_debt_board", (2.05, 3.70, 1.56), (1.28, 0.035, 0.78), m["debt"], coll, edge=0.005)
     txt("hq_debt_board_text", "OVERDUE\nTAKEOVER\nPRESSURE", (2.05, 3.655, 1.58), (math.radians(90), 0, 0), 0.15, m["paper"], coll)
     for i in range(14):
         cube(f"hq_wall_notice_{i}", (0.86 + (i % 7) * 0.35, 3.64, 0.58 + (i // 7) * 0.28), (0.11, 0.010, 0.070), m["paper" if i % 5 else "debt"], coll, edge=0.001)
 
-    cube("hq_equipment_shelf_frame", (-4.15, 3.42, 1.05), (0.78, 0.16, 0.90), m["metal"], coll, edge=0.006)
-    for z in (0.54, 1.04, 1.54):
+    cube("hq_equipment_shelf_frame", (-4.15, 3.42, 0.79), (0.78, 0.16, 1.54), m["metal"], coll, edge=0.006)
+    for z in (0.36, 0.84, 1.32):
         cube(f"hq_equipment_shelf_plank_{z}", (-4.15, 3.18, z), (0.90, 0.10, 0.035), m["metal_worn"], coll, edge=0.002)
-    cube("hq_medkit", (-4.58, 3.02, 0.74), (0.17, 0.13, 0.12), m["paper"], coll, edge=0.004)
-    cube("hq_medkit_cross_h", (-4.58, 2.875, 0.74), (0.10, 0.009, 0.018), m["debt"], coll, edge=0)
-    cube("hq_medkit_cross_v", (-4.58, 2.875, 0.74), (0.025, 0.009, 0.065), m["debt"], coll, edge=0)
-    cyl("hq_spray_can", (-4.16, 2.99, 0.78), 0.060, 0.26, m["cyan"], coll, vertices=10, edge=0.002)
-    cyl("hq_flashlight", (-3.73, 2.99, 1.24), 0.050, 0.36, m["black"], coll, vertices=10, rot=(0, math.radians(90), 0), edge=0.002)
+    cube("hq_medkit", (-4.58, 3.02, 0.50), (0.17, 0.13, 0.12), m["paper"], coll, edge=0.004)
+    cube("hq_medkit_cross_h", (-4.58, 2.875, 0.50), (0.10, 0.009, 0.018), m["debt"], coll, edge=0)
+    cube("hq_medkit_cross_v", (-4.58, 2.875, 0.50), (0.025, 0.009, 0.065), m["debt"], coll, edge=0)
+    cyl("hq_spray_can", (-4.16, 2.99, 0.52), 0.060, 0.26, m["cyan"], coll, vertices=10, edge=0.002)
+    cyl("hq_flashlight", (-3.73, 2.99, 1.00), 0.050, 0.36, m["black"], coll, vertices=10, rot=(0, math.radians(90), 0), edge=0.002)
 
     cube("hq_garage_floor_lane", (2.50, -1.82, 0.010), (2.00, 1.18, 0.018), m["wall_shadow"], coll, edge=0.002)
     for i in range(8):
@@ -231,9 +231,9 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_garage_amber_work_light", (2.50, -3.54, 2.12), (1.10, 0.035, 0.045), m["amber"], coll, edge=0.004)
     cube("hq_garage_flood_lamp_housing", (2.50, -3.48, 2.22), (1.25, 0.055, 0.055), m["black"], coll, edge=0.004)
 
-    cube("hq_sofa_base", (3.42, 2.04, 0.29), (0.95, 0.34, 0.14), m["uniform"], coll, edge=0.006)
-    cube("hq_sofa_back", (3.42, 2.32, 0.64), (0.95, 0.08, 0.34), m["uniform"], coll, edge=0.006)
-    cube("hq_missing_cushion_dark", (3.05, 2.04, 0.43), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
+    cube("hq_sofa_base", (3.42, 2.04, 0.20), (0.95, 0.34, 0.36), m["uniform"], coll, edge=0.006)
+    cube("hq_sofa_back", (3.42, 2.32, 0.46), (0.95, 0.08, 0.82), m["uniform"], coll, edge=0.006)
+    cube("hq_missing_cushion_dark", (3.05, 2.04, 0.39), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
     for i in range(8):
         x = -4.45 + (i % 2) * 0.50
         z = 0.35 + (i // 2) * 0.33
@@ -366,6 +366,8 @@ def build_van(m) -> bpy.types.Collection:
         (1.38, 0.34)
     ]
     prism("van_body_sloped_one_piece", body, 0.72, m["van_body"], coll)
+    cube("van_closed_side_skin_L", (-0.04, -0.745, 0.86), (3.05, 0.018, 0.72), m["van_body"], coll, edge=0.004)
+    cube("van_closed_side_skin_R", (-0.04, 0.745, 0.86), (3.05, 0.018, 0.72), m["van_body"], coll, edge=0.004)
     cube("van_lower_dirty_panel_L", (-0.06, -0.735, 0.47), (1.48, 0.016, 0.095), m["van_shadow"], coll, edge=0.003)
     cube("van_lower_dirty_panel_R", (-0.06, 0.735, 0.47), (1.48, 0.016, 0.095), m["van_shadow"], coll, edge=0.003)
     cube("van_front_bumper", (-1.88, 0, 0.45), (0.08, 0.66, 0.085), m["metal"], coll, edge=0.006)
