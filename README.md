@@ -12,6 +12,8 @@ Current MVP direction:
 
 See [docs/mvp-core-loop.md](docs/mvp-core-loop.md) for the full MVP design, story background, agent team setup, and first-phase implementation plan.
 
+Current art direction is locked in [docs/art/accidentsquad-style-lock-v1.md](docs/art/accidentsquad-style-lock-v1.md).
+
 Unity setup:
 
 1. Run `Tools > Accident Squad > Setup All (Run This First!)` if the base project has not been generated on this checkout.

@@ -4,6 +4,8 @@
 
 The playable HQ is currently a Unity runtime set, not the Blender HQ prefab.
 
+Style source of truth: [AccidentSquad Style Lock v1](accidentsquad-style-lock-v1.md).
+
 1. `MvpProjectSetup` creates the base HQ scene objects, including the real
    `OfficeComputer` interaction component.
 2. `MvpSceneStyleDirector.BuildOfficeStyle()` runs when the `HQ` scene loads.
