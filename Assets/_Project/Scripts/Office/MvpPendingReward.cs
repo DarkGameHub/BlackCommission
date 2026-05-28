@@ -87,6 +87,7 @@ public static class MvpPendingReward
             CountsTowardLostItemProgress,
             ResultKind);
 
+        CompanyData.Save();
         Clear();
         return true;
     }

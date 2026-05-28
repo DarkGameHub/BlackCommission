@@ -19,26 +19,30 @@ public class OfficeDepartureVan : MonoBehaviour, IInteractable
             if (MvpPendingReward.HasPending) return "先去电脑领取结算";
             if (VanTransitOverlay.IsActive) return "司机已经发车";
             if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return "先创建主机再出车";
-            if (!NetworkManager.Singleton.IsHost) return "等待房主发车";
-            if (computer.HasSelectedDemoTask)
-            {
-                GetBoardingCounts(out int boarded, out int total);
-                if (total > 0 && boarded < total)
-                    return $"车内 {boarded}/{total}: 等所有队员上车";
-
-                return $"关门开车: {computer.DemoTaskTitle}";
-            }
-            return "先在电脑锁定委托";
+            if (!computer.HasSelectedDemoTask) return "先在电脑锁定委托";
+            GetBoardingCounts(out int boarded, out int total);
+            if (!NetworkManager.Singleton.IsHost) return $"上车等候 {boarded}/{total}";
+            if (total > 0 && boarded < total)
+                return $"[SPACE]发车  {boarded}/{total} 上车中  长按强制";
+            return "[SPACE] 发车";
         }
     }
 
     public void OnInteractStart(PlayerController player)
     {
+        // E at HQ van = join boarding area (physical presence check already handles this)
+        // Departure is triggered by Space key via VanTransitOverlay boarding phase
         OfficeComputer computer = GetComputer();
         if (computer == null) return;
         if (!computer.HasSelectedDemoTask) return;
-        if (!IsEveryoneBoarded()) return;
-        computer.LaunchSelectedMissionFromVehicle(player);
+        if (!NetworkManager.Singleton.IsHost) return;
+
+        // Show boarding overlay — Space will depart
+        GetBoardingCounts(out int boarded, out int total);
+        string title = computer.DemoTaskTitle;
+        string location = computer.DemoTaskLocation;
+        VanTransitOverlay.ShowBoarding(title, location, true);
+        VanTransitOverlay.NotifyPlayerBoarded(boarded);
     }
 
     public void OnInteractEnd(PlayerController player) { }

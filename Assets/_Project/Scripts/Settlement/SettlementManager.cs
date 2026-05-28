@@ -99,14 +99,31 @@ public class SettlementData
 /// <summary>Persistent company state saved between missions.</summary>
 public static class CompanyData
 {
-    public static CompanyState Current = new CompanyState
+    const string SaveKey = "AS.CompanyData.v1";
+
+    public static CompanyState Current = Load();
+
+    public static void Save()
     {
-        Funds = -300,
-        Reputation = 0,
-        OfficeLevel = 1,
-        Experience = 0,
-        Debt = 300
-    };
+        string json = JsonUtility.ToJson(Current);
+        PlayerPrefs.SetString(SaveKey, json);
+        PlayerPrefs.Save();
+    }
+
+    public static void ResetToNew()
+    {
+        Current = new CompanyState { Funds = -300, Reputation = 0, OfficeLevel = 1, Experience = 0, Debt = 300 };
+        Save();
+    }
+
+    static CompanyState Load()
+    {
+        string json = PlayerPrefs.GetString(SaveKey, "");
+        if (string.IsNullOrEmpty(json))
+            return new CompanyState { Funds = -300, Reputation = 0, OfficeLevel = 1, Experience = 0, Debt = 300 };
+        try { return JsonUtility.FromJson<CompanyState>(json); }
+        catch { return new CompanyState { Funds = -300, Reputation = 0, OfficeLevel = 1, Experience = 0, Debt = 300 }; }
+    }
 
     public static void ApplySnapshot(
         int funds,
@@ -153,6 +170,7 @@ public class CompanyState
     public int FailedJobs;
     public int HostileTakeoverPressure;
     public bool HasAcquiredTutorialOffice;
+    public bool WristwatchPurchased;
     public bool LastMissionSucceeded;
     public bool WasRecentlyHostileAcquired;
     public bool HasHostileTakeoverUltimatum;

@@ -27,20 +27,10 @@ public class OfficeGroundItemPickup : MonoBehaviour, IInteractable
 
     public void OnInteractEnd(PlayerController player) { }
 
-    static string GetItemLabel(MvpHotbarItemId id)
+    static string GetItemLabel(MvpHotbarItemId id) => id switch
     {
-        switch (id)
-        {
-            case MvpHotbarItemId.Medkit:
-                return "回血药";
-            case MvpHotbarItemId.Decoy:
-                return "诱饵";
-            case MvpHotbarItemId.StunSpray:
-                return "定身喷雾";
-            case MvpHotbarItemId.Flashlight:
-                return "手电";
-            default:
-                return "物品";
-        }
-    }
+        MvpHotbarItemId.Flashlight => MvpLocale.T("flashlight"),
+        MvpHotbarItemId.Battery => MvpLocale.T("battery"),
+        _ => "物品"
+    };
 }

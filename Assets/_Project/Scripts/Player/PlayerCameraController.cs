@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,6 +16,12 @@ public class PlayerCameraController : NetworkBehaviour
     PlayerInputActions inputActions;
     Camera localCamera;
     float verticalAngle;
+
+    // Spectator
+    Transform spectateTarget;
+    int spectateIndex = -1;
+    public bool IsSpectating => spectateTarget != null;
+    public string SpectateTargetName => spectateTarget != null ? spectateTarget.root.name : "";
 
     public static float HorizontalSensitivity
     {
@@ -94,6 +101,17 @@ public class PlayerCameraController : NetworkBehaviour
         if (!IsOwner) return;
         if (inputActions == null) return;
         ApplyFieldOfView();
+
+        PlayerHealth health = GetComponentInParent<PlayerHealth>();
+        if (health != null && health.IsDowned.Value)
+        {
+            UpdateSpectator();
+            return;
+        }
+
+        if (spectateTarget != null)
+            ExitSpectator();
+
         if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
         if (Cursor.lockState != CursorLockMode.Locked)
         {
@@ -112,6 +130,72 @@ public class PlayerCameraController : NetworkBehaviour
         transform.localRotation = Quaternion.Euler(verticalAngle, 0f, 0f);
         if (playerBody != null)
             playerBody.Rotate(Vector3.up * mouseX);
+    }
+
+    void UpdateSpectator()
+    {
+        if (spectateTarget == null)
+            CycleSpectateTarget(1);
+
+        if (spectateTarget != null)
+        {
+            if (localCamera != null)
+            {
+                localCamera.transform.position = spectateTarget.position;
+                localCamera.transform.rotation = spectateTarget.rotation;
+            }
+
+            PlayerHealth targetHealth = spectateTarget.GetComponentInParent<PlayerHealth>();
+            if (targetHealth != null && targetHealth.IsDowned.Value)
+                CycleSpectateTarget(1);
+        }
+
+        var mouse = Mouse.current;
+        if (mouse != null)
+        {
+            if (mouse.leftButton.wasPressedThisFrame)
+                CycleSpectateTarget(1);
+            else if (mouse.rightButton.wasPressedThisFrame)
+                CycleSpectateTarget(-1);
+        }
+    }
+
+    void CycleSpectateTarget(int direction)
+    {
+        PlayerCameraController[] allCameras = FindObjectsByType<PlayerCameraController>(FindObjectsSortMode.None);
+        List<PlayerCameraController> alive = new();
+        foreach (var cam in allCameras)
+        {
+            if (cam == this) continue;
+            PlayerHealth h = cam.GetComponentInParent<PlayerHealth>();
+            if (h != null && !h.IsDowned.Value)
+                alive.Add(cam);
+        }
+
+        if (alive.Count == 0)
+        {
+            spectateTarget = null;
+            spectateIndex = -1;
+            return;
+        }
+
+        spectateIndex += direction;
+        if (spectateIndex >= alive.Count) spectateIndex = 0;
+        if (spectateIndex < 0) spectateIndex = alive.Count - 1;
+
+        Camera targetCam = alive[spectateIndex].GetComponentInChildren<Camera>(true);
+        spectateTarget = targetCam != null ? targetCam.transform : alive[spectateIndex].transform;
+    }
+
+    void ExitSpectator()
+    {
+        spectateTarget = null;
+        spectateIndex = -1;
+        if (localCamera != null)
+        {
+            localCamera.transform.localPosition = Vector3.zero;
+            localCamera.transform.localRotation = Quaternion.identity;
+        }
     }
 
     public void AddSway(float amount)

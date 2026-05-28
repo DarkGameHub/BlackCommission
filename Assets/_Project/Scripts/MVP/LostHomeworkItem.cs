@@ -23,6 +23,8 @@ public class LostHomeworkItem : NetworkBehaviour, IInteractable
     {
         if (player == null) return;
         if (player.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) return;
+        AudioManager.Instance?.PlayPickup(transform.position);
+
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
             LostItemMissionManager.Instance?.TryCollectItem(0, default);

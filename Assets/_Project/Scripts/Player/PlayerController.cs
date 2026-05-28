@@ -39,6 +39,7 @@ public class PlayerController : NetworkBehaviour
     Vector3 velocity;
     Vector3 standCameraLocalPosition;
     float lastGroundedTime;
+    float nextFootstepTime;
     bool hasCameraStandPosition;
     bool isCrouching;
     bool isSprinting;
@@ -50,6 +51,14 @@ public class PlayerController : NetworkBehaviour
     public NetworkVariable<bool> IsCarrying = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public NetworkVariable<bool> HiddenFromMonsters = new(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> CharacterIndex = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<int> GestureId = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<float> NetworkMoveSpeed = new(0f,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
+    float gestureEndTime;
 
     void Awake()
     {
@@ -63,7 +72,8 @@ public class PlayerController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        // Lock cursor only for the local player
+        CharacterIndex.Value = PlayerCharacterPalette.SavedIndex;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -114,6 +124,8 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
+        UpdateGestureInput();
+
         if (transform.position.y < -6f)
         {
             RecoverFromFall();
@@ -156,6 +168,10 @@ public class PlayerController : NetworkBehaviour
                            : isSprinting ? sprintSpeed
                            : walkSpeed;
 
+        float targetNetSpeed = !hasMoveInput ? 0f : isSprinting ? 1f : isCrouching ? 0.25f : 0.5f;
+        if (Mathf.Abs(NetworkMoveSpeed.Value - targetNetSpeed) > 0.05f)
+            NetworkMoveSpeed.Value = targetNetSpeed;
+
         // Water slowdown is applied from outside (WaterLevelManager)
         currentSpeed *= SpeedMultiplier;
 
@@ -169,6 +185,13 @@ public class PlayerController : NetworkBehaviour
         bool grounded = groundedBeforeMove || cc.isGrounded || (horizontalFlags & CollisionFlags.Below) != 0;
         if (grounded)
             lastGroundedTime = Time.time;
+
+        if (grounded && hasMoveInput && Time.time >= nextFootstepTime)
+        {
+            float interval = isSprinting ? 0.32f : isCrouching ? 0.6f : 0.45f;
+            nextFootstepTime = Time.time + interval;
+            AudioManager.Instance?.PlayFootstep(transform.position);
+        }
 
         if (grounded && velocity.y < 0f)
         {
@@ -214,6 +237,28 @@ public class PlayerController : NetworkBehaviour
             QueryTriggerInteraction.Ignore);
         if (wasEnabled) cc.enabled = true;
         return grounded;
+    }
+
+    void UpdateGestureInput()
+    {
+        if (GestureId.Value != 0 && Time.time > gestureEndTime)
+            GestureId.Value = 0;
+
+        var keyboard = Keyboard.current;
+        if (keyboard == null) return;
+
+        int pressed = 0;
+        if (keyboard.f1Key.wasPressedThisFrame) pressed = 1;
+        else if (keyboard.f2Key.wasPressedThisFrame) pressed = 2;
+        else if (keyboard.f3Key.wasPressedThisFrame) pressed = 3;
+        else if (keyboard.f4Key.wasPressedThisFrame) pressed = 4;
+        else if (keyboard.f5Key.wasPressedThisFrame) pressed = 5;
+
+        if (pressed > 0)
+        {
+            GestureId.Value = pressed;
+            gestureEndTime = Time.time + PlayerGestures.Duration;
+        }
     }
 
     void RecoverFromFall()

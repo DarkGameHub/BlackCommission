@@ -1,255 +1,741 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class VanTransitOverlay : MonoBehaviour
 {
+    public enum Phase { None, Boarding, Transit }
+
     static VanTransitOverlay current;
 
     string taskTitle;
     string locationName;
-    string directionLabel;
     float startTime;
-    float duration;
+    float transitDuration;
     float hideAt;
     bool outbound;
+    bool isHost;
+    Phase phase;
+    int boardedCount;
+
+    GameObject interiorRoot;
+    Camera transitCamera;
+    readonly List<GameObject> cosmeticPlayers = new();
+    Camera disabledPlayerCamera;
+    MonoBehaviour disabledCameraController;
 
     Texture2D ink;
-    Texture2D blackout;
     Texture2D cabin;
-    Texture2D steel;
     Texture2D rubber;
-    Texture2D glass;
-    Texture2D glassGlow;
-    Texture2D paper;
-    Texture2D paperDim;
-    Texture2D tape;
     Texture2D amber;
     Texture2D red;
-    Texture2D coldMark;
+    Texture2D paper;
     Texture2D shadow;
 
-    GUIStyle brandStyle;
     GUIStyle headingStyle;
-    GUIStyle statusStyle;
     GUIStyle labelStyle;
-    GUIStyle paperHeadingStyle;
-    GUIStyle paperLabelStyle;
-    GUIStyle paperSmallStyle;
     GUIStyle smallStyle;
-    GUIStyle stampStyle;
+    GUIStyle actionStyle;
 
-    public static bool IsActive => current != null && Time.unscaledTime < current.hideAt;
+    bool lockerOpen;
+    SchoolExitPoint cachedExitPoint;
+    float spaceHoldTime;
+    const float ForceDepartHoldDuration = 2f;
+
+    static readonly Vector3 TransitOffset = new(0f, 80f, 0f);
+
+    static readonly Vector3[] SeatPositions =
+    {
+        new(0.15f, 0.70f, -0.42f),
+        new(0.85f, 0.70f, -0.42f),
+        new(0.15f, 0.70f, 0.42f),
+        new(0.85f, 0.70f, 0.42f),
+    };
+
+    static readonly float[] SeatYaw = { 90f, 90f, -90f, -90f };
+
+    public static bool IsActive => current != null && current.phase != Phase.None;
+    public static Phase CurrentPhase => current != null ? current.phase : Phase.None;
+
+    // ─── Public API ───
 
     public static void ShowOutbound(string taskTitle, string locationName, float durationSeconds)
     {
-        Show(taskTitle, locationName, "DISPATCHING", durationSeconds, true);
+        EnsureInstance();
+        current.BeginTransit(taskTitle, locationName, durationSeconds, true);
+    }
+
+    public static void ShowBoarding(string taskTitle, string locationName, bool host)
+    {
+        EnsureInstance();
+        current.BeginBoarding(taskTitle, locationName, host);
+    }
+
+    public static void NotifyPlayerBoarded(int totalBoarded)
+    {
+        if (current != null && current.phase == Phase.Boarding)
+            current.UpdateBoardedCount(totalBoarded);
+    }
+
+    public static void StartDeparture(float transitSeconds)
+    {
+        if (current != null && current.phase == Phase.Boarding)
+            current.SwitchToTransit(transitSeconds);
     }
 
     public static void ShowReturn(string taskTitle, string locationName, float durationSeconds)
     {
-        Show(taskTitle, locationName, "RETURNING", durationSeconds, false);
+        EnsureInstance();
+        current.BeginTransit(taskTitle, locationName, durationSeconds, false);
     }
 
-    static void Show(string taskTitle, string locationName, string directionLabel, float durationSeconds, bool outbound)
+    static void EnsureInstance()
     {
-        if (current == null)
-        {
-            var go = new GameObject("MVP_VanTransitOverlay");
-            DontDestroyOnLoad(go);
-            current = go.AddComponent<VanTransitOverlay>();
-        }
-
-        current.Begin(taskTitle, locationName, directionLabel, durationSeconds, outbound);
+        if (current != null) return;
+        var go = new GameObject("MVP_VanTransitOverlay");
+        DontDestroyOnLoad(go);
+        current = go.AddComponent<VanTransitOverlay>();
     }
 
-    void Begin(string newTaskTitle, string newLocationName, string newDirectionLabel, float durationSeconds, bool isOutbound)
+    // ─── Boarding ───
+
+    void BeginBoarding(string newTaskTitle, string newLocationName, bool host)
     {
-        taskTitle = string.IsNullOrWhiteSpace(newTaskTitle) ? "委托" : newTaskTitle;
-        locationName = string.IsNullOrWhiteSpace(newLocationName) ? "任务地点" : newLocationName;
-        directionLabel = newDirectionLabel;
-        duration = Mathf.Max(1.5f, durationSeconds);
-        outbound = isOutbound;
+        taskTitle = string.IsNullOrWhiteSpace(newTaskTitle) ? MvpLocale.T("commission") : newTaskTitle;
+        locationName = string.IsNullOrWhiteSpace(newLocationName) ? MvpLocale.T("mission_location") : newLocationName;
+        isHost = host;
+        outbound = false;
+        phase = Phase.Boarding;
+        boardedCount = 1;
         startTime = Time.unscaledTime;
-        hideAt = startTime + duration + 0.65f;
+        hideAt = float.MaxValue;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        EnsureTextures();
+
+        Teardown3D();
+        Setup3D();
     }
 
-    void Update()
+    void UpdateBoardedCount(int count)
     {
-        if (Time.unscaledTime <= hideAt) return;
-        if (current == this) current = null;
-        Destroy(gameObject);
-    }
+        int previous = boardedCount;
+        boardedCount = count;
 
-    void OnGUI()
-    {
-        if (!IsActive) return;
-        EnsureTextures();
-        EnsureStyles();
-
-        int oldDepth = GUI.depth;
-        Color oldColor = GUI.color;
-        GUI.depth = -1000;
-
-        float elapsed = Time.unscaledTime - startTime;
-        float progress = Mathf.Clamp01(elapsed / duration);
-        float fadeIn = Mathf.Clamp01(elapsed / 0.32f);
-        float fadeOut = Mathf.Clamp01((hideAt - Time.unscaledTime) / 0.42f);
-        float alpha = Mathf.Min(fadeIn, fadeOut);
-        GUI.color = new Color(1f, 1f, 1f, alpha);
-
-        DrawRect(new Rect(0f, 0f, Screen.width, Screen.height), blackout);
-
-        float width = Mathf.Clamp(Screen.width - 64f, 360f, 1080f);
-        float height = Mathf.Clamp(Screen.height - 64f, 330f, 620f);
-        Rect shell = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
-
-        DrawTransitBoard(shell, elapsed, progress);
-        DrawScreenWear(shell, elapsed);
-
-        GUI.color = oldColor;
-        GUI.depth = oldDepth;
-    }
-
-    void DrawTransitBoard(Rect shell, float elapsed, float progress)
-    {
-        DrawRect(shell, ink);
-        DrawRect(new Rect(shell.x + 8f, shell.y + 8f, shell.width - 16f, shell.height - 16f), steel);
-        DrawRect(new Rect(shell.x + 18f, shell.y + 18f, shell.width - 36f, shell.height - 36f), cabin);
-
-        Rect header = new Rect(shell.x + 34f, shell.y + 28f, shell.width - 68f, 54f);
-        DrawHeader(header);
-
-        float gutter = 22f;
-        Rect content = new Rect(shell.x + 34f, header.yMax + 22f, shell.width - 68f, shell.height - 156f);
-        float docketWidth = content.width > 620f
-            ? Mathf.Clamp(content.width * 0.36f, 230f, 350f)
-            : Mathf.Clamp(content.width * 0.46f, 160f, 230f);
-        Rect docket = new Rect(content.x, content.y, docketWidth, content.height);
-        Rect window = new Rect(docket.xMax + gutter, content.y, content.width - docket.width - gutter, content.height);
-
-        DrawDocket(docket);
-        DrawRouteWindow(window, elapsed);
-        DrawBottomRoute(new Rect(shell.x + 34f, shell.yMax - 68f, shell.width - 68f, 42f), progress);
-    }
-
-    void DrawHeader(Rect header)
-    {
-        DrawRect(header, rubber);
-        DrawRect(new Rect(header.x, header.yMax - 2f, header.width, 2f), outbound ? amber : red);
-        GUI.Label(new Rect(header.x + 16f, header.y + 8f, 210f, 24f), "ACCIDENT SQUAD", brandStyle);
-        GUI.Label(new Rect(header.x + 16f, header.y + 31f, 280f, 17f), "外包车队 / 临时派遣回执", smallStyle);
-
-        string title = outbound ? "派车去现场" : "返程回事务所";
-        GUI.Label(new Rect(header.center.x - 150f, header.y + 10f, 300f, 30f), title, headingStyle);
-        GUI.Label(new Rect(header.xMax - 210f, header.y + 17f, 190f, 20f), $"车内人数 {GetPassengerCount()}/4", smallStyle);
-    }
-
-    void DrawDocket(Rect rect)
-    {
-        DrawRect(new Rect(rect.x + 8f, rect.y + 8f, rect.width, rect.height), shadow);
-        DrawRect(rect, paper);
-        DrawRect(new Rect(rect.x + 18f, rect.y - 7f, rect.width * 0.34f, 18f), tape);
-        DrawRect(new Rect(rect.x + rect.width * 0.58f, rect.y - 6f, rect.width * 0.28f, 16f), tape);
-
-        GUI.Label(new Rect(rect.x + 22f, rect.y + 20f, rect.width - 44f, 20f), outbound ? "外勤派车单" : "返程结算单", statusStyle);
-        GUI.Label(new Rect(rect.x + 22f, rect.y + 48f, rect.width - 44f, 34f), outbound ? taskTitle : "现场回收单据", paperHeadingStyle);
-
-        DrawDocketLine(rect, 96f, "地点", outbound ? locationName : "事故事务所");
-        DrawDocketLine(rect, 134f, "路线", outbound ? $"事务所 -> {locationName}" : $"{locationName} -> 事务所");
-        DrawDocketLine(rect, 172f, "车队", "二手外勤车 / 司机外包");
-        DrawDocketLine(rect, 210f, "状态", outbound ? "已从车库出发" : "后舱关门，回站结算");
-
-        Rect stamp = new Rect(rect.x + 22f, rect.yMax - 74f, rect.width - 44f, 42f);
-        DrawRect(stamp, outbound ? coldMark : red);
-        GUI.Label(stamp, directionLabel, stampStyle);
-    }
-
-    void DrawDocketLine(Rect rect, float y, string key, string value)
-    {
-        DrawRect(new Rect(rect.x + 22f, rect.y + y + 25f, rect.width - 44f, 1f), paperDim);
-        GUI.Label(new Rect(rect.x + 22f, rect.y + y, 62f, 24f), key, paperSmallStyle);
-        GUI.Label(new Rect(rect.x + 88f, rect.y + y, rect.width - 110f, 24f), value, paperLabelStyle);
-    }
-
-    void DrawRouteWindow(Rect rect, float elapsed)
-    {
-        DrawRect(rect, rubber);
-        Rect glassRect = new Rect(rect.x + 12f, rect.y + 12f, rect.width - 24f, rect.height - 24f);
-        DrawRect(glassRect, glass);
-        DrawRect(new Rect(glassRect.x + 14f, glassRect.y + 14f, glassRect.width - 28f, 4f), glassGlow);
-        DrawRect(new Rect(glassRect.x + 14f, glassRect.yMax - 18f, glassRect.width - 28f, 4f), shadow);
-
-        DrawExteriorSilhouettes(glassRect, elapsed);
-
-        Rect tag = new Rect(glassRect.x + 18f, glassRect.y + 22f, Mathf.Min(280f, glassRect.width - 36f), 38f);
-        DrawRect(tag, shadow);
-        GUI.Label(new Rect(tag.x + 12f, tag.y + 6f, tag.width - 24f, 22f),
-            outbound ? "车窗外: 旧城边缘 / 废弃学校方向" : "车窗外: 回事务所交账", labelStyle);
-
-        Rect mirror = new Rect(glassRect.xMax - 142f, glassRect.y + 24f, 112f, 38f);
-        DrawRect(mirror, ink);
-        DrawRect(new Rect(mirror.x + 8f, mirror.y + 8f, mirror.width - 16f, mirror.height - 16f), glassGlow);
-        GUI.Label(new Rect(mirror.x, mirror.y + 8f, mirror.width, 18f), outbound ? "司机未回头" : "车尾已关", smallStyle);
-    }
-
-    void DrawExteriorSilhouettes(Rect rect, float elapsed)
-    {
-        float speed = outbound ? 86f : 68f;
-        float roadY = rect.yMax - rect.height * 0.24f;
-        DrawRect(new Rect(rect.x, roadY, rect.width, rect.height * 0.24f), ink);
-
-        for (int i = 0; i < 7; i++)
+        for (int i = previous; i < Mathf.Min(count, SeatPositions.Length); i++)
         {
-            float x = rect.x + Mathf.Repeat((elapsed * speed) + i * 155f, rect.width + 190f) - 170f;
-            float h = 42f + (i % 3) * 26f;
-            DrawRect(new Rect(x, roadY - h, 92f + i % 2 * 28f, h), shadow);
-            if (i % 2 == 0)
-                DrawRect(new Rect(x + 12f, roadY - h + 14f, 16f, 4f), amber);
+            if (i == 0) continue;
+            SpawnSinglePassenger(i);
         }
+    }
 
-        if (!outbound)
+    void SwitchToTransit(float transitSeconds)
+    {
+        transitDuration = Mathf.Max(1.5f, transitSeconds);
+        startTime = Time.unscaledTime;
+        hideAt = startTime + transitDuration + 0.65f;
+        phase = Phase.Transit;
+        AudioManager.Instance?.PlayEngineStart(Vector3.zero);
+        AudioManager.Instance?.PlayEngineIdle();
+    }
+
+    // ─── Transit ───
+
+    void BeginTransit(string newTaskTitle, string newLocationName, float durationSeconds, bool isOutbound)
+    {
+        taskTitle = string.IsNullOrWhiteSpace(newTaskTitle) ? MvpLocale.T("commission") : newTaskTitle;
+        locationName = string.IsNullOrWhiteSpace(newLocationName) ? MvpLocale.T("mission_location") : newLocationName;
+        transitDuration = Mathf.Max(1.5f, durationSeconds);
+        outbound = isOutbound;
+        phase = Phase.Transit;
+        startTime = Time.unscaledTime;
+        hideAt = startTime + transitDuration + 0.65f;
+        boardedCount = GetPassengerCount();
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (interiorRoot == null)
         {
-            DrawRect(new Rect(rect.x + rect.width * 0.58f, roadY - 86f, rect.width * 0.22f, 86f), shadow);
-            DrawRect(new Rect(rect.x + rect.width * 0.62f, roadY - 118f, rect.width * 0.14f, 32f), shadow);
+            Teardown3D();
+            Setup3D();
+        }
+    }
+
+    // ─── 3D Interior ───
+
+    void Setup3D()
+    {
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_VanTransitInterior");
+        if (prefab != null)
+        {
+            interiorRoot = Instantiate(prefab);
+            interiorRoot.name = "MVP_VanTransitInterior_3D";
         }
         else
         {
-            DrawRect(new Rect(rect.x + rect.width * 0.62f, roadY - 104f, rect.width * 0.25f, 104f), shadow);
-            DrawRect(new Rect(rect.x + rect.width * 0.66f, roadY - 134f, rect.width * 0.17f, 30f), shadow);
-            DrawRect(new Rect(rect.x + rect.width * 0.71f, roadY - 82f, 18f, 48f), ink);
+            interiorRoot = CreateProceduralInterior();
         }
 
-        DrawRect(new Rect(rect.x + 26f, roadY + 14f, rect.width - 52f, 3f), amber);
-        DrawRect(new Rect(rect.x + 26f, roadY + 34f, rect.width - 52f, 2f), paperDim);
+        interiorRoot.transform.position = TransitOffset;
+        interiorRoot.transform.rotation = Quaternion.identity;
+        DontDestroyOnLoad(interiorRoot);
+
+        foreach (Collider c in interiorRoot.GetComponentsInChildren<Collider>())
+            c.enabled = false;
+
+        SetupTransitCamera();
+        DisablePlayerCamera();
+
+        int count = Mathf.Max(1, boardedCount);
+        for (int i = 1; i < Mathf.Min(count, SeatPositions.Length); i++)
+            SpawnSinglePassenger(i);
     }
 
-    void DrawBottomRoute(Rect rect, float progress)
+    GameObject CreateProceduralInterior()
     {
-        DrawRect(rect, ink);
-        DrawRect(new Rect(rect.x, rect.y, rect.width, 2f), steel);
+        var root = new GameObject("MVP_VanTransitInterior_Procedural");
 
-        Rect route = new Rect(rect.x + 18f, rect.y + 8f, rect.width - 220f, 26f);
-        GUI.Label(route, outbound ? $"事务所  ->  {locationName}" : $"{locationName}  ->  事务所", labelStyle);
+        Material wallMat = MakeFlatMaterial(new Color(0.184f, 0.310f, 0.294f));
+        Material metalMat = MakeFlatMaterial(new Color(0.067f, 0.078f, 0.075f));
+        Material benchMat = MakeFlatMaterial(new Color(0.125f, 0.208f, 0.196f));
+        Material blackMat = MakeFlatMaterial(new Color(0.035f, 0.04f, 0.037f));
+        Material amberMat = MakeFlatMaterial(new Color(0.851f, 0.604f, 0.192f));
 
-        Rect bar = new Rect(rect.xMax - 188f, rect.y + 15f, 164f, 10f);
+        CreateInteriorBox("Floor", root.transform, new Vector3(0.45f, 0.36f, 0f), new Vector3(2f, 0.02f, 1.36f), metalMat);
+        CreateInteriorBox("Ceiling", root.transform, new Vector3(0.45f, 1.44f, 0f), new Vector3(2f, 0.02f, 1.36f), metalMat);
+        CreateInteriorBox("WallL", root.transform, new Vector3(0.45f, 0.92f, -0.68f), new Vector3(2f, 0.56f, 0.02f), wallMat);
+        CreateInteriorBox("WallR", root.transform, new Vector3(0.45f, 0.92f, 0.68f), new Vector3(2f, 0.56f, 0.02f), wallMat);
+
+        CreateInteriorBox("BenchL", root.transform, new Vector3(0.50f, 0.48f, -0.52f), new Vector3(1.5f, 0.04f, 0.18f), benchMat);
+        CreateInteriorBox("BenchBackL", root.transform, new Vector3(0.50f, 0.80f, -0.64f), new Vector3(1.5f, 0.30f, 0.04f), benchMat);
+        CreateInteriorBox("BenchR", root.transform, new Vector3(0.50f, 0.48f, 0.52f), new Vector3(1.5f, 0.04f, 0.18f), benchMat);
+        CreateInteriorBox("BenchBackR", root.transform, new Vector3(0.50f, 0.80f, 0.64f), new Vector3(1.5f, 0.30f, 0.04f), benchMat);
+
+        CreateInteriorBox("CageTop", root.transform, new Vector3(-0.55f, 1.42f, 0f), new Vector3(0.04f, 0.04f, 1.36f), metalMat);
+        CreateInteriorBox("CageBot", root.transform, new Vector3(-0.55f, 0.42f, 0f), new Vector3(0.04f, 0.04f, 1.36f), metalMat);
+        for (int i = 0; i < 7; i++)
+        {
+            float z = -0.54f + i * 0.18f;
+            CreateInteriorCylinder($"Bar{i}", root.transform, new Vector3(-0.55f, 0.92f, z), 0.012f, 1.0f, metalMat);
+        }
+
+        CreateInteriorBox("DriverTorso", root.transform, new Vector3(-1.30f, 0.88f, 0f), new Vector3(0.24f, 0.36f, 0.20f), blackMat);
+        CreateInteriorBox("DriverHead", root.transform, new Vector3(-1.30f, 1.28f, -0.02f), new Vector3(0.18f, 0.20f, 0.16f), blackMat);
+        CreateInteriorBox("DriverCap", root.transform, new Vector3(-1.30f, 1.42f, -0.04f), new Vector3(0.22f, 0.04f, 0.18f), blackMat);
+
+        CreateInteriorBox("Light", root.transform, new Vector3(0.45f, 1.39f, 0f), new Vector3(0.72f, 0.012f, 0.025f), amberMat);
+
+        for (int i = 0; i < 2; i++)
+        {
+            float z = i == 0 ? -0.32f : 0.32f;
+            CreateInteriorCylinder($"GrabBar{i}", root.transform, new Vector3(0.45f, 1.38f, z), 0.018f, 1.6f, metalMat, horizontal: true);
+        }
+
+        // Municipal Debt Noir detail layer
+        Material paperMat = MakeFlatMaterial(new Color(0.839f, 0.784f, 0.608f));
+        Material debtMat = MakeFlatMaterial(new Color(0.761f, 0.227f, 0.169f));
+        Material greenMat = MakeFlatMaterial(new Color(0.482f, 0.812f, 0.541f));
+        Material cardboardMat = MakeFlatMaterial(new Color(0.451f, 0.314f, 0.165f));
+        Material grimeMat = MakeFlatMaterial(new Color(0.090f, 0.141f, 0.133f));
+
+        CreateInteriorBox("SafetyNotice", root.transform,
+            new Vector3(0.35f, 0.95f, -0.66f), new Vector3(0.32f, 0.22f, 0.01f), paperMat);
+        CreateInteriorBox("SafetyNoticeStamp", root.transform,
+            new Vector3(0.42f, 0.88f, -0.655f), new Vector3(0.1f, 0.06f, 0.008f), debtMat);
+        CreateInteriorBox("NoSmokingSign", root.transform,
+            new Vector3(0.72f, 1.05f, 0.665f), new Vector3(0.18f, 0.12f, 0.01f), debtMat);
+        CreateInteriorBox("CompanyLogoBar", root.transform,
+            new Vector3(-0.50f, 1.18f, 0f), new Vector3(0.01f, 0.06f, 0.48f), greenMat);
+        CreateInteriorBox("CompanyLogoLeft", root.transform,
+            new Vector3(-0.505f, 1.02f, -0.20f), new Vector3(0.01f, 0.38f, 0.06f), greenMat);
+        CreateInteriorBox("CompanyLogoRight", root.transform,
+            new Vector3(-0.505f, 1.02f, 0.20f), new Vector3(0.01f, 0.38f, 0.06f), greenMat);
+        var slash = CreateInteriorBox("CompanyDebtSlash", root.transform,
+            new Vector3(-0.51f, 1.02f, 0f), new Vector3(0.008f, 0.44f, 0.06f), debtMat);
+        slash.transform.localRotation = Quaternion.Euler(0f, 0f, -28f);
+        CreateInteriorBox("GearCrate", root.transform,
+            new Vector3(1.25f, 0.44f, 0.08f), new Vector3(0.22f, 0.16f, 0.18f), cardboardMat);
+        CreateInteriorBox("GearCrateLabel", root.transform,
+            new Vector3(1.25f, 0.46f, 0.18f), new Vector3(0.14f, 0.08f, 0.008f), paperMat);
+        CreateInteriorBox("FloorGrimeA", root.transform,
+            new Vector3(0.55f, 0.372f, -0.22f), new Vector3(0.35f, 0.005f, 0.28f), grimeMat);
+        CreateInteriorBox("FloorGrimeB", root.transform,
+            new Vector3(0.85f, 0.372f, 0.32f), new Vector3(0.22f, 0.005f, 0.18f), grimeMat);
+
+        return root;
+    }
+
+    static GameObject CreateInteriorBox(string name, Transform parent, Vector3 pos, Vector3 scale, Material mat)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = $"Interior_{name}";
+        go.transform.SetParent(parent);
+        go.transform.localPosition = pos;
+        go.transform.localScale = scale;
+        go.GetComponent<Renderer>().material = mat;
+        Object.Destroy(go.GetComponent<Collider>());
+        return go;
+    }
+
+    static void CreateInteriorCylinder(string name, Transform parent, Vector3 pos, float radius, float height, Material mat, bool horizontal = false)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.name = $"Interior_{name}";
+        go.transform.SetParent(parent);
+        go.transform.localPosition = pos;
+        go.transform.localScale = new Vector3(radius * 2f, height * 0.5f, radius * 2f);
+        if (horizontal)
+            go.transform.localRotation = Quaternion.Euler(0f, 0f, 90f);
+        go.GetComponent<Renderer>().material = mat;
+        Object.Destroy(go.GetComponent<Collider>());
+    }
+
+    static Material MakeFlatMaterial(Color color)
+    {
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Simple Lit") ?? Shader.Find("Standard"));
+        mat.color = color;
+        return mat;
+    }
+
+    void SetupTransitCamera()
+    {
+        var camGo = new GameObject("TransitCamera");
+        camGo.transform.SetParent(interiorRoot.transform);
+        camGo.transform.localPosition = SeatPositions[0] + new Vector3(0f, 0.55f, 0f);
+        camGo.transform.localRotation = Quaternion.Euler(5f, SeatYaw[0], 0f);
+
+        transitCamera = camGo.AddComponent<Camera>();
+        transitCamera.fieldOfView = 68f;
+        transitCamera.nearClipPlane = 0.05f;
+        transitCamera.farClipPlane = 20f;
+        transitCamera.clearFlags = CameraClearFlags.SolidColor;
+        transitCamera.backgroundColor = new Color(0.014f, 0.016f, 0.015f);
+        transitCamera.depth = 100f;
+
+        camGo.AddComponent<AudioListener>();
+    }
+
+    void DisablePlayerCamera()
+    {
+        PlayerCameraController[] controllers = FindObjectsByType<PlayerCameraController>(FindObjectsSortMode.None);
+        foreach (var ctrl in controllers)
+        {
+            if (!ctrl.IsOwner) continue;
+            Camera cam = ctrl.GetComponentInChildren<Camera>();
+            if (cam != null)
+            {
+                cam.enabled = false;
+                disabledPlayerCamera = cam;
+            }
+            AudioListener listener = ctrl.GetComponentInChildren<AudioListener>();
+            if (listener != null)
+                listener.enabled = false;
+            ctrl.enabled = false;
+            disabledCameraController = ctrl;
+            break;
+        }
+    }
+
+    void RestorePlayerCamera()
+    {
+        if (disabledPlayerCamera != null)
+        {
+            disabledPlayerCamera.enabled = true;
+            disabledPlayerCamera = null;
+        }
+        if (disabledCameraController != null)
+        {
+            disabledCameraController.enabled = true;
+            AudioListener listener = disabledCameraController.GetComponentInChildren<AudioListener>();
+            if (listener != null)
+                listener.enabled = true;
+            disabledCameraController = null;
+        }
+    }
+
+    void SpawnSinglePassenger(int seatIndex)
+    {
+        if (interiorRoot == null) return;
+        if (seatIndex < 0 || seatIndex >= SeatPositions.Length) return;
+
+        var colors = GetCharacterColorsForSeat(seatIndex);
+
+        GameObject workerPrefab = Resources.Load<GameObject>("GeneratedArt/ASV4_WorkerCheapOutsourcedUniform");
+        GameObject model;
+        if (workerPrefab != null)
+        {
+            model = Instantiate(workerPrefab, interiorRoot.transform);
+            ApplyColorsToModel(model, colors);
+        }
+        else
+        {
+            model = CreateFallbackPlayerModel(colors);
+            model.transform.SetParent(interiorRoot.transform);
+        }
+
+        model.name = $"TransitPassenger_{seatIndex}";
+        model.transform.localPosition = SeatPositions[seatIndex];
+        model.transform.localRotation = Quaternion.Euler(0f, SeatYaw[seatIndex], 0f);
+        model.transform.localScale = Vector3.one * 0.45f;
+
+        foreach (Collider c in model.GetComponentsInChildren<Collider>())
+            c.enabled = false;
+        foreach (var nb in model.GetComponentsInChildren<NetworkBehaviour>())
+            Destroy(nb);
+        foreach (var no in model.GetComponentsInChildren<NetworkObject>())
+            Destroy(no);
+
+        cosmeticPlayers.Add(model);
+    }
+
+    static PlayerCharacterPalette.CharacterColors GetCharacterColorsForSeat(int seatIndex)
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening)
+            return PlayerCharacterPalette.Get(0);
+
+        int playerIndex = 0;
+        foreach (ulong clientId in network.ConnectedClientsIds)
+        {
+            if (playerIndex == seatIndex && network.ConnectedClients.TryGetValue(clientId, out var client))
+            {
+                if (client.PlayerObject != null && client.PlayerObject.TryGetComponent<PlayerController>(out var ctrl))
+                    return PlayerCharacterPalette.Get(ctrl.CharacterIndex.Value);
+                break;
+            }
+            playerIndex++;
+        }
+
+        return PlayerCharacterPalette.Get(seatIndex % PlayerCharacterPalette.Count);
+    }
+
+    static void ApplyColorsToModel(GameObject model, PlayerCharacterPalette.CharacterColors colors)
+    {
+        foreach (Renderer r in model.GetComponentsInChildren<Renderer>())
+        {
+            string n = r.gameObject.name.ToLowerInvariant();
+            if (n.Contains("uniform") || n.Contains("torso") || n.Contains("arm") || n.Contains("leg") || n.Contains("fabric"))
+                r.material.color = colors.uniform;
+            else if (n.Contains("vest") || n.Contains("safety"))
+                r.material.color = colors.vest;
+            else if (n.Contains("helmet") || n.Contains("hat") || n.Contains("hardhat"))
+                r.material.color = colors.helmet;
+        }
+    }
+
+    static GameObject CreateFallbackPlayerModel(PlayerCharacterPalette.CharacterColors colors)
+    {
+        var root = new GameObject("FallbackPassenger");
+
+        var torso = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        torso.transform.SetParent(root.transform);
+        torso.transform.localPosition = new Vector3(0f, 0.45f, 0f);
+        torso.transform.localScale = new Vector3(0.42f, 0.52f, 0.22f);
+        torso.GetComponent<Renderer>().material.color = colors.uniform;
+
+        var head = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        head.transform.SetParent(root.transform);
+        head.transform.localPosition = new Vector3(0f, 0.88f, 0f);
+        head.transform.localScale = new Vector3(0.28f, 0.32f, 0.26f);
+        head.GetComponent<Renderer>().material.color = PlayerCharacterPalette.Skin;
+
+        var helmet = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        helmet.transform.SetParent(root.transform);
+        helmet.transform.localPosition = new Vector3(0f, 1.05f, 0f);
+        helmet.transform.localScale = new Vector3(0.36f, 0.08f, 0.30f);
+        helmet.GetComponent<Renderer>().material.color = colors.helmet;
+
+        var vest = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        vest.transform.SetParent(root.transform);
+        vest.transform.localPosition = new Vector3(0f, 0.48f, 0.12f);
+        vest.transform.localScale = new Vector3(0.44f, 0.24f, 0.04f);
+        vest.GetComponent<Renderer>().material.color = colors.vest;
+
+        return root;
+    }
+
+    void UpdateVanSway()
+    {
+        if (transitCamera == null) return;
+        float t = (Time.unscaledTime - startTime) * 1.8f;
+        float swayX = Mathf.Sin(t * 0.7f) * 0.3f;
+        float swayZ = Mathf.Sin(t * 1.1f + 0.5f) * 0.2f;
+        transitCamera.transform.localRotation = Quaternion.Euler(5f + swayX, SeatYaw[0], swayZ);
+    }
+
+    void Teardown3D()
+    {
+        AudioManager.Instance?.StopEngineIdle();
+        RestorePlayerCamera();
+
+        foreach (var go in cosmeticPlayers)
+            if (go != null) Destroy(go);
+        cosmeticPlayers.Clear();
+
+        if (transitCamera != null)
+        {
+            Destroy(transitCamera.gameObject);
+            transitCamera = null;
+        }
+
+        if (interiorRoot != null)
+        {
+            Destroy(interiorRoot);
+            interiorRoot = null;
+        }
+    }
+
+    // ─── Update ───
+
+    void Update()
+    {
+        if (phase == Phase.Boarding)
+        {
+            UpdateVanSway();
+            if (isHost) UpdateBoardingDepartInput();
+            return;
+        }
+
+        if (phase == Phase.Transit)
+        {
+            UpdateVanSway();
+
+            // F key opens/closes the van supply locker (return trips only)
+            if (!outbound && Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+                lockerOpen = !lockerOpen;
+
+            if (Time.unscaledTime > hideAt)
+            {
+                lockerOpen = false;
+                Teardown3D();
+                phase = Phase.None;
+                if (current == this) current = null;
+                Destroy(gameObject);
+            }
+        }
+    }
+
+    // ─── GUI ───
+
+    void OnGUI()
+    {
+        if (phase == Phase.None) return;
+        EnsureTextures();
+        EnsureStyles();
+
+        if (phase == Phase.Boarding)
+            DrawBoardingOverlay();
+        else if (phase == Phase.Transit)
+        {
+            DrawTransitInfoOverlay();
+            if (!outbound) DrawLockerHint();
+            if (lockerOpen) DrawLockerPanel();
+        }
+    }
+
+    void DrawBoardingOverlay()
+    {
+        float alpha = Mathf.Clamp01((Time.unscaledTime - startTime) / 0.5f) * 0.92f;
+        GUI.color = new Color(1f, 1f, 1f, alpha);
+
+        bool allAboard = boardedCount >= GetTotalPlayerCount();
+        float panelW = Mathf.Clamp(Screen.width * 0.34f, 240f, 380f);
+        float panelH = isHost ? 128f : 100f;
+        Rect panel = new Rect(24f, Screen.height - panelH - 24f, panelW, panelH);
+
+        // Red border flash when force-departing
+        if (isHost && !allAboard && spaceHoldTime > 0.2f)
+        {
+            GUI.color = new Color(1f, 1f, 1f, alpha * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 8f)));
+            DrawRect(new Rect(panel.x - 2, panel.y - 2, panel.width + 4, panel.height + 4), red);
+        }
+        GUI.color = new Color(1f, 1f, 1f, alpha);
+
+        DrawRect(panel, ink);
+        DrawRect(new Rect(panel.x + 4f, panel.y + 4f, panel.width - 8f, panel.height - 8f), cabin);
+
+        GUI.Label(new Rect(panel.x + 14f, panel.y + 10f, panel.width - 28f, 20f), taskTitle, labelStyle);
+
+        string status = allAboard
+            ? MvpLocale.T("all_aboard", boardedCount, GetTotalPlayerCount())
+            : MvpLocale.T("waiting_team", boardedCount, GetTotalPlayerCount());
+        GUI.Label(new Rect(panel.x + 14f, panel.y + 34f, panel.width - 28f, 18f), status, smallStyle);
+
+        float sway = Mathf.Sin(Time.unscaledTime * 2f) * 0.5f + 0.5f;
+        string dots = sway > 0.66f ? "..." : sway > 0.33f ? ".." : ".";
+        GUI.Label(new Rect(panel.x + 14f, panel.y + 56f, panel.width - 28f, 18f),
+            MvpLocale.T("driver_waiting") + dots, smallStyle);
+
+        if (isHost)
+        {
+            if (allAboard)
+            {
+                Rect btn = new Rect(panel.x + 14f, panel.y + panelH - 34f, panel.width - 28f, 26f);
+                DrawRect(btn, amber);
+                GUI.Label(btn, "[SPACE] 发车", actionStyle);
+            }
+            else
+            {
+                // Force depart progress bar
+                float progress = spaceHoldTime / ForceDepartHoldDuration;
+                Rect barBg = new Rect(panel.x + 14f, panel.y + panelH - 34f, panel.width - 28f, 12f);
+                DrawRect(barBg, rubber);
+                if (progress > 0f)
+                    DrawRect(new Rect(barBg.x, barBg.y, barBg.width * progress, barBg.height), red);
+                string forceLabel = progress > 0.05f
+                    ? $"长按SPACE强制发车 ({(int)(ForceDepartHoldDuration - spaceHoldTime + 1)}s)"
+                    : "长按SPACE强制发车";
+                GUI.Label(new Rect(panel.x + 14f, panel.y + panelH - 52f, panel.width - 28f, 16f),
+                    forceLabel, smallStyle);
+            }
+        }
+
+        GUI.color = Color.white;
+    }
+
+    void DrawTransitInfoOverlay()
+    {
+        float elapsed = Time.unscaledTime - startTime;
+        float progress = Mathf.Clamp01(elapsed / transitDuration);
+        float fadeIn = Mathf.Clamp01(elapsed / 0.5f);
+        float fadeOut = Mathf.Clamp01((hideAt - Time.unscaledTime) / 0.42f);
+        GUI.color = new Color(1f, 1f, 1f, Mathf.Min(fadeIn, fadeOut) * 0.92f);
+
+        float panelW = Mathf.Clamp(Screen.width * 0.32f, 220f, 360f);
+        float panelH = 130f;
+        Rect panel = new Rect(24f, Screen.height - panelH - 24f, panelW, panelH);
+
+        DrawRect(panel, ink);
+        DrawRect(new Rect(panel.x + 4f, panel.y + 4f, panel.width - 8f, panel.height - 8f), cabin);
+
+        string title = outbound ? MvpLocale.T("dispatch_outbound") : MvpLocale.T("return_office");
+        GUI.Label(new Rect(panel.x + 14f, panel.y + 10f, panel.width - 28f, 22f), title, headingStyle);
+        GUI.Label(new Rect(panel.x + 14f, panel.y + 36f, panel.width - 28f, 18f), taskTitle, labelStyle);
+
+        string officeName = MvpLocale.T("office");
+        string route = outbound ? $"{officeName} → {locationName}" : $"{locationName} → {officeName}";
+        GUI.Label(new Rect(panel.x + 14f, panel.y + 60f, panel.width - 28f, 18f), route, smallStyle);
+        GUI.Label(new Rect(panel.x + 14f, panel.y + 80f, 100f, 18f), MvpLocale.T("in_van", boardedCount), smallStyle);
+
+        Rect bar = new Rect(panel.x + 14f, panel.y + panelH - 24f, panel.width - 28f, 10f);
         DrawRect(bar, rubber);
         DrawRect(new Rect(bar.x, bar.y, bar.width * progress, bar.height), outbound ? amber : red);
 
-        float markerX = Mathf.Lerp(bar.x + 4f, bar.xMax - 4f, progress);
-        DrawRect(new Rect(markerX - 2f, bar.y - 5f, 4f, bar.height + 10f), paper);
+        GUI.color = Color.white;
     }
 
-    void DrawScreenWear(Rect shell, float elapsed)
+    void UpdateBoardingDepartInput()
     {
-        float offset = Mathf.Repeat(elapsed * 14f, 16f);
-        for (float y = shell.y + 24f + offset; y < shell.yMax - 24f; y += 16f)
-            DrawRect(new Rect(shell.x + 24f, y, shell.width - 48f, 1f), shadow);
+        var keyboard = Keyboard.current;
+        if (keyboard == null) return;
 
-        DrawRect(new Rect(shell.x, shell.y, shell.width, 10f), shadow);
-        DrawRect(new Rect(shell.x, shell.yMax - 10f, shell.width, 10f), shadow);
+        bool allAboard = boardedCount >= GetTotalPlayerCount();
+
+        if (allAboard && keyboard.spaceKey.wasPressedThisFrame)
+        {
+            spaceHoldTime = 0f;
+            TriggerDepart();
+            return;
+        }
+
+        if (!allAboard && keyboard.spaceKey.isPressed)
+        {
+            spaceHoldTime += Time.unscaledDeltaTime;
+            if (spaceHoldTime >= ForceDepartHoldDuration)
+            {
+                spaceHoldTime = 0f;
+                TriggerDepart();
+            }
+        }
+        else
+        {
+            spaceHoldTime = Mathf.Max(0f, spaceHoldTime - Time.unscaledDeltaTime * 2f);
+        }
+    }
+
+    void TriggerDepart()
+    {
+        // Return from school: use LostItemMissionManager
+        var missionManager = LostItemMissionManager.Instance;
+        if (missionManager != null)
+        {
+            missionManager.RequestDepartVan();
+            return;
+        }
+
+        // Depart from HQ: use OfficeDepartureVan → OfficeComputer
+        var van = Object.FindAnyObjectByType<OfficeDepartureVan>();
+        var computer = Object.FindAnyObjectByType<OfficeComputer>();
+        var player = FindLocalPlayer();
+        if (van != null && computer != null && player != null)
+            computer.LaunchSelectedMissionFromVehicle(player);
+    }
+
+    static PlayerController FindLocalPlayer()
+    {
+        var all = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        foreach (var p in all)
+            if (p.IsOwner) return p;
+        return null;
+    }
+
+    void DrawLockerHint()
+    {
+        EnsureStyles();
+        float alpha = 0.7f + Mathf.Sin(Time.unscaledTime * 2.5f) * 0.3f;
+        GUI.color = new Color(1f, 1f, 1f, alpha * 0.85f);
+        string hint = lockerOpen ? "[F] 关闭储物柜" : "[F] 打开储物柜";
+        GUI.Label(new Rect(Screen.width - 210f, Screen.height - 56f, 200f, 22f), hint, smallStyle);
+        GUI.color = Color.white;
+    }
+
+    void DrawLockerPanel()
+    {
+        EnsureTextures();
+        EnsureStyles();
+
+        if (cachedExitPoint == null)
+            cachedExitPoint = FindObjectsByType<SchoolExitPoint>(FindObjectsSortMode.None).Length > 0
+                ? FindObjectsByType<SchoolExitPoint>(FindObjectsSortMode.None)[0]
+                : null;
+
+        float panelW = 240f, panelH = 130f;
+        Rect panel = new Rect(Screen.width - panelW - 18f, Screen.height - panelH - 64f, panelW, panelH);
+
+        DrawRect(panel, ink);
+        DrawRect(new Rect(panel.x + 3, panel.y + 3, panel.width - 6, panel.height - 6), cabin);
+
+        GUI.Label(new Rect(panel.x + 12, panel.y + 10, panel.width - 24, 20), "车载储物柜", headingStyle);
+
+        if (cachedExitPoint == null)
+        {
+            GUI.Label(new Rect(panel.x + 12, panel.y + 38, panel.width - 24, 20), "储物柜已离线", smallStyle);
+            return;
+        }
+
+        for (int i = 0; i < 2; i++)
+        {
+            MvpHotbarItemId itemId = cachedExitPoint.GetLockerItemId(i);
+            int qty = cachedExitPoint.GetLockerQuantity(i);
+            if (itemId == MvpHotbarItemId.None) continue;
+
+            string name = itemId == MvpHotbarItemId.Flashlight ? "手电筒" : "电池";
+            float rowY = panel.y + 40 + i * 34;
+            GUI.Label(new Rect(panel.x + 12, rowY, 130, 20), $"{name}  x{qty}", labelStyle);
+
+            bool canTake = qty > 0;
+            GUI.enabled = canTake;
+            if (GUI.Button(new Rect(panel.x + panel.width - 68, rowY - 2, 56, 24), "取出", actionStyle))
+                TakeLockerItem(cachedExitPoint, i);
+            GUI.enabled = true;
+        }
+    }
+
+    void TakeLockerItem(SchoolExitPoint exitPoint, int slotIndex)
+    {
+        exitPoint.TryTakeLockerItem(slotIndex);
     }
 
     void DrawRect(Rect rect, Texture2D texture)
@@ -257,84 +743,55 @@ public class VanTransitOverlay : MonoBehaviour
         GUI.DrawTexture(rect, texture, ScaleMode.StretchToFill);
     }
 
+    // ─── Utilities ───
+
     void EnsureTextures()
     {
         if (ink != null) return;
-
         ink = MakeTexture(new Color(0.014f, 0.016f, 0.015f, 0.98f));
-        blackout = MakeTexture(new Color(0f, 0f, 0f, 0.92f));
         cabin = MakeTexture(new Color(0.055f, 0.064f, 0.058f, 0.98f));
-        steel = MakeTexture(new Color(0.14f, 0.16f, 0.145f, 0.98f));
         rubber = MakeTexture(new Color(0.035f, 0.04f, 0.037f, 0.98f));
-        glass = MakeTexture(new Color(0.035f, 0.055f, 0.06f, 0.98f));
-        glassGlow = MakeTexture(new Color(0.23f, 0.31f, 0.3f, 0.48f));
-        paper = MakeTexture(new Color(0.72f, 0.67f, 0.49f, 0.98f));
-        paperDim = MakeTexture(new Color(0.44f, 0.39f, 0.27f, 0.72f));
-        tape = MakeTexture(new Color(0.82f, 0.68f, 0.36f, 0.76f));
         amber = MakeTexture(new Color(0.78f, 0.54f, 0.2f, 0.95f));
         red = MakeTexture(new Color(0.48f, 0.11f, 0.09f, 0.95f));
-        coldMark = MakeTexture(new Color(0.22f, 0.31f, 0.29f, 0.95f));
+        paper = MakeTexture(new Color(0.72f, 0.67f, 0.49f, 0.98f));
         shadow = MakeTexture(new Color(0f, 0f, 0f, 0.36f));
     }
 
     void EnsureStyles()
     {
-        if (brandStyle != null) return;
+        if (headingStyle != null) return;
         if (GUI.skin == null || GUI.skin.label == null) return;
 
-        brandStyle = new GUIStyle(GUI.skin.label)
-        {
-            fontSize = 18,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color(0.84f, 0.78f, 0.61f) }
-        };
-        headingStyle = new GUIStyle(brandStyle)
+        headingStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 19,
-            alignment = TextAnchor.MiddleCenter,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleLeft,
             normal = { textColor = new Color(0.92f, 0.88f, 0.72f) }
         };
-        statusStyle = new GUIStyle(brandStyle)
-        {
-            fontSize = 15,
-            alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color(0.18f, 0.15f, 0.1f) }
-        };
-        labelStyle = new GUIStyle(brandStyle)
+        labelStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 14,
-            fontStyle = FontStyle.Normal,
             alignment = TextAnchor.MiddleLeft,
             normal = { textColor = new Color(0.86f, 0.86f, 0.78f) }
-        };
-        paperHeadingStyle = new GUIStyle(brandStyle)
-        {
-            fontSize = 18,
-            alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color(0.16f, 0.13f, 0.09f) }
-        };
-        paperLabelStyle = new GUIStyle(labelStyle)
-        {
-            normal = { textColor = new Color(0.18f, 0.15f, 0.1f) }
-        };
-        paperSmallStyle = new GUIStyle(labelStyle)
-        {
-            fontSize = 12,
-            normal = { textColor = new Color(0.34f, 0.28f, 0.18f) }
         };
         smallStyle = new GUIStyle(labelStyle)
         {
             fontSize = 12,
-            alignment = TextAnchor.MiddleLeft,
             normal = { textColor = new Color(0.55f, 0.6f, 0.55f) }
         };
-        stampStyle = new GUIStyle(brandStyle)
+        actionStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 18,
+            fontSize = 16,
+            fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.91f, 0.85f, 0.64f) }
+            normal = { textColor = new Color(0.06f, 0.06f, 0.05f) }
         };
+
+        MvpFontProvider.ApplyToStyle(headingStyle);
+        MvpFontProvider.ApplyToStyle(labelStyle);
+        MvpFontProvider.ApplyToStyle(smallStyle);
+        MvpFontProvider.ApplyToStyle(actionStyle);
     }
 
     static Texture2D MakeTexture(Color color)
@@ -350,6 +807,14 @@ public class VanTransitOverlay : MonoBehaviour
         NetworkManager network = NetworkManager.Singleton;
         if (network != null && network.IsListening)
             return Mathf.Clamp(network.ConnectedClientsIds.Count, 1, 4);
+        return 1;
+    }
+
+    static int GetTotalPlayerCount()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network != null && network.IsListening)
+            return network.ConnectedClientsIds.Count;
         return 1;
     }
 }

@@ -6,7 +6,9 @@ public class FlashlightController : NetworkBehaviour
 {
     [Header("Light")]
     [SerializeField] float maxBattery = 100f;
-    [SerializeField] float normalDrainRate = 2f;
+    // 30 minutes of continuous use: 100 / 1800 ≈ 0.0556
+    const float DrainPer30Min = 100f / 1800f;
+    float normalDrainRate;
 
     [Header("Strong Light")]
     [SerializeField] float strongDrainCost = 15f;
@@ -29,6 +31,7 @@ public class FlashlightController : NetworkBehaviour
     void Awake()
     {
         battery = maxBattery;
+        normalDrainRate = DrainPer30Min;
     }
 
     public override void OnNetworkSpawn()
@@ -79,8 +82,20 @@ public class FlashlightController : NetworkBehaviour
         if (!IsServer) return false;
         if (battery <= 0 && !IsOn.Value) return false;
         IsOn.Value = !IsOn.Value;
+        AudioManager.Instance?.PlayFlashlightClick(transform.position);
         return true;
     }
+
+    public bool TryRecharge()
+    {
+        if (!IsServer) return false;
+        if (battery >= maxBattery) return false;
+        battery = maxBattery;
+        AudioManager.Instance?.PlayPickup(transform.position);
+        return true;
+    }
+
+    public float BatteryNormalized => battery / maxBattery;
 
     [ServerRpc]
     void ToggleFlashlightServerRpc()
@@ -167,6 +182,5 @@ public class FlashlightController : NetworkBehaviour
         spotLight.spotAngle = origAngle;
     }
 
-    public float BatteryNormalized => battery / maxBattery;
     public float CooldownRemaining => Mathf.Max(0, cooldownTimer);
 }

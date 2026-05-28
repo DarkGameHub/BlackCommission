@@ -13,19 +13,13 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     [SerializeField] bool allowNonNetworkSoloStart = false;
     [SerializeField] float dispatchTransitSeconds = 8f;
 
-    static int storedMedkits;
-    static int storedDecoys;
-    static int storedStunSprays;
     static int storedFlashlights;
+    static int storedBatteries;
 
     bool missionLaunching;
-    public NetworkVariable<int> StoredMedkitCount = new(0,
-        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> StoredDecoyCount = new(0,
-        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> StoredStunSprayCount = new(0,
-        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> StoredFlashlightCount = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> StoredBatteryCount = new(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public OfficeTaskDefinition DemoTask => demoTask;
@@ -113,19 +107,12 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     public int GetDroppedItemCount(MvpHotbarItemId itemId)
     {
-        switch (itemId)
+        return itemId switch
         {
-            case MvpHotbarItemId.Medkit:
-                return StoredMedkitCount.Value;
-            case MvpHotbarItemId.Decoy:
-                return StoredDecoyCount.Value;
-            case MvpHotbarItemId.StunSpray:
-                return StoredStunSprayCount.Value;
-            case MvpHotbarItemId.Flashlight:
-                return StoredFlashlightCount.Value;
-            default:
-                return 0;
-        }
+            MvpHotbarItemId.Flashlight => StoredFlashlightCount.Value,
+            MvpHotbarItemId.Battery => StoredBatteryCount.Value,
+            _ => 0
+        };
     }
 
     public bool TryStoreDroppedItemServer(MvpHotbarItemId itemId, int quantity)
@@ -162,7 +149,6 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         if (network == null) return;
         if (!network.ConnectedClients.TryGetValue(rpcParams.Receive.SenderClientId, out var client)) return;
         if (client.PlayerObject == null) return;
-        if (Vector3.Distance(client.PlayerObject.transform.position, transform.position) > OfficeGroundStorageUseDistance) return;
         if (client.PlayerObject.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) return;
         if (!client.PlayerObject.TryGetComponent<PlayerHotbar>(out var hotbar)) return;
 
@@ -199,10 +185,8 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     void RestoreGroundStorageCounts()
     {
-        StoredMedkitCount.Value = storedMedkits;
-        StoredDecoyCount.Value = storedDecoys;
-        StoredStunSprayCount.Value = storedStunSprays;
         StoredFlashlightCount.Value = storedFlashlights;
+        StoredBatteryCount.Value = storedBatteries;
     }
 
     void SetDroppedItemCount(MvpHotbarItemId itemId, int count)
@@ -210,21 +194,13 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         count = Mathf.Max(0, count);
         switch (itemId)
         {
-            case MvpHotbarItemId.Medkit:
-                StoredMedkitCount.Value = count;
-                storedMedkits = count;
-                break;
-            case MvpHotbarItemId.Decoy:
-                StoredDecoyCount.Value = count;
-                storedDecoys = count;
-                break;
-            case MvpHotbarItemId.StunSpray:
-                StoredStunSprayCount.Value = count;
-                storedStunSprays = count;
-                break;
             case MvpHotbarItemId.Flashlight:
                 StoredFlashlightCount.Value = count;
                 storedFlashlights = count;
+                break;
+            case MvpHotbarItemId.Battery:
+                StoredBatteryCount.Value = count;
+                storedBatteries = count;
                 break;
         }
     }

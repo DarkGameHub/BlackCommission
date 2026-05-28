@@ -8,10 +8,8 @@ using UnityEngine.SceneManagement;
 public enum MvpHotbarItemId
 {
     None,
-    Medkit,
-    Decoy,
-    StunSpray,
-    Flashlight
+    Flashlight,
+    Battery
 }
 
 [Serializable]
@@ -31,11 +29,6 @@ public class PlayerHotbar : NetworkBehaviour
     const float OfficeGroundStorageDropDistance = 5.2f;
 
     [SerializeField] HotbarSlot[] slots = new HotbarSlot[SlotCount];
-    [SerializeField] float medkitHealAmount = 30f;
-    [SerializeField] float stunSprayRadius = 6f;
-    [SerializeField] float stunSprayDuration = 2.5f;
-    [SerializeField] float decoyRadius = 12f;
-    [SerializeField] float decoyDuration = 4f;
 
     PlayerInputActions inputActions;
 
@@ -57,6 +50,8 @@ public class PlayerHotbar : NetworkBehaviour
         if (!IsOwner) return;
         inputActions = new PlayerInputActions();
         inputActions.Enable();
+        if (CompanyData.Current.WristwatchPurchased)
+            localWristwatchOwned = true;
     }
 
     public override void OnNetworkDespawn()
@@ -137,18 +132,22 @@ public class PlayerHotbar : NetworkBehaviour
         int index = SelectedSlot.Value;
         if (!IsValidSlot(index) || slots[index].IsEmpty) return false;
 
-        OfficeComputer computer = FindNearestOfficeComputer(OfficeGroundStorageDropDistance);
+        // Find any OfficeComputer in the scene — no range restriction
+        OfficeComputer computer = Object.FindAnyObjectByType<OfficeComputer>();
         if (computer == null) return false;
 
         MvpHotbarItemId itemId = slots[index].itemId;
+        Vector3 dropPos = transform.position + transform.forward * 0.4f + Vector3.up * 0.08f;
+
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
             if (!computer.TryStoreDroppedItemServer(itemId, 1)) return false;
             RemoveOneFromSlot(index);
+            SpawnDropVisualLocal(dropPos, itemId);
             return true;
         }
 
-        DropSelectedSlotServerRpc(index, itemId);
+        DropSelectedSlotServerRpc(index, itemId, dropPos);
         return true;
     }
 
@@ -164,6 +163,8 @@ public class PlayerHotbar : NetworkBehaviour
         {
             localWristwatchOwned = true;
             CompanyData.Current.Funds -= WristwatchCost;
+            CompanyData.Current.WristwatchPurchased = true;
+            CompanyData.Save();
             return true;
         }
 
@@ -252,16 +253,9 @@ public class PlayerHotbar : NetworkBehaviour
     {
         switch (itemId)
         {
-            case MvpHotbarItemId.Medkit:
-                return 80;
-            case MvpHotbarItemId.Decoy:
-                return 60;
-            case MvpHotbarItemId.StunSpray:
-                return 120;
-            case MvpHotbarItemId.Flashlight:
-                return 100;
-            default:
-                return 0;
+            case MvpHotbarItemId.Flashlight: return 120;
+            case MvpHotbarItemId.Battery: return 40;
+            default: return 0;
         }
     }
 
@@ -278,26 +272,16 @@ public class PlayerHotbar : NetworkBehaviour
 
         bool used = false;
         bool shouldConsume = false;
-        if (itemId == MvpHotbarItemId.Medkit && TryGetComponent<PlayerHealth>(out var health))
-        {
-            health.Heal(medkitHealAmount);
-            used = true;
-            shouldConsume = true;
-        }
-        else if (itemId == MvpHotbarItemId.StunSpray)
-        {
-            used = SchoolMonsterAI.TryStunNearest(transform.position, stunSprayRadius, stunSprayDuration);
-            shouldConsume = used;
-        }
-        else if (itemId == MvpHotbarItemId.Decoy)
-        {
-            used = SchoolMonsterAI.TryDistractNearest(transform.position, decoyRadius, decoyDuration);
-            shouldConsume = used;
-        }
-        else if (itemId == MvpHotbarItemId.Flashlight &&
+        if (itemId == MvpHotbarItemId.Flashlight &&
             TryGetComponent<FlashlightController>(out var flashlight))
         {
             used = flashlight.TryToggleFromHotbar();
+        }
+        else if (itemId == MvpHotbarItemId.Battery &&
+            TryGetComponent<FlashlightController>(out var fl2))
+        {
+            used = fl2.TryRecharge();
+            shouldConsume = used;
         }
 
         if (used && shouldConsume)
@@ -308,7 +292,7 @@ public class PlayerHotbar : NetworkBehaviour
     }
 
     [ServerRpc]
-    void DropSelectedSlotServerRpc(int index, MvpHotbarItemId itemId)
+    void DropSelectedSlotServerRpc(int index, MvpHotbarItemId itemId, Vector3 dropPos)
     {
         EnsureSlots();
         if (!IsValidSlot(index)) return;
@@ -318,7 +302,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (slot.IsEmpty || slot.itemId != itemId) return;
         if (TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) return;
 
-        OfficeComputer computer = FindNearestOfficeComputer(OfficeGroundStorageDropDistance);
+        OfficeComputer computer = Object.FindAnyObjectByType<OfficeComputer>();
         if (computer == null) return;
         if (!computer.TryStoreDroppedItemServer(itemId, 1)) return;
 
@@ -329,6 +313,55 @@ public class PlayerHotbar : NetworkBehaviour
             GetItemId(2), slots[2].quantity,
             GetItemId(3), slots[3].quantity,
             GetItemId(4), slots[4].quantity);
+        SpawnDropVisualClientRpc(dropPos, (int)itemId);
+    }
+
+    [ClientRpc]
+    void SpawnDropVisualClientRpc(Vector3 position, int itemIdInt)
+    {
+        SpawnDropVisualLocal(position, (MvpHotbarItemId)itemIdInt);
+    }
+
+    static void SpawnDropVisualLocal(Vector3 position, MvpHotbarItemId itemId)
+    {
+        Color itemColor = itemId switch
+        {
+            MvpHotbarItemId.Flashlight => new Color(0.18f, 0.19f, 0.18f),
+            MvpHotbarItemId.Battery => new Color(0.73f, 0.50f, 0.16f),
+            _ => new Color(0.5f, 0.5f, 0.5f)
+        };
+
+        // Use cylinder for flashlight (long shape), cube for battery
+        GameObject go = itemId == MvpHotbarItemId.Flashlight
+            ? GameObject.CreatePrimitive(PrimitiveType.Cylinder)
+            : GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+        go.name = $"DroppedItem_{itemId}";
+        go.transform.position = position;
+        go.transform.localScale = itemId == MvpHotbarItemId.Flashlight
+            ? new Vector3(0.06f, 0.15f, 0.06f)
+            : new Vector3(0.07f, 0.12f, 0.07f);
+        go.transform.rotation = Quaternion.Euler(
+            itemId == MvpHotbarItemId.Flashlight ? 0f : 0f,
+            UnityEngine.Random.Range(0f, 360f), 0f);
+
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Simple Lit") ?? Shader.Find("Standard"));
+        mat.color = itemColor;
+        go.GetComponent<Renderer>().material = mat;
+
+        Object.Destroy(go.GetComponent<Collider>());
+
+        // Add interactable so player can pick up from drop location
+        go.AddComponent<DroppedItemVisual>().Init(itemId);
+
+        // Gentle bob animation via a small point light to make it findable
+        var glow = new GameObject("DropGlow").AddComponent<Light>();
+        glow.transform.SetParent(go.transform);
+        glow.transform.localPosition = Vector3.up * 0.15f;
+        glow.type = LightType.Point;
+        glow.color = itemColor;
+        glow.intensity = 0.35f;
+        glow.range = 0.8f;
     }
 
     [ServerRpc]
@@ -344,6 +377,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (!TryAddItem(itemId, 1)) return;
 
         CompanyData.Current.Funds -= cost;
+        CompanyData.Save();
         SyncHotbarAndFundsClientRpc(
             GetItemId(0), slots[0].quantity,
             GetItemId(1), slots[1].quantity,
@@ -363,6 +397,8 @@ public class PlayerHotbar : NetworkBehaviour
 
         HasWristwatch.Value = true;
         CompanyData.Current.Funds -= WristwatchCost;
+        CompanyData.Current.WristwatchPurchased = true;
+        CompanyData.Save();
         SyncWristwatchPurchaseClientRpc(CompanyData.Current.Funds);
     }
 

@@ -14,6 +14,8 @@ public class PlayerInteraction : NetworkBehaviour
     IInteractable currentTarget;
     Camera playerCamera;
     bool isInteracting;
+
+    public IInteractable CurrentTarget => currentTarget;
     GUIStyle hintStyle;
     Texture2D hintBg;
 
@@ -166,9 +168,10 @@ public class PlayerInteraction : NetworkBehaviour
                 fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.white, background = hintBg },
+                normal = { textColor = new Color(0.56f, 0.92f, 0.72f), background = hintBg },
                 padding = new RectOffset(16, 16, 8, 8)
             };
+            MvpFontProvider.ApplyToStyle(hintStyle);
         }
 
         float w = 340, h = 38;

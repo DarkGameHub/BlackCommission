@@ -28,7 +28,7 @@ public class PlayerHealth : NetworkBehaviour, IInteractable
         {
             if (!IsDowned.Value) return "";
             int pct = Mathf.RoundToInt(reviveProgress / reviveDuration * 100);
-            return reviverActive ? $"救援队友 ({pct}%)" : "救援队友";
+            return reviverActive ? MvpLocale.T("revive_progress", pct) : MvpLocale.T("revive_hint");
         }
     }
 

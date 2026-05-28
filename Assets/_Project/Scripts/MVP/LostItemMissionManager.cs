@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -31,8 +32,13 @@ public class LostItemMissionManager : NetworkBehaviour
     [SerializeField] int fallbackFailureReputation = -2;
     [SerializeField] int fallbackFailureExperience = 0;
 
+    [Header("Boarding / Departure")]
+    [SerializeField] float departureTransitSeconds = 6f;
+
     [Header("Scene Flow")]
     [SerializeField] string fallbackOfficeScene = "HQ";
+
+    readonly HashSet<ulong> boardedClientIds = new();
 
     public NetworkVariable<MissionPhase> CurrentPhase = new(MissionPhase.Searching,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -84,6 +90,7 @@ public class LostItemMissionManager : NetworkBehaviour
             SchoolEntranceDoor.SetAllOpen(true);
 
         if (!IsServer) return;
+        boardedClientIds.Clear();
         CurrentPhase.Value = MissionPhase.Searching;
         LostItemCollected.Value = false;
         CarrierClientId.Value = ulong.MaxValue;
@@ -150,6 +157,8 @@ public class LostItemMissionManager : NetworkBehaviour
     void HandleSchoolEntranceOpenedChanged(bool previousValue, bool newValue)
     {
         SchoolEntranceDoor.SetAllOpen(newValue);
+        if (newValue)
+            AudioManager.Instance?.PlayDoorCreak(transform.position);
     }
 
     public void RequestWrongHomeworkAttempt(Vector3 itemPosition, float requiredDistance = 3f)
@@ -228,6 +237,166 @@ public class LostItemMissionManager : NetworkBehaviour
         CurrentPhase.Value = MissionPhase.ReturnedEarly;
         GrantRewardsAndReturn(false, MvpMissionResultKind.Partial, returnTransitSeconds);
     }
+
+    // ─── Van Boarding ───
+
+    public void RequestBoardVan()
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            TryBoardVan(0);
+            return;
+        }
+        BoardVanServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void BoardVanServerRpc(ServerRpcParams rpcParams = default)
+    {
+        TryBoardVan(rpcParams.Receive.SenderClientId);
+    }
+
+    void TryBoardVan(ulong clientId)
+    {
+        if (!HasMissionAuthority) return;
+        if (boardedClientIds.Contains(clientId)) return;
+        if (CurrentPhase.Value == MissionPhase.Completed ||
+            CurrentPhase.Value == MissionPhase.ReturnedEarly ||
+            CurrentPhase.Value == MissionPhase.Failed) return;
+
+        boardedClientIds.Add(clientId);
+
+        if (IsServer)
+            PlayerBoardedClientRpc(boardedClientIds.Count);
+        else
+            VanTransitOverlay.NotifyPlayerBoarded(boardedClientIds.Count);
+    }
+
+    [ClientRpc]
+    void PlayerBoardedClientRpc(int totalBoarded)
+    {
+        VanTransitOverlay.NotifyPlayerBoarded(totalBoarded);
+    }
+
+    public void RequestDepartVan()
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            TryDepartVan();
+            return;
+        }
+        DepartVanServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void DepartVanServerRpc(ServerRpcParams rpcParams = default)
+    {
+        if (NetworkManager.Singleton != null && rpcParams.Receive.SenderClientId != NetworkManager.ServerClientId)
+            return;
+        TryDepartVan();
+    }
+
+    void TryDepartVan()
+    {
+        if (!HasMissionAuthority) return;
+        if (CurrentPhase.Value == MissionPhase.Completed ||
+            CurrentPhase.Value == MissionPhase.ReturnedEarly ||
+            CurrentPhase.Value == MissionPhase.Failed) return;
+
+        MvpMissionResultKind resultKind;
+        if (LostItemCollected.Value)
+        {
+            CurrentPhase.Value = MissionPhase.Completed;
+            resultKind = MvpMissionResultKind.Success;
+        }
+        else
+        {
+            CurrentPhase.Value = MissionPhase.ReturnedEarly;
+            resultKind = MvpMissionResultKind.Partial;
+        }
+
+        GrantBoardedRewardsAndReturn(resultKind);
+    }
+
+    void GrantBoardedRewardsAndReturn(MvpMissionResultKind resultKind)
+    {
+        if (RewardsGranted.Value) return;
+        RewardsGranted.Value = true;
+
+        OfficeTaskDefinition task = MvpMissionRuntime.ActiveTask;
+        float transitSeconds = Mathf.Max(1.5f, departureTransitSeconds);
+
+        int money = GetMoneyForResult(task, resultKind);
+        int reputation = GetReputationForResult(task, resultKind);
+        int experience = GetExperienceForResult(task, resultKind);
+        float overtimeGameHours = MvpMissionClock.GetOvertimeGameHours(task, MissionTimer.Value);
+        int overtimeMoneyPenalty = MvpMissionClock.GetOvertimeMoneyPenalty(task, MissionTimer.Value);
+        int overtimeReputationPenalty = MvpMissionClock.GetOvertimeReputationPenalty(task, MissionTimer.Value);
+        money -= overtimeMoneyPenalty;
+        reputation -= overtimeReputationPenalty;
+        if (resultKind != MvpMissionResultKind.Failed)
+            money -= GetWrongHomeworkMoneyPenalty();
+
+        int failMoney = GetFailureMoney(task);
+        int failReputation = GetFailureReputation(task);
+        int failExperience = GetFailureExperience(task);
+
+        bool successFlag = resultKind == MvpMissionResultKind.Success;
+        string officeScene = MvpMissionRuntime.HasActiveTask ? MvpMissionRuntime.ReturnOfficeScene : fallbackOfficeScene;
+        string taskTitle = task != null ? task.title : "委托";
+        string locationName = task != null ? task.locationName : "任务地点";
+
+        if (IsServer)
+        {
+            RestorePlayersForOffice();
+            DepartureTransitClientRpc(taskTitle, locationName, transitSeconds);
+
+            foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
+            {
+                bool boarded = boardedClientIds.Contains(clientId);
+                var targetParams = new ClientRpcParams
+                {
+                    Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } }
+                };
+
+                if (boarded)
+                {
+                    SetPendingRewardClientRpc(money, reputation, experience, successFlag,
+                        MissionTimer.Value, (int)resultKind,
+                        overtimeGameHours, overtimeMoneyPenalty, overtimeReputationPenalty,
+                        targetParams);
+                }
+                else
+                {
+                    SetPendingRewardClientRpc(failMoney, failReputation, failExperience, false,
+                        MissionTimer.Value, (int)MvpMissionResultKind.Failed,
+                        0f, 0, 0, targetParams);
+                }
+            }
+
+            StartCoroutine(LoadOfficeAfterRewardDispatch(officeScene, transitSeconds));
+        }
+        else
+        {
+            VanTransitOverlay.StartDeparture(transitSeconds);
+            MvpPendingReward.Set(money, reputation, experience, successFlag, MissionTimer.Value,
+                successFlag, resultKind,
+                overtimeGameHours, overtimeMoneyPenalty, overtimeReputationPenalty);
+            StartCoroutine(LoadOfficeLocalAfterTransit(officeScene, transitSeconds));
+        }
+    }
+
+    [ClientRpc]
+    void DepartureTransitClientRpc(string taskTitle, string locationName, float transitSeconds)
+    {
+        MvpMissionRuntime.Clear();
+        if (VanTransitOverlay.IsActive)
+            VanTransitOverlay.StartDeparture(transitSeconds);
+        else
+            VanTransitOverlay.ShowReturn(taskTitle, locationName, transitSeconds);
+    }
+
+    // ─── Mission Failure ───
 
     public void FailMission()
     {
@@ -316,7 +485,8 @@ public class LostItemMissionManager : NetworkBehaviour
         int resultKind,
         float overtimeGameHours,
         int overtimeMoneyPenalty,
-        int overtimeReputationPenalty)
+        int overtimeReputationPenalty,
+        ClientRpcParams clientRpcParams = default)
     {
         MvpMissionResultKind kind = (MvpMissionResultKind)Mathf.Clamp(resultKind, 0, (int)MvpMissionResultKind.Failed);
         MvpPendingReward.Set(money, reputation, experience, success, elapsedSeconds,

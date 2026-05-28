@@ -32,6 +32,7 @@ public class SchoolMonsterAI : NetworkBehaviour
     Transform target;
     int patrolIndex;
     float nextAttackTime;
+    float nextGrowlTime;
     float stunnedUntil;
     float distractedUntil;
     float detectionEnabledAt;
@@ -98,11 +99,17 @@ public class SchoolMonsterAI : NetworkBehaviour
     {
         if (CanUseAgent())
             agent.speed = patrolSpeed;
+        if (Time.time >= nextGrowlTime)
+        {
+            nextGrowlTime = Time.time + Random.Range(6f, 12f);
+            AudioManager.Instance?.PlayMonsterGrowl(transform.position);
+        }
         Transform nearest = Time.time >= detectionEnabledAt ? FindNearestPlayer(detectionRadius) : null;
         if (nearest != null)
         {
             target = nearest;
             state.Value = MonsterState.Chasing;
+            AudioManager.Instance?.PlayMonsterChaseAlert(transform.position);
             return;
         }
 

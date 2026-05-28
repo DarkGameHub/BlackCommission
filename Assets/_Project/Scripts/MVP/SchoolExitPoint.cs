@@ -10,24 +10,20 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
     [SerializeField] float exitUseRadius = 3.5f;
     [SerializeField] float returnTransitSeconds = 6f;
 
-    public NetworkVariable<int> MedkitCount = new(1,
-        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> DecoyCount = new(1,
-        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-    public NetworkVariable<int> StunSprayCount = new(1,
-        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> FlashlightCount = new(1,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> BatteryCount = new(2,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public string InteractHint
     {
         get
         {
+            if (VanTransitOverlay.IsActive) return "";
             var manager = LostItemMissionManager.Instance;
-            if (manager == null) return "打开事故车后舱";
-            if (!manager.LostItemCollected.Value) return "打开事故车后舱: 补给 / 提前返程";
-
-            return "打开事故车后舱: 完成委托并返程";
+            if (manager != null && manager.LostItemCollected.Value)
+                return "上车返程";
+            return "上车";
         }
     }
 
@@ -41,8 +37,18 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
     {
         if (player != null && player.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
             return;
+        if (VanTransitOverlay.IsActive) return;
 
-        MvpHud.OpenMissionVan(this);
+        var manager = LostItemMissionManager.Instance;
+        if (manager == null) return;
+
+        manager.RequestBoardVan();
+
+        bool isHost = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsHost;
+        string title = MvpMissionRuntime.ActiveTask?.title ?? MvpLocale.T("commission");
+        string loc = MvpMissionRuntime.ActiveTask?.locationName ?? MvpLocale.T("mission_location");
+        // E = board only; Space in the boarding overlay = depart
+        VanTransitOverlay.ShowBoarding(title, loc, isHost);
     }
 
     public void OnInteractEnd(PlayerController player) { }
@@ -51,16 +57,9 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
     {
         switch (index)
         {
-            case 0:
-                return MvpHotbarItemId.Medkit;
-            case 1:
-                return MvpHotbarItemId.Decoy;
-            case 2:
-                return MvpHotbarItemId.StunSpray;
-            case 3:
-                return MvpHotbarItemId.Flashlight;
-            default:
-                return MvpHotbarItemId.None;
+            case 0: return MvpHotbarItemId.Flashlight;
+            case 1: return MvpHotbarItemId.Battery;
+            default: return MvpHotbarItemId.None;
         }
     }
 
@@ -68,16 +67,9 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
     {
         switch (index)
         {
-            case 0:
-                return MedkitCount.Value;
-            case 1:
-                return DecoyCount.Value;
-            case 2:
-                return StunSprayCount.Value;
-            case 3:
-                return FlashlightCount.Value;
-            default:
-                return 0;
+            case 0: return FlashlightCount.Value;
+            case 1: return BatteryCount.Value;
+            default: return 0;
         }
     }
 
@@ -185,18 +177,8 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
     {
         switch (slotIndex)
         {
-            case 0:
-                MedkitCount.Value = quantity;
-                break;
-            case 1:
-                DecoyCount.Value = quantity;
-                break;
-            case 2:
-                StunSprayCount.Value = quantity;
-                break;
-            case 3:
-                FlashlightCount.Value = quantity;
-                break;
+            case 0: FlashlightCount.Value = quantity; break;
+            case 1: BatteryCount.Value = quantity; break;
         }
     }
 

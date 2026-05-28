@@ -1,11 +1,11 @@
 """
 AccidentSquad outsourced civic horror commercial vertical-slice assets.
 
-Run on Windows from Blender:
-  blender --background --factory-startup --python D:/AccidentSquad/docs/art/blender_outsourced_civic_commercial_v4.py
+Run from Blender:
+  blender --background --factory-startup --python docs/art/blender_outsourced_civic_commercial_v4.py
 
 Output:
-  D:/AccidentSquad/Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4
+  Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4
 
 The target is production-ready stylized low-poly art: municipal debt noir,
 cheap, dirty, dispatch-readable, and no longer a graybox or proof-of-style
@@ -15,13 +15,25 @@ sketch.
 from __future__ import annotations
 
 import math
+import os
+import sys
 from pathlib import Path
 
 import bpy
 from mathutils import Vector
 
 
-OUT = Path(r"D:/AccidentSquad/Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4")
+def _find_project_root() -> Path:
+    here = Path(__file__).resolve().parent
+    for ancestor in (here, *here.parents):
+        if (ancestor / "Assets").is_dir() and (ancestor / "ProjectSettings").is_dir():
+            return ancestor
+    if sys.platform == "win32":
+        return Path(r"D:/AccidentSquad")
+    return Path.home() / "Desktop" / "codespace" / "AccidentSquad"
+
+
+OUT = _find_project_root() / "Assets" / "_Project" / "Art" / "Generated" / "OutsourcedCivicCommercial_v4"
 
 
 def clear() -> None:
@@ -261,7 +273,165 @@ def build_hq(m) -> bpy.types.Collection:
         cube(f"hq_archive_box_{i}", (x, -2.65, z), (0.22, 0.20, 0.15), m["cardboard"], coll, edge=0.003)
         cube(f"hq_archive_label_{i}", (x, -2.865, z + 0.02), (0.13, 0.010, 0.040), m["paper"], coll, edge=0)
     sign("hq_company_sign", "ACCIDENT SQUAD", (0, 3.72, 2.40), (1.25, 0.020, 0.13), m["black"], m["terminal"], coll)
+
+    _build_hq_infrastructure(m, coll)
+    _build_hq_environmental_storytelling(m, coll)
     return coll
+
+
+def _build_hq_infrastructure(m, coll) -> None:
+    """Institutional infrastructure: lights, pipes, baseboards, exit sign, window."""
+
+    # --- Fluorescent ceiling fixtures (3 along Y axis) ---
+    for i, yy in enumerate((-1.4, 1.0, 3.0)):
+        cube(f"hq_fluoro_housing_{i}", (0, yy, 2.82), (0.85, 0.06, 0.04), m["metal"], coll, edge=0.003)
+        cube(f"hq_fluoro_tube_{i}", (0, yy, 2.76), (0.72, 0.025, 0.018), m["cyan"], coll, edge=0.001)
+        cube(f"hq_fluoro_diffuser_{i}", (0, yy, 2.74), (0.78, 0.045, 0.008), m["paper"], coll, edge=0.001)
+
+    # --- Baseboard molding (dark metal strip at floor level) ---
+    cube("hq_baseboard_back", (0, 3.70, 0.055), (5.12, 0.04, 0.055), m["metal"], coll, edge=0.002)
+    cube("hq_baseboard_left", (-5.12, 0, 0.055), (0.04, 3.72, 0.055), m["metal"], coll, edge=0.002)
+    cube("hq_baseboard_right", (5.12, 0.4, 0.055), (0.04, 3.32, 0.055), m["metal"], coll, edge=0.002)
+
+    # --- Exposed pipe along left wall ceiling ---
+    cyl("hq_pipe_left_ceiling", (-4.88, 0, 2.68), 0.04, 7.2, m["metal_worn"], coll,
+        vertices=8, rot=(math.radians(90), 0, 0), edge=0.002)
+    cyl("hq_pipe_elbow_back", (-4.88, 3.50, 2.68), 0.05, 0.08, m["metal_worn"], coll, vertices=8, edge=0.001)
+    cyl("hq_pipe_elbow_front", (-4.88, -3.20, 2.68), 0.05, 0.08, m["metal_worn"], coll, vertices=8, edge=0.001)
+    cyl("hq_pipe_vertical_drain", (-4.88, -3.20, 1.34), 0.035, 2.60, m["metal_worn"], coll, vertices=8, edge=0.002)
+    for i in range(3):
+        cyl(f"hq_pipe_bracket_{i}", (-4.88, -2.0 + i * 2.4, 2.68), 0.06, 0.03, m["metal"], coll, vertices=8, edge=0)
+
+    # --- Fire extinguisher on left wall near exit ---
+    cube("hq_extinguisher_bracket", (-5.10, -2.40, 0.82), (0.04, 0.12, 0.035), m["metal"], coll, edge=0.001)
+    cyl("hq_fire_extinguisher", (-5.06, -2.40, 0.58), 0.065, 0.42, m["debt"], coll, vertices=10, edge=0.003)
+    cyl("hq_extinguisher_nozzle", (-5.06, -2.40, 0.82), 0.022, 0.08, m["metal"], coll, vertices=8, edge=0)
+    cube("hq_extinguisher_label", (-5.06, -2.525, 0.58), (0.045, 0.010, 0.065), m["paper"], coll, edge=0)
+
+    # --- Exit sign above garage opening (dispatch green, emissive) ---
+    cube("hq_exit_sign_housing", (2.50, -3.30, 2.52), (0.45, 0.035, 0.12), m["black"], coll, edge=0.004)
+    sign("hq_exit_sign", "EXIT", (2.50, -3.34, 2.52), (0.38, 0.018, 0.09), m["exit"], m["black"], coll, size_ratio=0.40)
+
+    # --- Window with blinds on left wall ---
+    cube("hq_window_frame", (-5.14, 1.20, 1.52), (0.035, 0.68, 0.52), m["metal"], coll, edge=0.004)
+    cube("hq_window_glass", (-5.12, 1.20, 1.52), (0.015, 0.60, 0.44), m["glass"], coll, edge=0.001)
+    for i in range(9):
+        z = 1.30 + i * 0.05
+        cube(f"hq_blind_slat_{i}", (-5.10, 1.20, z), (0.008, 0.58, 0.018), m["paper_dark"], coll, edge=0)
+
+    # --- Ceiling panel lines (drop ceiling grid) ---
+    for i in range(1, 10):
+        x = -4.6 + i * 0.92
+        cube(f"hq_ceiling_grid_x_{i}", (x, 0, 2.90), (0.008, 3.72, 0.012), m["metal"], coll, edge=0)
+    for i in range(1, 8):
+        y = -3.2 + i * 0.92
+        cube(f"hq_ceiling_grid_y_{i}", (0, y, 2.90), (5.12, 0.008, 0.012), m["metal"], coll, edge=0)
+
+
+def _build_hq_environmental_storytelling(m, coll) -> None:
+    """Lived-in props: posters, clutter, stains, coat hooks, waste bin, cables."""
+
+    # --- Motivational poster on back wall, half-covered by debt notice ---
+    cube("hq_motiv_poster_bg", (-3.50, 3.66, 1.68), (0.38, 0.016, 0.26), m["paper"], coll, edge=0.003)
+    txt("hq_motiv_poster_text", "WORK HARD\nPAY DEBT", (-3.50, 3.635, 1.70), (math.radians(90), 0, 0), 0.065, m["metal"], coll)
+    cube("hq_motiv_debt_overlay", (-3.34, 3.64, 1.74), (0.22, 0.012, 0.14), m["debt"], coll, rot=(0, 0, math.radians(-8)), edge=0.001)
+    txt("hq_motiv_overdue_stamp", "OVERDUE", (-3.34, 3.625, 1.74), (math.radians(90), 0, 0), 0.042, m["paper"], coll)
+
+    # --- Competitor acquisition flyer near debt board ---
+    cube("hq_competitor_flyer", (3.40, 3.66, 1.30), (0.17, 0.012, 0.22), m["paper"], coll, rot=(0, 0, math.radians(4)), edge=0.002)
+    txt("hq_competitor_flyer_text", "SELL\nNOW?", (3.40, 3.642, 1.32), (math.radians(90), 0, 0), 0.050, m["debt"], coll)
+
+    # --- Expired calendar on right wall ---
+    cube("hq_calendar_bg", (5.10, 1.80, 1.45), (0.016, 0.22, 0.28), m["paper"], coll, edge=0.003)
+    for row in range(4):
+        for col in range(5):
+            cube(f"hq_cal_x_{row}_{col}", (5.09, 1.66 + col * 0.065, 1.30 + row * 0.055), (0.010, 0.020, 0.015), m["debt"], coll, edge=0)
+
+    # --- Water stain on ceiling (dark patch) ---
+    cube("hq_ceiling_stain_a", (-2.2, -1.5, 2.91), (0.65, 0.45, 0.006), m["wall_shadow"], coll, edge=0.001)
+    cube("hq_ceiling_stain_b", (-2.5, -1.3, 2.91), (0.35, 0.25, 0.005), m["floor"], coll, edge=0.001)
+
+    # --- Taped floor crack near entrance ---
+    cube("hq_floor_crack", (1.20, -2.80, 0.008), (0.008, 0.85, 0.008), m["floor_line"], coll, edge=0)
+    cube("hq_floor_tape_a", (1.20, -2.55, 0.012), (0.12, 0.008, 0.005), m["amber"], coll, rot=(0, 0, math.radians(45)), edge=0)
+    cube("hq_floor_tape_b", (1.20, -3.05, 0.012), (0.12, 0.008, 0.005), m["amber"], coll, rot=(0, 0, math.radians(-45)), edge=0)
+
+    # --- Waste bin near desk with crumpled paper ---
+    cyl("hq_waste_bin", (-0.40, 2.10, 0.18), 0.14, 0.36, m["metal_worn"], coll, vertices=10, edge=0.003)
+    for i in range(4):
+        cube(f"hq_crumpled_paper_{i}", (-0.40 + (i - 1.5) * 0.06, 2.10 + (i % 2) * 0.04, 0.32 + i * 0.03),
+             (0.04, 0.035, 0.03), m["paper"], coll, rot=(0, 0, math.radians(15 * i)), edge=0.001)
+    cube("hq_spilled_paper_floor", (-0.22, 1.85, 0.015), (0.09, 0.065, 0.005), m["paper"], coll, rot=(0, 0, math.radians(-18)), edge=0)
+
+    # --- Donated cardboard box near filing cabinet ---
+    cube("hq_donated_box", (-3.45, 3.10, 0.22), (0.28, 0.22, 0.22), m["cardboard"], coll, edge=0.004)
+    cube("hq_donated_box_label", (-3.45, 2.87, 0.28), (0.16, 0.010, 0.055), m["paper"], coll, edge=0)
+    txt("hq_donated_text", "DONATED", (-3.45, 2.855, 0.28), (math.radians(90), 0, 0), 0.030, m["metal"], coll)
+    cube("hq_donated_box_flap_l", (-3.65, 3.10, 0.44), (0.08, 0.18, 0.015), m["cardboard"], coll, rot=(0, math.radians(25), 0), edge=0.001)
+    cube("hq_donated_box_flap_r", (-3.25, 3.10, 0.44), (0.08, 0.18, 0.015), m["cardboard"], coll, rot=(0, math.radians(-20), 0), edge=0.001)
+
+    # --- Coat hooks on left wall near entrance ---
+    cube("hq_coat_rack_bar", (-5.10, -2.80, 1.52), (0.04, 0.55, 0.035), m["metal"], coll, edge=0.002)
+    for i in range(3):
+        cyl(f"hq_coat_hook_{i}", (-5.06, -3.00 + i * 0.22, 1.52), 0.012, 0.08, m["metal"], coll, vertices=6,
+            rot=(math.radians(90), 0, 0), edge=0)
+    cube("hq_hanging_jacket", (-5.02, -2.78, 1.12), (0.06, 0.18, 0.44), m["uniform"], coll, edge=0.004)
+    cube("hq_hanging_vest", (-5.02, -3.00, 1.18), (0.04, 0.14, 0.32), m["vest"], coll, edge=0.003)
+
+    # --- Power strip / cable run on floor near computer ---
+    cube("hq_power_strip", (-2.10, 2.60, 0.025), (0.24, 0.06, 0.025), m["paper_dark"], coll, edge=0.002)
+    for i in range(3):
+        cyl(f"hq_cable_run_{i}", (-2.10 + i * 0.22, 2.80 + i * 0.18, 0.018), 0.012, 0.42, m["black"], coll,
+            vertices=6, rot=(math.radians(90), 0, math.radians(30 + i * 15)), edge=0)
+
+    # --- Wall clock (stopped) on back wall ---
+    cyl("hq_wall_clock_face", (4.28, 3.66, 1.86), 0.16, 0.025, m["paper"], coll, vertices=16,
+        rot=(math.radians(90), 0, 0), edge=0.002)
+    cyl("hq_wall_clock_rim", (4.28, 3.68, 1.86), 0.18, 0.018, m["metal"], coll, vertices=16,
+        rot=(math.radians(90), 0, 0), edge=0.001)
+    cube("hq_clock_hand_hour", (4.28, 3.645, 1.90), (0.008, 0.010, 0.08), m["black"], coll,
+         rot=(0, 0, math.radians(-35)), edge=0)
+    cube("hq_clock_hand_minute", (4.28, 3.645, 1.92), (0.005, 0.010, 0.12), m["black"], coll,
+         rot=(0, 0, math.radians(72)), edge=0)
+
+    # --- Old landline phone on desk ---
+    cube("hq_phone_base", (-0.72, 2.28, 0.655), (0.14, 0.10, 0.030), m["paper_dark"], coll, edge=0.003)
+    cube("hq_phone_handset", (-0.72, 2.18, 0.695), (0.06, 0.16, 0.025), m["black"], coll, edge=0.003)
+    cyl("hq_phone_earpiece", (-0.72, 2.10, 0.71), 0.028, 0.02, m["black"], coll, vertices=8,
+        rot=(math.radians(90), 0, 0), edge=0)
+    cyl("hq_phone_cord_coil", (-0.50, 2.28, 0.66), 0.012, 0.30, m["black"], coll, vertices=6,
+        rot=(0, math.radians(75), 0), edge=0)
+
+    # --- Paper trail from receipt printer across floor ---
+    for i in range(5):
+        x = -2.05 + i * 0.12
+        y = 1.60 - i * 0.22
+        cube(f"hq_receipt_floor_{i}", (x, y, 0.012), (0.11, 0.15, 0.005), m["paper"], coll,
+             rot=(0, 0, math.radians(-5 + i * 8)), edge=0)
+
+    # --- Small notice board on right wall ---
+    cube("hq_notice_board_cork", (5.10, -0.60, 1.36), (0.018, 0.55, 0.38), m["cardboard"], coll, edge=0.004)
+    cube("hq_notice_board_frame", (5.10, -0.60, 1.36), (0.022, 0.60, 0.42), m["wood"], coll, edge=0.003)
+    for i in range(5):
+        y = -0.82 + i * 0.11
+        z = 1.28 + (i % 2) * 0.12
+        cube(f"hq_pinned_note_{i}", (5.08, y, z), (0.010, 0.08, 0.06), m["paper" if i % 3 else "debt"], coll,
+             rot=(0, 0, math.radians(-6 + i * 3)), edge=0)
+
+    # --- Stacked paper on sofa arm (someone was working late) ---
+    for i in range(3):
+        cube(f"hq_sofa_paper_{i}", (2.62, 2.20, 0.38 + i * 0.012), (0.14, 0.10, 0.005), m["paper"], coll,
+             rot=(0, 0, math.radians(-3 + i * 2)), edge=0)
+
+    # --- Coffee mug on desk ---
+    cyl("hq_coffee_mug", (-1.88, 2.00, 0.66), 0.035, 0.08, m["paper_dark"], coll, vertices=10, edge=0.002)
+    cyl("hq_coffee_inside", (-1.88, 2.00, 0.70), 0.030, 0.01, m["black"], coll, vertices=10, edge=0)
+
+    # --- Warning tape on garage threshold ---
+    for i in range(10):
+        x = 1.55 + i * 0.20
+        cube(f"hq_garage_threshold_tape_{i}", (x, -0.60, 0.018), (0.06, 0.035, 0.008),
+             m["vest"] if i % 2 == 0 else m["black"], coll, rot=(0, 0, math.radians(45 if i % 2 == 0 else -45)), edge=0)
 
 
 def build_school_map(m) -> bpy.types.Collection:
@@ -379,41 +549,189 @@ def build_notebook(m) -> bpy.types.Collection:
     return coll
 
 
+def _build_van_exterior(m, coll) -> None:
+    """Prisoner-transport van exterior: boxy institutional body, no rear windows."""
+
+    # --- Body: taller, boxier than the old sloped van ---
+    # Cab profile (front section, slightly sloped hood)
+    cab = [
+        (-2.05, 0.34), (-1.95, 0.56), (-1.72, 0.72), (-1.40, 0.88),
+        (-1.10, 1.48), (-0.60, 1.48), (-0.60, 0.34),
+    ]
+    prism("van_cab_body", cab, 0.76, m["van_body"], coll)
+
+    # Rear box: flat roof, vertical walls — institutional transport shape
+    cube("van_rear_box", (0.45, 0, 0.92), (2.10, 0.76, 0.58), m["van_body"], coll, edge=0.010)
+    cube("van_rear_box_top", (0.45, 0, 1.48), (2.10, 0.76, 0.04), m["van_body"], coll, edge=0.006)
+
+    # Side panels (blank, no windows in prisoner section)
+    cube("van_side_panel_L", (0.45, -0.775, 0.92), (2.08, 0.020, 0.56), m["van_body"], coll, edge=0.004)
+    cube("van_side_panel_R", (0.45, 0.775, 0.92), (2.08, 0.020, 0.56), m["van_body"], coll, edge=0.004)
+    cube("van_lower_strip_L", (0.45, -0.765, 0.44), (2.08, 0.016, 0.08), m["van_shadow"], coll, edge=0.003)
+    cube("van_lower_strip_R", (0.45, 0.765, 0.44), (2.08, 0.016, 0.08), m["van_shadow"], coll, edge=0.003)
+
+    # Cab side windows (small, only in driver section)
+    cube("van_cab_window_L", (-1.12, -0.78, 1.12), (0.32, 0.014, 0.18), m["glass"], coll, edge=0.002)
+    cube("van_cab_window_R", (-1.12, 0.78, 1.12), (0.32, 0.014, 0.18), m["glass"], coll, edge=0.002)
+    cube("van_windshield", (-1.42, 0, 1.18), (0.014, 0.52, 0.22), m["glass"], coll, edge=0.003)
+
+    # Bumpers
+    cube("van_front_bumper", (-2.08, 0, 0.44), (0.08, 0.68, 0.085), m["metal"], coll, edge=0.006)
+    cube("van_rear_bumper", (1.72, 0, 0.44), (0.08, 0.68, 0.085), m["metal"], coll, edge=0.006)
+    cube("van_front_grille", (-2.10, 0, 0.62), (0.014, 0.34, 0.08), m["black"], coll, edge=0)
+
+    # Rear doors (closed from outside, heavy institutional look)
+    cube("van_rear_door_L", (1.74, -0.34, 0.92), (0.04, 0.34, 0.56), m["metal_worn"], coll, edge=0.006)
+    cube("van_rear_door_R", (1.74, 0.34, 0.92), (0.04, 0.34, 0.56), m["metal_worn"], coll, edge=0.006)
+    cube("van_rear_door_seam", (1.74, 0, 0.92), (0.045, 0.015, 0.56), m["black"], coll, edge=0)
+    cube("van_rear_door_handle_L", (1.78, -0.16, 0.88), (0.020, 0.06, 0.035), m["metal"], coll, edge=0.002)
+    cube("van_rear_door_handle_R", (1.78, 0.16, 0.88), (0.020, 0.06, 0.035), m["metal"], coll, edge=0.002)
+    # Small wire-mesh window slit in rear door
+    cube("van_rear_window_slit", (1.76, 0, 1.18), (0.010, 0.22, 0.06), m["glass"], coll, edge=0.001)
+    for i in range(5):
+        cube(f"van_rear_mesh_{i}", (1.77, -0.10 + i * 0.05, 1.18), (0.008, 0.005, 0.058), m["metal"], coll, edge=0)
+
+    # Company branding
+    cube("van_company_patch_L", (0.45, -0.790, 0.78), (0.34, 0.010, 0.12), m["terminal"], coll, edge=0.001)
+    cube("van_company_patch_R", (0.45, 0.790, 0.78), (0.34, 0.010, 0.12), m["terminal"], coll, edge=0.001)
+    txt("van_company_text_L", "AS", (0.45, -0.806, 0.78), (math.radians(90), 0, 0), 0.13, m["black"], coll)
+    txt("van_company_text_R", "AS", (0.45, 0.806, 0.78), (math.radians(90), 0, math.radians(180)), 0.13, m["black"], coll)
+    cube("van_service_label_L", (-0.12, -0.792, 0.62), (0.40, 0.009, 0.050), m["paper"], coll, edge=0)
+    cube("van_service_label_R", (-0.12, 0.792, 0.62), (0.40, 0.009, 0.050), m["paper"], coll, edge=0)
+    txt("van_service_text_L", "CIVIC JOBS", (-0.12, -0.808, 0.62), (math.radians(90), 0, 0), 0.052, m["black"], coll)
+    txt("van_service_text_R", "CIVIC JOBS", (-0.12, 0.808, 0.62), (math.radians(90), 0, math.radians(180)), 0.052, m["black"], coll)
+    cube("van_debt_slash_L", (1.04, -0.792, 0.85), (0.25, 0.010, 0.035), m["debt"], coll, rot=(0, 0, math.radians(-10)), edge=0)
+    cube("van_debt_slash_R", (1.04, 0.792, 0.85), (0.25, 0.010, 0.035), m["debt"], coll, rot=(0, 0, math.radians(-10)), edge=0)
+
+    # Wheels
+    for i, x in enumerate((-1.28, 1.10)):
+        for side, y in (("L", -0.82), ("R", 0.82)):
+            cyl(f"van_wheel_{side}_{i}", (x, y, 0.34), 0.29, 0.20, m["black"], coll, vertices=18,
+                rot=(math.radians(90), 0, 0), edge=0.003)
+            cyl(f"van_wheel_hub_{side}_{i}", (x, y + (-0.105 if y < 0 else 0.105), 0.34), 0.115, 0.030, m["metal"],
+                coll, vertices=10, rot=(math.radians(90), 0, 0), edge=0.001)
+
+    # Roof rack and amber beacon
+    cube("van_roof_rack_front", (0.10, 0, 1.56), (0.75, 0.66, 0.024), m["metal"], coll, edge=0.004)
+    cube("van_roof_rack_rear", (0.88, 0, 1.56), (0.75, 0.66, 0.024), m["metal"], coll, edge=0.004)
+    cyl("van_roof_pipe_left", (0.50, -0.45, 1.64), 0.034, 1.12, m["metal"], coll, vertices=8,
+        rot=(0, math.radians(90), 0), edge=0.001)
+    cyl("van_roof_pipe_right", (0.50, 0.45, 1.64), 0.034, 1.12, m["metal"], coll, vertices=8,
+        rot=(0, math.radians(90), 0), edge=0.001)
+    cube("van_roof_amber_beacon", (-0.55, 0, 1.58), (0.16, 0.09, 0.050), m["amber"], coll, edge=0.006)
+    cube("van_rear_green_beacon", (1.76, 0, 1.24), (0.014, 0.15, 0.038), m["terminal"], coll, edge=0.001)
+
+
+def _build_van_interior(m, coll, prefix: str = "van") -> None:
+    """Prisoner compartment interior: cage, benches, driver silhouette, grab bars."""
+
+    # --- Interior floor ---
+    cube(f"{prefix}_int_floor", (0.45, 0, 0.36), (2.00, 0.68, 0.02), m["floor"], coll, edge=0.002)
+
+    # --- Interior ceiling ---
+    cube(f"{prefix}_int_ceiling", (0.45, 0, 1.44), (2.00, 0.68, 0.02), m["metal"], coll, edge=0.002)
+
+    # --- Interior wall panels (scratched teal metal) ---
+    cube(f"{prefix}_int_wall_L", (0.45, -0.68, 0.92), (2.00, 0.02, 0.56), m["wall"], coll, edge=0.003)
+    cube(f"{prefix}_int_wall_R", (0.45, 0.68, 0.92), (2.00, 0.02, 0.56), m["wall"], coll, edge=0.003)
+
+    # --- Cage partition (vertical bars between cab and prisoner area) ---
+    cube(f"{prefix}_cage_frame_top", (-0.55, 0, 1.42), (0.04, 0.68, 0.04), m["metal"], coll, edge=0.004)
+    cube(f"{prefix}_cage_frame_bot", (-0.55, 0, 0.42), (0.04, 0.68, 0.04), m["metal"], coll, edge=0.004)
+    cube(f"{prefix}_cage_frame_L", (-0.55, -0.66, 0.92), (0.04, 0.04, 0.56), m["metal"], coll, edge=0.004)
+    cube(f"{prefix}_cage_frame_R", (-0.55, 0.66, 0.92), (0.04, 0.04, 0.56), m["metal"], coll, edge=0.004)
+    for i in range(7):
+        y = -0.54 + i * 0.18
+        cyl(f"{prefix}_cage_bar_{i}", (-0.55, y, 0.92), 0.012, 1.0, m["metal"], coll, vertices=6, edge=0)
+
+    # --- Driver silhouette (dark menacing shape visible through cage) ---
+    cube(f"{prefix}_driver_torso", (-1.30, 0, 0.88), (0.24, 0.20, 0.36), m["black"], coll, edge=0.008)
+    sphere(f"{prefix}_driver_head", (-1.30, -0.02, 1.28), (0.14, 0.12, 0.16), m["black"], coll)
+    cube(f"{prefix}_driver_cap", (-1.30, -0.04, 1.42), (0.18, 0.15, 0.04), m["black"], coll, edge=0.006)
+    cube(f"{prefix}_driver_cap_brim", (-1.30, -0.14, 1.38), (0.12, 0.06, 0.015), m["black"], coll, edge=0.003)
+    # Arms reaching to steering wheel
+    cube(f"{prefix}_driver_arm_L", (-1.52, -0.18, 0.86), (0.16, 0.06, 0.08), m["black"], coll,
+         rot=(0, 0, math.radians(-15)), edge=0.004)
+    cube(f"{prefix}_driver_arm_R", (-1.52, 0.18, 0.86), (0.16, 0.06, 0.08), m["black"], coll,
+         rot=(0, 0, math.radians(15)), edge=0.004)
+    # Steering wheel silhouette
+    cyl(f"{prefix}_steering_wheel", (-1.64, 0, 0.86), 0.12, 0.015, m["black"], coll, vertices=12,
+        rot=(math.radians(70), 0, 0), edge=0)
+
+    # --- Left bench (facing right) ---
+    cube(f"{prefix}_bench_L_seat", (0.50, -0.52, 0.48), (1.50, 0.18, 0.04), m["metal_worn"], coll, edge=0.004)
+    cube(f"{prefix}_bench_L_back", (0.50, -0.64, 0.80), (1.50, 0.04, 0.30), m["metal_worn"], coll, edge=0.003)
+    # Exposed bolt heads
+    for i in range(4):
+        cyl(f"{prefix}_bench_L_bolt_{i}", (0.50 - 0.60 + i * 0.40, -0.66, 0.52), 0.012, 0.015, m["metal"], coll,
+            vertices=6, rot=(math.radians(90), 0, 0), edge=0)
+
+    # --- Right bench (facing left) ---
+    cube(f"{prefix}_bench_R_seat", (0.50, 0.52, 0.48), (1.50, 0.18, 0.04), m["metal_worn"], coll, edge=0.004)
+    cube(f"{prefix}_bench_R_back", (0.50, 0.64, 0.80), (1.50, 0.04, 0.30), m["metal_worn"], coll, edge=0.003)
+    for i in range(4):
+        cyl(f"{prefix}_bench_R_bolt_{i}", (0.50 - 0.60 + i * 0.40, 0.66, 0.52), 0.012, 0.015, m["metal"], coll,
+            vertices=6, rot=(math.radians(90), 0, 0), edge=0)
+
+    # --- Ceiling grab bars ---
+    cyl(f"{prefix}_grab_bar_L", (0.45, -0.32, 1.38), 0.018, 1.60, m["metal"], coll, vertices=8,
+        rot=(0, math.radians(90), 0), edge=0.001)
+    cyl(f"{prefix}_grab_bar_R", (0.45, 0.32, 1.38), 0.018, 1.60, m["metal"], coll, vertices=8,
+        rot=(0, math.radians(90), 0), edge=0.001)
+    # Bar mounting brackets
+    for bar_y in (-0.32, 0.32):
+        for bx in (-0.30, 0.45, 1.20):
+            cube(f"{prefix}_grab_mount_{bar_y:.0f}_{bx:.0f}", (bx, bar_y, 1.42), (0.03, 0.03, 0.04), m["metal"],
+                 coll, edge=0.002)
+
+    # --- Interior fluorescent strip (dim amber) ---
+    cube(f"{prefix}_int_light_housing", (0.45, 0, 1.42), (0.85, 0.05, 0.025), m["metal"], coll, edge=0.002)
+    cube(f"{prefix}_int_light_tube", (0.45, 0, 1.39), (0.72, 0.025, 0.012), m["amber"], coll, edge=0.001)
+
+    # --- Floor scuff marks ---
+    for i in range(5):
+        cube(f"{prefix}_scuff_{i}", (0.10 + i * 0.30, -0.15 + (i % 2) * 0.30, 0.37), (0.10, 0.04, 0.003),
+             m["floor_line"], coll, rot=(0, 0, math.radians(-12 + i * 6)), edge=0)
+
+    # --- Rear door frame / threshold (from inside) ---
+    cube(f"{prefix}_rear_threshold", (1.56, 0, 0.40), (0.04, 0.68, 0.04), m["metal"], coll, edge=0.003)
+
+
 def build_van(m) -> bpy.types.Collection:
     coll = collection("ASV4_Second_Hand_Dispatch_Van")
-    body = [
-        (-1.85, 0.34), (-1.75, 0.62), (-1.44, 0.78), (-1.14, 1.07),
-        (-0.82, 1.38), (1.22, 1.38), (1.60, 1.14), (1.64, 0.46),
-        (1.38, 0.34)
-    ]
-    prism("van_body_sloped_one_piece", body, 0.72, m["van_body"], coll)
-    cube("van_closed_side_skin_L", (-0.04, -0.745, 0.86), (3.05, 0.018, 0.72), m["van_body"], coll, edge=0.004)
-    cube("van_closed_side_skin_R", (-0.04, 0.745, 0.86), (3.05, 0.018, 0.72), m["van_body"], coll, edge=0.004)
-    cube("van_lower_dirty_panel_L", (-0.06, -0.735, 0.47), (1.48, 0.016, 0.095), m["van_shadow"], coll, edge=0.003)
-    cube("van_lower_dirty_panel_R", (-0.06, 0.735, 0.47), (1.48, 0.016, 0.095), m["van_shadow"], coll, edge=0.003)
-    cube("van_front_bumper", (-1.88, 0, 0.45), (0.08, 0.66, 0.085), m["metal"], coll, edge=0.006)
-    cube("van_rear_bumper", (1.68, 0, 0.45), (0.08, 0.66, 0.085), m["metal"], coll, edge=0.006)
-    cube("van_front_grille", (-1.91, 0, 0.62), (0.014, 0.33, 0.075), m["black"], coll, edge=0)
-    cube("van_company_patch_L", (0.45, -0.757, 0.72), (0.34, 0.010, 0.12), m["terminal"], coll, edge=0.001)
-    cube("van_company_patch_R", (0.45, 0.757, 0.72), (0.34, 0.010, 0.12), m["terminal"], coll, edge=0.001)
-    txt("van_company_text_L", "AS", (0.45, -0.773, 0.72), (math.radians(90), 0, 0), 0.13, m["black"], coll)
-    txt("van_company_text_R", "AS", (0.45, 0.773, 0.72), (math.radians(90), 0, math.radians(180)), 0.13, m["black"], coll)
-    cube("van_service_label_L", (-0.12, -0.758, 0.58), (0.40, 0.009, 0.050), m["paper"], coll, edge=0)
-    cube("van_service_label_R", (-0.12, 0.758, 0.58), (0.40, 0.009, 0.050), m["paper"], coll, edge=0)
-    txt("van_service_text_L", "CIVIC JOBS", (-0.12, -0.774, 0.58), (math.radians(90), 0, 0), 0.052, m["black"], coll)
-    txt("van_service_text_R", "CIVIC JOBS", (-0.12, 0.774, 0.58), (math.radians(90), 0, math.radians(180)), 0.052, m["black"], coll)
-    cube("van_debt_slash_L", (1.04, -0.758, 0.79), (0.25, 0.010, 0.035), m["debt"], coll, rot=(0, 0, math.radians(-10)), edge=0)
-    cube("van_debt_slash_R", (1.04, 0.758, 0.79), (0.25, 0.010, 0.035), m["debt"], coll, rot=(0, 0, math.radians(-10)), edge=0)
-    for i, x in enumerate((-1.18, 1.10)):
-        for side, y in (("L", -0.78), ("R", 0.78)):
-            cyl(f"van_wheel_{side}_{i}", (x, y, 0.34), 0.29, 0.20, m["black"], coll, vertices=18, rot=(math.radians(90), 0, 0), edge=0.003)
-            cyl(f"van_wheel_hub_{side}_{i}", (x, y + (-0.105 if y < 0 else 0.105), 0.34), 0.115, 0.030, m["metal"], coll, vertices=10, rot=(math.radians(90), 0, 0), edge=0.001)
-    cube("van_roof_rack_front", (0.10, 0, 1.52), (0.75, 0.66, 0.024), m["metal"], coll, edge=0.004)
-    cube("van_roof_rack_rear", (0.88, 0, 1.52), (0.75, 0.66, 0.024), m["metal"], coll, edge=0.004)
-    cyl("van_roof_pipe_left", (0.50, -0.43, 1.60), 0.034, 1.12, m["metal"], coll, vertices=8, rot=(0, math.radians(90), 0), edge=0.001)
-    cyl("van_roof_pipe_right", (0.50, 0.43, 1.60), 0.034, 1.12, m["metal"], coll, vertices=8, rot=(0, math.radians(90), 0), edge=0.001)
-    cube("van_roof_amber_beacon", (-0.55, 0, 1.54), (0.16, 0.09, 0.050), m["amber"], coll, edge=0.006)
-    cube("van_rear_green_beacon", (1.704, 0, 1.20), (0.014, 0.15, 0.038), m["terminal"], coll, edge=0.001)
+    _build_van_exterior(m, coll)
+    _build_van_interior(m, coll)
+    return coll
+
+
+def build_van_transit_interior(m) -> bpy.types.Collection:
+    """Rear compartment only — used by Unity for the 3D transit camera view."""
+    coll = collection("ASV4_Van_Transit_Interior")
+    _build_van_interior(m, coll, prefix="transit")
+
+    # Rear doors modeled ajar (slightly open, showing dark exterior)
+    cube("transit_rear_door_L", (1.62, -0.38, 0.92), (0.04, 0.30, 0.56), m["metal_worn"], coll,
+         rot=(0, 0, math.radians(18)), edge=0.005)
+    cube("transit_rear_door_R", (1.62, 0.38, 0.92), (0.04, 0.30, 0.56), m["metal_worn"], coll,
+         rot=(0, 0, math.radians(-18)), edge=0.005)
+
+    # Side window slits (narrow, for parallax exterior view)
+    cube("transit_window_slit_L", (0.45, -0.70, 1.18), (0.65, 0.015, 0.06), m["glass"], coll, edge=0.001)
+    cube("transit_window_slit_R", (0.45, 0.70, 1.18), (0.65, 0.015, 0.06), m["glass"], coll, edge=0.001)
+    # Wire mesh over slits
+    for i in range(8):
+        x = 0.14 + i * 0.08
+        cyl(f"transit_mesh_L_{i}", (x, -0.71, 1.18), 0.004, 0.058, m["metal"], coll, vertices=4, edge=0)
+        cyl(f"transit_mesh_R_{i}", (x, 0.71, 1.18), 0.004, 0.058, m["metal"], coll, vertices=4, edge=0)
+
+    # Seat position empties (for Unity player placement — exported as tiny cubes)
+    for i, (x, y, rot_z) in enumerate([
+        (0.15, -0.42, 0), (0.85, -0.42, 0),       # left bench, facing right
+        (0.15, 0.42, math.pi), (0.85, 0.42, math.pi),  # right bench, facing left
+    ]):
+        cube(f"transit_seat_marker_{i}", (x, y, 0.52), (0.02, 0.02, 0.02), m["exit"], coll,
+             rot=(0, 0, rot_z), edge=0)
+
     return coll
 
 
@@ -510,6 +828,100 @@ def export_all(assets: dict[str, bpy.types.Collection]) -> None:
     bpy.ops.render.render(write_still=True)
 
 
+def build_first_person_gloves(m) -> bpy.types.Collection:
+    """Low-poly first-person gloved hands (~300 tris). Origin at wrist center."""
+    coll = collection("ASV4_FirstPerson_Gloves")
+
+    # Right hand
+    rx, ry = 0.22, 0.0
+
+    # forearm + sleeve cuff
+    cube("fp_right_forearm", (rx, ry, -0.12), (0.065, 0.055, 0.22), m["uniform"], coll, edge=0.004)
+    cube("fp_right_cuff", (rx, ry, -0.01), (0.072, 0.062, 0.04), m["uniform"], coll, edge=0.002)
+
+    # palm
+    cube("fp_right_palm", (rx, ry, 0.10), (0.06, 0.04, 0.09), m["black"], coll, edge=0.006)
+
+    # thumb
+    cube("fp_right_thumb_base", (rx - 0.045, ry - 0.02, 0.06), (0.022, 0.02, 0.04), m["black"], coll,
+         rot=(0, 0, math.radians(25)), edge=0.003)
+    cube("fp_right_thumb_tip", (rx - 0.065, ry - 0.025, 0.09), (0.018, 0.018, 0.03), m["black"], coll,
+         rot=(0, 0, math.radians(15)), edge=0.002)
+
+    # fingers
+    finger_x_offsets = [-0.024, -0.008, 0.008, 0.024]
+    finger_lengths = [0.05, 0.06, 0.058, 0.045]
+    for i, (fx, fl) in enumerate(zip(finger_x_offsets, finger_lengths)):
+        cube(f"fp_right_finger_{i}_base", (rx + fx, ry - 0.005, 0.155), (0.016, 0.018, 0.02), m["black"], coll, edge=0.002)
+        cube(f"fp_right_finger_{i}_mid", (rx + fx, ry - 0.005, 0.155 + fl * 0.5), (0.014, 0.015, fl * 0.55), m["black"], coll, edge=0.002)
+        cube(f"fp_right_finger_{i}_tip", (rx + fx, ry - 0.005, 0.155 + fl * 0.9), (0.012, 0.013, fl * 0.3), m["black"], coll, edge=0.001)
+
+    # knuckle ridge
+    cube("fp_right_knuckle_ridge", (rx, ry - 0.025, 0.145), (0.058, 0.008, 0.012), m["black"], coll, edge=0.002)
+
+    # Left hand — mirror of right
+    lx = -rx
+
+    cube("fp_left_forearm", (lx, ry, -0.12), (0.065, 0.055, 0.22), m["uniform"], coll, edge=0.004)
+    cube("fp_left_cuff", (lx, ry, -0.01), (0.072, 0.062, 0.04), m["uniform"], coll, edge=0.002)
+    cube("fp_left_palm", (lx, ry, 0.10), (0.06, 0.04, 0.09), m["black"], coll, edge=0.006)
+
+    cube("fp_left_thumb_base", (lx + 0.045, ry - 0.02, 0.06), (0.022, 0.02, 0.04), m["black"], coll,
+         rot=(0, 0, math.radians(-25)), edge=0.003)
+    cube("fp_left_thumb_tip", (lx + 0.065, ry - 0.025, 0.09), (0.018, 0.018, 0.03), m["black"], coll,
+         rot=(0, 0, math.radians(-15)), edge=0.002)
+
+    for i, (fx, fl) in enumerate(zip(finger_x_offsets, finger_lengths)):
+        cube(f"fp_left_finger_{i}_base", (lx - fx, ry - 0.005, 0.155), (0.016, 0.018, 0.02), m["black"], coll, edge=0.002)
+        cube(f"fp_left_finger_{i}_mid", (lx - fx, ry - 0.005, 0.155 + fl * 0.5), (0.014, 0.015, fl * 0.55), m["black"], coll, edge=0.002)
+        cube(f"fp_left_finger_{i}_tip", (lx - fx, ry - 0.005, 0.155 + fl * 0.9), (0.012, 0.013, fl * 0.3), m["black"], coll, edge=0.001)
+
+    cube("fp_left_knuckle_ridge", (lx, ry - 0.025, 0.145), (0.058, 0.008, 0.012), m["black"], coll, edge=0.002)
+
+    # wristwatch strap hint on left wrist
+    cube("fp_left_watch_strap", (lx, ry - 0.032, 0.0), (0.032, 0.006, 0.035), m["metal"], coll, edge=0.001)
+
+    return coll
+
+
+def build_flashlight(m) -> bpy.types.Collection:
+    """Low-poly handheld flashlight — ~150 tris. Origin at grip center."""
+    coll = collection("ASV4_Item_Flashlight")
+
+    # Main body — rubber grip tube
+    cyl("fl_body", (0.0, 0.0, 0.0), 0.032, 0.22, m["black"], coll, vertices=8, edge=0.003)
+    # Head — wider reflector housing
+    cyl("fl_head", (0.0, 0.0, 0.135), 0.048, 0.055, m["metal_worn"], coll, vertices=8, edge=0.004)
+    # Lens face — emissive amber
+    cyl("fl_lens", (0.0, 0.0, 0.162), 0.038, 0.008, m["amber"], coll, vertices=8)
+    # Tail cap
+    cyl("fl_tail", (0.0, 0.0, -0.118), 0.035, 0.012, m["metal_worn"], coll, vertices=8, edge=0.002)
+    # Rubber grip texture ridges
+    for i in range(4):
+        z = -0.06 + i * 0.028
+        cyl(f"fl_grip_{i}", (0.0, 0.0, z), 0.034, 0.006, m["black"], coll, vertices=8)
+    # Pocket clip
+    cube("fl_clip", (0.038, 0.0, 0.02), (0.006, 0.005, 0.14), m["metal"], coll, edge=0.001)
+
+    return coll
+
+
+def build_battery(m) -> bpy.types.Collection:
+    """Low-poly AA battery — ~80 tris. Origin at center."""
+    coll = collection("ASV4_Item_Battery")
+
+    # Main body — amber/cardboard label
+    cyl("bat_body", (0.0, 0.0, 0.0), 0.028, 0.10, m["cardboard"], coll, vertices=8, edge=0.002)
+    # Positive terminal (nub top)
+    cyl("bat_pos", (0.0, 0.0, 0.056), 0.010, 0.008, m["metal"], coll, vertices=6)
+    # Negative terminal (flat bottom cap)
+    cyl("bat_neg", (0.0, 0.0, -0.054), 0.028, 0.006, m["metal"], coll, vertices=8)
+    # Warning label band — stamp red
+    cyl("bat_label_band", (0.0, 0.0, 0.015), 0.0285, 0.032, m["debt"], coll, vertices=8)
+
+    return coll
+
+
 def main() -> None:
     clear()
     bpy.context.scene.unit_settings.system = "METRIC"
@@ -521,6 +933,10 @@ def main() -> None:
         "ASV4_Monster_Homework_Debt_Collector": build_monster(m),
         "ASV4_Missing_Homework_Notebook": build_notebook(m),
         "ASV4_Second_Hand_Dispatch_Van": build_van(m),
+        "ASV4_Van_Transit_Interior": build_van_transit_interior(m),
+        "ASV4_FirstPerson_Gloves": build_first_person_gloves(m),
+        "ASV4_Item_Flashlight": build_flashlight(m),
+        "ASV4_Item_Battery": build_battery(m),
     }
     lights_camera()
     export_all(assets)

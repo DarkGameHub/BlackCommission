@@ -26,14 +26,21 @@ public class MvpHud : MonoBehaviour
     Texture2D slotTexture;
     Texture2D selectedSlotTexture;
     Texture2D emptyIcon;
-    Texture2D medkitIcon;
-    Texture2D sprayIcon;
-    Texture2D decoyIcon;
     Texture2D flashlightIcon;
+    Texture2D decoyIcon; // reused for battery
     string shopMessage;
     float shopMessageUntil;
     string missionMessage;
     float missionMessageUntil;
+    PlayerInteraction cachedLocalInteraction;
+    Texture2D crtScanlineTex;
+    Texture2D crtVignetteTex;
+    Texture2D crtBezelTex;
+    Texture2D hpBarBg;
+    Texture2D hpBarFill;
+    Texture2D damageFlashTex;
+    float damageFlashUntil;
+    float lastKnownHp = 100f;
     Vector2 officeScrollPosition;
     Vector2 settingsScrollPosition;
     static SchoolExitPoint partialReturnConfirmVan;
@@ -45,6 +52,12 @@ public class MvpHud : MonoBehaviour
         set => PlayerPrefs.SetInt("AS.Settings.Language", Mathf.Clamp(value, 0, 1));
     }
 
+    public static int LanguageIndexStatic
+    {
+        get => LanguageIndex;
+        set => LanguageIndex = value;
+    }
+
     static float MasterVolume
     {
         get => PlayerPrefs.GetFloat("AS.Audio.MasterVolume", 1f);
@@ -54,6 +67,12 @@ public class MvpHud : MonoBehaviour
             PlayerPrefs.SetFloat("AS.Audio.MasterVolume", volume);
             AudioListener.volume = volume;
         }
+    }
+
+    public static float MasterVolumeStatic
+    {
+        get => MasterVolume;
+        set => MasterVolume = value;
     }
 
     void Awake()
@@ -95,18 +114,7 @@ public class MvpHud : MonoBehaviour
                 return;
             }
 
-            if (!MvpPendingReward.HasPending)
-            {
-                PlayerHotbar activeHotbar = FindLocalHotbar();
-                if (activeHotbar != null)
-                {
-                    if (keyboard.f1Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Medkit);
-                    if (keyboard.f2Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Decoy);
-                    if (keyboard.f3Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.StunSpray);
-                    if (keyboard.f4Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Flashlight);
-                    if (keyboard.f5Key.wasPressedThisFrame) TryBuyWristwatch(activeHotbar);
-                }
-            }
+            // Shop purchases are mouse-click only (buttons in DrawOfficeShop)
 
             return;
         }
@@ -188,10 +196,63 @@ public class MvpHud : MonoBehaviour
             DrawOfficePanel();
         }
 
+        DrawDamageFlash();
+        DrawCrosshair();
+        DrawGestureHint();
         if (showNetworkHint)
             DrawFooterHint();
         if (settingsOpen)
             DrawSettingsPanel();
+    }
+
+    void DrawGestureHint()
+    {
+        PlayerController localCtrl = FindLocalPlayer();
+        if (localCtrl == null) return;
+        int gestureId = localCtrl.GestureId.Value;
+        if (gestureId <= 0) return;
+
+        string name = PlayerGestures.GetName(gestureId, LanguageIndex);
+        if (string.IsNullOrEmpty(name)) return;
+
+        float alpha = Mathf.Clamp01(1.5f - (Time.time % 3f));
+        GUI.color = new Color(1f, 1f, 1f, alpha);
+        GUI.Label(new Rect(Screen.width * 0.5f - 80f, Screen.height - 140f, 160f, 28f), name, accentStyle);
+        GUI.color = Color.white;
+    }
+
+    void DrawDamageFlash()
+    {
+        if (Time.time > damageFlashUntil) return;
+        if (damageFlashTex == null) return;
+        float alpha = (damageFlashUntil - Time.time) / 0.35f;
+        GUI.color = new Color(1f, 1f, 1f, alpha * 0.55f);
+        GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), damageFlashTex, ScaleMode.StretchToFill);
+        GUI.color = Color.white;
+    }
+
+    void DrawCrosshair()
+    {
+        if (IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
+
+        float cx = Screen.width * 0.5f;
+        float cy = Screen.height * 0.5f;
+
+        if (cachedLocalInteraction == null)
+        {
+            PlayerController[] ctrlArr = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+            foreach (var c in ctrlArr)
+                if (c.IsOwner) { cachedLocalInteraction = c.GetComponent<PlayerInteraction>(); break; }
+        }
+
+        bool hasTarget = cachedLocalInteraction != null && cachedLocalInteraction.CurrentTarget != null;
+        Color dotColor = hasTarget ? new Color(0.56f, 0.92f, 0.72f, 0.92f) : new Color(0.9f, 0.9f, 0.9f, 0.55f);
+        float size = hasTarget ? 6f : 4f;
+
+        Texture2D dot = hpBarBg ?? MakeTexture(Color.white);
+        GUI.color = dotColor;
+        GUI.DrawTexture(new Rect(cx - size * 0.5f, cy - size * 0.5f, size, size), dot, ScaleMode.StretchToFill);
+        GUI.color = Color.white;
     }
 
     void DrawSettingsPanel()
@@ -201,8 +262,8 @@ public class MvpHud : MonoBehaviour
         Rect rect = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        GUILayout.Label("暂停", titleStyle);
-        if (GUILayout.Button("继续", GUILayout.Width(72), GUILayout.Height(30)))
+        GUILayout.Label(MvpLocale.T("pause"), titleStyle);
+        if (GUILayout.Button(MvpLocale.T("resume"), GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseSettings();
             GUILayout.EndHorizontal();
@@ -213,43 +274,43 @@ public class MvpHud : MonoBehaviour
 
         settingsScrollPosition = GUILayout.BeginScrollView(settingsScrollPosition, false, true);
         GUILayout.Space(8);
-        GUILayout.Label("游戏", accentStyle);
+        GUILayout.Label(MvpLocale.T("game"), accentStyle);
         string[] languageLabels = { "简体中文", "English" };
-        GUILayout.Label($"语言: {languageLabels[LanguageIndex]}", labelStyle);
+        GUILayout.Label(MvpLocale.T("language", languageLabels[LanguageIndex]), labelStyle);
         int selectedLanguage = GUILayout.SelectionGrid(LanguageIndex, languageLabels, 2);
         if (selectedLanguage != LanguageIndex)
             LanguageIndex = selectedLanguage;
-        GUILayout.Label($"主音量: {MasterVolume:0.00}", labelStyle);
+        GUILayout.Label(MvpLocale.T("master_volume", $"{MasterVolume:0.00}"), labelStyle);
         MasterVolume = GUILayout.HorizontalSlider(MasterVolume, 0f, 1f);
-        showNetworkHint = GUILayout.Toggle(showNetworkHint, "显示网络提示");
+        showNetworkHint = GUILayout.Toggle(showNetworkHint, MvpLocale.T("show_network"));
 
         GUILayout.Space(10);
-        GUILayout.Label("视角", accentStyle);
-        GUILayout.Label($"鼠标水平速度: {PlayerCameraController.HorizontalSensitivity:0.00}", labelStyle);
+        GUILayout.Label(MvpLocale.T("camera"), accentStyle);
+        GUILayout.Label(MvpLocale.T("h_sensitivity", $"{PlayerCameraController.HorizontalSensitivity:0.00}"), labelStyle);
         PlayerCameraController.HorizontalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.HorizontalSensitivity, 0.25f, 8f);
-        GUILayout.Label($"鼠标垂直速度: {PlayerCameraController.VerticalSensitivity:0.00}", labelStyle);
+        GUILayout.Label(MvpLocale.T("v_sensitivity", $"{PlayerCameraController.VerticalSensitivity:0.00}"), labelStyle);
         PlayerCameraController.VerticalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.VerticalSensitivity, 0.25f, 8f);
-        PlayerCameraController.InvertY = GUILayout.Toggle(PlayerCameraController.InvertY, "反转垂直视角");
-        GUILayout.Label($"视野范围: {PlayerCameraController.FieldOfView:0}", labelStyle);
+        PlayerCameraController.InvertY = GUILayout.Toggle(PlayerCameraController.InvertY, MvpLocale.T("invert_y"));
+        GUILayout.Label(MvpLocale.T("fov", $"{PlayerCameraController.FieldOfView:0}"), labelStyle);
         PlayerCameraController.FieldOfView = GUILayout.HorizontalSlider(PlayerCameraController.FieldOfView, 55f, 95f);
 
         GUILayout.Space(10);
-        GUILayout.Label("语音", accentStyle);
-        ProximityVoiceChat.VoiceEnabled = GUILayout.Toggle(ProximityVoiceChat.VoiceEnabled, "默认开启语音");
-        ProximityVoiceChat.Muted = GUILayout.Toggle(ProximityVoiceChat.Muted, "静音自己");
+        GUILayout.Label(MvpLocale.T("voice"), accentStyle);
+        ProximityVoiceChat.VoiceEnabled = GUILayout.Toggle(ProximityVoiceChat.VoiceEnabled, MvpLocale.T("voice_default_on"));
+        ProximityVoiceChat.Muted = GUILayout.Toggle(ProximityVoiceChat.Muted, MvpLocale.T("mute_self"));
         DrawMicrophoneSelector();
-        GUILayout.Label($"麦克风增益: {ProximityVoiceChat.MicGain:0.0}", labelStyle);
+        GUILayout.Label(MvpLocale.T("mic_gain", $"{ProximityVoiceChat.MicGain:0.0}"), labelStyle);
         ProximityVoiceChat.MicGain = GUILayout.HorizontalSlider(ProximityVoiceChat.MicGain, 0f, 2f);
-        GUILayout.Label($"语音音量: {ProximityVoiceChat.OutputVolume:0.0}", labelStyle);
+        GUILayout.Label(MvpLocale.T("voice_volume", $"{ProximityVoiceChat.OutputVolume:0.0}"), labelStyle);
         ProximityVoiceChat.OutputVolume = GUILayout.HorizontalSlider(ProximityVoiceChat.OutputVolume, 0f, 2f);
-        GUILayout.Label($"语音距离: {ProximityVoiceChat.MaxDistance:0} m", labelStyle);
+        GUILayout.Label(MvpLocale.T("voice_distance", $"{ProximityVoiceChat.MaxDistance:0}"), labelStyle);
         ProximityVoiceChat.MaxDistance = GUILayout.HorizontalSlider(ProximityVoiceChat.MaxDistance, 4f, 40f);
 
         GUILayout.Space(14);
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("恢复默认", GUILayout.Height(32)))
+        if (GUILayout.Button(MvpLocale.T("reset_defaults"), GUILayout.Height(32)))
             ResetSettingsDefaults();
-        if (GUILayout.Button("退出游戏", GUILayout.Height(32)))
+        if (GUILayout.Button(MvpLocale.T("quit_game"), GUILayout.Height(32)))
             QuitGame();
         GUILayout.EndHorizontal();
         GUILayout.EndScrollView();
@@ -260,15 +321,15 @@ public class MvpHud : MonoBehaviour
     {
         string[] devices = Microphone.devices;
         bool hasDevices = devices != null && devices.Length > 0;
-        GUILayout.Label($"麦克风: {ProximityVoiceChat.SelectedMicrophoneDeviceName}", labelStyle);
+        GUILayout.Label(MvpLocale.T("mic_device", ProximityVoiceChat.SelectedMicrophoneDeviceName), labelStyle);
         GUILayout.BeginHorizontal();
         GUI.enabled = hasDevices;
-        if (GUILayout.Button("上一个", GUILayout.Height(28)))
+        if (GUILayout.Button(MvpLocale.T("prev"), GUILayout.Height(28)))
         {
             int count = devices.Length;
             ProximityVoiceChat.MicrophoneDeviceIndex = (ProximityVoiceChat.MicrophoneDeviceIndex + count - 1) % count;
         }
-        if (GUILayout.Button("下一个", GUILayout.Height(28)))
+        if (GUILayout.Button(MvpLocale.T("next"), GUILayout.Height(28)))
         {
             int count = devices.Length;
             ProximityVoiceChat.MicrophoneDeviceIndex = (ProximityVoiceChat.MicrophoneDeviceIndex + 1) % count;
@@ -292,16 +353,16 @@ public class MvpHud : MonoBehaviour
             GUIStyle statusStyle = accentStyle;
             if (MvpPendingReward.HasPending)
             {
-                officeStatus = $"结算待领取: {MvpPendingReward.ResultLabel}。去电脑盖章入账。";
+                officeStatus = MvpLocale.T("reward_pending", MvpPendingReward.ResultLabel);
                 statusStyle = warningStyle;
             }
             else if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
             {
-                officeStatus = $"委托已接受: {MvpMissionRuntime.SelectedTask.title}。采购后去公司车。";
+                officeStatus = MvpLocale.T("task_accepted", MvpMissionRuntime.SelectedTask.title);
             }
             else
             {
-                officeStatus = nearShop ? "办公室电脑已连接，可接单或采购。" : "事务所待机中。";
+                officeStatus = nearShop ? MvpLocale.T("computer_connected") : MvpLocale.T("office_idle");
             }
 
             GUILayout.Label(officeStatus, statusStyle);
@@ -311,12 +372,15 @@ public class MvpHud : MonoBehaviour
 
         OfficeComputer computer = activeComputer;
         float computerWidth = Mathf.Clamp(Screen.width - 36f, 360f, 720f);
-        Rect rect = new Rect((Screen.width - computerWidth) * 0.5f, 42, computerWidth, Mathf.Min(600, Screen.height - 84));
+        float computerHeight = Mathf.Min(600, Screen.height - 84);
+        Rect rect = new Rect((Screen.width - computerWidth) * 0.5f, 42, computerWidth, computerHeight);
+
+        Color savedColor = GUI.color;
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        GUILayout.Label("ACCIDENT SQUAD 委托终端", titleStyle);
-        if (GUILayout.Button("关闭电脑", GUILayout.Width(96), GUILayout.Height(30)))
+        GUILayout.Label(MvpLocale.T("terminal_title"), titleStyle);
+        if (GUILayout.Button(MvpLocale.T("close_computer"), GUILayout.Width(96), GUILayout.Height(30)))
         {
             CloseComputer();
             GUILayout.EndHorizontal();
@@ -327,27 +391,27 @@ public class MvpHud : MonoBehaviour
 
         officeScrollPosition = GUILayout.BeginScrollView(officeScrollPosition, false, true);
         GUILayout.Space(8);
-        GUILayout.Label($"资金: {company.Funds} G    债务: {company.Debt} G", company.Funds < 0 ? warningStyle : labelStyle);
-        GUILayout.Label($"声望: {company.Reputation}    等级: {company.OfficeLevel}    经验: {company.Experience}/{company.ExperienceForNextLevel}", labelStyle);
-        GUILayout.Label($"已解锁委托类别: {company.UnlockedCategoryCount}/8", labelStyle);
-        GUILayout.Label($"被吞并压力: {company.HostileTakeoverPressure}/100", company.IsHostileTakeoverRisk ? warningStyle : labelStyle);
-        GUILayout.Label($"找回失物委托: {company.CompletedLostItemJobs}/2", labelStyle);
+        GUILayout.Label(MvpLocale.T("funds_debt", company.Funds, company.Debt), company.Funds < 0 ? warningStyle : labelStyle);
+        GUILayout.Label(MvpLocale.T("rep_level_xp", company.Reputation, company.OfficeLevel, company.Experience, company.ExperienceForNextLevel), labelStyle);
+        // Locked job categories hidden until content is available
+        GUILayout.Label(MvpLocale.T("takeover_pressure", company.HostileTakeoverPressure), company.IsHostileTakeoverRisk ? warningStyle : labelStyle);
+        GUILayout.Label(MvpLocale.T("lost_item_progress", company.CompletedLostItemJobs), labelStyle);
         GUILayout.Space(12);
 
         if (company.WasRecentlyHostileAcquired)
         {
-            GUILayout.Label("警告: 事务所刚被竞对低价吞并，债务重组，等级和委托进度已被压回。", warningStyle);
-            GUILayout.Label("继续赚钱和提升声望可以降低下一次被吞并风险。", mutedStyle);
+            GUILayout.Label(MvpLocale.T("hostile_acquired"), warningStyle);
+            GUILayout.Label(MvpLocale.T("hostile_acquired_hint"), mutedStyle);
         }
         else if (company.WasRecentlyIssuedTakeoverUltimatum)
         {
-            GUILayout.Label("竞对发来收购威胁: 事务所已进入最后通牒状态。", warningStyle);
-            GUILayout.Label("下一次失败前最好先把资金或声望拉回安全线。", mutedStyle);
+            GUILayout.Label(MvpLocale.T("ultimatum_issued"), warningStyle);
+            GUILayout.Label(MvpLocale.T("ultimatum_hint"), mutedStyle);
         }
         else if (company.HasHostileTakeoverUltimatum)
         {
-            GUILayout.Label("最后通牒: 再失败且资金/声望仍为负，就会被竞对强制吞并。", warningStyle);
-            GUILayout.Label("完成委托、攒现金或提高声望可以解除风险。", mutedStyle);
+            GUILayout.Label(MvpLocale.T("ultimatum_active"), warningStyle);
+            GUILayout.Label(MvpLocale.T("ultimatum_resolve"), mutedStyle);
         }
         else if (MvpPendingReward.HasPending)
         {
@@ -360,11 +424,11 @@ public class MvpHud : MonoBehaviour
                     warningStyle);
             bool hostCanClaim = IsLocalHostOrSolo();
             GUI.enabled = hostCanClaim;
-            if (computer != null && GUILayout.Button(hostCanClaim ? "领取结算" : "等待房主领取结算", GUILayout.Height(34)))
+            if (computer != null && GUILayout.Button(hostCanClaim ? MvpLocale.T("claim_reward") : MvpLocale.T("wait_host_claim"), GUILayout.Height(34)))
                 computer.ExecuteComputerAction(FindLocalPlayer());
             GUI.enabled = true;
             if (!hostCanClaim)
-                GUILayout.Label("结算盖章只能由房主确认，确认后全队同步。", mutedStyle);
+                GUILayout.Label(MvpLocale.T("host_only_claim"), mutedStyle);
         }
         else if (company.CanShowTutorialAcquisition)
         {
@@ -395,6 +459,10 @@ public class MvpHud : MonoBehaviour
         DrawOfficeShop(computerOpen || nearShop);
         GUILayout.EndScrollView();
         GUILayout.EndArea();
+
+        GUI.color = savedColor;
+        EnsureCrtTextures();
+        DrawCrtOverlay(rect);
     }
 
     void DrawCurrentCommissionOrDemo(OfficeComputer computer)
@@ -413,11 +481,11 @@ public class MvpHud : MonoBehaviour
     {
         if (computer == null)
         {
-            GUILayout.Label("委托终端未连接。", warningStyle);
+            GUILayout.Label(MvpLocale.T("terminal_offline"), warningStyle);
             return;
         }
 
-        GUILayout.Label("可用委托", accentStyle);
+        GUILayout.Label(MvpLocale.T("available_commissions"), accentStyle);
         GUILayout.BeginVertical(slotStyle);
         GUILayout.Label(computer.DemoTaskTitle, titleStyle);
         GUILayout.Label($"委托人: {computer.DemoTaskClient}    地点: {computer.DemoTaskLocation}", labelStyle);
@@ -430,7 +498,7 @@ public class MvpHud : MonoBehaviour
         bool hostReady = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && NetworkManager.Singleton.IsHost;
         if (hostReady)
         {
-            if (GUILayout.Button("接受委托", GUILayout.Height(36)))
+            if (GUILayout.Button(MvpLocale.T("accept_task"), GUILayout.Height(36)))
             {
                 computer.ExecuteComputerAction(FindLocalPlayer());
                 if (MvpMissionRuntime.HasSelectedTask)
@@ -440,16 +508,16 @@ public class MvpHud : MonoBehaviour
         else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             GUI.enabled = false;
-            GUILayout.Button("等待房主接受委托", GUILayout.Height(36));
+            GUILayout.Button(MvpLocale.T("wait_host_accept"), GUILayout.Height(36));
             GUI.enabled = true;
-            GUILayout.Label("等待房主选择委托。", mutedStyle);
+            GUILayout.Label(MvpLocale.T("wait_host_hint"), mutedStyle);
         }
         else
         {
             GUI.enabled = false;
-            GUILayout.Button("Start Host 后接受委托", GUILayout.Height(36));
+            GUILayout.Button(MvpLocale.T("start_host_first"), GUILayout.Height(36));
             GUI.enabled = true;
-            GUILayout.Label("主机启动后可接受委托。", mutedStyle);
+            GUILayout.Label(MvpLocale.T("start_host_hint"), mutedStyle);
         }
 
         GUILayout.EndVertical();
@@ -457,24 +525,20 @@ public class MvpHud : MonoBehaviour
 
     void DrawOfficeShop(bool nearShop)
     {
-        GUILayout.Label("电脑商店", accentStyle);
+        GUILayout.Label(MvpLocale.T("shop_title"), accentStyle);
         PlayerHotbar activeHotbar = FindLocalHotbar();
         GUILayout.Label(GetHotbarStorageSummary(activeHotbar), mutedStyle);
         if (MvpPendingReward.HasPending)
         {
-            GUILayout.Label("先在电脑上领取本次委托结算，之后才能采购下一单道具。", mutedStyle);
+            GUILayout.Label(MvpLocale.T("claim_first"), mutedStyle);
             return;
         }
 
         bool canBuy = activeHotbar != null && nearShop;
 
         GUILayout.BeginHorizontal();
-        DrawShopButton(activeHotbar, MvpHotbarItemId.Medkit, "回血药", canBuy);
-        DrawShopButton(activeHotbar, MvpHotbarItemId.Decoy, "诱饵", canBuy);
-        GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal();
-        DrawShopButton(activeHotbar, MvpHotbarItemId.StunSpray, "定身喷雾", canBuy);
-        DrawShopButton(activeHotbar, MvpHotbarItemId.Flashlight, "手电", canBuy);
+        DrawShopButton(activeHotbar, MvpHotbarItemId.Flashlight, MvpLocale.T("flashlight"), canBuy);
+        DrawShopButton(activeHotbar, MvpHotbarItemId.Battery, MvpLocale.T("battery"), canBuy);
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
         DrawWristwatchShopButton(activeHotbar, canBuy);
@@ -483,10 +547,8 @@ public class MvpHud : MonoBehaviour
 
         if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
             GUILayout.Label(shopMessage, shopMessage.Contains("不足") ? warningStyle : accentStyle);
-        GUILayout.Label(canBuy
-            ? "快捷采购: F1回血药 / F2诱饵 / F3定身喷雾 / F4手电 / F5工时表。HQ 内按 G 可把当前热栏道具放到地上存放。"
-            : "站到电脑前才可采购。HQ 内按 G 可把当前热栏道具放到地上存放。",
-            mutedStyle);
+        if (!canBuy)
+            GUILayout.Label(MvpLocale.T("shop_stand_near"), mutedStyle);
     }
 
     void DrawShopButton(PlayerHotbar hotbar, MvpHotbarItemId itemId, string label, bool canBuy)
@@ -522,7 +584,39 @@ public class MvpHud : MonoBehaviour
         if (!string.IsNullOrEmpty(missionMessage) && Time.time < missionMessageUntil)
             GUILayout.Label(missionMessage, missionMessage.Contains("警告") ? warningStyle : accentStyle);
 
+        DrawSpectatorHint();
+
         GUILayout.EndArea();
+    }
+
+    void DrawSpectatorHint()
+    {
+        PlayerHealth localHealth = FindLocalPlayerHealth();
+        if (localHealth == null || !localHealth.IsDowned.Value) return;
+
+        PlayerCameraController cam = localHealth.GetComponentInChildren<PlayerCameraController>();
+        if (cam == null) return;
+
+        GUILayout.Space(6);
+        if (cam.IsSpectating)
+        {
+            string targetName = cam.SpectateTargetName;
+            GUILayout.Label(MvpLocale.T("downed_spectating", targetName), warningStyle);
+        }
+        else
+        {
+            GUILayout.Label(MvpLocale.T("downed_all"), warningStyle);
+        }
+    }
+
+    PlayerHealth FindLocalPlayerHealth()
+    {
+        PlayerHealth[] all = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
+        foreach (var h in all)
+        {
+            if (h.IsOwner) return h;
+        }
+        return null;
     }
 
     void DrawMissionVanPanel()
@@ -535,8 +629,8 @@ public class MvpHud : MonoBehaviour
         Rect rect = new Rect((Screen.width - width) * 0.5f, 56, width, height);
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        GUILayout.Label("事故车后舱", titleStyle);
-        if (GUILayout.Button("关门", GUILayout.Width(72), GUILayout.Height(30)))
+        GUILayout.Label(MvpLocale.T("mission_van"), titleStyle);
+        if (GUILayout.Button(MvpLocale.T("close_door"), GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseMissionVan();
             GUILayout.EndHorizontal();
@@ -548,7 +642,7 @@ public class MvpHud : MonoBehaviour
         GUILayout.Space(8);
         GUILayout.Label(van.GetReturnSummary(), accentStyle);
         DrawVehicleClockBlock(LostItemMissionManager.Instance);
-        GUILayout.Label("先决定是否返程；补给柜只是可选物资，不影响关门回事务所。", mutedStyle);
+        GUILayout.Label(MvpLocale.T("van_decide_hint"), mutedStyle);
         GUILayout.Space(10);
 
         if (DrawMissionVanReturnControls(van))
@@ -558,7 +652,7 @@ public class MvpHud : MonoBehaviour
         }
 
         GUILayout.Space(10);
-        GUILayout.Label("车载补给柜", accentStyle);
+        GUILayout.Label(MvpLocale.T("van_locker"), accentStyle);
         PlayerHotbar localHotbar = FindLocalHotbar();
         for (int i = 0; i < SchoolExitPoint.LockerSlotCount; i++)
         {
@@ -569,7 +663,7 @@ public class MvpHud : MonoBehaviour
             string lockerReason = string.Empty;
             bool canReceive = localHotbar != null && localHotbar.CanReceiveItem(itemId, out lockerReason);
             GUI.enabled = quantity > 0 && canReceive;
-            if (GUILayout.Button("取出", GUILayout.Width(88), GUILayout.Height(28)))
+            if (GUILayout.Button(MvpLocale.T("take_item"), GUILayout.Width(88), GUILayout.Height(28)))
             {
                 van.TryTakeLockerItem(i);
                 SetMissionMessage($"车载物资申请: {GetShopItemLabel(itemId)}。");
@@ -581,7 +675,7 @@ public class MvpHud : MonoBehaviour
         }
 
         GUILayout.Space(12);
-        if (GUILayout.Button("继续搜索", GUILayout.Height(32)))
+        if (GUILayout.Button(MvpLocale.T("continue_search"), GUILayout.Height(32)))
         {
             CloseMissionVan();
             GUILayout.EndArea();
@@ -698,11 +792,54 @@ public class MvpHud : MonoBehaviour
                 GetItemIcon(slot == null || slot.IsEmpty ? MvpHotbarItemId.None : slot.itemId),
                 ScaleMode.ScaleToFit, true);
             GUI.Label(new Rect(rect.x + rect.width - 38, rect.y + rect.height - 22, 34, 16), qty, mutedStyle);
+
+            // Battery level bar for flashlight slot
+            if (slot != null && slot.itemId == MvpHotbarItemId.Flashlight)
+                DrawFlashlightBar(rect);
         }
 
-        GUI.Label(new Rect(startX, y - 24f, totalWidth, 22f),
-            "1-5切换  左键/H使用  回到事故车可取补给或提前返程",
-            mutedStyle);
+        DrawHealthBar(startX, y - 14f, totalWidth);
+    }
+
+    void DrawHealthBar(float x, float y, float width)
+    {
+        PlayerHealth localHealth = FindLocalPlayerHealth();
+        if (localHealth == null) return;
+
+        float hp = localHealth.CurrentHP.Value;
+        float maxHp = 100f;
+
+        if (hp < lastKnownHp)
+        {
+            damageFlashUntil = Time.time + 0.35f;
+            lastKnownHp = hp;
+        }
+        else if (hp > lastKnownHp)
+            lastKnownHp = hp;
+
+        float barH = 6f;
+        float fillW = width * Mathf.Clamp01(hp / maxHp);
+        GUI.DrawTexture(new Rect(x, y, width, barH), hpBarBg);
+        GUI.DrawTexture(new Rect(x, y, fillW, barH), hpBarFill);
+    }
+
+    void DrawFlashlightBar(Rect slotRect)
+    {
+        FlashlightController fl = null;
+        PlayerController[] controllers = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        foreach (var c in controllers)
+            if (c.IsOwner) { fl = c.GetComponent<FlashlightController>(); break; }
+        if (fl == null) return;
+
+        float normalized = fl.BatteryNormalized;
+        float barW = slotRect.width - 8f;
+        float barY = slotRect.y + slotRect.height - 8f;
+        Color barColor = normalized > 0.4f
+            ? new Color(0.85f, 0.60f, 0.19f, 0.9f)  // amber
+            : new Color(0.9f, 0.1f, 0.05f, 0.9f);    // red when low
+
+        GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW, 4), hpBarBg);
+        GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW * normalized, 4), MakeTexture(barColor));
     }
 
     void DrawFooterHint()
@@ -799,6 +936,8 @@ public class MvpHud : MonoBehaviour
         activeComputer = computer;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        ComputerCloseupCamera.Enter(computer.transform);
+        AudioManager.Instance?.PlayComputerOpen(computer.transform.position);
     }
 
     public static void OpenMissionVan(SchoolExitPoint van)
@@ -808,6 +947,7 @@ public class MvpHud : MonoBehaviour
         activeMissionVan = van;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        SetLocalPlayerHidden(true);
     }
 
     static void OpenSettings()
@@ -821,6 +961,7 @@ public class MvpHud : MonoBehaviour
 
     static void CloseComputer()
     {
+        ComputerCloseupCamera.Exit();
         activeComputer = null;
         RestoreGameplayCursor();
     }
@@ -829,7 +970,19 @@ public class MvpHud : MonoBehaviour
     {
         activeMissionVan = null;
         partialReturnConfirmVan = null;
+        SetLocalPlayerHidden(false);
         RestoreGameplayCursor();
+    }
+
+    static void SetLocalPlayerHidden(bool hidden)
+    {
+        PlayerController[] all = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        foreach (var c in all)
+            if (c.IsOwner && c.IsServer)
+            {
+                c.HiddenFromMonsters.Value = hidden;
+                break;
+            }
     }
 
     static void CloseSettings()
@@ -910,71 +1063,38 @@ public class MvpHud : MonoBehaviour
     {
         switch (itemId)
         {
-            case MvpHotbarItemId.Medkit:
-                return medkitIcon;
-            case MvpHotbarItemId.StunSpray:
-                return sprayIcon;
-            case MvpHotbarItemId.Decoy:
-                return decoyIcon;
-            case MvpHotbarItemId.Flashlight:
-                return flashlightIcon;
-            default:
-                return emptyIcon;
+            case MvpHotbarItemId.Flashlight: return flashlightIcon;
+            case MvpHotbarItemId.Battery: return decoyIcon; // reuse amber-toned icon for battery
+            default: return emptyIcon;
         }
     }
 
     static string GetShopItemLabel(MvpHotbarItemId itemId)
     {
-        switch (itemId)
+        return itemId switch
         {
-            case MvpHotbarItemId.Medkit:
-                return "回血药";
-            case MvpHotbarItemId.Decoy:
-                return "诱饵";
-            case MvpHotbarItemId.StunSpray:
-                return "定身喷雾";
-            case MvpHotbarItemId.Flashlight:
-                return "手电";
-            default:
-                return "道具";
-        }
+            MvpHotbarItemId.Flashlight => MvpLocale.T("flashlight"),
+            MvpHotbarItemId.Battery => MvpLocale.T("battery"),
+            _ => MvpLocale.T("flashlight")
+        };
     }
 
     static string GetHotbarStorageSummary(PlayerHotbar hotbar)
     {
-        if (hotbar == null)
-            return "热栏: 未找到本地玩家。";
+        if (hotbar == null) return "热栏: 未找到本地玩家。";
 
-        int usedSlots = 0;
-        int medkits = 0;
-        int decoys = 0;
-        int sprays = 0;
-        int flashlights = 0;
+        int usedSlots = 0, flashlights = 0, batteries = 0;
         for (int i = 0; i < PlayerHotbar.SlotCount; i++)
         {
             HotbarSlot slot = hotbar.GetSlot(i);
             if (slot == null || slot.IsEmpty) continue;
-
             usedSlots++;
-            switch (slot.itemId)
-            {
-                case MvpHotbarItemId.Medkit:
-                    medkits += slot.quantity;
-                    break;
-                case MvpHotbarItemId.Decoy:
-                    decoys += slot.quantity;
-                    break;
-                case MvpHotbarItemId.StunSpray:
-                    sprays += slot.quantity;
-                    break;
-                case MvpHotbarItemId.Flashlight:
-                    flashlights += slot.quantity;
-                    break;
-            }
+            if (slot.itemId == MvpHotbarItemId.Flashlight) flashlights += slot.quantity;
+            else if (slot.itemId == MvpHotbarItemId.Battery) batteries += slot.quantity;
         }
 
-        string watch = hotbar.HasWristwatchOwned ? "已佩戴工时表" : "未购工时表";
-        return $"热栏: {usedSlots}/{PlayerHotbar.SlotCount}格  回血药x{medkits} / 诱饵x{decoys} / 定身喷雾x{sprays} / 手电x{flashlights}  {watch}";
+        string watch = hotbar.HasWristwatchOwned ? MvpLocale.T("wristwatch_status_owned") : MvpLocale.T("wristwatch_status_none");
+        return MvpLocale.T("hotbar_summary", usedSlots, PlayerHotbar.SlotCount, flashlights, batteries, watch);
     }
 
     void EnsureStyles()
@@ -1028,14 +1148,31 @@ public class MvpHud : MonoBehaviour
             fontStyle = FontStyle.Bold,
             normal = { textColor = new Color(1f, 0.5f, 0.42f) }
         };
+
+        EnsureCrtTextures();
+
+        if (hpBarBg == null)
+        {
+            hpBarBg = MakeTexture(new Color(0.06f, 0.07f, 0.07f, 0.85f));
+            hpBarFill = MakeTexture(new Color(0.78f, 0.12f, 0.08f, 0.9f));
+            damageFlashTex = MakeTexture(new Color(0.9f, 0.05f, 0.02f, 0.35f));
+        }
+
+        MvpFontProvider.ApplyToStyle(panelStyle);
+        MvpFontProvider.ApplyToStyle(titleStyle);
+        MvpFontProvider.ApplyToStyle(labelStyle);
+        MvpFontProvider.ApplyToStyle(mutedStyle);
+        MvpFontProvider.ApplyToStyle(accentStyle);
+        MvpFontProvider.ApplyToStyle(warningStyle);
+        MvpFontProvider.ApplyToStyle(slotStyle);
+        MvpFontProvider.ApplyToStyle(selectedSlotStyle);
     }
 
     void EnsureIcons()
     {
         emptyIcon = MakeIcon(new Color(0.07f, 0.08f, 0.08f, 0.9f), new Color(0.24f, 0.28f, 0.26f), Color.clear, 0);
-        medkitIcon = MakeIcon(new Color(0.88f, 0.87f, 0.78f), new Color(0.78f, 0.06f, 0.04f), Color.white, 1);
-        decoyIcon = MakeIcon(new Color(0.95f, 0.63f, 0.16f), new Color(0.38f, 0.18f, 0.04f), new Color(0.9f, 0.08f, 0.05f), 2);
-        sprayIcon = MakeIcon(new Color(0.13f, 0.62f, 0.72f), new Color(0.02f, 0.08f, 0.1f), new Color(0.8f, 0.95f, 1f), 3);
+        // battery: amber cylinder shape
+        decoyIcon = MakeIcon(new Color(0.73f, 0.50f, 0.16f), new Color(0.45f, 0.28f, 0.05f), new Color(0.95f, 0.85f, 0.3f), 2);
         flashlightIcon = MakeIcon(new Color(0.18f, 0.2f, 0.19f), new Color(1f, 0.86f, 0.25f), new Color(0.03f, 0.035f, 0.04f), 4);
     }
 
@@ -1114,5 +1251,54 @@ public class MvpHud : MonoBehaviour
         texture.SetPixel(0, 0, color);
         texture.Apply();
         return texture;
+    }
+
+    void EnsureCrtTextures()
+    {
+        if (crtScanlineTex != null) return;
+
+        crtScanlineTex = new Texture2D(1, 4, TextureFormat.RGBA32, false);
+        crtScanlineTex.filterMode = FilterMode.Point;
+        crtScanlineTex.wrapMode = TextureWrapMode.Repeat;
+        crtScanlineTex.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.18f));
+        crtScanlineTex.SetPixel(0, 1, Color.clear);
+        crtScanlineTex.SetPixel(0, 2, Color.clear);
+        crtScanlineTex.SetPixel(0, 3, new Color(0f, 0f, 0f, 0.08f));
+        crtScanlineTex.Apply();
+
+        const int vigSize = 64;
+        crtVignetteTex = new Texture2D(vigSize, vigSize);
+        crtVignetteTex.filterMode = FilterMode.Bilinear;
+        for (int y = 0; y < vigSize; y++)
+        {
+            for (int x = 0; x < vigSize; x++)
+            {
+                float nx = (x / (float)(vigSize - 1)) * 2f - 1f;
+                float ny = (y / (float)(vigSize - 1)) * 2f - 1f;
+                float d = Mathf.Sqrt(nx * nx + ny * ny);
+                float alpha = Mathf.Clamp01((d - 0.6f) / 0.55f) * 0.7f;
+                crtVignetteTex.SetPixel(x, y, new Color(0f, 0f, 0f, alpha));
+            }
+        }
+        crtVignetteTex.Apply();
+
+        crtBezelTex = MakeTexture(new Color(0.035f, 0.04f, 0.037f, 1f));
+    }
+
+    void DrawCrtOverlay(Rect screenArea)
+    {
+        float bezel = 18f;
+        GUI.DrawTexture(new Rect(screenArea.x - bezel, screenArea.y - bezel,
+            screenArea.width + bezel * 2f, bezel), crtBezelTex);
+        GUI.DrawTexture(new Rect(screenArea.x - bezel, screenArea.yMax,
+            screenArea.width + bezel * 2f, bezel + 4f), crtBezelTex);
+        GUI.DrawTexture(new Rect(screenArea.x - bezel, screenArea.y,
+            bezel, screenArea.height), crtBezelTex);
+        GUI.DrawTexture(new Rect(screenArea.xMax, screenArea.y,
+            bezel, screenArea.height), crtBezelTex);
+
+        GUI.DrawTexture(screenArea, crtScanlineTex, ScaleMode.StretchToFill, true,
+            0f, Color.white, 0f, 0f);
+        GUI.DrawTexture(screenArea, crtVignetteTex, ScaleMode.StretchToFill);
     }
 }
