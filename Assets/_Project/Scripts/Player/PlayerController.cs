@@ -314,6 +314,42 @@ public class PlayerController : NetworkBehaviour
     public bool IsCrouching => isCrouching;
     public bool IsHiddenFromMonsters => HiddenFromMonsters.Value;
 
+    public void RestoreControlAt(Vector3 position, Quaternion rotation)
+    {
+        bool hadController = cc != null;
+        if (hadController)
+            cc.enabled = false;
+
+        transform.SetPositionAndRotation(position, rotation);
+
+        velocity = Vector3.zero;
+        isSprinting = false;
+        isCrouching = false;
+        SpeedMultiplier = 1f;
+        IsExhausted = false;
+        Stamina = maxStamina;
+
+        if (cc != null)
+        {
+            cc.height = standHeight;
+            cc.center = new Vector3(0, cc.height / 2f, 0);
+            cc.enabled = true;
+        }
+
+        UpdateCrouchCamera(true);
+
+        if (IsOwner)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        if (IsServer)
+            HiddenFromMonsters.Value = false;
+        else if (IsOwner)
+            SetHiddenFromMonstersServerRpc(false);
+    }
+
     public void SetHiddenFromMonsters(bool hidden, Vector3 hidePosition, Quaternion hideRotation)
     {
         if (IsOwner)
