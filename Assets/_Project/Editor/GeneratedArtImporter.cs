@@ -17,12 +17,19 @@ public static class GeneratedArtImporter
         public readonly string ModelPath;
         public readonly string PrefabName;
         public readonly Vector3 GalleryPosition;
+        public readonly Vector3 PrefabScale;
 
         public AssetSpec(string modelPath, string prefabName, Vector3 galleryPosition)
+            : this(modelPath, prefabName, galleryPosition, Vector3.one)
+        {
+        }
+
+        public AssetSpec(string modelPath, string prefabName, Vector3 galleryPosition, Vector3 prefabScale)
         {
             ModelPath = modelPath;
             PrefabName = prefabName;
             GalleryPosition = galleryPosition;
+            PrefabScale = prefabScale;
         }
 
         public string PrefabPath => $"{PrefabFolder}/{PrefabName}.prefab";
@@ -41,7 +48,8 @@ public static class GeneratedArtImporter
         new AssetSpec(
             "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Worker_Cheap_Outsourced_Uniform.fbx",
             "ASV4_WorkerCheapOutsourcedUniform",
-            new Vector3(-5f, 0f, -4f)),
+            new Vector3(-5f, 0f, -4f),
+            Vector3.one * 1.08f),
         new AssetSpec(
             "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Monster_Homework_Debt_Collector.fbx",
             "ASV4_MonsterHomeworkDebtCollector",
@@ -227,7 +235,7 @@ public static class GeneratedArtImporter
         modelInstance.transform.SetParent(wrapper.transform, false);
         modelInstance.transform.localPosition = Vector3.zero;
         modelInstance.transform.localRotation = Quaternion.identity;
-        modelInstance.transform.localScale = Vector3.one;
+        modelInstance.transform.localScale = spec.PrefabScale;
 
         foreach (var renderer in wrapper.GetComponentsInChildren<Renderer>())
         {

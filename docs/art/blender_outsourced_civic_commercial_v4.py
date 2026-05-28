@@ -198,14 +198,14 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_right_wall", (5.2, 0.4, 1.48), (0.08, 3.4, 1.48), m["wall_shadow"], coll, edge=0.008)
     cube("hq_ceiling_tiles", (0, 0, 2.92), (5.12, 3.72, 0.035), m["metal"], coll, edge=0.003)
 
-    cube("hq_counter_front", (-1.35, 2.72, 0.54), (1.45, 0.32, 0.42), m["wood"], coll, edge=0.008)
-    cube("hq_counter_top", (-1.35, 2.40, 0.96), (1.52, 0.14, 0.045), m["metal"], coll, edge=0.004)
-    cube("hq_crt_body", (-1.35, 2.22, 1.30), (0.46, 0.30, 0.30), m["metal"], coll, edge=0.012)
-    cube("hq_crt_screen", (-1.35, 1.90, 1.31), (0.34, 0.022, 0.19), m["terminal"], coll, edge=0.004)
-    txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.875, 1.61), (math.radians(90), 0, 0), 0.085, m["terminal"], coll)
-    cube("hq_keyboard_keys", (-1.35, 2.16, 1.01), (0.52, 0.16, 0.020), m["black"], coll, edge=0.002)
+    cube("hq_counter_front", (-1.35, 2.72, 0.40), (1.45, 0.32, 0.32), m["wood"], coll, edge=0.008)
+    cube("hq_counter_top", (-1.35, 2.40, 0.76), (1.52, 0.14, 0.045), m["metal"], coll, edge=0.004)
+    cube("hq_crt_body", (-1.35, 2.22, 1.10), (0.44, 0.28, 0.24), m["metal"], coll, edge=0.012)
+    cube("hq_crt_screen", (-1.35, 1.92, 1.10), (0.32, 0.022, 0.15), m["terminal"], coll, edge=0.004)
+    txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.895, 1.24), (math.radians(90), 0, 0), 0.072, m["terminal"], coll)
+    cube("hq_keyboard_keys", (-1.35, 2.16, 0.84), (0.52, 0.16, 0.020), m["black"], coll, edge=0.002)
     for i in range(6):
-        cube(f"hq_keyboard_key_row_{i}", (-1.58 + i * 0.09, 2.02, 1.035), (0.025, 0.012, 0.006), m["paper_dark"], coll, edge=0)
+        cube(f"hq_keyboard_key_row_{i}", (-1.58 + i * 0.09, 2.02, 0.865), (0.025, 0.012, 0.006), m["paper_dark"], coll, edge=0)
 
     cube("hq_debt_board", (2.05, 3.70, 1.56), (1.28, 0.035, 0.78), m["debt"], coll, edge=0.005)
     txt("hq_debt_board_text", "OVERDUE\nTAKEOVER\nPRESSURE", (2.05, 3.655, 1.58), (math.radians(90), 0, 0), 0.15, m["paper"], coll)
@@ -228,10 +228,12 @@ def build_hq(m) -> bpy.types.Collection:
     for i in range(7):
         cube(f"hq_rollup_door_panel_{i}", (2.50, -3.72, 0.48 + i * 0.26), (1.72, 0.050, 0.095), m["metal"], coll, edge=0.002)
     cube("hq_green_departure_beacon", (2.50, -3.62, 2.30), (0.22, 0.035, 0.055), m["terminal"], coll, edge=0.006)
+    cube("hq_garage_amber_work_light", (2.50, -3.54, 2.12), (1.10, 0.035, 0.045), m["amber"], coll, edge=0.004)
+    cube("hq_garage_flood_lamp_housing", (2.50, -3.48, 2.22), (1.25, 0.055, 0.055), m["black"], coll, edge=0.004)
 
-    cube("hq_sofa_base", (3.42, 2.04, 0.34), (0.95, 0.34, 0.18), m["uniform"], coll, edge=0.006)
-    cube("hq_sofa_back", (3.42, 2.32, 0.72), (0.95, 0.08, 0.38), m["uniform"], coll, edge=0.006)
-    cube("hq_missing_cushion_dark", (3.05, 2.04, 0.56), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
+    cube("hq_sofa_base", (3.42, 2.04, 0.29), (0.95, 0.34, 0.14), m["uniform"], coll, edge=0.006)
+    cube("hq_sofa_back", (3.42, 2.32, 0.64), (0.95, 0.08, 0.34), m["uniform"], coll, edge=0.006)
+    cube("hq_missing_cushion_dark", (3.05, 2.04, 0.43), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
     for i in range(8):
         x = -4.45 + (i % 2) * 0.50
         z = 0.35 + (i // 2) * 0.33
