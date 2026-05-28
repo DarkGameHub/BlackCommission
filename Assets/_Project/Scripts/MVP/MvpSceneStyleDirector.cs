@@ -671,9 +671,16 @@ public static class MvpSceneStyleDirector
             new Vector3(0.045f, 0.52f, 0.08f), warningRed);
         slash.transform.rotation = Quaternion.Euler(0f, 0f, -25f);
 
+        CreateBlockingCollider("FallbackExteriorVanSolidBodyCollider", root,
+            center + new Vector3(0f, 0.03f, 0f), new Vector3(1.85f, 1.45f, 2.7f));
+        CreateBlockingCollider("FallbackExteriorVanSolidNoseCollider", root,
+            center + new Vector3(0f, -0.12f, -1.28f), new Vector3(1.55f, 0.85f, 0.72f));
+
         GameObject trigger = CreateInteractionTrigger("FallbackExteriorVanDepartureTrigger", root,
-            center + new Vector3(0f, 0.1f, 0f), new Vector3(2.65f, 1.85f, 3.35f));
+            center + new Vector3(1.35f, 0.1f, 0f), new Vector3(0.95f, 1.85f, 3.35f));
         trigger.AddComponent<OfficeDepartureVan>();
+        CreateBox("FallbackExteriorVanBoardingPad", root, center + new Vector3(1.35f, -0.71f, 0f),
+            new Vector3(0.95f, 0.025f, 3.1f), terminalGreen);
     }
 
     static void BuildSchoolStyle()
@@ -725,7 +732,9 @@ public static class MvpSceneStyleDirector
 
         CreateSchoolRouteComplexity(root.transform, coldPaint, warningRed, paper, dark);
         CreateExpandedSchoolPlayLayout(root.transform, coldPaint, warningRed, paper, dark, exitGreen);
+        CreateSchoolReadableRoomDressing(root.transform, coldPaint, warningRed, paper, dark, exitGreen);
         CreateBonusEvidenceItem(root.transform, paper, warningRed);
+        CreateWrongHomeworkDecoys(root.transform, paper, warningRed);
         CreateHidingLocker(root.transform, new Vector3(-4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, 90f, 0f), coldPaint, warningRed);
         CreateHidingLocker(root.transform, new Vector3(4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, -90f, 0f), coldPaint, warningRed);
         CreateHidingLocker(root.transform, new Vector3(-10.55f, 0.95f, 2.1f), Quaternion.identity, coldPaint, warningRed);
@@ -758,6 +767,9 @@ public static class MvpSceneStyleDirector
         GameObject southWall = GameObject.Find("Wall_South");
         if (southWall != null)
             southWall.SetActive(false);
+        DisableObjectIfPresent("Wall_South_LeftOfEntrance");
+        DisableObjectIfPresent("Wall_South_RightOfEntrance");
+        DisableObjectIfPresent("Wall_South_EntranceHeader");
 
         GameObject spawn = GameObject.Find("PlayerSpawnPoint");
         if (spawn != null)
@@ -780,10 +792,10 @@ public static class MvpSceneStyleDirector
         CreateBlockingCollider("SchoolExteriorRightFenceCollider", root,
             new Vector3(5.35f, 0.9f, -12.4f), new Vector3(0.3f, 1.8f, 7.7f));
 
-        CreateSchoolObstacle("SchoolSouthWall_LeftOfDoor", root, new Vector3(-7.1f, 1.55f, -9f),
-            new Vector3(9.8f, 3.1f, 0.28f), coldPaint);
-        CreateSchoolObstacle("SchoolSouthWall_RightOfDoor", root, new Vector3(7.1f, 1.55f, -9f),
-            new Vector3(9.8f, 3.1f, 0.28f), coldPaint);
+        CreateSchoolObstacle("SchoolSouthWall_LeftOfDoor", root, new Vector3(-7.45f, 1.55f, -9f),
+            new Vector3(9.1f, 3.1f, 0.28f), coldPaint);
+        CreateSchoolObstacle("SchoolSouthWall_RightOfDoor", root, new Vector3(7.45f, 1.55f, -9f),
+            new Vector3(9.1f, 3.1f, 0.28f), coldPaint);
         CreateSchoolObstacle("SchoolSouthWall_DoorHeader", root, new Vector3(0f, 2.75f, -9f),
             new Vector3(3.7f, 0.75f, 0.28f), coldPaint);
 
@@ -822,6 +834,13 @@ public static class MvpSceneStyleDirector
             SodiumAmberPale, 1.3f, 5.2f);
         CreatePointLight("SchoolExteriorVanSafetyLamp", root, new Vector3(-1.25f, 1.35f, -12.85f),
             DispatchGreen, 0.62f, 4.2f);
+    }
+
+    static void DisableObjectIfPresent(string name)
+    {
+        GameObject go = GameObject.Find(name);
+        if (go != null)
+            go.SetActive(false);
     }
 
     static void CreateSchoolRouteComplexity(Transform root, Material coldPaint, Material warningRed, Material paper, Material dark)
@@ -987,6 +1006,124 @@ public static class MvpSceneStyleDirector
             SodiumAmberPale, 0.42f, 3.8f);
     }
 
+    static void CreateSchoolReadableRoomDressing(
+        Transform root,
+        Material coldPaint,
+        Material warningRed,
+        Material paper,
+        Material dark,
+        Material exitGreen)
+    {
+        Material softShadow = MakeMaterial(DeadRubberSoft);
+        Material shelfEdge = MakeOfficeMaterial("School_ShelfEdgeRubber", DeadRubber, CivicTealShadow, OfficePattern.Scratched);
+
+        CreateRoomDoorMarker(root, "Records", new Vector3(-5.95f, 1.45f, 0.8f), Quaternion.Euler(0f, 90f, 0f),
+            "RECORDS", warningRed, paper, dark);
+        CreateRoomDoorMarker(root, "LostProperty", new Vector3(5.95f, 1.45f, -3.95f), Quaternion.Euler(0f, -90f, 0f),
+            "LOST\nPROPERTY", exitGreen, paper, dark);
+        CreateRoomDoorMarker(root, "DebtOffice", new Vector3(6.05f, 1.45f, 4.0f), Quaternion.Euler(0f, -90f, 0f),
+            "HOMEWORK\nDEBT", warningRed, paper, dark);
+
+        AddShelfRun(root, "WestRecordsNorth", new Vector3(-10.1f, 1.07f, 2.6f), true, 2.3f, dark, shelfEdge, paper, warningRed);
+        AddShelfRun(root, "WestRecordsSouth", new Vector3(-10.1f, 1.07f, -1.85f), true, 2.3f, dark, shelfEdge, paper, warningRed);
+        AddShelfRun(root, "WestRecordsSide", new Vector3(-9.05f, 1.07f, 0.32f), false, 2.6f, dark, shelfEdge, paper, warningRed);
+        AddShelfRun(root, "EastLostPropertyA", new Vector3(7.35f, 1.08f, -5.85f), true, 3.15f, dark, shelfEdge, paper, exitGreen);
+        AddShelfRun(root, "EastLostPropertyB", new Vector3(10.1f, 1.08f, -4.05f), false, 2.9f, dark, shelfEdge, paper, exitGreen);
+
+        CreateBox("CafeteriaCart_Handle", root, new Vector3(-4.95f, 0.86f, -2.78f),
+            new Vector3(0.08f, 0.62f, 0.72f), dark).transform.rotation = Quaternion.Euler(0f, -17f, 0f);
+        CreateBox("CafeteriaCart_ServiceTray", root, new Vector3(-4.2f, 0.89f, -2.85f),
+            new Vector3(1.18f, 0.08f, 0.47f), paper).transform.rotation = Quaternion.Euler(0f, -17f, 0f);
+        CreateCylinder("CafeteriaCart_WheelA", root, new Vector3(-4.82f, 0.2f, -3.12f),
+            Quaternion.Euler(90f, 0f, 0f), new Vector3(0.12f, 0.045f, 0.12f), softShadow);
+        CreateCylinder("CafeteriaCart_WheelB", root, new Vector3(-3.58f, 0.2f, -2.62f),
+            Quaternion.Euler(90f, 0f, 0f), new Vector3(0.12f, 0.045f, 0.12f), softShadow);
+
+        CreateBox("FallenNoticeBoard_PaperFace", root, new Vector3(-2.9f, 0.78f, -0.55f),
+            new Vector3(1.55f, 0.035f, 0.72f), paper).transform.rotation = Quaternion.Euler(0f, 24f, 10f);
+        CreateBox("FallenNoticeBoard_Stamp", root, new Vector3(-2.45f, 0.86f, -0.38f),
+            new Vector3(0.42f, 0.04f, 0.16f), warningRed).transform.rotation = Quaternion.Euler(0f, 24f, 10f);
+        CreateBox("FallenNoticeBoard_Kickstand", root, new Vector3(-3.38f, 0.38f, -0.95f),
+            new Vector3(0.08f, 0.82f, 0.08f), dark).transform.rotation = Quaternion.Euler(22f, 24f, -16f);
+
+        CreateBox("DebtOfficeDeskGreenLampBase", root, SchoolNotebookPosition + new Vector3(-0.48f, 0.12f, -0.18f),
+            new Vector3(0.22f, 0.08f, 0.18f), dark);
+        CreateBox("DebtOfficeDeskGreenLampShade", root, SchoolNotebookPosition + new Vector3(-0.48f, 0.36f, -0.18f),
+            new Vector3(0.38f, 0.12f, 0.24f), exitGreen);
+        CreatePointLight("DebtOfficeDeskLampGlow", root, SchoolNotebookPosition + new Vector3(-0.48f, 0.58f, -0.18f),
+            DispatchGreen, 0.52f, 2.6f);
+        for (int i = 0; i < 6; i++)
+        {
+            CreateBox($"DebtOfficeDeskPaperStack_{i + 1}", root,
+                SchoolNotebookPosition + new Vector3(-0.18f + i * 0.11f, 0.09f + i * 0.012f, 0.22f + (i % 2) * 0.08f),
+                new Vector3(0.28f, 0.016f, 0.18f), i == 2 ? warningRed : paper)
+                .transform.rotation = Quaternion.Euler(0f, -7f + i * 5f, 0f);
+        }
+
+        CreateBox("MainHallLowRiskRoutePlaque", root, new Vector3(-1.58f, 0.055f, -0.85f),
+            new Vector3(0.8f, 0.022f, 0.12f), exitGreen).transform.rotation = Quaternion.Euler(0f, -34f, 0f);
+        CreateBox("MainHallHighRiskRoutePlaque", root, new Vector3(1.58f, 0.055f, -0.85f),
+            new Vector3(0.8f, 0.022f, 0.12f), warningRed).transform.rotation = Quaternion.Euler(0f, 34f, 0f);
+    }
+
+    static void CreateRoomDoorMarker(
+        Transform root,
+        string id,
+        Vector3 position,
+        Quaternion rotation,
+        string label,
+        Material sign,
+        Material paper,
+        Material dark)
+    {
+        GameObject frame = CreateBox($"School{id}DoorFrame", root, position,
+            new Vector3(0.12f, 1.85f, 1.62f), dark);
+        frame.transform.rotation = rotation;
+        GameObject signPanel = CreateBox($"School{id}SignPanel", root, position + Vector3.up * 0.72f,
+            new Vector3(0.035f, 0.34f, 1.05f), sign);
+        signPanel.transform.rotation = rotation;
+        CreateText(label, root, position + Vector3.up * 0.73f + rotation * new Vector3(-0.035f, 0f, 0f),
+            rotation * Quaternion.Euler(0f, -90f, 0f), 0.105f, AgedPaper);
+        CreateBox($"School{id}PaperNotice", root, position + Vector3.down * 0.08f,
+            new Vector3(0.035f, 0.36f, 0.28f), paper).transform.rotation = rotation;
+    }
+
+    static void AddShelfRun(
+        Transform root,
+        string id,
+        Vector3 center,
+        bool alongX,
+        float length,
+        Material body,
+        Material edge,
+        Material paper,
+        Material accent)
+    {
+        for (int level = 0; level < 3; level++)
+        {
+            Vector3 levelOffset = Vector3.up * (-0.48f + level * 0.42f);
+            Vector3 shelfScale = alongX
+                ? new Vector3(length * 0.92f, 0.055f, 0.36f)
+                : new Vector3(0.36f, 0.055f, length * 0.92f);
+            CreateBox($"{id}_ShelfBoard_{level + 1}", root, center + levelOffset, shelfScale, edge);
+        }
+
+        int boxCount = Mathf.Max(3, Mathf.RoundToInt(length * 2f));
+        for (int i = 0; i < boxCount; i++)
+        {
+            float t = boxCount == 1 ? 0f : Mathf.Lerp(-0.42f, 0.42f, i / (float)(boxCount - 1));
+            Vector3 axisOffset = alongX ? new Vector3(t * length, 0f, 0f) : new Vector3(0f, 0f, t * length);
+            Vector3 boxSize = alongX
+                ? new Vector3(0.26f, 0.18f + (i % 2) * 0.08f, 0.18f)
+                : new Vector3(0.18f, 0.18f + (i % 2) * 0.08f, 0.26f);
+            CreateBox($"{id}_LabeledBox_{i + 1}", root, center + axisOffset + Vector3.up * (-0.22f + (i % 3) * 0.42f),
+                boxSize, i % 4 == 0 ? accent : paper);
+        }
+
+        CreateBox($"{id}_BackShadow", root, center + Vector3.up * 0.05f,
+            alongX ? new Vector3(length, 1.18f, 0.035f) : new Vector3(0.035f, 1.18f, length), body);
+    }
+
     static void RefreshSchoolMonsterPatrolRoute(Transform root)
     {
         Vector3[] positions =
@@ -1086,9 +1223,9 @@ public static class MvpSceneStyleDirector
         CreateBlockingCollider("SchoolEastSafetyWallCollider", root,
             new Vector3(12.18f, 1.55f, 0f), new Vector3(0.36f, 3.1f, 18.6f));
         CreateBlockingCollider("SchoolEntranceLeftSafetyWallCollider", root,
-            new Vector3(-6.65f, 1.55f, -9.18f), new Vector3(10.7f, 3.1f, 0.36f));
+            new Vector3(-7.45f, 1.55f, -9.18f), new Vector3(9.1f, 3.1f, 0.36f));
         CreateBlockingCollider("SchoolEntranceRightSafetyWallCollider", root,
-            new Vector3(6.65f, 1.55f, -9.18f), new Vector3(10.7f, 3.1f, 0.36f));
+            new Vector3(7.45f, 1.55f, -9.18f), new Vector3(9.1f, 3.1f, 0.36f));
         CreateBlockingCollider("SchoolExteriorFarSafetyFenceCollider", root,
             new Vector3(0f, 1f, -16.35f), new Vector3(11.1f, 2f, 0.42f));
         CreateBlockingCollider("SchoolExteriorLeftSafetyFenceCollider", root,
@@ -1121,6 +1258,73 @@ public static class MvpSceneStyleDirector
         ledger.AddComponent<SchoolBonusEvidenceItem>();
         CreateBox("OverdueLedgerStamp", ledger.transform, ledger.transform.position + new Vector3(0.16f, 0.07f, -0.05f),
             new Vector3(0.24f, 0.025f, 0.16f), warningRed);
+    }
+
+    static void CreateWrongHomeworkDecoys(Transform root, Material paper, Material warningRed)
+    {
+        if (GameObject.Find("WrongHomeworkDecoy_LostProperty") != null) return;
+
+        Vector3[] positions =
+        {
+            new Vector3(8.42f, 0.92f, -3.72f),
+            new Vector3(-3.85f, 0.84f, 3.62f),
+            new Vector3(1.2f, 0.62f, -1.92f)
+        };
+        Quaternion[] rotations =
+        {
+            Quaternion.Euler(0f, -18f, 0f),
+            Quaternion.Euler(0f, 22f, 0f),
+            Quaternion.Euler(0f, 51f, 0f)
+        };
+        string[] names =
+        {
+            "WrongHomeworkDecoy_LostProperty",
+            "WrongHomeworkDecoy_ClassroomPile",
+            "WrongHomeworkDecoy_MainHallForms"
+        };
+
+        for (int i = 0; i < positions.Length; i++)
+            CreateWrongHomeworkDecoy(names[i], root, positions[i], rotations[i], paper, warningRed);
+    }
+
+    static void CreateWrongHomeworkDecoy(
+        string name,
+        Transform root,
+        Vector3 position,
+        Quaternion rotation,
+        Material paper,
+        Material warningRed)
+    {
+        var decoy = new GameObject(name);
+        decoy.transform.SetParent(root, false);
+        decoy.transform.SetPositionAndRotation(position, rotation);
+
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_MissingHomeworkNotebook");
+        if (prefab != null)
+        {
+            GameObject visual = Object.Instantiate(prefab, decoy.transform);
+            visual.name = $"{name}_ASV4Visual";
+            visual.transform.localPosition = Vector3.zero;
+            visual.transform.localRotation = Quaternion.identity;
+            visual.transform.localScale = Vector3.one * 0.72f;
+            foreach (Collider childCollider in visual.GetComponentsInChildren<Collider>())
+                childCollider.enabled = false;
+        }
+        else
+        {
+            CreateBox($"{name}_Paper", decoy.transform, position, new Vector3(0.55f, 0.06f, 0.36f), paper);
+            CreateBox($"{name}_RedStamp", decoy.transform, position + new Vector3(0.14f, 0.045f, -0.08f),
+                new Vector3(0.18f, 0.025f, 0.12f), warningRed);
+        }
+
+        var collider = decoy.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
+        collider.size = new Vector3(1.7f, 1.25f, 1.45f);
+        collider.center = new Vector3(0f, 0.48f, 0f);
+        decoy.AddComponent<WrongHomeworkItem>();
+
+        CreateBox($"{name}_LooseRedTab", decoy.transform, position + rotation * new Vector3(0.24f, 0.045f, -0.12f),
+            new Vector3(0.18f, 0.025f, 0.1f), warningRed).transform.rotation = rotation;
     }
 
     static GameObject CreateBox(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
@@ -1761,8 +1965,14 @@ public static class MvpSceneStyleDirector
         slash.transform.rotation = Quaternion.Euler(0f, 0f, -25f);
 
         GameObject trigger = CreateInteractionTrigger("DispatchVanDepartureTrigger", root,
-            new Vector3(2.65f, 0.92f, -2.52f), new Vector3(2.65f, 1.85f, 3.35f));
+            new Vector3(2.65f, 0.86f, -0.85f), new Vector3(3.8f, 1.8f, 0.95f));
         trigger.AddComponent<OfficeDepartureVan>();
+        CreateBlockingCollider("DispatchVanSolidBodyCollider", root,
+            new Vector3(2.65f, 0.86f, -2.35f), new Vector3(1.9f, 1.45f, 2.7f));
+        CreateBlockingCollider("DispatchVanSolidNoseCollider", root,
+            new Vector3(2.65f, 0.68f, -3.52f), new Vector3(1.55f, 0.85f, 0.78f));
+        CreateBox("DispatchVanBoardingPad", root, new Vector3(2.65f, 0.13f, -0.86f),
+            new Vector3(3.65f, 0.025f, 0.82f), terminalGreen);
 
         var beaconGo = new GameObject("DispatchVanSicklyBeacon");
         beaconGo.transform.SetParent(root, false);
@@ -1793,11 +2003,13 @@ public static class MvpSceneStyleDirector
         van.transform.localPosition = new Vector3(2.65f, 0.08f, -6.35f);
         van.transform.localRotation = Quaternion.identity;
         van.transform.localScale = Vector3.one;
+        ConfigureGeneratedDepartureVan(van);
+        PatchGeneratedVanLeftSideVisual(root, van.transform.position, terminalGreen);
 
         if (van.GetComponentInChildren<OfficeDepartureVan>() == null)
         {
             GameObject trigger = CreateInteractionTrigger("DispatchVanASV4DepartureTrigger", root,
-                new Vector3(2.65f, 0.92f, -6.35f), new Vector3(2.8f, 1.9f, 3.5f));
+                new Vector3(2.65f, 0.86f, -4.93f), new Vector3(4.35f, 1.85f, 0.95f));
             trigger.AddComponent<OfficeDepartureVan>();
         }
 
@@ -1826,6 +2038,66 @@ public static class MvpSceneStyleDirector
         CreateBox("DispatchVanASV4RoutePickupMark", root, new Vector3(2.65f, 0.1f, -6.35f),
             new Vector3(0.28f, 0.018f, 2.7f), terminalGreen);
         return true;
+    }
+
+    static void ConfigureGeneratedDepartureVan(GameObject van)
+    {
+        if (van == null) return;
+
+        if (van.TryGetComponent<BoxCollider>(out var boardingTrigger))
+        {
+            boardingTrigger.isTrigger = true;
+            boardingTrigger.center = new Vector3(0f, 0.78f, 1.42f);
+            boardingTrigger.size = new Vector3(4.35f, 1.85f, 0.95f);
+        }
+
+        AddLocalBlockingCollider(van.transform, "ASV4DepartureVanSolidBodyCollider",
+            new Vector3(0f, 0.86f, 0f), new Vector3(3.55f, 1.45f, 1.7f));
+        AddLocalBlockingCollider(van.transform, "ASV4DepartureVanFrontBulkCollider",
+            new Vector3(-1.65f, 0.68f, 0f), new Vector3(0.55f, 0.92f, 1.35f));
+        AddLocalBlockingCollider(van.transform, "ASV4DepartureVanRearBulkCollider",
+            new Vector3(1.55f, 0.66f, 0f), new Vector3(0.36f, 0.82f, 1.28f));
+    }
+
+    static void PatchGeneratedVanLeftSideVisual(Transform root, Vector3 vanCenter, Material terminalGreen)
+    {
+        Material repairPanel = MakeOfficeMaterial("Office_ASV4VanLeftSideRepairPanel",
+            CivicTeal, DirtyBone, OfficePattern.Scratched);
+        Material repairDirt = MakeOfficeMaterial("Office_ASV4VanLeftSideLowerDirt",
+            DeadRubberSoft, DeadRubber, OfficePattern.Grime);
+        Material repairPaper = MakeOfficeMaterial("Office_ASV4VanLeftSidePaperLabel",
+            AgedPaper, DeadRubberSoft, OfficePattern.Warning);
+        Material repairDebt = MakeOfficeMaterial("Office_ASV4VanLeftSideDebtSlash",
+            StampRed, AgedPaper, OfficePattern.Warning);
+
+        CreateBox("DispatchVanASV4LeftSideSkinRepair", root, vanCenter + new Vector3(0f, 0.86f, -0.755f),
+            new Vector3(3.08f, 0.72f, 0.035f), repairPanel);
+        CreateBox("DispatchVanASV4LeftLowerDirtyPanel", root, vanCenter + new Vector3(-0.06f, 0.47f, -0.745f),
+            new Vector3(1.48f, 0.095f, 0.032f), repairDirt);
+        CreateBox("DispatchVanASV4LeftCompanyPatch", root, vanCenter + new Vector3(0.45f, 0.72f, -0.776f),
+            new Vector3(0.34f, 0.12f, 0.024f), terminalGreen);
+        CreateBox("DispatchVanASV4LeftServiceLabel", root, vanCenter + new Vector3(-0.12f, 0.58f, -0.778f),
+            new Vector3(0.42f, 0.06f, 0.024f), repairPaper);
+        GameObject slash = CreateBox("DispatchVanASV4LeftDebtSlash", root, vanCenter + new Vector3(1.04f, 0.79f, -0.78f),
+            new Vector3(0.27f, 0.045f, 0.026f), repairDebt);
+        slash.transform.rotation = Quaternion.Euler(0f, 0f, -10f);
+        CreateBox("DispatchVanASV4BoardingPad", root, vanCenter + new Vector3(0f, 0.03f, 1.42f),
+            new Vector3(4.05f, 0.025f, 0.82f), terminalGreen);
+    }
+
+    static void AddLocalBlockingCollider(Transform parent, string name, Vector3 localCenter, Vector3 size)
+    {
+        if (parent == null || parent.Find(name) != null) return;
+
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localCenter;
+        go.transform.localRotation = Quaternion.identity;
+        go.transform.localScale = Vector3.one;
+        var collider = go.AddComponent<BoxCollider>();
+        collider.isTrigger = false;
+        collider.center = Vector3.zero;
+        collider.size = size;
     }
 
     static bool CreateGeneratedOfficeVisualIfAvailable(Transform root)

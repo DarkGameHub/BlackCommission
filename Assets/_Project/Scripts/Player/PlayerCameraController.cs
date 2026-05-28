@@ -17,6 +17,9 @@ public class PlayerCameraController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        if (playerBody == null)
+            playerBody = transform.root;
+
         var cam = GetComponentInChildren<Camera>(true);
         var listener = GetComponentInChildren<AudioListener>(true);
 
@@ -76,7 +79,8 @@ public class PlayerCameraController : NetworkBehaviour
 
         verticalAngle = Mathf.Clamp(verticalAngle - mouseY, -verticalClamp, verticalClamp);
         transform.localRotation = Quaternion.Euler(verticalAngle, 0f, 0f);
-        playerBody.Rotate(Vector3.up * mouseX);
+        if (playerBody != null)
+            playerBody.Rotate(Vector3.up * mouseX);
     }
 
     public void AddSway(float amount)

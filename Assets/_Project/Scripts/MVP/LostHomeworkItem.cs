@@ -13,7 +13,9 @@ public class LostHomeworkItem : NetworkBehaviour, IInteractable
         {
             var manager = LostItemMissionManager.Instance;
             if (manager != null && manager.LostItemCollected.Value) return "";
-            return $"拾取{itemName}";
+            if (manager != null && manager.BonusEvidenceCollected.Value)
+                return $"拾取已核验{itemName}";
+            return $"拾取{itemName}（未核验登记）";
         }
     }
 

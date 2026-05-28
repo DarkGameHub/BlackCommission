@@ -274,8 +274,15 @@ public static class GeneratedArtImporter
 
         var trigger = wrapper.AddComponent<BoxCollider>();
         trigger.isTrigger = true;
-        trigger.center = new Vector3(0f, 0.9f, 0f);
-        trigger.size = new Vector3(4.4f, 2.0f, 2.4f);
+        trigger.center = new Vector3(0f, 0.78f, 1.42f);
+        trigger.size = new Vector3(4.35f, 1.85f, 0.95f);
+
+        AddVanBlockingCollider(wrapper.transform, "ASV4DepartureVanSolidBodyCollider",
+            new Vector3(0f, 0.86f, 0f), new Vector3(3.55f, 1.45f, 1.7f));
+        AddVanBlockingCollider(wrapper.transform, "ASV4DepartureVanFrontBulkCollider",
+            new Vector3(-1.65f, 0.68f, 0f), new Vector3(0.55f, 0.92f, 1.35f));
+        AddVanBlockingCollider(wrapper.transform, "ASV4DepartureVanRearBulkCollider",
+            new Vector3(1.55f, 0.66f, 0f), new Vector3(0.36f, 0.82f, 1.28f));
 
         wrapper.AddComponent<OfficeDepartureVan>();
 
@@ -289,6 +296,19 @@ public static class GeneratedArtImporter
         PrefabUtility.SaveAsPrefabAsset(wrapper, PlayableVanResourcesPath);
         Object.DestroyImmediate(wrapper);
         return true;
+    }
+
+    static void AddVanBlockingCollider(Transform parent, string name, Vector3 localCenter, Vector3 size)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.localPosition = localCenter;
+        go.transform.localRotation = Quaternion.identity;
+        go.transform.localScale = Vector3.one;
+        var collider = go.AddComponent<BoxCollider>();
+        collider.isTrigger = false;
+        collider.center = Vector3.zero;
+        collider.size = size;
     }
 
     static void EnsureFolder(string folderPath)
