@@ -103,7 +103,7 @@ public class PlayerController : NetworkBehaviour
             velocity = Vector3.zero;
             return;
         }
-        if (MvpHud.IsComputerOpen)
+        if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive)
         {
             isSprinting = false;
             velocity = Vector3.zero;

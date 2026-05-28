@@ -7,8 +7,9 @@ Run on Windows from Blender:
 Output:
   D:/AccidentSquad/Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4
 
-The target is production-ready stylized low-poly art: still cheap, dirty, and
-outsourced-civic in tone, but no longer a graybox or proof-of-style sketch.
+The target is production-ready stylized low-poly art: municipal debt noir,
+cheap, dirty, dispatch-readable, and no longer a graybox or proof-of-style
+sketch.
 """
 
 from __future__ import annotations
@@ -53,30 +54,30 @@ def material(name: str, color: tuple[float, float, float, float], emission: floa
 
 def palette() -> dict[str, bpy.types.Material]:
     return {
-        "wall": material("ASV4_institutional_wall_gray_green", (0.26, 0.34, 0.32, 1)),
-        "wall_shadow": material("ASV4_damp_wall_shadow", (0.12, 0.16, 0.15, 1)),
-        "floor": material("ASV4_worn_civic_vinyl", (0.19, 0.21, 0.19, 1)),
-        "floor_line": material("ASV4_dirty_floor_grout", (0.08, 0.09, 0.085, 1)),
-        "paper": material("ASV4_dirty_paper", (0.78, 0.75, 0.60, 1)),
-        "paper_dark": material("ASV4_old_notice_back", (0.50, 0.46, 0.34, 1)),
-        "cardboard": material("ASV4_cheap_cardboard", (0.40, 0.27, 0.13, 1)),
-        "wood": material("ASV4_second_hand_wood", (0.31, 0.19, 0.09, 1)),
-        "metal": material("ASV4_dead_metal", (0.055, 0.06, 0.055, 1)),
-        "metal_worn": material("ASV4_worn_blue_gray_metal", (0.30, 0.36, 0.36, 1)),
-        "black": material("ASV4_old_black_rubber", (0.012, 0.012, 0.010, 1)),
-        "terminal": material("ASV4_company_terminal_green", (0.03, 0.82, 0.34, 1), 0.55),
-        "exit": material("ASV4_exit_green", (0.05, 0.68, 0.28, 1), 0.35),
-        "debt": material("ASV4_debt_red", (0.56, 0.025, 0.02, 1), 0.05),
+        "wall": material("ASV4_civic_teal_wall", (0.184, 0.310, 0.294, 1)),
+        "wall_shadow": material("ASV4_deep_civic_teal_shadow", (0.090, 0.141, 0.133, 1)),
+        "floor": material("ASV4_dead_rubber_civic_floor", (0.137, 0.157, 0.145, 1)),
+        "floor_line": material("ASV4_dead_rubber_grout", (0.067, 0.078, 0.075, 1)),
+        "paper": material("ASV4_aged_paper", (0.839, 0.784, 0.608, 1)),
+        "paper_dark": material("ASV4_old_notice_back", (0.525, 0.478, 0.345, 1)),
+        "cardboard": material("ASV4_cheap_cardboard", (0.451, 0.314, 0.165, 1)),
+        "wood": material("ASV4_second_hand_wood", (0.290, 0.192, 0.098, 1)),
+        "metal": material("ASV4_dead_rubber_metal", (0.067, 0.078, 0.075, 1)),
+        "metal_worn": material("ASV4_worn_civic_teal_metal", (0.125, 0.208, 0.196, 1)),
+        "black": material("ASV4_dead_rubber_black", (0.067, 0.078, 0.075, 1)),
+        "terminal": material("ASV4_dispatch_green", (0.482, 0.812, 0.541, 1), 0.24),
+        "exit": material("ASV4_muted_dispatch_exit_green", (0.133, 0.349, 0.227, 1), 0.18),
+        "debt": material("ASV4_stamp_red_debt", (0.761, 0.227, 0.169, 1), 0.02),
         "eye": material("ASV4_monster_eye_red", (1.0, 0.025, 0.0, 1), 1.4),
-        "cyan": material("ASV4_school_cold_cyan", (0.40, 0.88, 0.82, 1), 0.42),
+        "cyan": material("ASV4_sickly_fluorescent_bone", (0.790, 0.761, 0.667, 1), 0.22),
         "skin": material("ASV4_worker_skin", (0.56, 0.40, 0.30, 1)),
-        "uniform": material("ASV4_worker_uniform_deep_green", (0.09, 0.18, 0.14, 1)),
-        "vest": material("ASV4_faded_safety_orange", (0.84, 0.40, 0.08, 1)),
-        "helmet": material("ASV4_scuffed_objective_yellow", (0.88, 0.68, 0.14, 1)),
-        "glass": material("ASV4_dirty_blue_green_glass", (0.035, 0.10, 0.12, 1)),
-        "van_body": material("ASV4_van_old_warm_white", (0.70, 0.69, 0.60, 1)),
-        "van_shadow": material("ASV4_van_dirty_lower_panel", (0.42, 0.43, 0.38, 1)),
-        "amber": material("ASV4_old_amber_light", (0.92, 0.46, 0.08, 1), 0.45),
+        "uniform": material("ASV4_worker_tired_fabric", (0.173, 0.196, 0.169, 1)),
+        "vest": material("ASV4_sodium_safety_vest", (0.851, 0.604, 0.192, 1)),
+        "helmet": material("ASV4_dirty_bone_helmet", (0.788, 0.761, 0.667, 1)),
+        "glass": material("ASV4_dirty_green_black_glass", (0.110, 0.235, 0.243, 1)),
+        "van_body": material("ASV4_civic_fleet_teal_van_body", (0.184, 0.310, 0.294, 1)),
+        "van_shadow": material("ASV4_van_dead_rubber_lower_panel", (0.137, 0.157, 0.145, 1)),
+        "amber": material("ASV4_old_sodium_amber_light", (0.851, 0.604, 0.192, 1), 0.32),
     }
 
 
@@ -198,19 +199,19 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_right_wall", (5.2, 0.4, 1.48), (0.08, 3.4, 1.48), m["wall_shadow"], coll, edge=0.008)
     cube("hq_ceiling_tiles", (0, 0, 2.92), (5.12, 3.72, 0.035), m["metal"], coll, edge=0.003)
 
-    cube("hq_counter_front", (-1.35, 2.72, 0.31), (1.45, 0.32, 0.58), m["wood"], coll, edge=0.008)
-    cube("hq_counter_top", (-1.35, 2.40, 0.62), (1.52, 0.14, 0.055), m["metal"], coll, edge=0.004)
-    cube("hq_crt_base", (-1.35, 2.20, 0.675), (0.52, 0.24, 0.040), m["metal"], coll, edge=0.004)
-    cube("hq_crt_neck", (-1.35, 2.20, 0.745), (0.10, 0.10, 0.13), m["metal"], coll, edge=0.004)
-    cube("hq_crt_body", (-1.35, 2.22, 0.91), (0.42, 0.26, 0.22), m["metal"], coll, edge=0.012)
-    cube("hq_crt_screen", (-1.35, 1.93, 0.91), (0.30, 0.022, 0.13), m["terminal"], coll, edge=0.004)
-    txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.905, 1.02), (math.radians(90), 0, 0), 0.064, m["terminal"], coll)
-    cube("hq_keyboard_keys", (-1.35, 2.16, 0.68), (0.48, 0.15, 0.018), m["black"], coll, edge=0.002)
+    cube("hq_counter_front", (-1.35, 2.72, 0.267), (1.45, 0.32, 0.58), m["wood"], coll, edge=0.008)
+    cube("hq_counter_top", (-1.35, 2.40, 0.585), (1.52, 0.14, 0.055), m["metal"], coll, edge=0.004)
+    cube("hq_crt_base", (-1.35, 2.20, 0.640), (0.52, 0.24, 0.040), m["metal"], coll, edge=0.004)
+    cube("hq_crt_neck", (-1.35, 2.20, 0.710), (0.10, 0.10, 0.13), m["metal"], coll, edge=0.004)
+    cube("hq_crt_body", (-1.35, 2.22, 0.875), (0.42, 0.26, 0.22), m["metal"], coll, edge=0.012)
+    cube("hq_crt_screen", (-1.35, 1.93, 0.875), (0.30, 0.022, 0.13), m["terminal"], coll, edge=0.004)
+    txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.905, 0.985), (math.radians(90), 0, 0), 0.064, m["terminal"], coll)
+    cube("hq_keyboard_keys", (-1.35, 2.16, 0.645), (0.48, 0.15, 0.018), m["black"], coll, edge=0.002)
     for i in range(6):
-        cube(f"hq_keyboard_key_row_{i}", (-1.56 + i * 0.082, 2.02, 0.705), (0.022, 0.011, 0.005), m["paper_dark"], coll, edge=0)
-    cube("hq_receipt_printer", (-1.92, 2.18, 0.70), (0.30, 0.20, 0.11), m["paper"], coll, edge=0.004)
-    cube("hq_receipt_trail_a", (-2.02, 1.98, 0.665), (0.18, 0.26, 0.012), m["paper"], coll, edge=0.001)
-    cube("hq_receipt_trail_b", (-2.04, 1.72, 0.665), (0.18, 0.24, 0.010), m["paper"], coll, rot=(0, 0, math.radians(7)), edge=0.001)
+        cube(f"hq_keyboard_key_row_{i}", (-1.56 + i * 0.082, 2.02, 0.670), (0.022, 0.011, 0.005), m["paper_dark"], coll, edge=0)
+    cube("hq_receipt_printer", (-1.92, 2.18, 0.665), (0.30, 0.20, 0.11), m["paper"], coll, edge=0.004)
+    cube("hq_receipt_trail_a", (-2.02, 1.98, 0.630), (0.18, 0.26, 0.012), m["paper"], coll, edge=0.001)
+    cube("hq_receipt_trail_b", (-2.04, 1.72, 0.630), (0.18, 0.24, 0.010), m["paper"], coll, rot=(0, 0, math.radians(7)), edge=0.001)
 
     cube("hq_debt_board", (2.05, 3.70, 1.56), (1.28, 0.035, 0.78), m["debt"], coll, edge=0.005)
     txt("hq_debt_board_text", "OVERDUE\nTAKEOVER\nPRESSURE", (2.05, 3.655, 1.58), (math.radians(90), 0, 0), 0.15, m["paper"], coll)
@@ -245,15 +246,17 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_garage_amber_work_light", (2.50, -3.54, 2.12), (1.10, 0.035, 0.045), m["amber"], coll, edge=0.004)
     cube("hq_garage_flood_lamp_housing", (2.50, -3.48, 2.22), (1.25, 0.055, 0.055), m["black"], coll, edge=0.004)
 
-    cube("hq_sofa_base", (3.42, 2.04, 0.20), (0.95, 0.34, 0.36), m["uniform"], coll, edge=0.006)
-    cube("hq_sofa_back", (3.42, 2.32, 0.46), (0.95, 0.08, 0.82), m["uniform"], coll, edge=0.006)
-    cube("hq_missing_cushion_dark", (3.05, 2.04, 0.39), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
-    cube("hq_office_chair_seat", (-1.35, 1.52, 0.32), (0.46, 0.38, 0.08), m["uniform"], coll, edge=0.004)
-    cube("hq_office_chair_back", (-1.35, 1.68, 0.62), (0.46, 0.08, 0.48), m["uniform"], coll, edge=0.004)
-    cube("hq_office_chair_stem", (-1.35, 1.52, 0.18), (0.07, 0.07, 0.28), m["metal"], coll, edge=0.003)
-    cube("hq_filing_cabinet_grounded", (-2.75, 3.32, 0.62), (0.44, 0.34, 1.20), m["metal_worn"], coll, edge=0.005)
+    cube("hq_sofa_contact_shadow", (3.42, 2.04, -0.010), (1.05, 0.40, 0.018), m["black"], coll, edge=0.001)
+    cube("hq_sofa_base", (3.42, 2.04, 0.158), (0.95, 0.34, 0.36), m["uniform"], coll, edge=0.006)
+    cube("hq_sofa_back", (3.42, 2.32, 0.388), (0.95, 0.08, 0.82), m["uniform"], coll, edge=0.006)
+    cube("hq_missing_cushion_dark", (3.05, 2.04, 0.338), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
+    cube("hq_office_chair_seat", (-1.35, 1.52, 0.30), (0.46, 0.38, 0.08), m["uniform"], coll, edge=0.004)
+    cube("hq_office_chair_back", (-1.35, 1.68, 0.58), (0.46, 0.08, 0.48), m["uniform"], coll, edge=0.004)
+    cube("hq_office_chair_stem", (-1.35, 1.52, 0.118), (0.07, 0.07, 0.28), m["metal"], coll, edge=0.003)
+    cube("hq_filing_cabinet_contact_shadow", (-2.75, 3.32, -0.010), (0.52, 0.40, 0.018), m["black"], coll, edge=0.001)
+    cube("hq_filing_cabinet_grounded", (-2.75, 3.32, 0.578), (0.44, 0.34, 1.20), m["metal_worn"], coll, edge=0.005)
     for i in range(3):
-        cube(f"hq_filing_cabinet_handle_{i}", (-2.75, 3.13, 0.95 - i * 0.26), (0.24, 0.010, 0.026), m["paper_dark"], coll, edge=0)
+        cube(f"hq_filing_cabinet_handle_{i}", (-2.75, 3.13, 0.91 - i * 0.26), (0.24, 0.010, 0.026), m["paper_dark"], coll, edge=0)
     for i in range(8):
         x = -4.45 + (i % 2) * 0.50
         z = 0.35 + (i // 2) * 0.33

@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,6 +9,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     [SerializeField] OfficeTaskDefinition demoTask;
     [SerializeField] string returnOfficeScene = "HQ";
     [SerializeField] bool allowNonNetworkSoloStart = false;
+    [SerializeField] float dispatchTransitSeconds = 8f;
 
     bool missionLaunching;
     public bool HasSelectedDemoTask => demoTask != null && MvpMissionRuntime.SelectedTask == demoTask;
@@ -32,7 +34,26 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
     }
 
-    public string InteractHint => "";
+    public string InteractHint
+    {
+        get
+        {
+            if (MvpPendingReward.HasPending)
+            {
+                if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !NetworkManager.Singleton.IsHost)
+                    return "等待房主领取结算";
+                return "打开委托终端: 领取结算";
+            }
+
+            if (MvpMissionRuntime.HasSelectedTask)
+                return "打开委托终端: 查看已锁定委托";
+
+            if (CompanyData.Current.CanShowTutorialAcquisition)
+                return "打开委托终端: 事务所收购文件";
+
+            return "打开委托终端";
+        }
+    }
 
     public void OnInteractStart(PlayerController player)
     {
@@ -80,14 +101,14 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
             if (allowNonNetworkSoloStart && CanStartDemoTask())
-                StartMissionLocal();
+                StartMissionLocalWithTransit();
             return;
         }
 
         if (!CanStartDemoTask()) return;
 
         if (NetworkManager.Singleton.IsHost)
-            StartMissionServerSide();
+            StartMissionServerSideWithTransit();
     }
 
     void QueueDemoTask()
@@ -95,18 +116,30 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         if (demoTask == null) return;
         if (!CanStartDemoTask()) return;
         MvpMissionRuntime.SelectMission(demoTask, returnOfficeScene);
+        if (IsServer && NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            SyncSelectedDemoTaskClientRpc();
     }
 
-    void StartMissionLocal()
+    void StartMissionLocalWithTransit()
     {
         if (demoTask == null) return;
         if (!CanStartDemoTask()) return;
+        if (missionLaunching) return;
+
         missionLaunching = true;
         MvpMissionRuntime.BeginMission(demoTask, returnOfficeScene);
-        SceneManager.LoadScene(demoTask.sceneName);
+        float duration = Mathf.Max(1.5f, dispatchTransitSeconds);
+        VanTransitOverlay.ShowOutbound(demoTask.title, demoTask.locationName, duration);
+        StartCoroutine(LoadMissionLocalAfterTransit(demoTask.sceneName, duration));
     }
 
-    void StartMissionServerSide()
+    IEnumerator LoadMissionLocalAfterTransit(string sceneName, float delaySeconds)
+    {
+        yield return new WaitForSecondsRealtime(delaySeconds);
+        SceneManager.LoadScene(sceneName);
+    }
+
+    void StartMissionServerSideWithTransit()
     {
         if (!IsServer || demoTask == null) return;
         if (!CanStartDemoTask()) return;
@@ -114,9 +147,34 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
         missionLaunching = true;
         MvpMissionRuntime.BeginMission(demoTask, returnOfficeScene);
+        ShowDispatchTransitClientRpc(
+            demoTask.title,
+            demoTask.locationName,
+            Mathf.Max(1.5f, dispatchTransitSeconds));
+        StartCoroutine(LoadMissionAfterTransit(demoTask.sceneName, Mathf.Max(1.5f, dispatchTransitSeconds)));
+    }
+
+    IEnumerator LoadMissionAfterTransit(string sceneName, float delaySeconds)
+    {
+        yield return new WaitForSecondsRealtime(delaySeconds);
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
-            NetworkManager.Singleton.SceneManager.LoadScene(demoTask.sceneName, LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
+    }
+
+    [ClientRpc]
+    void ShowDispatchTransitClientRpc(string taskTitle, string locationName, float durationSeconds)
+    {
+        if (demoTask != null)
+            MvpMissionRuntime.BeginMission(demoTask, returnOfficeScene);
+        VanTransitOverlay.ShowOutbound(taskTitle, locationName, durationSeconds);
+    }
+
+    [ClientRpc]
+    void SyncSelectedDemoTaskClientRpc(ClientRpcParams clientRpcParams = default)
+    {
+        if (demoTask != null)
+            MvpMissionRuntime.SelectMission(demoTask, returnOfficeScene);
     }
 
     bool CanStartDemoTask()
@@ -134,6 +192,16 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     void HandleClientConnected(ulong clientId)
     {
         BroadcastCompanyState();
+        if (!HasSelectedDemoTask) return;
+
+        var clientRpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new[] { clientId }
+            }
+        };
+        SyncSelectedDemoTaskClientRpc(clientRpcParams);
     }
 
     void BroadcastCompanyState(bool clearPendingReward = false)

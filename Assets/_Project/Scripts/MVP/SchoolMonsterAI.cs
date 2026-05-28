@@ -343,6 +343,9 @@ public class SchoolMonsterAI : NetworkBehaviour
         CreateVisualPrimitive(PrimitiveType.Sphere, "DebtCollector_Head", root.transform,
             new Vector3(0f, 1.85f, -0.02f), new Vector3(0.52f, 0.58f, 0.48f),
             Quaternion.identity, skin);
+        CreateVisualPrimitive(PrimitiveType.Cube, "ReceiptHeadBand", root.transform,
+            new Vector3(0f, 2.08f, -0.05f), new Vector3(0.62f, 0.18f, 0.055f),
+            Quaternion.Euler(-4f, 0f, 0f), paper);
         CreateVisualPrimitive(PrimitiveType.Cube, "DebtCollector_LeftArm", root.transform,
             new Vector3(-0.55f, 1.02f, -0.05f), new Vector3(0.16f, 1.2f, 0.16f),
             Quaternion.Euler(0f, 0f, 12f), coat);
@@ -352,6 +355,15 @@ public class SchoolMonsterAI : NetworkBehaviour
         CreateVisualPrimitive(PrimitiveType.Cube, "OverdueLedger", root.transform,
             new Vector3(0.2f, 1.08f, -0.34f), new Vector3(0.42f, 0.28f, 0.04f),
             Quaternion.Euler(8f, -8f, 0f), paper);
+        CreateVisualPrimitive(PrimitiveType.Cube, "LedgerRedStamp", root.transform,
+            new Vector3(0.2f, 1.08f, -0.375f), new Vector3(0.18f, 0.09f, 0.018f),
+            Quaternion.Euler(8f, -8f, 0f), eye);
+        CreateVisualPrimitive(PrimitiveType.Cube, "ReceiptTail_Left", root.transform,
+            new Vector3(-0.24f, 0.22f, 0.02f), new Vector3(0.12f, 0.62f, 0.035f),
+            Quaternion.Euler(0f, 0f, 8f), paper);
+        CreateVisualPrimitive(PrimitiveType.Cube, "ReceiptTail_Right", root.transform,
+            new Vector3(0.26f, 0.22f, 0.02f), new Vector3(0.12f, 0.54f, 0.035f),
+            Quaternion.Euler(0f, 0f, -7f), paper);
         CreateVisualPrimitive(PrimitiveType.Sphere, "LeftEye", root.transform,
             new Vector3(-0.11f, 1.9f, -0.25f), new Vector3(0.07f, 0.04f, 0.03f),
             Quaternion.identity, eye);

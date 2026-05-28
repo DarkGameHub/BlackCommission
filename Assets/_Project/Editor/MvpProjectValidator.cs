@@ -136,6 +136,9 @@ public static class MvpProjectValidator
             var returnSceneProp = so.FindProperty("returnOfficeScene");
             if (returnSceneProp == null || returnSceneProp.stringValue != "HQ")
                 Warning("OfficeComputer returnOfficeScene 应该是 HQ。", ref warnings);
+            var transitProp = so.FindProperty("dispatchTransitSeconds");
+            if (transitProp == null || transitProp.floatValue < 1f)
+                Warning("OfficeComputer dispatchTransitSeconds 应该至少 1 秒，用于车内转场。", ref warnings);
         }
 
         if (Object.FindFirstObjectByType<MvpHud>() == null)
@@ -193,6 +196,8 @@ public static class MvpProjectValidator
             Warning("学校场景缺少 spawn manager，玩家可能不会被传送到校门。", ref warnings);
         if (Object.FindFirstObjectByType<MvpHud>() == null)
             Warning("学校场景缺少 MVP_HUD。", ref warnings);
+        if (Object.FindFirstObjectByType<SchoolBonusEvidenceItem>() == null)
+            Warning("学校场景未保存可选目标 OverdueLedgerEvidence；运行时风格层会补一个，但建议重新跑 Setup School MVP 写入场景。", ref warnings);
 
         if (NavMesh.CalculateTriangulation().vertices.Length == 0)
             Warning("学校场景没有检测到已烘焙 NavMesh，怪物可能无法巡逻。", ref warnings);

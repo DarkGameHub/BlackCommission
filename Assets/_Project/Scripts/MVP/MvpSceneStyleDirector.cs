@@ -1,10 +1,30 @@
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.SceneManagement;
 
 public static class MvpSceneStyleDirector
 {
     const string OfficeRootName = "MVP_RuntimeStyle_Office_ExteriorDispatch";
     const string SchoolRootName = "MVP_RuntimeStyle_School";
+
+    static readonly Color CivicTeal = Rgb(0x2F, 0x4F, 0x4B);
+    static readonly Color CivicTealDark = Rgb(0x17, 0x24, 0x22);
+    static readonly Color CivicTealShadow = Rgb(0x20, 0x35, 0x32);
+    static readonly Color DeadRubber = Rgb(0x11, 0x14, 0x13);
+    static readonly Color DeadRubberSoft = Rgb(0x23, 0x28, 0x25);
+    static readonly Color AgedPaper = Rgb(0xD6, 0xC8, 0x9B);
+    static readonly Color AgedPaperDark = Rgb(0x86, 0x7A, 0x58);
+    static readonly Color CheapCardboard = Rgb(0x73, 0x50, 0x2A);
+    static readonly Color SecondHandWood = Rgb(0x4A, 0x31, 0x19);
+    static readonly Color DispatchGreen = Rgb(0x7B, 0xCF, 0x8A);
+    static readonly Color DispatchGreenDark = Rgb(0x22, 0x59, 0x3A);
+    static readonly Color StampRed = Rgb(0xC2, 0x3A, 0x2B);
+    static readonly Color StampRedDark = Rgb(0x63, 0x18, 0x14);
+    static readonly Color SodiumAmber = Rgb(0xD9, 0x9A, 0x31);
+    static readonly Color SodiumAmberPale = Rgb(0xE2, 0xC2, 0x78);
+    static readonly Color DirtyBone = Rgb(0xC9, 0xC2, 0xAA);
+    static readonly Color TiredFabric = Rgb(0x2C, 0x32, 0x2B);
+    static readonly Color OldGlass = Rgb(0x1C, 0x3C, 0x3E);
 
     enum OfficePattern
     {
@@ -60,31 +80,31 @@ public static class MvpSceneStyleDirector
             new Vector3(2.45f, -0.04f, -6.2f), new Vector3(5.75f, 0.22f, 4.65f));
         CreateOfficeBoundaryColliders(root.transform);
         ApplyOfficeAtmosphere();
-        Material stainedWall = MakeOfficeMaterial("Office_StainedWall", new Color(0.42f, 0.49f, 0.39f), new Color(0.2f, 0.24f, 0.18f), OfficePattern.Grime);
-        Material dirtyFloor = MakeOfficeMaterial("Office_WornFloor", new Color(0.16f, 0.18f, 0.15f), new Color(0.36f, 0.31f, 0.22f), OfficePattern.Tile);
-        Material paper = MakeOfficeMaterial("Office_DirtyPaper", new Color(0.78f, 0.75f, 0.58f), new Color(0.55f, 0.08f, 0.06f), OfficePattern.Notice);
-        Material warningRed = MakeOfficeMaterial("Office_DebtRed", new Color(0.58f, 0.035f, 0.025f), new Color(0.95f, 0.78f, 0.62f), OfficePattern.Warning);
-        Material terminalGreen = MakeOfficeMaterial("Office_TerminalGreen", new Color(0.04f, 0.62f, 0.25f), new Color(0.36f, 1f, 0.58f), OfficePattern.Scanline);
-        Material darkMetal = MakeOfficeMaterial("Office_DeadMetal", new Color(0.045f, 0.05f, 0.05f), new Color(0.18f, 0.2f, 0.18f), OfficePattern.Scratched);
-        Material tiredFabric = MakeOfficeMaterial("Office_TiredFabric", new Color(0.16f, 0.17f, 0.13f), new Color(0.08f, 0.09f, 0.07f), OfficePattern.Fabric);
-        Material cardboard = MakeOfficeMaterial("Office_CheapCardboard", new Color(0.43f, 0.29f, 0.14f), new Color(0.72f, 0.5f, 0.24f), OfficePattern.Cardboard);
-        Material wood = MakeOfficeMaterial("Office_SecondHandWood", new Color(0.28f, 0.18f, 0.09f), new Color(0.52f, 0.33f, 0.16f), OfficePattern.Wood);
-        Material cable = MakeMaterial(new Color(0.015f, 0.018f, 0.018f));
-        Material black = MakeMaterial(new Color(0.015f, 0.017f, 0.016f));
-        Material grime = MakeMaterial(new Color(0.08f, 0.11f, 0.08f));
-        Material oldTape = MakeMaterial(new Color(0.72f, 0.61f, 0.36f));
-        Material oldPlaster = MakeOfficeMaterial("Office_PeeledPlaster", new Color(0.68f, 0.62f, 0.48f), new Color(0.23f, 0.2f, 0.14f), OfficePattern.Grime);
-        Material columnRed = MakeOfficeMaterial("Office_DebtColumnPaint", new Color(0.32f, 0.08f, 0.065f), new Color(0.08f, 0.035f, 0.03f), OfficePattern.Scratched);
-        Material tileLight = MakeMaterial(new Color(0.48f, 0.46f, 0.36f));
-        Material tileDark = MakeMaterial(new Color(0.08f, 0.09f, 0.085f));
-        Material carpet = MakeOfficeMaterial("Office_ThreadbareCarpet", new Color(0.12f, 0.21f, 0.16f), new Color(0.04f, 0.08f, 0.06f), OfficePattern.Fabric);
-        Material garageConcrete = MakeOfficeMaterial("Office_GarageConcrete", new Color(0.19f, 0.21f, 0.19f), new Color(0.045f, 0.055f, 0.05f), OfficePattern.Grime);
-        Material bayDoor = MakeOfficeMaterial("Office_DentedBayDoor", new Color(0.13f, 0.16f, 0.145f), new Color(0.035f, 0.04f, 0.035f), OfficePattern.Scratched);
-        Material hazardStripe = MakeOfficeMaterial("Office_HazardStripe", new Color(0.78f, 0.58f, 0.12f), new Color(0.025f, 0.026f, 0.022f), OfficePattern.Warning);
-        Material vanBody = MakeOfficeMaterial("Office_CompanyVanBody", new Color(0.08f, 0.115f, 0.095f), new Color(0.27f, 0.42f, 0.28f), OfficePattern.Scratched);
-        Material vanGlass = MakeOfficeMaterial("Office_SmokedGlass", new Color(0.015f, 0.03f, 0.033f), new Color(0.07f, 0.18f, 0.15f), OfficePattern.Scanline);
-        Material rubber = MakeMaterial(new Color(0.008f, 0.009f, 0.008f));
-        Material headlight = MakeEmissiveMaterial(new Color(0.8f, 0.72f, 0.38f), new Color(1f, 0.86f, 0.38f), 1.2f);
+        Material stainedWall = MakeOfficeMaterial("Office_CivicTealWall", CivicTeal, CivicTealDark, OfficePattern.Grime);
+        Material dirtyFloor = MakeOfficeMaterial("Office_WornCivicFloor", DeadRubberSoft, CivicTealShadow, OfficePattern.Tile);
+        Material paper = MakeOfficeMaterial("Office_AgedPaper", AgedPaper, StampRedDark, OfficePattern.Notice);
+        Material warningRed = MakeOfficeMaterial("Office_StampRedDebt", StampRed, AgedPaper, OfficePattern.Warning);
+        Material terminalGreen = MakeOfficeMaterial("Office_DispatchGreen", DispatchGreenDark, DispatchGreen, OfficePattern.Scanline);
+        Material darkMetal = MakeOfficeMaterial("Office_DeadRubberMetal", DeadRubber, DeadRubberSoft, OfficePattern.Scratched);
+        Material tiredFabric = MakeOfficeMaterial("Office_TiredFabric", TiredFabric, DeadRubber, OfficePattern.Fabric);
+        Material cardboard = MakeOfficeMaterial("Office_CheapCardboard", CheapCardboard, AgedPaperDark, OfficePattern.Cardboard);
+        Material wood = MakeOfficeMaterial("Office_SecondHandWood", SecondHandWood, CheapCardboard, OfficePattern.Wood);
+        Material cable = MakeMaterial(DeadRubber);
+        Material black = MakeMaterial(DeadRubber);
+        Material grime = MakeMaterial(CivicTealDark);
+        Material oldTape = MakeMaterial(SodiumAmberPale);
+        Material oldPlaster = MakeOfficeMaterial("Office_PeeledPlaster", DirtyBone, CivicTealDark, OfficePattern.Grime);
+        Material columnRed = MakeOfficeMaterial("Office_DarkStampColumnPaint", StampRedDark, DeadRubber, OfficePattern.Scratched);
+        Material tileLight = MakeMaterial(DirtyBone);
+        Material tileDark = MakeMaterial(DeadRubberSoft);
+        Material carpet = MakeOfficeMaterial("Office_ThreadbareCarpet", TiredFabric, CivicTealDark, OfficePattern.Fabric);
+        Material garageConcrete = MakeOfficeMaterial("Office_GarageConcrete", DeadRubberSoft, DeadRubber, OfficePattern.Grime);
+        Material bayDoor = MakeOfficeMaterial("Office_DentedBayDoor", CivicTealShadow, DeadRubber, OfficePattern.Scratched);
+        Material hazardStripe = MakeOfficeMaterial("Office_SodiumHazardStripe", SodiumAmber, DeadRubber, OfficePattern.Warning);
+        Material vanBody = MakeOfficeMaterial("Office_CivicFleetVanBody", CivicTeal, DirtyBone, OfficePattern.Scratched);
+        Material vanGlass = MakeOfficeMaterial("Office_OldGlass", OldGlass, DeadRubber, OfficePattern.Scanline);
+        Material rubber = MakeMaterial(DeadRubber);
+        Material headlight = MakeEmissiveMaterial(SodiumAmberPale, SodiumAmberPale, 0.9f);
 
         BuildCleanReadableOfficeAndExterior(root.transform, stainedWall, dirtyFloor, paper, warningRed,
             terminalGreen, darkMetal, tiredFabric, cardboard, wood, garageConcrete, bayDoor, hazardStripe,
@@ -256,9 +276,9 @@ public static class MvpSceneStyleDirector
         Material rubber,
         Material headlight)
     {
-        Material exitGreen = MakeEmissiveMaterial(new Color(0.05f, 0.55f, 0.22f), new Color(0.3f, 1f, 0.55f), 0.9f);
-        Material lightPanel = MakeEmissiveMaterial(new Color(0.82f, 0.78f, 0.58f), new Color(1f, 0.92f, 0.62f), 0.55f);
-        Material asphalt = MakeOfficeMaterial("Office_CleanExteriorAsphalt", new Color(0.11f, 0.12f, 0.115f), new Color(0.21f, 0.22f, 0.2f), OfficePattern.Grime);
+        Material exitGreen = MakeEmissiveMaterial(DispatchGreenDark, DispatchGreen, 0.45f);
+        Material lightPanel = MakeEmissiveMaterial(DirtyBone, SodiumAmberPale, 0.34f);
+        Material asphalt = MakeOfficeMaterial("Office_ExteriorDeadAsphalt", DeadRubber, DeadRubberSoft, OfficePattern.Grime);
 
         CreateBox("HQReadableInteriorFloor", root, new Vector3(0f, 0.025f, 0f),
             new Vector3(6.15f, 0.04f, 5.1f), floor);
@@ -269,7 +289,7 @@ public static class MvpSceneStyleDirector
         CreateBox("HQReadableRightWall", root, new Vector3(3.05f, 1.45f, 0.65f),
             new Vector3(0.08f, 2.85f, 3.65f), wall);
         CreateBox("HQReadableCeiling", root, new Vector3(0f, 2.88f, 0f),
-            new Vector3(6.1f, 0.06f, 5.05f), MakeOfficeMaterial("Office_CleanCeiling", new Color(0.38f, 0.4f, 0.35f), new Color(0.22f, 0.24f, 0.2f), OfficePattern.Tile));
+            new Vector3(6.1f, 0.06f, 5.05f), MakeOfficeMaterial("Office_CheapCeilingTile", Rgb(0x7C, 0x78, 0x66), DeadRubberSoft, OfficePattern.Tile));
 
         CreateBox("HQExitHeader", root, new Vector3(2.1f, 2.55f, -2.55f),
             new Vector3(2.9f, 0.6f, 0.1f), wall);
@@ -300,6 +320,14 @@ public static class MvpSceneStyleDirector
             new Vector3(0.16f, 0.18f, 4.55f), darkMetal);
         CreateBox("HQExteriorStreetStopCurb", root, new Vector3(2.45f, 0.18f, -8.55f),
             new Vector3(5.85f, 0.2f, 0.16f), darkMetal);
+        CreateBox("HQExteriorBackFenceLeft", root, new Vector3(0.06f, 0.72f, -3.64f),
+            new Vector3(1.36f, 1.18f, 0.08f), darkMetal);
+        CreateBox("HQExteriorBackFenceRight", root, new Vector3(4.56f, 0.72f, -3.64f),
+            new Vector3(1.86f, 1.18f, 0.08f), darkMetal);
+        CreateBox("HQGarageDoorLeftSafetyPost", root, new Vector3(0.54f, 1.12f, -2.82f),
+            new Vector3(0.16f, 2.15f, 0.16f), darkMetal);
+        CreateBox("HQGarageDoorRightSafetyPost", root, new Vector3(3.66f, 1.12f, -2.82f),
+            new Vector3(0.16f, 2.15f, 0.16f), darkMetal);
 
         CreateBox("HQRouteLineInside", root, new Vector3(2.08f, 0.075f, -1.25f),
             new Vector3(0.16f, 0.02f, 2.05f), terminalGreen);
@@ -374,9 +402,9 @@ public static class MvpSceneStyleDirector
             CreateBox($"HQDebtPressureGaugeBar_{i + 1}", root, new Vector3(1.92f + i * 0.14f, 1.35f, 2.455f),
                 new Vector3(0.08f, 0.16f + i * 0.055f, 0.025f), warningRed);
 
-        CreateBox("HQEquipmentShelfLeftUpright", root, new Vector3(2.16f, 0.8f, 1.8f),
+        CreateBox("HQEquipmentShelfLeftUpright", root, new Vector3(2.16f, 0.82f, 1.8f),
             new Vector3(0.08f, 1.55f, 0.28f), darkMetal);
-        CreateBox("HQEquipmentShelfRightUpright", root, new Vector3(2.94f, 0.8f, 1.8f),
+        CreateBox("HQEquipmentShelfRightUpright", root, new Vector3(2.94f, 0.82f, 1.8f),
             new Vector3(0.08f, 1.55f, 0.28f), darkMetal);
         CreateBox("HQEquipmentShelfBackBrace", root, new Vector3(2.55f, 1.55f, 1.92f),
             new Vector3(0.86f, 0.08f, 0.08f), darkMetal);
@@ -399,16 +427,24 @@ public static class MvpSceneStyleDirector
             Quaternion.Euler(0f, 0f, 90f), new Vector3(0.06f, 0.22f, 0.06f), darkMetal);
         CreateBox("HQCardboardSupplyBox", root, new Vector3(2.88f, 0.14f, 1.72f),
             new Vector3(0.28f, 0.18f, 0.22f), cardboard);
-        CreateBox("HQSofaSeat", root, new Vector3(1.05f, 0.22f, 2.18f),
-            new Vector3(1.1f, 0.4f, 0.5f), fabric);
-        CreateBox("HQSofaBack", root, new Vector3(1.05f, 0.45f, 2.43f),
-            new Vector3(1.1f, 0.82f, 0.16f), fabric);
-        CreateBox("HQSofaMissingCushion", root, new Vector3(0.72f, 0.44f, 1.96f),
+        CreateBox("HQEquipmentShelfLeftFoot", root, new Vector3(2.16f, 0.067f, 1.8f),
+            new Vector3(0.22f, 0.045f, 0.36f), darkMetal);
+        CreateBox("HQEquipmentShelfRightFoot", root, new Vector3(2.94f, 0.067f, 1.8f),
+            new Vector3(0.22f, 0.045f, 0.36f), darkMetal);
+        CreateBox("HQSofaContactShadow", root, new Vector3(1.05f, 0.058f, 2.18f),
+            new Vector3(1.22f, 0.018f, 0.6f), darkMetal);
+        CreateBox("HQSofaSeat", root, new Vector3(1.05f, 0.215f, 2.18f),
+            new Vector3(1.1f, 0.34f, 0.5f), fabric);
+        CreateBox("HQSofaBack", root, new Vector3(1.05f, 0.435f, 2.43f),
+            new Vector3(1.1f, 0.78f, 0.16f), fabric);
+        CreateBox("HQSofaMissingCushion", root, new Vector3(0.72f, 0.405f, 1.96f),
             new Vector3(0.3f, 0.035f, 0.26f), darkMetal);
-        CreateBox("HQGroundedFilingCabinet", root, new Vector3(-2.64f, 0.62f, 1.55f),
+        CreateBox("HQFilingCabinetContactShadow", root, new Vector3(-2.64f, 0.058f, 1.55f),
+            new Vector3(0.5f, 0.018f, 0.44f), darkMetal);
+        CreateBox("HQGroundedFilingCabinet", root, new Vector3(-2.64f, 0.645f, 1.55f),
             new Vector3(0.42f, 1.2f, 0.36f), darkMetal);
         for (int i = 0; i < 3; i++)
-            CreateBox($"HQFilingCabinetHandle_{i + 1}", root, new Vector3(-2.64f, 0.95f - i * 0.26f, 1.36f),
+            CreateBox($"HQFilingCabinetHandle_{i + 1}", root, new Vector3(-2.64f, 0.98f - i * 0.26f, 1.36f),
                 new Vector3(0.26f, 0.035f, 0.025f), paper);
 
         CreateBox("HQOfficeMainLightPanel", root, new Vector3(0f, 2.82f, 0.75f),
@@ -430,25 +466,25 @@ public static class MvpSceneStyleDirector
         officeLightGo.transform.position = new Vector3(0f, 2.35f, 0.55f);
         var officeLight = officeLightGo.AddComponent<Light>();
         officeLight.type = LightType.Point;
-        officeLight.color = new Color(1f, 0.9f, 0.68f);
-        officeLight.intensity = 1.85f;
-        officeLight.range = 7f;
+        officeLight.color = SodiumAmberPale;
+        officeLight.intensity = 1.35f;
+        officeLight.range = 6.4f;
 
         var exitLightGo = new GameObject("HQReadableExitLight");
         exitLightGo.transform.SetParent(root, false);
         exitLightGo.transform.position = new Vector3(2.1f, 2f, -2.25f);
         var exitLight = exitLightGo.AddComponent<Light>();
         exitLight.type = LightType.Point;
-        exitLight.color = new Color(0.45f, 1f, 0.62f);
-        exitLight.intensity = 1.25f;
-        exitLight.range = 4.8f;
+        exitLight.color = DispatchGreen;
+        exitLight.intensity = 0.5f;
+        exitLight.range = 3.6f;
 
         CreateSpotLight("HQGarageWorkLight", root, new Vector3(2.1f, 2.35f, -3.1f),
-            new Vector3(2.1f, 0.08f, -3.55f), new Color(1f, 0.82f, 0.48f), 1.55f, 4.6f, 78f);
+            new Vector3(2.1f, 0.08f, -3.55f), SodiumAmberPale, 1.75f, 4.9f, 78f);
         CreateSpotLight("HQYardFloodLight", root, new Vector3(2.45f, 3.05f, -4.25f),
-            new Vector3(2.45f, 0.05f, -6.05f), new Color(1f, 0.74f, 0.42f), 1.35f, 5.8f, 70f);
+            new Vector3(2.45f, 0.05f, -6.05f), SodiumAmber, 1.55f, 6.2f, 70f);
         CreateSpotLight("HQVanHeadlightCone", root, new Vector3(2.65f, 0.7f, -7.65f),
-            new Vector3(2.65f, 0.18f, -8.35f), new Color(1f, 0.86f, 0.5f), 0.45f, 2.4f, 48f);
+            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 0.42f, 2.4f, 48f);
     }
 
     static void CreateReadableComputerTerminal(
@@ -508,9 +544,9 @@ public static class MvpSceneStyleDirector
         glowGo.transform.position = screenCenter + new Vector3(0f, 0f, -0.25f);
         var glow = glowGo.AddComponent<Light>();
         glow.type = LightType.Point;
-        glow.color = new Color(0.32f, 1f, 0.58f);
-        glow.intensity = 1.35f;
-        glow.range = 3.2f;
+        glow.color = DispatchGreen;
+        glow.intensity = 0.82f;
+        glow.range = 2.6f;
     }
 
     static void CreateCleanFallbackExteriorVan(
@@ -550,7 +586,7 @@ public static class MvpSceneStyleDirector
         CreateBox("FallbackExteriorVanHeadlightR", root, center + new Vector3(0.5f, -0.18f, -1.72f),
             new Vector3(0.28f, 0.16f, 0.04f), headlight);
         CreatePointLight("FallbackExteriorVanHeadlightSpill", root, center + new Vector3(0f, -0.08f, -1.95f),
-            new Color(1f, 0.86f, 0.48f), 0.45f, 2.6f);
+            SodiumAmberPale, 0.35f, 2.4f);
 
         CreateCylinder("FallbackExteriorVanWheelFL", root, center + new Vector3(-0.93f, -0.48f, -0.88f),
             Quaternion.Euler(0f, 0f, 90f), new Vector3(0.34f, 0.18f, 0.34f), rubber);
@@ -583,15 +619,15 @@ public static class MvpSceneStyleDirector
 
         var root = new GameObject(SchoolRootName);
         ApplySchoolAtmosphere();
-        Material coldPaint = MakeMaterial(new Color(0.22f, 0.3f, 0.31f));
-        Material warningRed = MakeMaterial(new Color(0.64f, 0.035f, 0.025f));
-        Material paper = MakeMaterial(new Color(0.82f, 0.8f, 0.68f));
-        Material lightColor = MakeMaterial(new Color(0.56f, 0.92f, 0.86f));
-        Material dark = MakeMaterial(new Color(0.045f, 0.05f, 0.055f));
-        Material exitGreen = MakeOfficeMaterial("School_ExitGreen", new Color(0.05f, 0.62f, 0.24f), new Color(0.35f, 1f, 0.58f), OfficePattern.Scanline);
-        Material vanBody = MakeOfficeMaterial("School_ReturnVanBody", new Color(0.065f, 0.1f, 0.08f), new Color(0.24f, 0.37f, 0.24f), OfficePattern.Scratched);
-        Material vanGlass = MakeOfficeMaterial("School_ReturnVanGlass", new Color(0.012f, 0.025f, 0.03f), new Color(0.08f, 0.18f, 0.16f), OfficePattern.Scanline);
-        Material tire = MakeMaterial(new Color(0.006f, 0.007f, 0.006f));
+        Material coldPaint = MakeMaterial(CivicTealShadow);
+        Material warningRed = MakeMaterial(StampRed);
+        Material paper = MakeMaterial(AgedPaper);
+        Material lightColor = MakeMaterial(DirtyBone);
+        Material dark = MakeMaterial(DeadRubber);
+        Material exitGreen = MakeOfficeMaterial("School_DispatchExitGreen", DispatchGreenDark, DispatchGreen, OfficePattern.Scanline);
+        Material vanBody = MakeOfficeMaterial("School_ReturnVanBody", CivicTeal, DirtyBone, OfficePattern.Scratched);
+        Material vanGlass = MakeOfficeMaterial("School_ReturnVanGlass", OldGlass, DeadRubber, OfficePattern.Scanline);
+        Material tire = MakeMaterial(DeadRubber);
 
         for (int i = 0; i < 5; i++)
         {
@@ -618,6 +654,8 @@ public static class MvpSceneStyleDirector
                 new Vector3(0.34f, 0.02f, 0.24f), paper);
         }
 
+        CreateSchoolRouteComplexity(root.transform, coldPaint, warningRed, paper, dark);
+        CreateBonusEvidenceItem(root.transform, paper, warningRed);
         CreateHidingLocker(root.transform, new Vector3(-4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, 90f, 0f), coldPaint, warningRed);
         CreateHidingLocker(root.transform, new Vector3(4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, -90f, 0f), coldPaint, warningRed);
         CreateSchoolExtractionVan(root.transform, vanBody, vanGlass, tire, dark, exitGreen, warningRed, paper);
@@ -627,9 +665,59 @@ public static class MvpSceneStyleDirector
         lightGo.transform.position = new Vector3(0f, 2.8f, 1f);
         var light = lightGo.AddComponent<Light>();
         light.type = LightType.Point;
-        light.color = new Color(0.52f, 0.95f, 0.9f);
-        light.intensity = 0.9f;
-        light.range = 7f;
+        light.color = new Color(0.58f, 0.74f, 0.68f);
+        light.intensity = 0.72f;
+        light.range = 6.5f;
+    }
+
+    static void CreateSchoolRouteComplexity(Transform root, Material coldPaint, Material warningRed, Material paper, Material dark)
+    {
+        CreateSchoolObstacle("AdminRecords_LeftWall", root, new Vector3(-8.45f, 0.92f, 1.15f),
+            new Vector3(0.22f, 1.84f, 4.4f), coldPaint);
+        CreateSchoolObstacle("AdminRecords_BackWall", root, new Vector3(-7.0f, 0.92f, 3.2f),
+            new Vector3(2.75f, 1.84f, 0.22f), coldPaint);
+        CreateSchoolObstacle("AdminRecords_Counter", root, new Vector3(-7.25f, 0.55f, -0.45f),
+            new Vector3(2.3f, 1.1f, 0.38f), dark);
+
+        CreateSchoolObstacle("OverdueShelf_A", root, new Vector3(7.2f, 0.82f, -3.3f),
+            new Vector3(3.1f, 1.64f, 0.34f), dark);
+        CreateSchoolObstacle("OverdueShelf_B", root, new Vector3(9.15f, 0.82f, -1.25f),
+            new Vector3(0.34f, 1.64f, 3.0f), dark);
+        CreateSchoolObstacle("TippedDesk_Blocker", root, new Vector3(1.4f, 0.42f, -1.9f),
+            new Vector3(2.2f, 0.55f, 0.62f), coldPaint).transform.rotation = Quaternion.Euler(0f, 19f, 0f);
+
+        CreateBox("AdminRecords_Sign", root, new Vector3(-7f, 1.62f, -0.68f),
+            new Vector3(1.35f, 0.28f, 0.035f), warningRed);
+        CreateBox("OverdueShelf_PaperStack_A", root, new Vector3(7.2f, 1.68f, -3.3f),
+            new Vector3(2.4f, 0.12f, 0.22f), paper);
+        CreateBox("OverdueShelf_PaperStack_B", root, new Vector3(9.15f, 1.68f, -1.25f),
+            new Vector3(0.22f, 0.12f, 2.2f), paper);
+    }
+
+    static GameObject CreateSchoolObstacle(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
+    {
+        GameObject go = CreateBox(name, parent, position, scale, material);
+        var collider = go.AddComponent<BoxCollider>();
+        collider.size = Vector3.one;
+        var obstacle = go.AddComponent<NavMeshObstacle>();
+        obstacle.carving = true;
+        obstacle.size = Vector3.one;
+        return go;
+    }
+
+    static void CreateBonusEvidenceItem(Transform root, Material paper, Material warningRed)
+    {
+        if (GameObject.Find("OverdueLedgerEvidence") != null) return;
+
+        GameObject ledger = CreateBox("OverdueLedgerEvidence", root, new Vector3(-7.55f, 0.96f, 1.38f),
+            new Vector3(0.7f, 0.08f, 0.48f), paper);
+        var collider = ledger.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
+        collider.size = new Vector3(2.6f, 16f, 3f);
+        collider.center = new Vector3(0f, 7f, 0f);
+        ledger.AddComponent<SchoolBonusEvidenceItem>();
+        CreateBox("OverdueLedgerStamp", ledger.transform, ledger.transform.position + new Vector3(0.16f, 0.07f, -0.05f),
+            new Vector3(0.24f, 0.025f, 0.16f), warningRed);
     }
 
     static GameObject CreateBox(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
@@ -699,6 +787,14 @@ public static class MvpSceneStyleDirector
             new Vector3(-0.55f, 0.85f, -6.1f), new Vector3(0.34f, 1.7f, 4.9f));
         CreateBlockingCollider("HQExteriorRightCurbCollider", root,
             new Vector3(5.45f, 0.85f, -6.1f), new Vector3(0.34f, 1.7f, 4.9f));
+        CreateBlockingCollider("HQExteriorBackLeftFenceCollider", root,
+            new Vector3(0.06f, 0.85f, -3.64f), new Vector3(1.36f, 1.7f, 0.32f));
+        CreateBlockingCollider("HQExteriorBackRightFenceCollider", root,
+            new Vector3(4.56f, 0.85f, -3.64f), new Vector3(1.86f, 1.7f, 0.32f));
+        CreateBlockingCollider("HQGarageDoorLeftSafetyPostCollider", root,
+            new Vector3(0.54f, 0.9f, -2.82f), new Vector3(0.32f, 1.8f, 0.62f));
+        CreateBlockingCollider("HQGarageDoorRightSafetyPostCollider", root,
+            new Vector3(3.66f, 0.9f, -2.82f), new Vector3(0.32f, 1.8f, 0.62f));
     }
 
     static GameObject CreateBlockingCollider(string name, Transform parent, Vector3 position, Vector3 size)
@@ -753,7 +849,7 @@ public static class MvpSceneStyleDirector
 
         var camera = cameraGo.AddComponent<Camera>();
         camera.clearFlags = CameraClearFlags.SolidColor;
-        camera.backgroundColor = new Color(0.018f, 0.022f, 0.02f);
+        camera.backgroundColor = DeadRubber;
         camera.depth = -10f;
         camera.fieldOfView = 62f;
         camera.nearClipPlane = 0.05f;
@@ -781,12 +877,12 @@ public static class MvpSceneStyleDirector
         locker.transform.rotation = rotation;
         locker.AddComponent<HidingSpot>();
 
-        if (locker.TryGetComponent<BoxCollider>(out var collider))
-        {
-            collider.isTrigger = true;
-            collider.size = new Vector3(1.35f, 1.15f, 1.35f);
-            collider.center = new Vector3(0f, 0f, -0.15f);
-        }
+        var collider = locker.GetComponent<BoxCollider>();
+        if (collider == null)
+            collider = locker.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
+        collider.size = new Vector3(1.35f, 1.15f, 1.35f);
+        collider.center = new Vector3(0f, 0f, -0.15f);
 
         CreateBox("HidingLocker_DebtSticker", locker.transform, position + locker.transform.forward * -0.31f + Vector3.up * 0.28f,
             new Vector3(0.42f, 0.22f, 0.035f), warning);
@@ -858,9 +954,9 @@ public static class MvpSceneStyleDirector
         exitLightGo.transform.position = new Vector3(exitPosition.x, 1.55f, exitPosition.z - 0.35f);
         var exitLight = exitLightGo.AddComponent<Light>();
         exitLight.type = LightType.Point;
-        exitLight.color = new Color(0.22f, 1f, 0.5f);
-        exitLight.intensity = 1.1f;
-        exitLight.range = 4.2f;
+        exitLight.color = DispatchGreen;
+        exitLight.intensity = 0.7f;
+        exitLight.range = 3.8f;
     }
 
     static void CreateOfficeWallStains(Transform root, Material grime, Material warningRed, Material paper, Material tape)
@@ -1084,15 +1180,15 @@ public static class MvpSceneStyleDirector
     {
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
-        RenderSettings.fogColor = new Color(0.13f, 0.16f, 0.14f);
+        RenderSettings.fogColor = CivicTealDark;
         RenderSettings.fogDensity = 0.006f;
-        RenderSettings.ambientLight = new Color(0.22f, 0.24f, 0.20f);
+        RenderSettings.ambientLight = new Color(0.18f, 0.2f, 0.17f);
 
         foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
         {
             if (light == null || light.name != "OfficeLight") continue;
             light.intensity = Mathf.Max(light.intensity, 1.15f);
-            light.color = new Color(1f, 0.92f, 0.7f);
+            light.color = SodiumAmberPale;
         }
     }
 
@@ -1100,9 +1196,9 @@ public static class MvpSceneStyleDirector
     {
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
-        RenderSettings.fogColor = new Color(0.035f, 0.05f, 0.06f);
-        RenderSettings.fogDensity = 0.025f;
-        RenderSettings.ambientLight = new Color(0.025f, 0.032f, 0.038f);
+        RenderSettings.fogColor = CivicTealDark;
+        RenderSettings.fogDensity = 0.021f;
+        RenderSettings.ambientLight = new Color(0.035f, 0.044f, 0.04f);
     }
 
     static void CreateOfficeGarageAndVan(
@@ -1243,18 +1339,18 @@ public static class MvpSceneStyleDirector
         beaconGo.transform.position = new Vector3(2.65f, 1.72f, -2.45f);
         var beacon = beaconGo.AddComponent<Light>();
         beacon.type = LightType.Point;
-        beacon.color = new Color(0.25f, 1f, 0.55f);
-        beacon.intensity = 0.65f;
-        beacon.range = 3.1f;
+        beacon.color = SodiumAmber;
+        beacon.intensity = 0.35f;
+        beacon.range = 2.5f;
 
         var bayLightGo = new GameObject("GarageAmberBayLight");
         bayLightGo.transform.SetParent(root, false);
         bayLightGo.transform.position = new Vector3(2.55f, 2.48f, -2.2f);
         var bayLight = bayLightGo.AddComponent<Light>();
         bayLight.type = LightType.Point;
-        bayLight.color = new Color(1f, 0.74f, 0.32f);
-        bayLight.intensity = 0.75f;
-        bayLight.range = 4.5f;
+        bayLight.color = SodiumAmberPale;
+        bayLight.intensity = 0.85f;
+        bayLight.range = 4.8f;
     }
 
     static bool CreateGeneratedDispatchVanIfAvailable(Transform root, Material terminalGreen)
@@ -1269,13 +1365,13 @@ public static class MvpSceneStyleDirector
         van.transform.localScale = Vector3.one;
 
         Material repairPanel = MakeOfficeMaterial("Office_ASV4VanClosedSidePanel",
-            new Color(0.62f, 0.61f, 0.53f), new Color(0.36f, 0.38f, 0.34f), OfficePattern.Scratched);
+            CivicTeal, DirtyBone, OfficePattern.Scratched);
         Material repairGlass = MakeOfficeMaterial("Office_ASV4VanClosedDirtyGlass",
-            new Color(0.025f, 0.06f, 0.065f), new Color(0.08f, 0.16f, 0.14f), OfficePattern.Scanline);
+            OldGlass, DeadRubber, OfficePattern.Scanline);
         Material repairDirt = MakeOfficeMaterial("Office_ASV4VanLowerDirtPatch",
-            new Color(0.25f, 0.27f, 0.24f), new Color(0.08f, 0.09f, 0.08f), OfficePattern.Grime);
+            DeadRubberSoft, DeadRubber, OfficePattern.Grime);
         Material repairDebt = MakeOfficeMaterial("Office_ASV4VanDebtSlash",
-            new Color(0.58f, 0.035f, 0.025f), new Color(0.95f, 0.72f, 0.55f), OfficePattern.Warning);
+            StampRed, AgedPaper, OfficePattern.Warning);
         Vector3 vanCenter = new Vector3(2.65f, 0.08f, -6.35f);
         CreateBox("DispatchVanASV4ClosedSidePanelNear", root, vanCenter + new Vector3(0f, 0.78f, -0.78f),
             new Vector3(3.25f, 0.82f, 0.055f), repairPanel);
@@ -1306,26 +1402,29 @@ public static class MvpSceneStyleDirector
         CreateBox("DispatchVanASV4LogoFarDebtSlash", root, vanCenter + new Vector3(0.72f, 0.78f, 0.86f),
             new Vector3(0.08f, 0.54f, 0.025f), repairDebt).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
 
-        GameObject trigger = CreateInteractionTrigger("DispatchVanASV4DepartureTrigger", root,
-            new Vector3(2.65f, 0.92f, -6.35f), new Vector3(2.8f, 1.9f, 3.5f));
-        trigger.AddComponent<OfficeDepartureVan>();
+        if (van.GetComponentInChildren<OfficeDepartureVan>() == null)
+        {
+            GameObject trigger = CreateInteractionTrigger("DispatchVanASV4DepartureTrigger", root,
+                new Vector3(2.65f, 0.92f, -6.35f), new Vector3(2.8f, 1.9f, 3.5f));
+            trigger.AddComponent<OfficeDepartureVan>();
+        }
 
         var beaconGo = new GameObject("DispatchVanASV4SicklyBeacon");
         beaconGo.transform.SetParent(root, false);
         beaconGo.transform.position = new Vector3(2.65f, 1.72f, -6.35f);
         var beacon = beaconGo.AddComponent<Light>();
         beacon.type = LightType.Point;
-        beacon.color = new Color(0.25f, 1f, 0.55f);
-        beacon.intensity = 0.55f;
-        beacon.range = 2.8f;
+        beacon.color = SodiumAmber;
+        beacon.intensity = 0.35f;
+        beacon.range = 2.4f;
 
         CreateSpotLight("GarageAmberBayLight", root, new Vector3(2.55f, 2.48f, -3.85f),
-            new Vector3(2.55f, 0.12f, -4.65f), new Color(1f, 0.74f, 0.32f), 1f, 4.5f, 72f);
+            new Vector3(2.55f, 0.12f, -4.65f), SodiumAmberPale, 1.3f, 4.8f, 72f);
         CreateSpotLight("DispatchVanASV4HeadlightCone", root, new Vector3(2.65f, 0.7f, -7.7f),
-            new Vector3(2.65f, 0.18f, -8.35f), new Color(1f, 0.86f, 0.5f), 0.45f, 2.4f, 48f);
+            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 0.42f, 2.4f, 48f);
 
-        CreateBox("DispatchVanASV4GroundGlow", root, new Vector3(2.65f, 0.1f, -6.35f),
-            new Vector3(2.1f, 0.018f, 3.1f), terminalGreen);
+        CreateBox("DispatchVanASV4RoutePickupMark", root, new Vector3(2.65f, 0.1f, -6.35f),
+            new Vector3(0.28f, 0.018f, 2.7f), terminalGreen);
         return true;
     }
 
@@ -1517,5 +1616,10 @@ public static class MvpSceneStyleDirector
             material.SetColor("_EmissionColor", emissionColor * intensity);
         }
         return material;
+    }
+
+    static Color Rgb(int r, int g, int b)
+    {
+        return new Color(r / 255f, g / 255f, b / 255f);
     }
 }

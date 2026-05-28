@@ -10,7 +10,7 @@ public class HQSpawnManager : MonoBehaviour
         if (NetworkManager.Singleton == null) return;
 
         if (NetworkManager.Singleton.IsListening)
-            Invoke(nameof(TeleportAllPlayers), 0.2f);
+            Invoke(nameof(TeleportLocalPlayer), 0.2f);
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
     }
@@ -23,23 +23,33 @@ public class HQSpawnManager : MonoBehaviour
 
     void OnClientConnected(ulong clientId)
     {
-        if (!NetworkManager.Singleton.IsServer) return;
-        Invoke(nameof(TeleportAllPlayers), 0.3f);
+        if (NetworkManager.Singleton == null || clientId != NetworkManager.Singleton.LocalClientId) return;
+        Invoke(nameof(TeleportLocalPlayer), 0.3f);
     }
 
-    void TeleportAllPlayers()
+    void TeleportLocalPlayer()
     {
         if (spawnPoint == null) return;
 
         var players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
-        for (int i = 0; i < players.Length; i++)
+        foreach (var player in players)
         {
-            var cc = players[i].GetComponent<CharacterController>();
+            if (player == null || !player.IsOwner) continue;
+            var cc = player.GetComponent<CharacterController>();
             if (cc == null) continue;
+
+            int offsetIndex = GetLocalSpawnOffsetIndex();
             cc.enabled = false;
-            players[i].transform.position = spawnPoint.position + Vector3.right * (i * 1.5f);
-            players[i].transform.rotation = spawnPoint.rotation;
+            player.transform.position = spawnPoint.position + Vector3.right * (offsetIndex * 1.5f);
+            player.transform.rotation = spawnPoint.rotation;
             cc.enabled = true;
         }
+    }
+
+    int GetLocalSpawnOffsetIndex()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening) return 0;
+        return Mathf.Clamp((int)network.LocalClientId, 0, 3);
     }
 }

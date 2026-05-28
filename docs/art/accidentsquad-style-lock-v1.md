@@ -1,7 +1,7 @@
 # AccidentSquad Style Lock v1
 
 Status: locked direction for MVP and ASV4 asset work
-Working title: **Debt-Civic Dispatch Horror**
+Working title: **Municipal Debt Noir**
 Primary references are methods, not assets. Do not copy reference-game logos,
 creatures, suits, terminals, sound identities, maps, or loop wording.
 
@@ -15,17 +15,17 @@ Research sources:
 
 ## One-Sentence Style
 
-AccidentSquad is a cheap outsourced accident office where broken civic spaces,
-debt paperwork, and second-hand dispatch equipment have become a survival-horror
-ritual.
+AccidentSquad is a cheap outsourced accident office where failed civic spaces,
+debt paperwork, sodium-lit dispatch gear, and stamp-red bureaucracy have become
+a survival-horror ritual.
 
 Players should remember:
 
-- the green AS company mark crossed by a red debt slash;
+- the civic-teal AS dispatch seal crossed by a stamp-red debt slash;
 - the sad office computer that starts everything;
 - the gear shelf full of improvised tools;
-- the green floor route to the dirty dispatch van;
-- the red bureaucratic monster that makes paperwork feel alive.
+- the muted dispatch-green floor route to the dirty civic fleet van;
+- the stamp-red bureaucratic monster that makes paperwork feel alive.
 
 ## Research Summary
 
@@ -120,34 +120,37 @@ What AccidentSquad must not copy:
 
 ### Name Of The Style
 
-Use **Debt-Civic Dispatch Horror** when discussing the art direction.
+Use **Municipal Debt Noir** when discussing the art direction.
 
 It means:
 
-- **Debt**: money pressure is visible as red marks, invoices, final warnings,
+- **Municipal**: every location should feel like a public-service or
+  service-adjacent institution that failed cheaply.
+- **Debt**: money pressure is visible as stamp-red marks, invoices, final warnings,
   hostile takeover notices, stamps, gauges, and monster features.
-- **Civic**: locations are public-service or service-adjacent spaces: schools,
-  clinics, office floors, apartments, malls, basements, warehouses, transit
-  service corridors.
+- **Noir**: the palette is dirty teal, dead rubber, aged paper, sodium amber,
+  and restrained warning color, not clean green/red arcade contrast.
 - **Dispatch**: the office is not a menu. It is a physical work ritual:
-  computer -> gear shelf -> green route -> van -> mission -> return van ->
+  computer -> gear shelf -> dispatch route -> van -> mission -> return van ->
   settlement.
 - **Horror**: darkness, pursuit, and anomalies are real, but always grounded in
   bureaucracy and underfunded work.
 
 ### Three Non-Negotiable Motifs
 
-1. **Green AS mark with red debt slash**
+1. **Civic AS dispatch seal with stamp-red debt slash**
    Must appear on the HQ hero wall, dispatch van, worker badge, important
    office documents, and later mission return points.
 
-2. **Terminal green vs debt red**
-   Green means company system, approved action, exit, route, or interaction.
-   Red means debt, danger, hostile takeover, overdue pressure, or monster.
+2. **Dispatch green vs stamp red**
+   Dispatch green means company system, approved action, route, exit, or
+   interaction. Stamp red means debt, hostile takeover, overdue pressure,
+   monster focus, or serious danger. Both colors are accents, not the main
+   scene color.
 
 3. **The dispatch ritual**
    Every hub pass must visually communicate: accept job at computer, buy gear,
-   walk the green route, board the van.
+   follow the muted route paint, board the van.
 
 If an asset does not support one of these motifs, it needs a strong gameplay
 reason to exist.
@@ -194,28 +197,33 @@ The first monster remains the **Homework Debt Collector**:
 
 Approximate palette balance per scene:
 
-- 55-65% dirty gray-green / dead metal / tired concrete;
-- 15-20% dirty paper / cardboard / old wood;
-- 8-12% terminal or exit green;
-- 5-8% debt red;
+- 55-65% civic teal / dead rubber / tired concrete;
+- 15-20% aged paper / cardboard / old wood;
+- 8-12% sodium amber and dirty bone practical lighting;
+- 3-6% muted dispatch green;
+- 3-5% stamp red debt/danger;
 - 0-5% map-specific accent.
 
 Semantic tokens:
 
 | Token | Hex | Use |
 |---|---:|---|
-| Terminal Green | `#14D965` | computer, company mark, route, approved systems |
-| Exit Green | `#19BF61` | extraction, safe return, valid completion |
-| Debt Red | `#9E0A08` | overdue, hostile takeover, danger, monster warning |
+| Civic Teal | `#2F4F4B` | walls, van body, company panels, old civic paint |
+| Deep Civic Teal | `#172422` | grime, fog, shadowed wall sections |
+| Dead Rubber | `#111413` | shelves, lockers, computer casing, tires, black metal |
+| Aged Paper | `#D6C89B` | notices, forms, labels, homework |
+| Dispatch Green | `#7BCF8A` | computer screen, route marks, approved systems, extraction |
+| Stamp Red | `#C23A2B` | overdue stamps, debt slash, hostile takeover, monster warning |
 | Monster Eye Red | `#F2140A` | active threat focus only |
-| Civic Gray-Green | `#4D5A58` | public walls, old partitions |
-| Dirty Paper | `#D1CDAE` | notices, forms, labels, homework |
-| Cheap Cardboard | `#78572E` | boxes, improvised gear, storage |
-| Dead Metal | `#0D0E0E` | old shelves, lockers, computer casing |
-| Tired Fabric | `#2E3029` | sofa, chair, cheap uniform cloth |
+| Sodium Amber | `#D99A31` | garage fixtures, old work lights, van beacon |
+| Dirty Bone | `#C9C2AA` | old plastic, fixture panels, worn helmet, sofa edge wear |
+| Cheap Cardboard | `#73502A` | boxes, improvised gear, storage |
+| Second-Hand Wood | `#4A3119` | desks, counters, school furniture |
+| Tired Fabric | `#2C322B` | sofa, chair, cheap uniform cloth |
 
-Do not let a scene become one-note blue, black, brown, or gray. Green/red
-semantics must stay visible.
+Do not let a scene become one-note blue, black, brown, gray, or neon green/red.
+Green/red semantics must stay visible, but the scene should read first as dirty
+municipal noir.
 
 ## Lighting Lock
 
@@ -238,17 +246,18 @@ Avoid:
 HQ lighting:
 
 - warm weak overhead;
-- terminal green spill at computer;
+- small dispatch-green spill at computer only;
 - controlled amber work light in garage;
-- stable green route/exit marks;
-- red board readable but not brighter than computer.
+- stable muted green route/exit marks;
+- stamp-red board readable but not brighter than computer.
+- no large green floor glow under the van.
 
 Mission lighting:
 
-- colder civic fluorescents;
+- colder civic fluorescents, still within the teal/paper/dirty-bone palette;
 - darker side rooms;
-- red threat accents;
-- green return/van/extraction point.
+- stamp-red threat accents;
+- muted green return/van/extraction point.
 
 ## Modeling And Grounding Rules
 
@@ -299,15 +308,17 @@ Required readable zones:
 - computer desk;
 - debt/status wall;
 - gear shelf;
-- green route paint;
+- muted dispatch route paint;
 - garage threshold;
 - dispatch van.
 
 Hero composition:
 
 - The computer and debt wall should be visible in the same screenshot.
-- The AS mark with red debt slash must be visible from the main room.
-- The green route should lead the eye to the garage, not decorate randomly.
+- The AS dispatch seal with stamp-red debt slash must be visible from the main
+  room.
+- The muted green route should lead the eye to the garage, not decorate
+  randomly.
 
 Forbidden:
 
@@ -324,12 +335,12 @@ The van is the game's first memorable object after the computer.
 
 Required:
 
-- dirty old off-white or green-gray fleet body;
+- dirty civic-teal or old green-gray fleet body;
 - full side panels;
 - roof rack;
 - amber beacon;
-- green AS mark;
-- red debt slash;
+- dispatch-green AS mark;
+- stamp-red debt slash;
 - dirty glass;
 - small interaction zone;
 - practical headlight or work-light cone.
@@ -402,8 +413,9 @@ Run these before calling an art pass complete:
 
 1. **Two-second read**: from spawn, can the player identify the computer, debt
    wall, and route to van?
-2. **Screenshot test**: one HQ screenshot should show green company system,
-   red debt pressure, cheap furniture, and dispatch identity.
+2. **Screenshot test**: one HQ screenshot should show civic teal, aged paper,
+   sodium light, a small dispatch-green system accent, stamp-red debt pressure,
+   cheap grounded furniture, and dispatch identity.
 3. **Grounding test**: no sofa, shelf, cabinet, chair, monitor, or van panel
    floats.
 4. **Collision test**: player cannot fall out of the HQ/garage route.
@@ -425,5 +437,6 @@ The game is memorable when players can describe it as:
 
 ```text
 That co-op horror game where your broke accident office sends you out in the
-debt-slashed van to fix absurd civic problems before the paperwork eats you.
+stamp-slashed civic van to fix absurd public problems before the paperwork eats
+you.
 ```

@@ -35,7 +35,6 @@ public static class MvpSmokeTestRunner
         var warnings = new List<string>();
         string originalScene = SceneManager.GetActiveScene().path;
 
-        NormalizeSerializedMvpValues(warnings);
         CheckInputBindings(errors);
         CheckHqScene(errors, warnings);
         CheckSchoolScene(errors, warnings);
@@ -153,6 +152,7 @@ public static class MvpSmokeTestRunner
 
         EditorSceneManager.OpenScene(HqScenePath, OpenSceneMode.Single);
         CheckHud(errors);
+        CheckOfficeComputer(errors, warnings);
         WarnIfGeneratedTextExists("HQ", warnings);
     }
 
@@ -181,6 +181,22 @@ public static class MvpSmokeTestRunner
 
         if (NavMesh.CalculateTriangulation().vertices.Length == 0)
             warnings.Add("School scene has no baked NavMesh. Monster should use direct-chase fallback until NavMesh is baked.");
+
+        if (Object.FindFirstObjectByType<SchoolBonusEvidenceItem>() == null)
+            warnings.Add("School scene has no saved optional evidence item. Runtime style pass should create OverdueLedgerEvidence on scene load.");
+    }
+
+    static void CheckOfficeComputer(List<string> errors, List<string> warnings)
+    {
+        var computer = Object.FindFirstObjectByType<OfficeComputer>();
+        Require(computer != null, "HQ scene must contain OfficeComputer.", errors);
+        if (computer == null) return;
+
+        Require(!string.IsNullOrWhiteSpace(computer.InteractHint), "OfficeComputer must expose a non-empty interaction hint.", errors);
+        var so = new SerializedObject(computer);
+        SerializedProperty transit = so.FindProperty("dispatchTransitSeconds");
+        if (transit == null || transit.floatValue < 1f)
+            warnings.Add("OfficeComputer dispatch transit should be at least 1 second for the van ritual.");
     }
 
     static void CheckHud(List<string> errors)
