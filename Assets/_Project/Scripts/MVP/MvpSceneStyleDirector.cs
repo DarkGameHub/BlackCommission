@@ -25,6 +25,8 @@ public static class MvpSceneStyleDirector
     static readonly Color DirtyBone = Rgb(0xC9, 0xC2, 0xAA);
     static readonly Color TiredFabric = Rgb(0x2C, 0x32, 0x2B);
     static readonly Color OldGlass = Rgb(0x1C, 0x3C, 0x3E);
+    static readonly Vector3 SchoolNotebookPosition = new(8.15f, 0.96f, 5.7f);
+    static readonly Vector3 SchoolLedgerPosition = new(-7.55f, 0.96f, 1.38f);
 
     enum OfficePattern
     {
@@ -722,9 +724,13 @@ public static class MvpSceneStyleDirector
         }
 
         CreateSchoolRouteComplexity(root.transform, coldPaint, warningRed, paper, dark);
+        CreateExpandedSchoolPlayLayout(root.transform, coldPaint, warningRed, paper, dark, exitGreen);
         CreateBonusEvidenceItem(root.transform, paper, warningRed);
         CreateHidingLocker(root.transform, new Vector3(-4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, 90f, 0f), coldPaint, warningRed);
         CreateHidingLocker(root.transform, new Vector3(4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, -90f, 0f), coldPaint, warningRed);
+        CreateHidingLocker(root.transform, new Vector3(-10.55f, 0.95f, 2.1f), Quaternion.identity, coldPaint, warningRed);
+        CreateHidingLocker(root.transform, new Vector3(10.55f, 0.95f, 6.55f), Quaternion.Euler(0f, 180f, 0f), coldPaint, warningRed);
+        RefreshSchoolMonsterPatrolRoute(root.transform);
         CreateSchoolExtractionVan(root.transform, vanBody, vanGlass, tire, dark, exitGreen, warningRed, paper);
 
         var lightGo = new GameObject("SchoolColdDebtLight");
@@ -876,11 +882,11 @@ public static class MvpSceneStyleDirector
         CreateSchoolObstacle("ClassroomRightPile", root, new Vector3(4.72f, 0.46f, 3.42f),
             new Vector3(0.74f, 0.82f, 1.25f), coldPaint);
 
-        CreateBox("TargetDeskDebtCircle_A", root, new Vector3(3.6f, 0.075f, 5.02f),
+        CreateBox("TargetDeskDebtCircle_A", root, new Vector3(SchoolNotebookPosition.x, 0.075f, SchoolNotebookPosition.z),
             new Vector3(1.25f, 0.02f, 0.1f), warningRed);
-        CreateBox("TargetDeskDebtCircle_B", root, new Vector3(3.6f, 0.078f, 5.02f),
+        CreateBox("TargetDeskDebtCircle_B", root, new Vector3(SchoolNotebookPosition.x, 0.078f, SchoolNotebookPosition.z),
             new Vector3(0.1f, 0.02f, 1.0f), warningRed);
-        CreatePointLight("NotebookWeakGoldLight", root, new Vector3(3.6f, 1.38f, 5.05f),
+        CreatePointLight("NotebookWeakGoldLight", root, SchoolNotebookPosition + new Vector3(0f, 0.42f, 0f),
             SodiumAmberPale, 0.75f, 3.2f);
 
         for (int i = 0; i < 5; i++)
@@ -891,11 +897,129 @@ public static class MvpSceneStyleDirector
         }
     }
 
+    static void CreateExpandedSchoolPlayLayout(
+        Transform root,
+        Material coldPaint,
+        Material warningRed,
+        Material paper,
+        Material dark,
+        Material exitGreen)
+    {
+        Material floorGuide = MakeEmissiveMaterial(DispatchGreenDark, DispatchGreen, 0.12f);
+        Material deadRubberSoft = MakeMaterial(DeadRubberSoft);
+
+        CreateSchoolObstacle("WestRecordsShelfMaze_North", root, new Vector3(-10.1f, 0.78f, 2.6f),
+            new Vector3(2.3f, 1.56f, 0.32f), dark);
+        CreateSchoolObstacle("WestRecordsShelfMaze_South", root, new Vector3(-10.1f, 0.78f, -1.85f),
+            new Vector3(2.3f, 1.56f, 0.32f), dark);
+        CreateSchoolObstacle("WestRecordsShelfMaze_Side", root, new Vector3(-9.05f, 0.78f, 0.32f),
+            new Vector3(0.32f, 1.56f, 2.6f), dark);
+        CreateSchoolObstacle("WestRecordsServiceCounter", root, new Vector3(-7.55f, 0.52f, 1.05f),
+            new Vector3(1.35f, 0.64f, 0.42f), coldPaint);
+        CreateBox("WestRecordsLedgerGreenRoute", root, new Vector3(-7.55f, 0.045f, -0.35f),
+            new Vector3(0.22f, 0.02f, 2.5f), floorGuide);
+        CreateBox("WestRecordsStampRedWarning", root, new Vector3(-9.35f, 1.63f, 2.42f),
+            new Vector3(0.72f, 0.22f, 0.035f), warningRed);
+        for (int i = 0; i < 7; i++)
+        {
+            CreateBox($"WestRecordsLooseForm_{i + 1}", root,
+                new Vector3(-10.9f + i * 0.38f, 0.055f, -0.95f + (i % 2) * 0.34f),
+                new Vector3(0.24f, 0.018f, 0.16f), paper);
+        }
+
+        CreateSchoolObstacle("EastLostPropertyShelf_A", root, new Vector3(7.35f, 0.8f, -5.85f),
+            new Vector3(3.15f, 1.6f, 0.34f), dark);
+        CreateSchoolObstacle("EastLostPropertyShelf_B", root, new Vector3(10.1f, 0.8f, -4.05f),
+            new Vector3(0.34f, 1.6f, 2.9f), dark);
+        CreateSchoolObstacle("EastLostPropertyCart", root, new Vector3(8.05f, 0.42f, -1.35f),
+            new Vector3(1.25f, 0.58f, 0.54f), coldPaint).transform.rotation = Quaternion.Euler(0f, -18f, 0f);
+        CreateBox("LostPropertyReturnArrow", root, new Vector3(7.15f, 0.045f, -2.55f),
+            new Vector3(0.82f, 0.02f, 0.12f), floorGuide).transform.rotation = Quaternion.Euler(0f, -34f, 0f);
+
+        CreateSchoolObstacle("DebtOfficeLeftPartition", root, new Vector3(6.25f, 1.12f, 5.45f),
+            new Vector3(0.28f, 2.24f, 3.8f), coldPaint);
+        CreateSchoolObstacle("DebtOfficeBackPartition", root, new Vector3(8.7f, 1.12f, 7.5f),
+            new Vector3(4.75f, 2.24f, 0.28f), coldPaint);
+        CreateSchoolObstacle("DebtOfficeQueueCounter_A", root, new Vector3(8.15f, 0.54f, 4.25f),
+            new Vector3(1.8f, 0.72f, 0.42f), dark);
+        CreateSchoolObstacle("DebtOfficeQueueCounter_B", root, new Vector3(10.2f, 0.54f, 5.8f),
+            new Vector3(0.42f, 0.72f, 2.0f), dark);
+        CreateSchoolObstacle("DebtOfficePrincipalDesk", root, new Vector3(SchoolNotebookPosition.x, 0.55f, SchoolNotebookPosition.z),
+            new Vector3(1.5f, 0.72f, 0.72f), dark);
+        CreateBox("DebtOfficeHomeworkBanner", root, new Vector3(8.65f, 2.12f, 7.34f),
+            new Vector3(2.25f, 0.32f, 0.04f), warningRed);
+        CreateBox("DebtOfficeApprovedReturnMarker", root, new Vector3(9.55f, 0.045f, 4.62f),
+            new Vector3(0.78f, 0.02f, 0.12f), exitGreen).transform.rotation = Quaternion.Euler(0f, 28f, 0f);
+        CreateBox("DebtOfficeBannerPaperLine", root, new Vector3(8.65f, 2.12f, 7.3f),
+            new Vector3(1.55f, 0.055f, 0.025f), paper);
+        for (int i = 0; i < 9; i++)
+        {
+            CreateBox($"DebtOfficeWallNotice_{i + 1}", root,
+                new Vector3(7.18f + (i % 3) * 0.5f, 1.42f + (i / 3) * 0.25f, 7.31f),
+                new Vector3(0.32f, 0.18f, 0.025f), i % 4 == 0 ? warningRed : paper);
+        }
+
+        CreateSchoolObstacle("CrouchReturnShortcut_LeftStack", root, new Vector3(-4.9f, 0.86f, -6.35f),
+            new Vector3(0.28f, 1.72f, 2.35f), dark);
+        CreateSchoolObstacle("CrouchReturnShortcut_RightStack", root, new Vector3(-2.8f, 0.86f, -6.35f),
+            new Vector3(0.28f, 1.72f, 2.35f), dark);
+        CreateSchoolObstacle("CrouchReturnShortcut_LowFormsPipe", root, new Vector3(-3.85f, 1.55f, -6.35f),
+            new Vector3(1.86f, 0.66f, 1.9f), coldPaint);
+        CreateBox("CrouchReturnShortcutRouteMark", root, new Vector3(-3.85f, 0.04f, -6.35f),
+            new Vector3(1.28f, 0.02f, 1.45f), floorGuide);
+
+        CreateSchoolObstacle("JumpShortcut_TippedBench", root, new Vector3(2.95f, 0.24f, -6.8f),
+            new Vector3(1.65f, 0.38f, 0.34f), coldPaint).transform.rotation = Quaternion.Euler(0f, 11f, 0f);
+        CreateBox("JumpShortcut_BenchRedLip", root, new Vector3(2.95f, 0.455f, -6.8f),
+            new Vector3(1.38f, 0.025f, 0.16f), warningRed);
+        CreateSchoolObstacle("MainSpineSplitNoticeRack", root, new Vector3(0f, 0.7f, -0.15f),
+            new Vector3(0.4f, 1.4f, 1.85f), deadRubberSoft);
+        CreateBox("MainSpineSplitRouteLeft", root, new Vector3(-0.62f, 0.04f, -0.15f),
+            new Vector3(0.68f, 0.02f, 0.12f), floorGuide).transform.rotation = Quaternion.Euler(0f, -32f, 0f);
+        CreateBox("MainSpineSplitRouteRight", root, new Vector3(0.62f, 0.04f, -0.15f),
+            new Vector3(0.68f, 0.02f, 0.12f), floorGuide).transform.rotation = Quaternion.Euler(0f, 32f, 0f);
+
+        CreatePointLight("WestRecordsColdTaskLight", root, new Vector3(-8.8f, 2.25f, 1.25f),
+            new Color(0.58f, 0.74f, 0.68f), 0.55f, 4.4f);
+        CreatePointLight("DebtOfficeStampRedThreatLight", root, new Vector3(8.85f, 2.1f, 5.6f),
+            StampRed, 0.48f, 4.2f);
+        CreatePointLight("LostPropertyShelfDimLight", root, new Vector3(8.65f, 2.0f, -4.35f),
+            SodiumAmberPale, 0.42f, 3.8f);
+    }
+
+    static void RefreshSchoolMonsterPatrolRoute(Transform root)
+    {
+        Vector3[] positions =
+        {
+            new Vector3(8.7f, 0.08f, 5.6f),
+            new Vector3(8.8f, 0.08f, -4.65f),
+            new Vector3(0.1f, 0.08f, -6.9f),
+            new Vector3(-8.9f, 0.08f, -1.6f),
+            new Vector3(-7.6f, 0.08f, 2.1f),
+            new Vector3(2.8f, 0.08f, 4.9f)
+        };
+
+        Transform[] points = new Transform[positions.Length];
+        for (int i = 0; i < positions.Length; i++)
+        {
+            var point = new GameObject($"RuntimeMonsterPatrolPoint_{i + 1}");
+            point.transform.SetParent(root, false);
+            point.transform.position = positions[i];
+            points[i] = point.transform;
+        }
+
+        foreach (var monster in Object.FindObjectsByType<SchoolMonsterAI>(FindObjectsSortMode.None))
+        {
+            if (monster != null)
+                monster.OverridePatrolPoints(points);
+        }
+    }
+
     static void CalibrateSchoolMissionObjects(Transform root, Material warningRed, Material paper, Material exitGreen)
     {
         MoveObjectIfPresent("PlayerSpawnPoint", new Vector3(0f, 0.1f, -11.45f), Quaternion.identity);
-        MoveObjectIfPresent("LostHomeworkNotebook", new Vector3(3.6f, 0.72f, 5.05f), Quaternion.Euler(0f, -7f, 0f));
-        MoveObjectIfPresent("OverdueLedgerEvidence", new Vector3(-7.55f, 0.96f, 1.38f), Quaternion.Euler(0f, 12f, 0f));
+        MoveObjectIfPresent("LostHomeworkNotebook", SchoolNotebookPosition, Quaternion.Euler(0f, -7f, 0f));
+        MoveObjectIfPresent("OverdueLedgerEvidence", SchoolLedgerPosition, Quaternion.Euler(0f, 12f, 0f));
 
         foreach (var exit in Object.FindObjectsByType<SchoolExitPoint>(FindObjectsSortMode.None))
         {
@@ -917,9 +1041,9 @@ public static class MvpSceneStyleDirector
             new Vector3(0.1f, 0.02f, 1.4f), exitGreen);
         CreateBox("SchoolVanReturnPadOutline_R", root, new Vector3(2.25f, 0.041f, -12.85f),
             new Vector3(0.1f, 0.02f, 1.4f), exitGreen);
-        CreateBox("SchoolLedgerTablePatch", root, new Vector3(-7.55f, 0.91f, 1.38f),
+        CreateBox("SchoolLedgerTablePatch", root, SchoolLedgerPosition + new Vector3(0f, -0.05f, 0f),
             new Vector3(0.92f, 0.055f, 0.62f), paper);
-        CreateBox("SchoolLedgerWarningTab", root, new Vector3(-7.2f, 0.98f, 1.08f),
+        CreateBox("SchoolLedgerWarningTab", root, SchoolLedgerPosition + new Vector3(0.35f, 0.02f, -0.3f),
             new Vector3(0.28f, 0.025f, 0.12f), warningRed);
     }
 
