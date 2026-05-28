@@ -1794,56 +1794,6 @@ public static class MvpSceneStyleDirector
         van.transform.localRotation = Quaternion.identity;
         van.transform.localScale = Vector3.one;
 
-        Material repairPanel = MakeOfficeMaterial("Office_ASV4VanClosedSidePanel",
-            CivicTeal, DirtyBone, OfficePattern.Scratched);
-        Material repairGlass = MakeOfficeMaterial("Office_ASV4VanClosedDirtyGlass",
-            OldGlass, DeadRubber, OfficePattern.Scanline);
-        Material repairDirt = MakeOfficeMaterial("Office_ASV4VanLowerDirtPatch",
-            DeadRubberSoft, DeadRubber, OfficePattern.Grime);
-        Material repairDebt = MakeOfficeMaterial("Office_ASV4VanDebtSlash",
-            StampRed, AgedPaper, OfficePattern.Warning);
-        Vector3 vanCenter = new Vector3(2.65f, 0.08f, -6.35f);
-        CreateBox("DispatchVanASV4ClosedSidePanelNear", root, vanCenter + new Vector3(0f, 0.78f, -0.78f),
-            new Vector3(3.25f, 0.82f, 0.055f), repairPanel);
-        CreateBox("DispatchVanASV4ClosedSidePanelFar", root, vanCenter + new Vector3(0f, 0.78f, 0.78f),
-            new Vector3(3.25f, 0.82f, 0.055f), repairPanel);
-        CreateBox("DispatchVanASV4ClosedLowerPanelNear", root, vanCenter + new Vector3(0f, 0.4f, -0.81f),
-            new Vector3(3.35f, 0.22f, 0.065f), repairDirt);
-        CreateBox("DispatchVanASV4ClosedLowerPanelFar", root, vanCenter + new Vector3(0f, 0.4f, 0.81f),
-            new Vector3(3.35f, 0.22f, 0.065f), repairDirt);
-        CreateBox("DispatchVanASV4WindowPatchNear", root, vanCenter + new Vector3(-0.65f, 1.08f, -0.835f),
-            new Vector3(0.74f, 0.28f, 0.035f), repairGlass);
-        CreateBox("DispatchVanASV4WindowPatchFar", root, vanCenter + new Vector3(-0.65f, 1.08f, 0.835f),
-            new Vector3(0.74f, 0.28f, 0.035f), repairGlass);
-        CreateBox("DispatchVanASV4LogoNearTop", root, vanCenter + new Vector3(0.72f, 0.96f, -0.85f),
-            new Vector3(0.58f, 0.055f, 0.025f), terminalGreen);
-        CreateBox("DispatchVanASV4LogoNearLeft", root, vanCenter + new Vector3(0.45f, 0.78f, -0.85f),
-            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
-        CreateBox("DispatchVanASV4LogoNearRight", root, vanCenter + new Vector3(0.99f, 0.78f, -0.85f),
-            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
-        CreateBox("DispatchVanASV4LogoNearDebtSlash", root, vanCenter + new Vector3(0.72f, 0.78f, -0.86f),
-            new Vector3(0.08f, 0.54f, 0.025f), repairDebt).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
-        CreateBox("DispatchVanASV4LogoFarTop", root, vanCenter + new Vector3(0.72f, 0.96f, 0.85f),
-            new Vector3(0.58f, 0.055f, 0.025f), terminalGreen);
-        CreateBox("DispatchVanASV4LogoFarLeft", root, vanCenter + new Vector3(0.45f, 0.78f, 0.85f),
-            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
-        CreateBox("DispatchVanASV4LogoFarRight", root, vanCenter + new Vector3(0.99f, 0.78f, 0.85f),
-            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
-        CreateBox("DispatchVanASV4LogoFarDebtSlash", root, vanCenter + new Vector3(0.72f, 0.78f, 0.86f),
-            new Vector3(0.08f, 0.54f, 0.025f), repairDebt).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
-        CreateBox("DispatchVanASV4ClosedLeftWallPatch", root, vanCenter + new Vector3(-1.72f, 0.78f, 0f),
-            new Vector3(0.065f, 0.86f, 1.7f), repairPanel);
-        CreateBox("DispatchVanASV4ClosedRightWallPatch", root, vanCenter + new Vector3(1.72f, 0.78f, 0f),
-            new Vector3(0.065f, 0.86f, 1.7f), repairPanel);
-        CreateBox("DispatchVanASV4ClosedRearDoors", root, vanCenter + new Vector3(0f, 0.78f, 1.02f),
-            new Vector3(2.75f, 0.9f, 0.065f), repairPanel);
-        CreateBox("DispatchVanASV4ClosedFrontCab", root, vanCenter + new Vector3(0f, 0.72f, -1.02f),
-            new Vector3(2.45f, 0.72f, 0.065f), repairPanel);
-        CreateBox("DispatchVanASV4ClosedRoofSkin", root, vanCenter + new Vector3(0f, 1.32f, 0f),
-            new Vector3(3.25f, 0.08f, 1.62f), repairPanel);
-        CreateBox("DispatchVanASV4ClosedFloorShadow", root, vanCenter + new Vector3(0f, 0.14f, 0f),
-            new Vector3(3.35f, 0.08f, 1.72f), repairDirt);
-
         if (van.GetComponentInChildren<OfficeDepartureVan>() == null)
         {
             GameObject trigger = CreateInteractionTrigger("DispatchVanASV4DepartureTrigger", root,
