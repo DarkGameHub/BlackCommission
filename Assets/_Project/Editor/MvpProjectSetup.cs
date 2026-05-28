@@ -75,6 +75,12 @@ public static class MvpProjectSetup
         task.recommendedPlayersMax = 4;
         task.requiredOfficeLevel = 1;
         task.minimumReputation = -100;
+        task.missionStartClockHour = 8f;
+        task.contractWindowGameHours = 12f;
+        task.realSecondsPerGameHour = 60f;
+        task.overtimeMoneyPenaltyPerGameHour = 30;
+        task.overtimeReputationPenaltyBlockGameHours = 2f;
+        task.overtimeReputationPenaltyPerBlock = 1;
         task.moneyReward = 300;
         task.reputationReward = 5;
         task.experienceReward = 80;

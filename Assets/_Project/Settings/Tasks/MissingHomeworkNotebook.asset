@@ -23,6 +23,12 @@ MonoBehaviour:
   recommendedPlayersMax: 4
   requiredOfficeLevel: 1
   minimumReputation: -100
+  missionStartClockHour: 8
+  contractWindowGameHours: 12
+  realSecondsPerGameHour: 60
+  overtimeMoneyPenaltyPerGameHour: 30
+  overtimeReputationPenaltyBlockGameHours: 2
+  overtimeReputationPenaltyPerBlock: 1
   moneyReward: 300
   reputationReward: 5
   experienceReward: 80

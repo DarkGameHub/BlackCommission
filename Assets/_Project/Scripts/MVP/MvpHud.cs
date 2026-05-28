@@ -76,6 +76,7 @@ public class MvpHud : MonoBehaviour
                     if (keyboard.f2Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Decoy);
                     if (keyboard.f3Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.StunSpray);
                     if (keyboard.f4Key.wasPressedThisFrame) TryBuy(activeHotbar, MvpHotbarItemId.Flashlight);
+                    if (keyboard.f5Key.wasPressedThisFrame) TryBuyWristwatch(activeHotbar);
                 }
             }
 
@@ -105,6 +106,27 @@ public class MvpHud : MonoBehaviour
             SetShopMessage($"采购申请已盖章: {GetShopItemLabel(itemId)} -{cost}G。");
         else
             SetShopMessage($"{GetShopItemLabel(itemId)}采购失败。");
+    }
+
+    void TryBuyWristwatch(PlayerHotbar hotbar)
+    {
+        if (hotbar == null) return;
+        if (hotbar.HasWristwatchOwned)
+        {
+            SetShopMessage("你已经戴着一块廉价工时表。");
+            return;
+        }
+
+        if (CompanyData.Current.Funds < PlayerHotbar.WristwatchCost)
+        {
+            SetShopMessage($"资金不足: 廉价工时表需要 {PlayerHotbar.WristwatchCost}G。");
+            return;
+        }
+
+        if (hotbar.TryPurchaseWristwatch())
+            SetShopMessage($"采购申请已盖章: 廉价工时表 -{PlayerHotbar.WristwatchCost}G。");
+        else
+            SetShopMessage("廉价工时表采购失败。");
     }
 
     void SetShopMessage(string message)
@@ -195,6 +217,10 @@ public class MvpHud : MonoBehaviour
             string result = MvpPendingReward.ResultLabel;
             int displayedExperience = MvpPendingReward.ResultKind == MvpMissionResultKind.Failed ? 0 : MvpPendingReward.Experience;
             GUILayout.Label($"待领取奖励: {result}  金钱 {MvpPendingReward.Money} / 声望 {MvpPendingReward.Reputation} / 经验 {displayedExperience}", accentStyle);
+            if (MvpPendingReward.HasOvertimePenalty)
+                GUILayout.Label(
+                    $"含超时扣罚: {MvpMissionClock.FormatGameHours(MvpPendingReward.OvertimeGameHours)}  -{MvpPendingReward.OvertimeMoneyPenalty}G / 声望 -{MvpPendingReward.OvertimeReputationPenalty}",
+                    warningStyle);
             bool hostCanClaim = IsLocalHostOrSolo();
             GUI.enabled = hostCanClaim;
             if (computer != null && GUILayout.Button(hostCanClaim ? "领取结算" : "等待房主领取结算", GUILayout.Height(34)))
@@ -253,6 +279,8 @@ public class MvpHud : MonoBehaviour
         GUILayout.Label($"委托人: {computer.DemoTaskClient}    地点: {computer.DemoTaskLocation}", labelStyle);
         GUILayout.Label(computer.DemoTaskDescription, mutedStyle);
         GUILayout.Label($"报酬: {computer.DemoTaskMoneyReward} G    声望 +{computer.DemoTaskReputationReward}    经验 +{computer.DemoTaskExperienceReward}", labelStyle);
+        GUILayout.Label($"作业窗口: {MvpMissionClock.GetScheduleSummary(computer.DemoTask)}", labelStyle);
+        GUILayout.Label(MvpMissionClock.GetOvertimeRuleSummary(computer.DemoTask), mutedStyle);
         GUILayout.Space(8);
 
         bool hostReady = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && NetworkManager.Singleton.IsHost;
@@ -293,6 +321,10 @@ public class MvpHud : MonoBehaviour
         DrawShopButton(activeHotbar, MvpHotbarItemId.StunSpray, "定身喷雾", canBuy);
         DrawShopButton(activeHotbar, MvpHotbarItemId.Flashlight, "手电", canBuy);
         GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        DrawWristwatchShopButton(activeHotbar, canBuy);
+        GUILayout.FlexibleSpace();
+        GUILayout.EndHorizontal();
 
         if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
             GUILayout.Label(shopMessage, shopMessage.Contains("不足") ? warningStyle : accentStyle);
@@ -306,11 +338,21 @@ public class MvpHud : MonoBehaviour
         GUI.enabled = true;
     }
 
+    void DrawWristwatchShopButton(PlayerHotbar hotbar, bool canBuy)
+    {
+        bool alreadyOwned = hotbar != null && hotbar.HasWristwatchOwned;
+        GUI.enabled = canBuy && !alreadyOwned;
+        string label = alreadyOwned ? "廉价工时表 已佩戴" : $"廉价工时表  {PlayerHotbar.WristwatchCost}G";
+        if (GUILayout.Button(label, GUILayout.Height(30)))
+            TryBuyWristwatch(hotbar);
+        GUI.enabled = true;
+    }
+
     void DrawMissionPanel()
     {
         LostItemMissionManager mission = LostItemMissionManager.Instance;
-        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 190), GUIContent.none, panelStyle);
-        GUILayout.Label($"用时: {FormatTime(mission.MissionTimer.Value)}", labelStyle);
+        GUILayout.BeginArea(new Rect(18, 18, panelWidth, 230), GUIContent.none, panelStyle);
+        DrawFieldClockLine(mission);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
         GUILayout.Label(GetCarrierText(mission), mission.LostItemCollected.Value ? accentStyle : mutedStyle);
         GUILayout.Label(GetBonusEvidenceText(mission), mission.BonusEvidenceCollected.Value ? accentStyle : mutedStyle);
@@ -346,6 +388,7 @@ public class MvpHud : MonoBehaviour
 
         GUILayout.Space(8);
         GUILayout.Label(van.GetReturnSummary(), accentStyle);
+        DrawVehicleClockBlock(LostItemMissionManager.Instance);
         GUILayout.Label("车载物资柜是团队共享补给。拿完再决定继续进场，或直接返程结算。", mutedStyle);
         GUILayout.Space(10);
 
@@ -392,6 +435,60 @@ public class MvpHud : MonoBehaviour
         if (!canReturn)
             GUILayout.Label(van.GetReturnBlockedReason(), warningStyle);
         GUILayout.EndArea();
+    }
+
+    void DrawFieldClockLine(LostItemMissionManager mission)
+    {
+        if (mission == null) return;
+
+        if (HasLocalWristwatch())
+        {
+            GUILayout.Label(
+                $"工时表: {mission.CurrentClockLabel}    合同截止: {mission.DeadlineClockLabel}",
+                mission.IsOvertime ? warningStyle : labelStyle);
+            DrawOvertimeLine(mission);
+            return;
+        }
+
+        GUILayout.Label($"天光判断: {MvpMissionClock.GetDaylightLabel(mission.CurrentClockHour)}", labelStyle);
+        GUILayout.Label("准确时间: 回事故车看车载钟，或在事务所购买廉价工时表。", mutedStyle);
+        if (mission.IsOvertime)
+            GUILayout.Label("你感觉已经拖过合同窗口了，返程结算会被扣。", warningStyle);
+    }
+
+    void DrawVehicleClockBlock(LostItemMissionManager mission)
+    {
+        if (mission == null) return;
+
+        GUILayout.BeginVertical(slotStyle);
+        GUILayout.Label(
+            $"车载时钟: {mission.CurrentClockLabel}    标准下班: {mission.DeadlineClockLabel}",
+            mission.IsOvertime ? warningStyle : labelStyle);
+        if (mission.IsOvertime)
+        {
+            DrawOvertimeLine(mission);
+        }
+        else
+        {
+            GUILayout.Label($"剩余窗口: {MvpMissionClock.FormatGameHours(mission.RemainingGameHours)}", accentStyle);
+        }
+        GUILayout.EndVertical();
+        GUILayout.Space(8);
+    }
+
+    void DrawOvertimeLine(LostItemMissionManager mission)
+    {
+        if (mission == null || !mission.IsOvertime) return;
+
+        GUILayout.Label(
+            $"超时: {MvpMissionClock.FormatGameHours(mission.OvertimeGameHours)}    预计扣款 -{mission.OvertimeMoneyPenalty}G / 声望 -{mission.OvertimeReputationPenalty}",
+            warningStyle);
+    }
+
+    bool HasLocalWristwatch()
+    {
+        PlayerHotbar hotbar = FindLocalHotbar();
+        return hotbar != null && hotbar.HasWristwatchOwned;
     }
 
     void DrawHotbar()
@@ -600,12 +697,6 @@ public class MvpHud : MonoBehaviour
             default:
                 return "道具";
         }
-    }
-
-    static string FormatTime(float seconds)
-    {
-        int total = Mathf.Max(0, Mathf.FloorToInt(seconds));
-        return $"{total / 60:00}:{total % 60:00}";
     }
 
     void EnsureStyles()

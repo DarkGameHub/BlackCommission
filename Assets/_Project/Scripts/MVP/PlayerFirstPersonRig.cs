@@ -14,6 +14,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     GameObject sprayModel;
     GameObject decoyModel;
     GameObject flashlightModel;
+    GameObject watchModel;
+    GameObject thirdPersonWatchModel;
 
     Material skinMaterial;
     Material sleeveMaterial;
@@ -24,6 +26,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     Material decoyMaterial;
     Material flashlightMaterial;
     Material lightMaterial;
+    Material watchMaterial;
+    Material watchScreenMaterial;
     Renderer bodyRenderer;
     bool bodyRendererWasEnabled;
 
@@ -54,6 +58,9 @@ public class PlayerFirstPersonRig : NetworkBehaviour
 
     void LateUpdate()
     {
+        if (!IsOwner && hotbar != null && thirdPersonWatchModel != null)
+            thirdPersonWatchModel.SetActive(hotbar.HasWristwatch.Value);
+
         if (!IsOwner || hotbar == null || heldItemRoot == null) return;
 
         HotbarSlot selected = hotbar.GetSlot(hotbar.SelectedSlot.Value);
@@ -62,6 +69,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
             : selected.itemId;
 
         SetActiveItem(itemId);
+        if (watchModel != null)
+            watchModel.SetActive(hotbar.HasWristwatchOwned);
     }
 
     void BuildRig()
@@ -80,6 +89,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
 
         EnsureMaterials();
         CreateHands(rigRoot.transform);
+        watchModel = CreateWristwatch(rigRoot.transform);
+        watchModel.SetActive(false);
 
         heldItemRoot = new GameObject("HeldItemRoot").transform;
         heldItemRoot.SetParent(rigRoot.transform, false);
@@ -121,6 +132,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         CreatePrimitive(PrimitiveType.Cube, "CheapBackpack", thirdPersonRoot.transform,
             new Vector3(0f, 1.05f, 0.2f), new Vector3(0.38f, 0.48f, 0.12f),
             Quaternion.identity, darkMaterial);
+        thirdPersonWatchModel = CreateThirdPersonWristwatch(thirdPersonRoot.transform);
+        thirdPersonWatchModel.SetActive(hotbar != null && hotbar.HasWristwatch.Value);
     }
 
     void HideCapsuleBodyMesh()
@@ -201,6 +214,36 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         return root;
     }
 
+    GameObject CreateWristwatch(Transform parent)
+    {
+        var root = new GameObject("Worn_Wristwatch");
+        root.transform.SetParent(parent, false);
+        root.transform.localPosition = new Vector3(-0.235f, -0.085f, 0.28f);
+        root.transform.localRotation = Quaternion.Euler(18f, -12f, 4f);
+
+        CreatePrimitive(PrimitiveType.Cube, "CheapBand", root.transform, Vector3.zero,
+            new Vector3(0.15f, 0.035f, 0.075f), Quaternion.identity, watchMaterial);
+        CreatePrimitive(PrimitiveType.Cube, "ClockFace", root.transform, new Vector3(0f, 0.026f, 0f),
+            new Vector3(0.11f, 0.018f, 0.058f), Quaternion.identity, watchScreenMaterial);
+        CreatePrimitive(PrimitiveType.Cube, "ClockScratch", root.transform, new Vector3(0.02f, 0.038f, -0.004f),
+            new Vector3(0.055f, 0.006f, 0.008f), Quaternion.identity, lightMaterial);
+        return root;
+    }
+
+    GameObject CreateThirdPersonWristwatch(Transform parent)
+    {
+        var root = new GameObject("ThirdPerson_Wristwatch");
+        root.transform.SetParent(parent, false);
+        root.transform.localPosition = new Vector3(-0.36f, 0.86f, -0.09f);
+        root.transform.localRotation = Quaternion.identity;
+
+        CreatePrimitive(PrimitiveType.Cube, "VisibleBand", root.transform, Vector3.zero,
+            new Vector3(0.17f, 0.055f, 0.035f), Quaternion.identity, watchMaterial);
+        CreatePrimitive(PrimitiveType.Cube, "VisibleClockFace", root.transform, new Vector3(0f, 0f, -0.022f),
+            new Vector3(0.1f, 0.042f, 0.02f), Quaternion.identity, watchScreenMaterial);
+        return root;
+    }
+
     GameObject CreatePrimitive(PrimitiveType type, string name, Transform parent,
         Vector3 localPosition, Vector3 localScale, Quaternion localRotation, Material material)
     {
@@ -236,6 +279,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         decoyMaterial = MakeMaterial(new Color(0.95f, 0.62f, 0.16f));
         flashlightMaterial = MakeMaterial(new Color(0.18f, 0.19f, 0.18f));
         lightMaterial = MakeMaterial(new Color(1f, 0.9f, 0.35f));
+        watchMaterial = MakeMaterial(new Color(0.025f, 0.03f, 0.03f));
+        watchScreenMaterial = MakeMaterial(new Color(0.08f, 0.75f, 0.32f));
     }
 
     static Material MakeMaterial(Color color)
