@@ -28,6 +28,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     public NetworkVariable<int> StoredFlashlightCount = new(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public OfficeTaskDefinition DemoTask => demoTask;
     public bool HasSelectedDemoTask => demoTask != null && MvpMissionRuntime.SelectedTask == demoTask;
     public string DemoTaskTitle => demoTask != null ? demoTask.title : "被遗忘的作业本";
     public string DemoTaskClient => demoTask != null ? demoTask.client : "家长";

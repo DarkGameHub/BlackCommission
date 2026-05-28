@@ -52,6 +52,18 @@ public class LostItemMissionManager : NetworkBehaviour
     public NetworkVariable<float> MissionTimer = new(0f,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    OfficeTaskDefinition ActiveTask => MvpMissionRuntime.ActiveTask;
+    public float ElapsedGameHours => MvpMissionClock.GetElapsedGameHours(ActiveTask, MissionTimer.Value);
+    public float CurrentClockHour => MvpMissionClock.GetCurrentClockHour(ActiveTask, MissionTimer.Value);
+    public float DeadlineClockHour => MvpMissionClock.GetDeadlineClockHour(ActiveTask);
+    public float RemainingGameHours => MvpMissionClock.GetRemainingGameHours(ActiveTask, MissionTimer.Value);
+    public float OvertimeGameHours => MvpMissionClock.GetOvertimeGameHours(ActiveTask, MissionTimer.Value);
+    public bool IsOvertime => OvertimeGameHours > 0f;
+    public int OvertimeMoneyPenalty => MvpMissionClock.GetOvertimeMoneyPenalty(ActiveTask, MissionTimer.Value);
+    public int OvertimeReputationPenalty => MvpMissionClock.GetOvertimeReputationPenalty(ActiveTask, MissionTimer.Value);
+    public string CurrentClockLabel => MvpMissionClock.FormatClock(CurrentClockHour);
+    public string DeadlineClockLabel => MvpMissionClock.FormatClock(DeadlineClockHour);
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -162,6 +174,11 @@ public class LostItemMissionManager : NetworkBehaviour
         int money = GetMoneyForResult(task, resultKind);
         int reputation = GetReputationForResult(task, resultKind);
         int experience = GetExperienceForResult(task, resultKind);
+        float overtimeGameHours = MvpMissionClock.GetOvertimeGameHours(task, MissionTimer.Value);
+        int overtimeMoneyPenalty = MvpMissionClock.GetOvertimeMoneyPenalty(task, MissionTimer.Value);
+        int overtimeReputationPenalty = MvpMissionClock.GetOvertimeReputationPenalty(task, MissionTimer.Value);
+        money -= overtimeMoneyPenalty;
+        reputation -= overtimeReputationPenalty;
         string officeScene = MvpMissionRuntime.HasActiveTask ? MvpMissionRuntime.ReturnOfficeScene : fallbackOfficeScene;
         string taskTitle = task != null ? task.title : "委托";
         string locationName = task != null ? task.locationName : "任务地点";
@@ -170,14 +187,16 @@ public class LostItemMissionManager : NetworkBehaviour
         {
             RestorePlayersForOffice();
             ShowReturnTransitClientRpc(taskTitle, locationName, Mathf.Max(1.5f, returnTransitSeconds));
-            SetPendingRewardClientRpc(money, reputation, experience, success, MissionTimer.Value, (int)resultKind);
+            SetPendingRewardClientRpc(money, reputation, experience, success, MissionTimer.Value, (int)resultKind,
+                overtimeGameHours, overtimeMoneyPenalty, overtimeReputationPenalty);
             StartCoroutine(LoadOfficeAfterRewardDispatch(officeScene, Mathf.Max(1.5f, returnTransitSeconds)));
         }
         else
         {
             VanTransitOverlay.ShowReturn(taskTitle, locationName, Mathf.Max(1.5f, returnTransitSeconds));
             MvpPendingReward.Set(money, reputation, experience, success, MissionTimer.Value,
-                resultKind == MvpMissionResultKind.Success, resultKind);
+                resultKind == MvpMissionResultKind.Success, resultKind,
+                overtimeGameHours, overtimeMoneyPenalty, overtimeReputationPenalty);
             StartCoroutine(LoadOfficeLocalAfterTransit(officeScene, Mathf.Max(1.5f, returnTransitSeconds)));
         }
     }
@@ -211,11 +230,21 @@ public class LostItemMissionManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    void SetPendingRewardClientRpc(int money, int reputation, int experience, bool success, float elapsedSeconds, int resultKind)
+    void SetPendingRewardClientRpc(
+        int money,
+        int reputation,
+        int experience,
+        bool success,
+        float elapsedSeconds,
+        int resultKind,
+        float overtimeGameHours,
+        int overtimeMoneyPenalty,
+        int overtimeReputationPenalty)
     {
         MvpMissionResultKind kind = (MvpMissionResultKind)Mathf.Clamp(resultKind, 0, (int)MvpMissionResultKind.Failed);
         MvpPendingReward.Set(money, reputation, experience, success, elapsedSeconds,
-            kind == MvpMissionResultKind.Success, kind);
+            kind == MvpMissionResultKind.Success, kind,
+            overtimeGameHours, overtimeMoneyPenalty, overtimeReputationPenalty);
     }
 
     int GetMoneyForResult(OfficeTaskDefinition task, MvpMissionResultKind resultKind)
@@ -291,6 +320,7 @@ public class LostItemMissionManager : NetworkBehaviour
     int GetFailureMoney(OfficeTaskDefinition task) => task != null ? task.failureConsolationMoney : fallbackFailureMoney;
     int GetFailureReputation(OfficeTaskDefinition task) => task != null ? task.failureReputationPenalty : fallbackFailureReputation;
     int GetFailureExperience(OfficeTaskDefinition task) => task != null ? task.failureExperience : fallbackFailureExperience;
+
     bool HasMissionAuthority => IsServer || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening;
 
     bool IsPlayerNearExit(ulong clientId, Vector3 exitPosition, float requiredDistance)

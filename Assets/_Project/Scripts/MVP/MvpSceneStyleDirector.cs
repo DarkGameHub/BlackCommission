@@ -735,6 +735,10 @@ public static class MvpSceneStyleDirector
         light.color = new Color(0.58f, 0.74f, 0.68f);
         light.intensity = 0.72f;
         light.range = 6.5f;
+
+        var timeDirector = new GameObject("SchoolTimeOfDayDirector");
+        timeDirector.transform.SetParent(root.transform, false);
+        timeDirector.AddComponent<MissionTimeOfDayDirector>();
     }
 
     static void PrepareSchoolExteriorEntry(
@@ -1223,6 +1227,14 @@ public static class MvpSceneStyleDirector
             new Vector3(1.92f, 0.18f, 0.12f), darkMetal);
         CreateBox("SchoolReturnVan_Plate", root, new Vector3(exitPosition.x, 0.55f, exitPosition.z - 0.22f),
             new Vector3(0.58f, 0.15f, 0.035f), paper);
+        CreateBox("SchoolReturnVan_ClockScreen", root, new Vector3(exitPosition.x, 1.42f, exitPosition.z - 0.31f),
+            new Vector3(0.72f, 0.2f, 0.035f), exitGreen);
+        CreateBox("SchoolReturnVan_ClockBezel", root, new Vector3(exitPosition.x, 1.42f, exitPosition.z - 0.34f),
+            new Vector3(0.88f, 0.28f, 0.025f), darkMetal);
+        CreateBox("SchoolReturnVan_ClockLineA", root, new Vector3(exitPosition.x - 0.13f, 1.43f, exitPosition.z - 0.285f),
+            new Vector3(0.18f, 0.035f, 0.02f), paper);
+        CreateBox("SchoolReturnVan_ClockLineB", root, new Vector3(exitPosition.x + 0.18f, 1.43f, exitPosition.z - 0.285f),
+            new Vector3(0.22f, 0.035f, 0.02f), paper);
 
         CreateCylinder("SchoolReturnVan_Wheel_LA", root, vanCenter + new Vector3(-1.08f, -0.42f, -0.7f),
             Quaternion.Euler(0f, 0f, 90f), new Vector3(0.32f, 0.18f, 0.32f), tire);

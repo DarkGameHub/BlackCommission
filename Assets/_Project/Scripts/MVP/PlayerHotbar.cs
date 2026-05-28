@@ -26,6 +26,7 @@ public class HotbarSlot
 public class PlayerHotbar : NetworkBehaviour
 {
     public const int SlotCount = 5;
+    public const int WristwatchCost = 150;
     const float OfficeComputerPurchaseDistance = 3.4f;
     const float OfficeGroundStorageDropDistance = 5.2f;
 
@@ -40,6 +41,11 @@ public class PlayerHotbar : NetworkBehaviour
 
     public NetworkVariable<int> SelectedSlot = new(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<bool> HasWristwatch = new(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    bool localWristwatchOwned;
+    public bool HasWristwatchOwned => localWristwatchOwned || HasWristwatch.Value;
 
     void Awake()
     {
@@ -143,6 +149,25 @@ public class PlayerHotbar : NetworkBehaviour
         }
 
         DropSelectedSlotServerRpc(index, itemId);
+        return true;
+    }
+
+    public bool TryPurchaseWristwatch()
+    {
+        if (!IsOwner) return false;
+        if (HasWristwatchOwned) return false;
+        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
+        if (!IsNearOfficeComputer()) return false;
+        if (CompanyData.Current.Funds < WristwatchCost) return false;
+
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            localWristwatchOwned = true;
+            CompanyData.Current.Funds -= WristwatchCost;
+            return true;
+        }
+
+        PurchaseWristwatchServerRpc();
         return true;
     }
 
@@ -328,6 +353,19 @@ public class PlayerHotbar : NetworkBehaviour
             CompanyData.Current.Funds);
     }
 
+    [ServerRpc]
+    void PurchaseWristwatchServerRpc()
+    {
+        if (HasWristwatch.Value) return;
+        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return;
+        if (!IsNearOfficeComputer()) return;
+        if (CompanyData.Current.Funds < WristwatchCost) return;
+
+        HasWristwatch.Value = true;
+        CompanyData.Current.Funds -= WristwatchCost;
+        SyncWristwatchPurchaseClientRpc(CompanyData.Current.Funds);
+    }
+
     [ClientRpc]
     void SlotConsumedClientRpc(int index, int remainingQuantity)
     {
@@ -372,6 +410,13 @@ public class PlayerHotbar : NetworkBehaviour
         SetSlotFromNetwork(4, item4, qty4);
     }
 
+    [ClientRpc]
+    void SyncWristwatchPurchaseClientRpc(int funds)
+    {
+        localWristwatchOwned = true;
+        CompanyData.Current.Funds = funds;
+    }
+
     bool TryPurchaseLocal(MvpHotbarItemId itemId)
     {
         if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
@@ -396,7 +441,7 @@ public class PlayerHotbar : NetworkBehaviour
     {
         if (itemId == MvpHotbarItemId.None || quantity <= 0) return false;
 
-        if (itemId == MvpHotbarItemId.Flashlight && HasItem(MvpHotbarItemId.Flashlight))
+        if (itemId == MvpHotbarItemId.Flashlight && HasItem(itemId))
             return false;
 
         for (int i = 0; i < slots.Length; i++)
@@ -421,7 +466,7 @@ public class PlayerHotbar : NetworkBehaviour
         return false;
     }
 
-    bool HasItem(MvpHotbarItemId itemId)
+    public bool HasItem(MvpHotbarItemId itemId)
     {
         for (int i = 0; i < slots.Length; i++)
         {

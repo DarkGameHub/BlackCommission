@@ -20,6 +20,17 @@ public class OfficeTaskDefinition : ScriptableObject
     public int requiredOfficeLevel = 1;
     public int minimumReputation = -100;
 
+    [Header("Schedule")]
+    [Tooltip("Game clock hour when the crew clocks in. 8 = 08:00.")]
+    public float missionStartClockHour = 8f;
+    [Tooltip("How many in-game hours the standard contract window lasts.")]
+    public float contractWindowGameHours = 12f;
+    [Tooltip("Real seconds per in-game hour. 60 means 12 real minutes equals 12 in-game hours.")]
+    public float realSecondsPerGameHour = 60f;
+    public int overtimeMoneyPenaltyPerGameHour = 30;
+    public float overtimeReputationPenaltyBlockGameHours = 2f;
+    public int overtimeReputationPenaltyPerBlock = 1;
+
     [Header("Rewards")]
     public int moneyReward = 300;
     public int reputationReward = 5;
