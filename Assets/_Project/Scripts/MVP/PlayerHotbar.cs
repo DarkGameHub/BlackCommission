@@ -70,6 +70,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (!IsOwner) return;
         if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
 
+        bool usePressed = inputActions != null && inputActions.Player.UseItem.WasPressedThisFrame();
         if (Keyboard.current != null)
         {
             if (Keyboard.current.digit1Key.wasPressedThisFrame) SelectSlot(0);
@@ -77,9 +78,10 @@ public class PlayerHotbar : NetworkBehaviour
             if (Keyboard.current.digit3Key.wasPressedThisFrame) SelectSlot(2);
             if (Keyboard.current.digit4Key.wasPressedThisFrame) SelectSlot(3);
             if (Keyboard.current.digit5Key.wasPressedThisFrame) SelectSlot(4);
+            usePressed |= Keyboard.current.hKey.wasPressedThisFrame;
         }
 
-        if (inputActions != null && inputActions.Player.UseItem.WasPressedThisFrame())
+        if (usePressed)
             UseSelectedSlot();
 
         if (inputActions != null && inputActions.Player.Drop.WasPressedThisFrame())
