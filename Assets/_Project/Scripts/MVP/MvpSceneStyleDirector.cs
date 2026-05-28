@@ -358,16 +358,6 @@ public static class MvpSceneStyleDirector
             new Vector3(0.2f, 0.018f, 0.34f), paper);
         CreateBox("HQDeskReceiptTrailB", root, new Vector3(-2.04f, 0.635f, 1.1f),
             new Vector3(0.2f, 0.016f, 0.28f), paper).transform.rotation = Quaternion.Euler(0f, 8f, 0f);
-        CreateBox("HQCheapOfficeChairSeat", root, new Vector3(-1.35f, 0.32f, 1.02f),
-            new Vector3(0.55f, 0.09f, 0.42f), fabric);
-        CreateBox("HQCheapOfficeChairBack", root, new Vector3(-1.35f, 0.62f, 1.2f),
-            new Vector3(0.55f, 0.52f, 0.08f), fabric);
-        CreateBox("HQCheapOfficeChairStem", root, new Vector3(-1.35f, 0.18f, 1.02f),
-            new Vector3(0.08f, 0.28f, 0.08f), darkMetal);
-        CreateBox("HQCheapOfficeChairFoot", root, new Vector3(-1.35f, 0.055f, 1.02f),
-            new Vector3(0.58f, 0.035f, 0.08f), darkMetal);
-        CreateBox("HQCheapOfficeChairFootCross", root, new Vector3(-1.35f, 0.055f, 1.02f),
-            new Vector3(0.08f, 0.035f, 0.58f), darkMetal);
         CreateReadableComputerTerminal(root, darkMetal, terminalGreen, paper, lightPanel);
 
         CreateBox("HQDebtBoard", root, new Vector3(-2.45f, 1.65f, 2.49f),
@@ -431,6 +421,7 @@ public static class MvpSceneStyleDirector
             new Vector3(0.22f, 0.045f, 0.36f), darkMetal);
         CreateBox("HQEquipmentShelfRightFoot", root, new Vector3(2.94f, 0.067f, 1.8f),
             new Vector3(0.22f, 0.045f, 0.36f), darkMetal);
+        CreateOfficeGroundStoragePads(root, terminalGreen, warningRed, paper, darkMetal, cardboard);
         CreateBox("HQSofaContactShadow", root, new Vector3(1.05f, 0.058f, 2.18f),
             new Vector3(1.22f, 0.018f, 0.6f), darkMetal);
         CreateBox("HQSofaSeat", root, new Vector3(1.05f, 0.215f, 2.18f),
@@ -480,9 +471,13 @@ public static class MvpSceneStyleDirector
         exitLight.range = 3.6f;
 
         CreateSpotLight("HQGarageWorkLight", root, new Vector3(2.1f, 2.35f, -3.1f),
-            new Vector3(2.1f, 0.08f, -3.55f), SodiumAmberPale, 1.75f, 4.9f, 78f);
+            new Vector3(2.1f, 0.08f, -4.1f), SodiumAmberPale, 2.35f, 6.8f, 84f);
+        CreatePointLight("HQGarageVehicleFillLight", root, new Vector3(2.55f, 1.55f, -5.85f),
+            SodiumAmberPale, 1.05f, 5.4f);
+        CreatePointLight("HQGarageGreenServiceLamp", root, new Vector3(1.05f, 1.42f, -3.85f),
+            DispatchGreen, 0.55f, 3.5f);
         CreateSpotLight("HQYardFloodLight", root, new Vector3(2.45f, 3.05f, -4.25f),
-            new Vector3(2.45f, 0.05f, -6.05f), SodiumAmber, 1.55f, 6.2f, 70f);
+            new Vector3(2.45f, 0.05f, -6.05f), SodiumAmber, 2.05f, 7.6f, 76f);
         CreateSpotLight("HQVanHeadlightCone", root, new Vector3(2.65f, 0.7f, -7.65f),
             new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 0.42f, 2.4f, 48f);
     }
@@ -547,6 +542,63 @@ public static class MvpSceneStyleDirector
         glow.color = DispatchGreen;
         glow.intensity = 0.82f;
         glow.range = 2.6f;
+    }
+
+    static void CreateOfficeGroundStoragePads(
+        Transform root,
+        Material terminalGreen,
+        Material warningRed,
+        Material paper,
+        Material darkMetal,
+        Material cardboard)
+    {
+        CreateBox("HQGroundStorageMat", root, new Vector3(2.42f, 0.082f, 0.72f),
+            new Vector3(1.55f, 0.024f, 0.92f), MakeOfficeMaterial("Office_GroundStorageMat",
+                DeadRubberSoft, DispatchGreenDark, OfficePattern.Warning));
+        CreateBox("HQGroundStorageTapeFront", root, new Vector3(2.42f, 0.105f, 0.26f),
+            new Vector3(1.48f, 0.018f, 0.055f), warningRed);
+        CreateBox("HQGroundStorageTapeBack", root, new Vector3(2.42f, 0.105f, 1.18f),
+            new Vector3(1.48f, 0.018f, 0.055f), terminalGreen);
+
+        CreateGroundStoragePickup("HQStoredMedkitPickup", root, MvpHotbarItemId.Medkit,
+            new Vector3(1.86f, 0.22f, 0.52f), new Vector3(0.28f, 0.2f, 0.22f), paper, warningRed);
+        CreateGroundStoragePickup("HQStoredDecoyPickup", root, MvpHotbarItemId.Decoy,
+            new Vector3(2.28f, 0.2f, 0.52f), new Vector3(0.22f, 0.18f, 0.22f), cardboard, terminalGreen);
+        CreateGroundStoragePickup("HQStoredSprayPickup", root, MvpHotbarItemId.StunSpray,
+            new Vector3(2.7f, 0.28f, 0.52f), new Vector3(0.11f, 0.24f, 0.11f), terminalGreen, darkMetal);
+        CreateGroundStoragePickup("HQStoredFlashlightPickup", root, MvpHotbarItemId.Flashlight,
+            new Vector3(2.42f, 0.2f, 0.94f), new Vector3(0.1f, 0.28f, 0.1f), darkMetal, paper)
+            .transform.rotation = Quaternion.Euler(0f, 0f, 90f);
+    }
+
+    static GameObject CreateGroundStoragePickup(
+        string name,
+        Transform root,
+        MvpHotbarItemId itemId,
+        Vector3 position,
+        Vector3 scale,
+        Material material,
+        Material accent)
+    {
+        GameObject pickup = itemId == MvpHotbarItemId.StunSpray || itemId == MvpHotbarItemId.Flashlight
+            ? CreateCylinder(name, root, position, Quaternion.identity, scale, material)
+            : CreateBox(name, root, position, scale, material);
+        var collider = pickup.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
+        collider.size = new Vector3(2.1f, 2.2f, 2.1f);
+        collider.center = new Vector3(0f, 0.2f, 0f);
+        var item = pickup.AddComponent<OfficeGroundItemPickup>();
+        item.Configure(itemId);
+
+        if (itemId == MvpHotbarItemId.Medkit)
+        {
+            CreateBox($"{name}_CrossH", pickup.transform, position + new Vector3(0f, 0.02f, -0.115f),
+                new Vector3(0.18f, 0.035f, 0.02f), accent);
+            CreateBox($"{name}_CrossV", pickup.transform, position + new Vector3(0f, 0.02f, -0.12f),
+                new Vector3(0.035f, 0.14f, 0.02f), accent);
+        }
+
+        return pickup;
     }
 
     static void CreateCleanFallbackExteriorVan(
@@ -629,6 +681,8 @@ public static class MvpSceneStyleDirector
         Material vanGlass = MakeOfficeMaterial("School_ReturnVanGlass", OldGlass, DeadRubber, OfficePattern.Scanline);
         Material tire = MakeMaterial(DeadRubber);
 
+        PrepareSchoolExteriorEntry(root.transform, coldPaint, warningRed, paper, dark, exitGreen);
+
         for (int i = 0; i < 5; i++)
         {
             CreateBox($"ColdLocker_{i + 1}", root.transform, new Vector3(-10.8f, 0.95f, -5.4f + i * 1.3f),
@@ -668,6 +722,83 @@ public static class MvpSceneStyleDirector
         light.color = new Color(0.58f, 0.74f, 0.68f);
         light.intensity = 0.72f;
         light.range = 6.5f;
+    }
+
+    static void PrepareSchoolExteriorEntry(
+        Transform root,
+        Material coldPaint,
+        Material warningRed,
+        Material paper,
+        Material dark,
+        Material exitGreen)
+    {
+        GameObject southWall = GameObject.Find("Wall_South");
+        if (southWall != null)
+            southWall.SetActive(false);
+
+        GameObject spawn = GameObject.Find("PlayerSpawnPoint");
+        if (spawn != null)
+            spawn.transform.SetPositionAndRotation(new Vector3(0f, 0.1f, -11.45f), Quaternion.identity);
+
+        foreach (var exit in Object.FindObjectsByType<SchoolExitPoint>(FindObjectsSortMode.None))
+        {
+            if (exit != null)
+                exit.transform.position = new Vector3(0f, 0.08f, -12.2f);
+        }
+
+        CreateBox("SchoolExteriorForecourt", root, new Vector3(0f, -0.045f, -12.1f),
+            new Vector3(10.5f, 0.06f, 7.0f), MakeMaterial(DeadRubberSoft));
+        CreateWalkableCollider("SchoolExteriorForecourtCollider", root,
+            new Vector3(0f, -0.05f, -12.1f), new Vector3(10.65f, 0.26f, 7.1f));
+        CreateBlockingCollider("SchoolExteriorBackFenceCollider", root,
+            new Vector3(0f, 0.9f, -15.7f), new Vector3(10.7f, 1.8f, 0.3f));
+        CreateBlockingCollider("SchoolExteriorLeftFenceCollider", root,
+            new Vector3(-5.35f, 0.9f, -12.1f), new Vector3(0.3f, 1.8f, 7.1f));
+        CreateBlockingCollider("SchoolExteriorRightFenceCollider", root,
+            new Vector3(5.35f, 0.9f, -12.1f), new Vector3(0.3f, 1.8f, 7.1f));
+
+        CreateSchoolObstacle("SchoolSouthWall_LeftOfDoor", root, new Vector3(-7.1f, 1.55f, -9f),
+            new Vector3(9.8f, 3.1f, 0.28f), coldPaint);
+        CreateSchoolObstacle("SchoolSouthWall_RightOfDoor", root, new Vector3(7.1f, 1.55f, -9f),
+            new Vector3(9.8f, 3.1f, 0.28f), coldPaint);
+        CreateSchoolObstacle("SchoolSouthWall_DoorHeader", root, new Vector3(0f, 2.75f, -9f),
+            new Vector3(3.7f, 0.75f, 0.28f), coldPaint);
+
+        CreateBox("SchoolEntranceDoorFrameLeft", root, new Vector3(-1.1f, 1.28f, -9.18f),
+            new Vector3(0.18f, 2.55f, 0.2f), dark);
+        CreateBox("SchoolEntranceDoorFrameRight", root, new Vector3(1.1f, 1.28f, -9.18f),
+            new Vector3(0.18f, 2.55f, 0.2f), dark);
+        CreateBox("SchoolEntranceAwning", root, new Vector3(0f, 2.55f, -9.75f),
+            new Vector3(3.2f, 0.16f, 0.88f), dark);
+        CreateBox("SchoolEntranceSignPanel", root, new Vector3(0f, 2.13f, -9.32f),
+            new Vector3(2.35f, 0.34f, 0.035f), warningRed);
+        CreateBox("SchoolEntranceSignStripe", root, new Vector3(0f, 2.13f, -9.36f),
+            new Vector3(1.65f, 0.055f, 0.02f), paper);
+
+        GameObject door = CreateBox("SchoolEntranceDoor", root, new Vector3(0f, 1.18f, -9.1f),
+            new Vector3(1.7f, 2.25f, 0.12f), dark);
+        var doorCollider = door.AddComponent<BoxCollider>();
+        doorCollider.size = Vector3.one;
+        GameObject handle = CreateBox("SchoolEntranceDoorHandle", root, new Vector3(0.62f, 1.12f, -9.19f),
+            new Vector3(0.12f, 0.12f, 0.055f), exitGreen);
+        handle.transform.SetParent(door.transform, true);
+        door.AddComponent<SchoolEntranceDoor>();
+
+        CreateBox("SchoolEntranceSafetyPaint", root, new Vector3(0f, 0.025f, -10.05f),
+            new Vector3(2.65f, 0.024f, 0.42f), exitGreen);
+        CreateBox("SchoolExteriorDispatchArrowStem", root, new Vector3(0f, 0.03f, -11.2f),
+            new Vector3(0.18f, 0.02f, 1.85f), exitGreen);
+        GameObject arrowLeft = CreateBox("SchoolExteriorDispatchArrowLeft", root, new Vector3(-0.32f, 0.04f, -10.35f),
+            new Vector3(0.68f, 0.02f, 0.12f), exitGreen);
+        arrowLeft.transform.rotation = Quaternion.Euler(0f, -34f, 0f);
+        GameObject arrowRight = CreateBox("SchoolExteriorDispatchArrowRight", root, new Vector3(0.32f, 0.04f, -10.35f),
+            new Vector3(0.68f, 0.02f, 0.12f), exitGreen);
+        arrowRight.transform.rotation = Quaternion.Euler(0f, 34f, 0f);
+
+        CreatePointLight("SchoolExteriorDoorLamp", root, new Vector3(0f, 2.25f, -9.85f),
+            SodiumAmberPale, 1.3f, 5.2f);
+        CreatePointLight("SchoolExteriorVanSafetyLamp", root, new Vector3(-1.25f, 1.35f, -12.15f),
+            DispatchGreen, 0.62f, 4.2f);
     }
 
     static void CreateSchoolRouteComplexity(Transform root, Material coldPaint, Material warningRed, Material paper, Material dark)
@@ -1401,6 +1532,18 @@ public static class MvpSceneStyleDirector
             new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
         CreateBox("DispatchVanASV4LogoFarDebtSlash", root, vanCenter + new Vector3(0.72f, 0.78f, 0.86f),
             new Vector3(0.08f, 0.54f, 0.025f), repairDebt).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
+        CreateBox("DispatchVanASV4ClosedLeftWallPatch", root, vanCenter + new Vector3(-1.72f, 0.78f, 0f),
+            new Vector3(0.065f, 0.86f, 1.7f), repairPanel);
+        CreateBox("DispatchVanASV4ClosedRightWallPatch", root, vanCenter + new Vector3(1.72f, 0.78f, 0f),
+            new Vector3(0.065f, 0.86f, 1.7f), repairPanel);
+        CreateBox("DispatchVanASV4ClosedRearDoors", root, vanCenter + new Vector3(0f, 0.78f, 1.02f),
+            new Vector3(2.75f, 0.9f, 0.065f), repairPanel);
+        CreateBox("DispatchVanASV4ClosedFrontCab", root, vanCenter + new Vector3(0f, 0.72f, -1.02f),
+            new Vector3(2.45f, 0.72f, 0.065f), repairPanel);
+        CreateBox("DispatchVanASV4ClosedRoofSkin", root, vanCenter + new Vector3(0f, 1.32f, 0f),
+            new Vector3(3.25f, 0.08f, 1.62f), repairPanel);
+        CreateBox("DispatchVanASV4ClosedFloorShadow", root, vanCenter + new Vector3(0f, 0.14f, 0f),
+            new Vector3(3.35f, 0.08f, 1.72f), repairDirt);
 
         if (van.GetComponentInChildren<OfficeDepartureVan>() == null)
         {
@@ -1419,9 +1562,13 @@ public static class MvpSceneStyleDirector
         beacon.range = 2.4f;
 
         CreateSpotLight("GarageAmberBayLight", root, new Vector3(2.55f, 2.48f, -3.85f),
-            new Vector3(2.55f, 0.12f, -4.65f), SodiumAmberPale, 1.3f, 4.8f, 72f);
+            new Vector3(2.55f, 0.12f, -5.75f), SodiumAmberPale, 2.2f, 7.0f, 84f);
+        CreatePointLight("GarageVehicleFillLight", root, new Vector3(2.6f, 1.55f, -6.1f),
+            SodiumAmberPale, 1.2f, 5.4f);
+        CreatePointLight("GarageDoorGreenWorkLight", root, new Vector3(1.15f, 1.35f, -4.1f),
+            DispatchGreen, 0.62f, 3.8f);
         CreateSpotLight("DispatchVanASV4HeadlightCone", root, new Vector3(2.65f, 0.7f, -7.7f),
-            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 0.42f, 2.4f, 48f);
+            new Vector3(2.65f, 0.18f, -8.35f), SodiumAmberPale, 0.72f, 3.2f, 52f);
 
         CreateBox("DispatchVanASV4RoutePickupMark", root, new Vector3(2.65f, 0.1f, -6.35f),
             new Vector3(0.28f, 0.018f, 2.7f), terminalGreen);

@@ -84,10 +84,12 @@ Main Menu
   -> Rundown Office
   -> Office Computer
   -> Buy Gear From Computer
+  -> Drop Spare Gear On HQ Storage Mat With G
   -> Accept "Missing Homework Notebook"
   -> Gather In Dispatch Van
-  -> Host Drives / In-Van Transit
-  -> School Gate Van
+  -> Host Drives / Facing-Seat Van Transit
+  -> School Gate Van / Exterior Forecourt
+  -> Open School Entrance Door
   -> Find Homework Notebook
   -> Avoid Monster
   -> Return To Van
@@ -104,7 +106,7 @@ settlement path.
 
 ## Office Computer UX
 
-The office computer is the MVP hub. It should behave like a compact diegetic terminal rather than a full management screen: one interaction point, clear keyboard commands, no nested economy menus, and no mouse-only flow. In the office, pressing `E` on the computer performs the highest-priority action in this order: claim pending reward, accept the available lost-item job, or accept the tutorial acquisition when it is unlocked and affordable. Gear purchasing is available only while near the computer and only when no pending reward is waiting: `F1` medkit, `F2` decoy, `F3` stun spray, `F4` flashlight.
+The office computer is the MVP hub. It should behave like a compact diegetic terminal rather than a full management screen: one interaction point, clear keyboard commands, no nested economy menus, and no mouse-only flow. In the office, pressing `E` on the computer performs the highest-priority action in this order: claim pending reward, accept the available lost-item job, or accept the tutorial acquisition when it is unlocked and affordable. Gear purchasing is available only while near the computer and only when no pending reward is waiting: `F1` medkit, `F2` decoy, `F3` stun spray, `F4` flashlight. In HQ, `G` drops one item from the selected hotbar slot onto the office floor storage mat; the dropped counts live on the office computer so the team can retrieve spare gear before a later run.
 
 The computer panel must always show funds/debt, reputation, office level/XP, hostile takeover pressure, current lost-item progress, the next available computer action, and shop commands. Purchased gear must immediately appear in the five-slot hotbar with an icon and quantity; unpurchased gear must not appear. The mission item never occupies a hotbar slot.
 
@@ -118,7 +120,7 @@ HQ is a dense physical menu, not an exploration map. It should stay small and im
 |---|---|
 | Entry / rally area | Player spawn, join flow, team gathering, "broke company clocking in" tone |
 | Office computer | Task start, reward claim, gear shop, acquisition prompt, company state |
-| Equipment shelf | Physical reminder that gear is bought before jobs and appears in the hotbar |
+| Equipment shelf / floor mat | Physical reminder that gear is bought before jobs; spare hotbar gear can be dropped with `G` and picked back up |
 | Dispatch van | Team rally point, drive confirmation, loading ritual, return/partial settlement anchor |
 | Company status wall | Debt, reputation, hostile takeover pressure, locked categories, acquisition hints |
 | Upgrade display area | Small visible progression hooks: repaired furniture, new shelf space, better lighting |
@@ -244,7 +246,7 @@ Run `Tools > Accident Squad > MVP > Setup School MVP` after the base project set
 4. Adds `PlayerHotbar`, `PlayerFirstPersonRig`, and `ClientNetworkTransform` to the player prefab if missing.
 5. Enables Netcode connection approval and adds `MvpConnectionLimiter` to cap sessions at 4 players.
 6. Generates `Assets/_Project/Scenes/School_LostItem_01.unity`.
-7. Builds a school graybox with classroom, side record office, shelf obstacles, lockers, lighting, notebook, optional overdue ledger evidence, exit van marker, and monster.
+7. Builds a school graybox with exterior forecourt, entrance door, classroom, side record office, shelf obstacles, lockers, lighting, notebook, optional overdue ledger evidence, exit van marker, and monster.
 8. Adds `LostItemMissionManager`, `LostHomeworkItem`, `SchoolExitPoint`, and `SchoolMonsterAI` scene objects.
 9. Bakes NavMesh for the school scene when Unity's NavMesh builder is available.
 10. Updates Build Settings to `HQ -> School_LostItem_01 -> Mall_B2`.
@@ -270,9 +272,9 @@ The first playable MVP is not accepted until these pass:
 
 Run these after `Setup School MVP` and `Validate School MVP`:
 
-1. Solo host happy path: `HQ -> Start Host -> Office Computer -> Board Van -> School -> Optional Ledger -> Notebook -> Return Van -> HQ -> Claim Reward`.
+1. Solo host happy path: `HQ -> Start Host -> Office Computer -> Board Van -> School Gate -> Open Entrance Door -> Optional Ledger -> Notebook -> Return Van -> HQ -> Claim Reward`.
 2. Solo host failure path: enter school, let the monster down the player, confirm return to HQ with failure reward/penalty and hostile takeover pressure.
-3. Shop and hotbar path: in HQ, stand near the computer and buy gear with `F1-F4`; confirm only purchased gear appears in the icon hotbar and first-person hand model, then use `1-5` to select slots. Use a medkit after taking damage, use stun spray near the monster and confirm chase pauses, use a decoy and confirm the monster is distracted, then select the flashlight slot and confirm it toggles without being consumed.
+3. Shop and hotbar path: in HQ, stand near the computer and buy gear with `F1-F4`; confirm only purchased gear appears in the icon hotbar and first-person hand model, then use `1-5` to select slots. Press `G` near the office storage mat to drop one selected hotbar item, then press `E` on the floor item to pick it back up. Use a medkit after taking damage, use stun spray near the monster and confirm chase pauses, use a decoy and confirm the monster is distracted, then select the flashlight slot and confirm it toggles without being consumed.
 4. Two-client smoke: host starts mission, second player joins before mission start, both board the dispatch van, both load into school, one collects notebook, and only the notebook carrier can trigger full-success return.
 5. Partial-return smoke: host starts mission, opens the school return van before collecting the notebook, clicks once to arm the warning, clicks again to return, and confirms partial settlement.
 6. Reward idempotency: after returning to HQ, press `E` on the computer repeatedly and confirm the pending reward is applied only once.

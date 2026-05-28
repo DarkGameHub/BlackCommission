@@ -250,9 +250,7 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_sofa_base", (3.42, 2.04, 0.158), (0.95, 0.34, 0.36), m["uniform"], coll, edge=0.006)
     cube("hq_sofa_back", (3.42, 2.32, 0.388), (0.95, 0.08, 0.82), m["uniform"], coll, edge=0.006)
     cube("hq_missing_cushion_dark", (3.05, 2.04, 0.338), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
-    cube("hq_office_chair_seat", (-1.35, 1.52, 0.30), (0.46, 0.38, 0.08), m["uniform"], coll, edge=0.004)
-    cube("hq_office_chair_back", (-1.35, 1.68, 0.58), (0.46, 0.08, 0.48), m["uniform"], coll, edge=0.004)
-    cube("hq_office_chair_stem", (-1.35, 1.52, 0.118), (0.07, 0.07, 0.28), m["metal"], coll, edge=0.003)
+    # No chair in front of the terminal: players stand at the only office interaction point.
     cube("hq_filing_cabinet_contact_shadow", (-2.75, 3.32, -0.010), (0.52, 0.40, 0.018), m["black"], coll, edge=0.001)
     cube("hq_filing_cabinet_grounded", (-2.75, 3.32, 0.578), (0.44, 0.34, 1.20), m["metal_worn"], coll, edge=0.005)
     for i in range(3):

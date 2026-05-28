@@ -56,6 +56,7 @@ public class PlayerInteraction : NetworkBehaviour
             if (hit.transform.root == transform) continue;
             var interactable = hit.GetComponentInParent<IInteractable>();
             if (interactable == null) continue;
+            if (string.IsNullOrEmpty(interactable.InteractHint)) continue;
             float dist = Vector3.Distance(transform.position, hit.transform.position);
             if (dist < nearestDist) { nearest = interactable; nearestDist = dist; }
         }

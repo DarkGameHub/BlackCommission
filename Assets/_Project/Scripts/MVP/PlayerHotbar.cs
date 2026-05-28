@@ -2,6 +2,7 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 [Serializable]
 public enum MvpHotbarItemId
@@ -26,6 +27,7 @@ public class PlayerHotbar : NetworkBehaviour
 {
     public const int SlotCount = 5;
     const float OfficeComputerPurchaseDistance = 3.4f;
+    const float OfficeGroundStorageDropDistance = 5.2f;
 
     [SerializeField] HotbarSlot[] slots = new HotbarSlot[SlotCount];
     [SerializeField] float medkitHealAmount = 30f;
@@ -79,6 +81,9 @@ public class PlayerHotbar : NetworkBehaviour
 
         if (inputActions != null && inputActions.Player.UseItem.WasPressedThisFrame())
             UseSelectedSlot();
+
+        if (inputActions != null && inputActions.Player.Drop.WasPressedThisFrame())
+            TryDropSelectedSlot();
     }
 
     public HotbarSlot GetSlot(int index)
@@ -112,6 +117,31 @@ public class PlayerHotbar : NetworkBehaviour
             return;
 
         UseSlotServerRpc(index, slots[index].itemId);
+    }
+
+    public bool TryDropSelectedSlot()
+    {
+        EnsureSlots();
+        if (!IsOwner) return false;
+        if (TryGetComponent<CarrySystem>(out var carry) && carry.IsCarrying) return false;
+        if (SceneManager.GetActiveScene().name != "HQ") return false;
+
+        int index = SelectedSlot.Value;
+        if (!IsValidSlot(index) || slots[index].IsEmpty) return false;
+
+        OfficeComputer computer = FindNearestOfficeComputer(OfficeGroundStorageDropDistance);
+        if (computer == null) return false;
+
+        MvpHotbarItemId itemId = slots[index].itemId;
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            if (!computer.TryStoreDroppedItemServer(itemId, 1)) return false;
+            RemoveOneFromSlot(index);
+            return true;
+        }
+
+        DropSelectedSlotServerRpc(index, itemId);
+        return true;
     }
 
     public bool TryPurchaseItem(MvpHotbarItemId itemId)
@@ -251,6 +281,30 @@ public class PlayerHotbar : NetworkBehaviour
     }
 
     [ServerRpc]
+    void DropSelectedSlotServerRpc(int index, MvpHotbarItemId itemId)
+    {
+        EnsureSlots();
+        if (!IsValidSlot(index)) return;
+        if (SceneManager.GetActiveScene().name != "HQ") return;
+
+        HotbarSlot slot = slots[index];
+        if (slot.IsEmpty || slot.itemId != itemId) return;
+        if (TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) return;
+
+        OfficeComputer computer = FindNearestOfficeComputer(OfficeGroundStorageDropDistance);
+        if (computer == null) return;
+        if (!computer.TryStoreDroppedItemServer(itemId, 1)) return;
+
+        RemoveOneFromSlot(index);
+        SyncHotbarClientRpc(
+            GetItemId(0), slots[0].quantity,
+            GetItemId(1), slots[1].quantity,
+            GetItemId(2), slots[2].quantity,
+            GetItemId(3), slots[3].quantity,
+            GetItemId(4), slots[4].quantity);
+    }
+
+    [ServerRpc]
     void PurchaseItemServerRpc(MvpHotbarItemId itemId)
     {
         EnsureSlots();
@@ -328,6 +382,14 @@ public class PlayerHotbar : NetworkBehaviour
         return true;
     }
 
+    void RemoveOneFromSlot(int index)
+    {
+        if (!IsValidSlot(index)) return;
+        slots[index].quantity = Mathf.Max(0, slots[index].quantity - 1);
+        if (slots[index].quantity <= 0)
+            slots[index].itemId = MvpHotbarItemId.None;
+    }
+
     bool TryAddItem(MvpHotbarItemId itemId, int quantity)
     {
         if (itemId == MvpHotbarItemId.None || quantity <= 0) return false;
@@ -379,6 +441,25 @@ public class PlayerHotbar : NetworkBehaviour
         }
 
         return false;
+    }
+
+    OfficeComputer FindNearestOfficeComputer(float maxDistance)
+    {
+        OfficeComputer nearest = null;
+        float nearestDistance = maxDistance;
+        OfficeComputer[] computers = FindObjectsByType<OfficeComputer>(FindObjectsSortMode.None);
+        foreach (var computer in computers)
+        {
+            if (computer == null) continue;
+            float distance = Vector3.Distance(transform.position, computer.transform.position);
+            if (distance <= nearestDistance)
+            {
+                nearest = computer;
+                nearestDistance = distance;
+            }
+        }
+
+        return nearest;
     }
 
     int GetItemId(int index) => IsValidSlot(index) ? (int)slots[index].itemId : 0;

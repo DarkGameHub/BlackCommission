@@ -137,7 +137,7 @@ public static class MvpSmokeTestRunner
         bool changed = false;
         changed |= SetSerializedFloat(monster, "detectionRadius", 5.5f);
         changed |= SetSerializedFloat(monster, "loseRadius", 13f);
-        changed |= SetSerializedFloat(monster, "initialGraceSeconds", 8f);
+        changed |= SetSerializedFloat(monster, "initialGraceSeconds", 14f);
         changed |= SetSerializedFloat(monster, "chaseSpeed", 3.55f);
         return changed;
     }
@@ -175,7 +175,7 @@ public static class MvpSmokeTestRunner
         var so = new SerializedObject(monster);
         Require(so.FindProperty("detectionRadius").floatValue <= 6f, "Monster detection radius should stay tight enough for classroom stealth.", errors);
         Require(so.FindProperty("loseRadius").floatValue <= 14f, "Monster lose radius should allow players to break chase.", errors);
-        Require(so.FindProperty("initialGraceSeconds").floatValue >= 8f, "Monster should not chase immediately when the mission starts.", errors);
+        Require(so.FindProperty("initialGraceSeconds").floatValue >= 14f, "Monster should give players time to enter from the school gate.", errors);
         Require(so.FindProperty("chaseSpeed").floatValue < 3.8f, "Monster chase speed should be slightly below player escape speed.", errors);
         Require(monster.GetComponent<NavMeshAgent>() != null, "Monster must keep NavMeshAgent component for baked maps.", errors);
 
@@ -184,6 +184,8 @@ public static class MvpSmokeTestRunner
 
         if (Object.FindFirstObjectByType<SchoolBonusEvidenceItem>() == null)
             warnings.Add("School scene has no saved optional evidence item. Runtime style pass should create OverdueLedgerEvidence on scene load.");
+        if (Object.FindFirstObjectByType<SchoolEntranceDoor>() == null)
+            warnings.Add("School scene has no saved entrance door. Runtime style pass should create the school gate on scene load.");
     }
 
     static void CheckOfficeComputer(List<string> errors, List<string> warnings)
@@ -197,6 +199,8 @@ public static class MvpSmokeTestRunner
         SerializedProperty transit = so.FindProperty("dispatchTransitSeconds");
         if (transit == null || transit.floatValue < 1f)
             warnings.Add("OfficeComputer dispatch transit should be at least 1 second for the van ritual.");
+        if (Object.FindFirstObjectByType<OfficeGroundItemPickup>() == null)
+            warnings.Add("HQ scene has no saved floor storage pickups. Runtime style pass should create the G-drop storage mat.");
     }
 
     static void CheckHud(List<string> errors)
