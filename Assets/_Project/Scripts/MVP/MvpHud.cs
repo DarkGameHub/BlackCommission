@@ -33,6 +33,7 @@ public class MvpHud : MonoBehaviour
     float shopMessageUntil;
     string missionMessage;
     float missionMessageUntil;
+    Vector2 officeScrollPosition;
     static SchoolExitPoint partialReturnConfirmVan;
     static float partialReturnConfirmUntil;
 
@@ -189,6 +190,8 @@ public class MvpHud : MonoBehaviour
             return;
         }
         GUILayout.EndHorizontal();
+
+        officeScrollPosition = GUILayout.BeginScrollView(officeScrollPosition, false, true);
         GUILayout.Space(8);
         GUILayout.Label($"资金: {company.Funds} G    债务: {company.Debt} G", company.Funds < 0 ? warningStyle : labelStyle);
         GUILayout.Label($"声望: {company.Reputation}    等级: {company.OfficeLevel}    经验: {company.Experience}/{company.ExperienceForNextLevel}", labelStyle);
@@ -246,23 +249,30 @@ public class MvpHud : MonoBehaviour
         {
             GUILayout.Label("扩张完成: 已吞并一家 0 级事务所，第二类委托入口已解锁为后续内容。", accentStyle);
             GUILayout.Label("继续接找回失物任务可以积累资金和声望。", mutedStyle);
+            GUILayout.Space(8);
+            DrawCurrentCommissionOrDemo(computer);
         }
         else
         {
-            if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
-            {
-                GUILayout.Label($"已接受委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
-                GUILayout.Label("采购完道具后，去外面的公司车出发。", mutedStyle);
-            }
-            else
-            {
-                DrawDemoTaskCard(computer);
-            }
+            DrawCurrentCommissionOrDemo(computer);
         }
 
         GUILayout.Space(12);
         DrawOfficeShop(computerOpen || nearShop);
+        GUILayout.EndScrollView();
         GUILayout.EndArea();
+    }
+
+    void DrawCurrentCommissionOrDemo(OfficeComputer computer)
+    {
+        if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
+        {
+            GUILayout.Label($"已接受委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
+            GUILayout.Label("采购完道具后，去外面的公司车出发。", mutedStyle);
+            return;
+        }
+
+        DrawDemoTaskCard(computer);
     }
 
     void DrawDemoTaskCard(OfficeComputer computer)
@@ -291,10 +301,16 @@ public class MvpHud : MonoBehaviour
         }
         else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
+            GUI.enabled = false;
+            GUILayout.Button("等待房主接受委托", GUILayout.Height(36));
+            GUI.enabled = true;
             GUILayout.Label("等待房主选择委托。", mutedStyle);
         }
         else
         {
+            GUI.enabled = false;
+            GUILayout.Button("Start Host 后接受委托", GUILayout.Height(36));
+            GUI.enabled = true;
             GUILayout.Label("主机启动后可接受委托。", mutedStyle);
         }
 
