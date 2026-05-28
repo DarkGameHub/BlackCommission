@@ -324,6 +324,22 @@ public static class MvpSceneStyleDirector
             new Vector3(0.1f, 0.56f, 0.52f), darkMetal);
         CreateBox("HQDispatchDeskRightLeg", root, new Vector3(-0.72f, 0.3f, 1.62f),
             new Vector3(0.1f, 0.56f, 0.52f), darkMetal);
+        CreateBox("HQDeskReceiptPrinter", root, new Vector3(-1.92f, 0.7f, 1.58f),
+            new Vector3(0.32f, 0.12f, 0.26f), paper);
+        CreateBox("HQDeskReceiptTrailA", root, new Vector3(-2.02f, 0.635f, 1.32f),
+            new Vector3(0.2f, 0.018f, 0.34f), paper);
+        CreateBox("HQDeskReceiptTrailB", root, new Vector3(-2.04f, 0.635f, 1.1f),
+            new Vector3(0.2f, 0.016f, 0.28f), paper).transform.rotation = Quaternion.Euler(0f, 8f, 0f);
+        CreateBox("HQCheapOfficeChairSeat", root, new Vector3(-1.35f, 0.32f, 1.02f),
+            new Vector3(0.55f, 0.09f, 0.42f), fabric);
+        CreateBox("HQCheapOfficeChairBack", root, new Vector3(-1.35f, 0.62f, 1.2f),
+            new Vector3(0.55f, 0.52f, 0.08f), fabric);
+        CreateBox("HQCheapOfficeChairStem", root, new Vector3(-1.35f, 0.18f, 1.02f),
+            new Vector3(0.08f, 0.28f, 0.08f), darkMetal);
+        CreateBox("HQCheapOfficeChairFoot", root, new Vector3(-1.35f, 0.055f, 1.02f),
+            new Vector3(0.58f, 0.035f, 0.08f), darkMetal);
+        CreateBox("HQCheapOfficeChairFootCross", root, new Vector3(-1.35f, 0.055f, 1.02f),
+            new Vector3(0.08f, 0.035f, 0.58f), darkMetal);
         CreateReadableComputerTerminal(root, darkMetal, terminalGreen, paper, lightPanel);
 
         CreateBox("HQDebtBoard", root, new Vector3(-2.45f, 1.65f, 2.49f),
@@ -342,18 +358,58 @@ public static class MvpSceneStyleDirector
             CreateBox($"HQSimpleNotice_{i + 1}", root, new Vector3(-1.08f + i * 0.32f, 1.58f, 2.49f),
                 new Vector3(0.22f, 0.28f, 0.03f), i == 1 ? warningRed : paper);
 
-        CreateBox("HQEquipmentShelfFrame", root, new Vector3(2.55f, 0.8f, 1.8f),
-            new Vector3(0.85f, 1.55f, 0.28f), darkMetal);
+        CreateBox("HQCompanyMarkBackplate", root, new Vector3(1.28f, 1.72f, 2.49f),
+            new Vector3(0.9f, 0.58f, 0.035f), darkMetal);
+        CreateBox("HQCompanyMarkTop", root, new Vector3(1.28f, 1.9f, 2.455f),
+            new Vector3(0.55f, 0.055f, 0.025f), terminalGreen);
+        CreateBox("HQCompanyMarkLeft", root, new Vector3(1.02f, 1.69f, 2.455f),
+            new Vector3(0.07f, 0.42f, 0.025f), terminalGreen);
+        CreateBox("HQCompanyMarkRight", root, new Vector3(1.54f, 1.69f, 2.455f),
+            new Vector3(0.07f, 0.42f, 0.025f), terminalGreen);
+        CreateBox("HQCompanyMarkDebtSlash", root, new Vector3(1.28f, 1.68f, 2.445f),
+            new Vector3(0.08f, 0.62f, 0.025f), warningRed).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
+        CreateBox("HQDebtPressureGaugeTrack", root, new Vector3(2.14f, 1.35f, 2.49f),
+            new Vector3(0.52f, 0.08f, 0.03f), darkMetal);
+        for (int i = 0; i < 4; i++)
+            CreateBox($"HQDebtPressureGaugeBar_{i + 1}", root, new Vector3(1.92f + i * 0.14f, 1.35f, 2.455f),
+                new Vector3(0.08f, 0.16f + i * 0.055f, 0.025f), warningRed);
+
+        CreateBox("HQEquipmentShelfLeftUpright", root, new Vector3(2.16f, 0.8f, 1.8f),
+            new Vector3(0.08f, 1.55f, 0.28f), darkMetal);
+        CreateBox("HQEquipmentShelfRightUpright", root, new Vector3(2.94f, 0.8f, 1.8f),
+            new Vector3(0.08f, 1.55f, 0.28f), darkMetal);
+        CreateBox("HQEquipmentShelfBackBrace", root, new Vector3(2.55f, 1.55f, 1.92f),
+            new Vector3(0.86f, 0.08f, 0.08f), darkMetal);
+        for (int i = 0; i < 3; i++)
+            CreateBox($"HQEquipmentShelfPlank_{i + 1}", root, new Vector3(2.55f, 0.28f + i * 0.48f, 1.8f),
+                new Vector3(0.9f, 0.055f, 0.32f), darkMetal);
         CreateBox("HQMedkitBox", root, new Vector3(2.22f, 1.17f, 1.58f),
             new Vector3(0.32f, 0.2f, 0.16f), paper);
+        CreateBox("HQMedkitCrossH", root, new Vector3(2.22f, 1.17f, 1.475f),
+            new Vector3(0.18f, 0.035f, 0.025f), warningRed);
+        CreateBox("HQMedkitCrossV", root, new Vector3(2.22f, 1.17f, 1.475f),
+            new Vector3(0.035f, 0.14f, 0.025f), warningRed);
         CreateBox("HQToolBox", root, new Vector3(2.58f, 0.66f, 1.58f),
             new Vector3(0.36f, 0.2f, 0.18f), warningRed);
+        CreateCylinder("HQSprayCan", root, new Vector3(2.85f, 0.92f, 1.58f),
+            Quaternion.identity, new Vector3(0.08f, 0.18f, 0.08f), terminalGreen);
+        CreateCylinder("HQDecoyBell", root, new Vector3(2.25f, 0.36f, 1.58f),
+            Quaternion.identity, new Vector3(0.12f, 0.09f, 0.12f), cardboard);
+        CreateCylinder("HQFlashlightBody", root, new Vector3(2.74f, 0.43f, 1.58f),
+            Quaternion.Euler(0f, 0f, 90f), new Vector3(0.06f, 0.22f, 0.06f), darkMetal);
         CreateBox("HQCardboardSupplyBox", root, new Vector3(2.88f, 0.14f, 1.72f),
             new Vector3(0.28f, 0.18f, 0.22f), cardboard);
         CreateBox("HQSofaSeat", root, new Vector3(1.05f, 0.22f, 2.18f),
             new Vector3(1.1f, 0.4f, 0.5f), fabric);
         CreateBox("HQSofaBack", root, new Vector3(1.05f, 0.45f, 2.43f),
             new Vector3(1.1f, 0.82f, 0.16f), fabric);
+        CreateBox("HQSofaMissingCushion", root, new Vector3(0.72f, 0.44f, 1.96f),
+            new Vector3(0.3f, 0.035f, 0.26f), darkMetal);
+        CreateBox("HQGroundedFilingCabinet", root, new Vector3(-2.64f, 0.62f, 1.55f),
+            new Vector3(0.42f, 1.2f, 0.36f), darkMetal);
+        for (int i = 0; i < 3; i++)
+            CreateBox($"HQFilingCabinetHandle_{i + 1}", root, new Vector3(-2.64f, 0.95f - i * 0.26f, 1.36f),
+                new Vector3(0.26f, 0.035f, 0.025f), paper);
 
         CreateBox("HQOfficeMainLightPanel", root, new Vector3(0f, 2.82f, 0.75f),
             new Vector3(1.9f, 0.045f, 0.2f), lightPanel);
@@ -387,20 +443,12 @@ public static class MvpSceneStyleDirector
         exitLight.intensity = 1.25f;
         exitLight.range = 4.8f;
 
-        var yardLightGo = new GameObject("HQReadableYardLight");
-        yardLightGo.transform.SetParent(root, false);
-        yardLightGo.transform.position = new Vector3(2.5f, 3f, -5.75f);
-        var yardLight = yardLightGo.AddComponent<Light>();
-        yardLight.type = LightType.Point;
-        yardLight.color = new Color(1f, 0.78f, 0.45f);
-        yardLight.intensity = 0.9f;
-        yardLight.range = 5.2f;
-        CreatePointLight("HQGarageWorkLight", root, new Vector3(2.1f, 2.18f, -3.05f),
-            new Color(1f, 0.82f, 0.48f), 1.25f, 4.8f);
-        CreatePointLight("HQYardFloodLight", root, new Vector3(2.45f, 3.05f, -4.25f),
-            new Color(1f, 0.76f, 0.42f), 1.05f, 5.8f);
-        CreatePointLight("HQVanHeadlightWash", root, new Vector3(2.65f, 0.72f, -7.65f),
-            new Color(1f, 0.88f, 0.58f), 0.35f, 2.6f);
+        CreateSpotLight("HQGarageWorkLight", root, new Vector3(2.1f, 2.35f, -3.1f),
+            new Vector3(2.1f, 0.08f, -3.55f), new Color(1f, 0.82f, 0.48f), 1.55f, 4.6f, 78f);
+        CreateSpotLight("HQYardFloodLight", root, new Vector3(2.45f, 3.05f, -4.25f),
+            new Vector3(2.45f, 0.05f, -6.05f), new Color(1f, 0.74f, 0.42f), 1.35f, 5.8f, 70f);
+        CreateSpotLight("HQVanHeadlightCone", root, new Vector3(2.65f, 0.7f, -7.65f),
+            new Vector3(2.65f, 0.18f, -8.35f), new Color(1f, 0.86f, 0.5f), 0.45f, 2.4f, 48f);
     }
 
     static void CreateReadableComputerTerminal(
@@ -673,6 +721,24 @@ public static class MvpSceneStyleDirector
         light.color = color;
         light.intensity = intensity;
         light.range = range;
+        return light;
+    }
+
+    static Light CreateSpotLight(string name, Transform parent, Vector3 position, Vector3 target, Color color, float intensity, float range, float spotAngle)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = position;
+        Vector3 direction = target - position;
+        if (direction.sqrMagnitude > 0.001f)
+            go.transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+
+        var light = go.AddComponent<Light>();
+        light.type = LightType.Spot;
+        light.color = color;
+        light.intensity = intensity;
+        light.range = range;
+        light.spotAngle = spotAngle;
         return light;
     }
 
@@ -1208,6 +1274,8 @@ public static class MvpSceneStyleDirector
             new Color(0.025f, 0.06f, 0.065f), new Color(0.08f, 0.16f, 0.14f), OfficePattern.Scanline);
         Material repairDirt = MakeOfficeMaterial("Office_ASV4VanLowerDirtPatch",
             new Color(0.25f, 0.27f, 0.24f), new Color(0.08f, 0.09f, 0.08f), OfficePattern.Grime);
+        Material repairDebt = MakeOfficeMaterial("Office_ASV4VanDebtSlash",
+            new Color(0.58f, 0.035f, 0.025f), new Color(0.95f, 0.72f, 0.55f), OfficePattern.Warning);
         Vector3 vanCenter = new Vector3(2.65f, 0.08f, -6.35f);
         CreateBox("DispatchVanASV4ClosedSidePanelNear", root, vanCenter + new Vector3(0f, 0.78f, -0.78f),
             new Vector3(3.25f, 0.82f, 0.055f), repairPanel);
@@ -1221,6 +1289,22 @@ public static class MvpSceneStyleDirector
             new Vector3(0.74f, 0.28f, 0.035f), repairGlass);
         CreateBox("DispatchVanASV4WindowPatchFar", root, vanCenter + new Vector3(-0.65f, 1.08f, 0.835f),
             new Vector3(0.74f, 0.28f, 0.035f), repairGlass);
+        CreateBox("DispatchVanASV4LogoNearTop", root, vanCenter + new Vector3(0.72f, 0.96f, -0.85f),
+            new Vector3(0.58f, 0.055f, 0.025f), terminalGreen);
+        CreateBox("DispatchVanASV4LogoNearLeft", root, vanCenter + new Vector3(0.45f, 0.78f, -0.85f),
+            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
+        CreateBox("DispatchVanASV4LogoNearRight", root, vanCenter + new Vector3(0.99f, 0.78f, -0.85f),
+            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
+        CreateBox("DispatchVanASV4LogoNearDebtSlash", root, vanCenter + new Vector3(0.72f, 0.78f, -0.86f),
+            new Vector3(0.08f, 0.54f, 0.025f), repairDebt).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
+        CreateBox("DispatchVanASV4LogoFarTop", root, vanCenter + new Vector3(0.72f, 0.96f, 0.85f),
+            new Vector3(0.58f, 0.055f, 0.025f), terminalGreen);
+        CreateBox("DispatchVanASV4LogoFarLeft", root, vanCenter + new Vector3(0.45f, 0.78f, 0.85f),
+            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
+        CreateBox("DispatchVanASV4LogoFarRight", root, vanCenter + new Vector3(0.99f, 0.78f, 0.85f),
+            new Vector3(0.07f, 0.38f, 0.025f), terminalGreen);
+        CreateBox("DispatchVanASV4LogoFarDebtSlash", root, vanCenter + new Vector3(0.72f, 0.78f, 0.86f),
+            new Vector3(0.08f, 0.54f, 0.025f), repairDebt).transform.rotation = Quaternion.Euler(0f, 0f, -24f);
 
         GameObject trigger = CreateInteractionTrigger("DispatchVanASV4DepartureTrigger", root,
             new Vector3(2.65f, 0.92f, -6.35f), new Vector3(2.8f, 1.9f, 3.5f));
@@ -1235,16 +1319,10 @@ public static class MvpSceneStyleDirector
         beacon.intensity = 0.55f;
         beacon.range = 2.8f;
 
-        var bayLightGo = new GameObject("GarageAmberBayLight");
-        bayLightGo.transform.SetParent(root, false);
-        bayLightGo.transform.position = new Vector3(2.55f, 2.48f, -3.85f);
-        var bayLight = bayLightGo.AddComponent<Light>();
-        bayLight.type = LightType.Point;
-        bayLight.color = new Color(1f, 0.74f, 0.32f);
-        bayLight.intensity = 0.95f;
-        bayLight.range = 4.5f;
-        CreatePointLight("DispatchVanASV4HeadlightSpill", root, new Vector3(2.65f, 0.7f, -7.7f),
-            new Color(1f, 0.86f, 0.5f), 0.35f, 2.6f);
+        CreateSpotLight("GarageAmberBayLight", root, new Vector3(2.55f, 2.48f, -3.85f),
+            new Vector3(2.55f, 0.12f, -4.65f), new Color(1f, 0.74f, 0.32f), 1f, 4.5f, 72f);
+        CreateSpotLight("DispatchVanASV4HeadlightCone", root, new Vector3(2.65f, 0.7f, -7.7f),
+            new Vector3(2.65f, 0.18f, -8.35f), new Color(1f, 0.86f, 0.5f), 0.45f, 2.4f, 48f);
 
         CreateBox("DispatchVanASV4GroundGlow", root, new Vector3(2.65f, 0.1f, -6.35f),
             new Vector3(2.1f, 0.018f, 3.1f), terminalGreen);

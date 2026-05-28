@@ -200,25 +200,39 @@ def build_hq(m) -> bpy.types.Collection:
 
     cube("hq_counter_front", (-1.35, 2.72, 0.31), (1.45, 0.32, 0.58), m["wood"], coll, edge=0.008)
     cube("hq_counter_top", (-1.35, 2.40, 0.62), (1.52, 0.14, 0.055), m["metal"], coll, edge=0.004)
+    cube("hq_crt_base", (-1.35, 2.20, 0.675), (0.52, 0.24, 0.040), m["metal"], coll, edge=0.004)
+    cube("hq_crt_neck", (-1.35, 2.20, 0.745), (0.10, 0.10, 0.13), m["metal"], coll, edge=0.004)
     cube("hq_crt_body", (-1.35, 2.22, 0.91), (0.42, 0.26, 0.22), m["metal"], coll, edge=0.012)
     cube("hq_crt_screen", (-1.35, 1.93, 0.91), (0.30, 0.022, 0.13), m["terminal"], coll, edge=0.004)
     txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.905, 1.02), (math.radians(90), 0, 0), 0.064, m["terminal"], coll)
     cube("hq_keyboard_keys", (-1.35, 2.16, 0.68), (0.48, 0.15, 0.018), m["black"], coll, edge=0.002)
     for i in range(6):
         cube(f"hq_keyboard_key_row_{i}", (-1.56 + i * 0.082, 2.02, 0.705), (0.022, 0.011, 0.005), m["paper_dark"], coll, edge=0)
+    cube("hq_receipt_printer", (-1.92, 2.18, 0.70), (0.30, 0.20, 0.11), m["paper"], coll, edge=0.004)
+    cube("hq_receipt_trail_a", (-2.02, 1.98, 0.665), (0.18, 0.26, 0.012), m["paper"], coll, edge=0.001)
+    cube("hq_receipt_trail_b", (-2.04, 1.72, 0.665), (0.18, 0.24, 0.010), m["paper"], coll, rot=(0, 0, math.radians(7)), edge=0.001)
 
     cube("hq_debt_board", (2.05, 3.70, 1.56), (1.28, 0.035, 0.78), m["debt"], coll, edge=0.005)
     txt("hq_debt_board_text", "OVERDUE\nTAKEOVER\nPRESSURE", (2.05, 3.655, 1.58), (math.radians(90), 0, 0), 0.15, m["paper"], coll)
     for i in range(14):
         cube(f"hq_wall_notice_{i}", (0.86 + (i % 7) * 0.35, 3.64, 0.58 + (i // 7) * 0.28), (0.11, 0.010, 0.070), m["paper" if i % 5 else "debt"], coll, edge=0.001)
 
-    cube("hq_equipment_shelf_frame", (-4.15, 3.42, 0.79), (0.78, 0.16, 1.54), m["metal"], coll, edge=0.006)
+    cube("hq_company_mark_backplate", (0.10, 3.70, 1.82), (0.78, 0.024, 0.44), m["black"], coll, edge=0.003)
+    cube("hq_company_mark_top", (0.10, 3.665, 1.98), (0.48, 0.012, 0.035), m["terminal"], coll, edge=0.001)
+    cube("hq_company_mark_left", (-0.13, 3.665, 1.82), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
+    cube("hq_company_mark_right", (0.33, 3.665, 1.82), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
+    cube("hq_company_mark_debt_slash", (0.10, 3.650, 1.82), (0.07, 0.010, 0.52), m["debt"], coll, rot=(0, math.radians(-24), 0), edge=0)
+
+    cube("hq_equipment_shelf_left_upright", (-4.56, 3.42, 0.79), (0.08, 0.16, 1.54), m["metal"], coll, edge=0.006)
+    cube("hq_equipment_shelf_right_upright", (-3.74, 3.42, 0.79), (0.08, 0.16, 1.54), m["metal"], coll, edge=0.006)
+    cube("hq_equipment_shelf_back_brace", (-4.15, 3.48, 1.52), (0.86, 0.06, 0.08), m["metal"], coll, edge=0.003)
     for z in (0.36, 0.84, 1.32):
         cube(f"hq_equipment_shelf_plank_{z}", (-4.15, 3.18, z), (0.90, 0.10, 0.035), m["metal_worn"], coll, edge=0.002)
     cube("hq_medkit", (-4.58, 3.02, 0.50), (0.17, 0.13, 0.12), m["paper"], coll, edge=0.004)
     cube("hq_medkit_cross_h", (-4.58, 2.875, 0.50), (0.10, 0.009, 0.018), m["debt"], coll, edge=0)
     cube("hq_medkit_cross_v", (-4.58, 2.875, 0.50), (0.025, 0.009, 0.065), m["debt"], coll, edge=0)
     cyl("hq_spray_can", (-4.16, 2.99, 0.52), 0.060, 0.26, m["cyan"], coll, vertices=10, edge=0.002)
+    cyl("hq_decoy_bell", (-4.48, 2.99, 0.88), 0.075, 0.08, m["cardboard"], coll, vertices=12, edge=0.002)
     cyl("hq_flashlight", (-3.73, 2.99, 1.00), 0.050, 0.36, m["black"], coll, vertices=10, rot=(0, math.radians(90), 0), edge=0.002)
 
     cube("hq_garage_floor_lane", (2.50, -1.82, 0.010), (2.00, 1.18, 0.018), m["wall_shadow"], coll, edge=0.002)
@@ -234,6 +248,12 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_sofa_base", (3.42, 2.04, 0.20), (0.95, 0.34, 0.36), m["uniform"], coll, edge=0.006)
     cube("hq_sofa_back", (3.42, 2.32, 0.46), (0.95, 0.08, 0.82), m["uniform"], coll, edge=0.006)
     cube("hq_missing_cushion_dark", (3.05, 2.04, 0.39), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
+    cube("hq_office_chair_seat", (-1.35, 1.52, 0.32), (0.46, 0.38, 0.08), m["uniform"], coll, edge=0.004)
+    cube("hq_office_chair_back", (-1.35, 1.68, 0.62), (0.46, 0.08, 0.48), m["uniform"], coll, edge=0.004)
+    cube("hq_office_chair_stem", (-1.35, 1.52, 0.18), (0.07, 0.07, 0.28), m["metal"], coll, edge=0.003)
+    cube("hq_filing_cabinet_grounded", (-2.75, 3.32, 0.62), (0.44, 0.34, 1.20), m["metal_worn"], coll, edge=0.005)
+    for i in range(3):
+        cube(f"hq_filing_cabinet_handle_{i}", (-2.75, 3.13, 0.95 - i * 0.26), (0.24, 0.010, 0.026), m["paper_dark"], coll, edge=0)
     for i in range(8):
         x = -4.45 + (i % 2) * 0.50
         z = 0.35 + (i // 2) * 0.33
