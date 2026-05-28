@@ -41,6 +41,15 @@ public class SchoolMonsterAI : NetworkBehaviour
     public bool IsStunned => state.Value == MonsterState.Stunned;
     public bool IsDistracted => state.Value == MonsterState.Distracted;
 
+    public void OverridePatrolPoints(Transform[] runtimePatrolPoints)
+    {
+        if (runtimePatrolPoints == null || runtimePatrolPoints.Length == 0) return;
+        patrolPoints = runtimePatrolPoints;
+        patrolIndex = 0;
+        if (IsServer && state.Value == MonsterState.Patrolling)
+            GoToNextPatrolPoint();
+    }
+
     void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -323,6 +332,9 @@ public class SchoolMonsterAI : NetworkBehaviour
     void EnsureVisualModel()
     {
         if (transform.Find("MVP_MonsterVisualRoot") != null) return;
+        HideBaseRenderer();
+        if (TryCreateGeneratedMonsterVisual())
+            return;
 
         Material coat = MakeVisualMaterial(new Color(0.44f, 0.03f, 0.025f));
         Material shirt = MakeVisualMaterial(new Color(0.08f, 0.075f, 0.065f));
@@ -379,6 +391,57 @@ public class SchoolMonsterAI : NetworkBehaviour
         light.color = new Color(1f, 0.08f, 0.04f);
         light.range = 2.5f;
         light.intensity = 0.9f;
+    }
+
+    void HideBaseRenderer()
+    {
+        Renderer ownRenderer = GetComponent<Renderer>();
+        if (ownRenderer != null)
+            ownRenderer.enabled = false;
+    }
+
+    bool TryCreateGeneratedMonsterVisual()
+    {
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_MonsterHomeworkDebtCollector");
+        if (prefab == null) return false;
+
+        var root = new GameObject("MVP_MonsterVisualRoot");
+        root.transform.SetParent(transform, false);
+        root.transform.localPosition = new Vector3(0f, -1f, 0f);
+        root.transform.localRotation = Quaternion.identity;
+
+        GameObject visual = Instantiate(prefab, root.transform);
+        visual.name = "ASV4_MonsterHomeworkDebtCollector_Visual";
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.identity;
+        visual.transform.localScale = Vector3.one;
+        RemoveVisualColliders(visual);
+        ConfigureVisualRenderers(visual);
+
+        var eyeLight = new GameObject("ASV4_MonsterEyeWarningLight");
+        eyeLight.transform.SetParent(root.transform, false);
+        eyeLight.transform.localPosition = new Vector3(0f, 2.45f, -0.26f);
+        var light = eyeLight.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.color = new Color(1f, 0.08f, 0.04f);
+        light.range = 2.8f;
+        light.intensity = 1.05f;
+        return true;
+    }
+
+    static void RemoveVisualColliders(GameObject visual)
+    {
+        foreach (var collider in visual.GetComponentsInChildren<Collider>())
+            Object.Destroy(collider);
+    }
+
+    static void ConfigureVisualRenderers(GameObject visual)
+    {
+        foreach (var renderer in visual.GetComponentsInChildren<Renderer>())
+        {
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            renderer.receiveShadows = true;
+        }
     }
 
     GameObject CreateVisualPrimitive(PrimitiveType type, string name, Transform parent,

@@ -114,6 +114,13 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         thirdPersonRoot.transform.localPosition = Vector3.zero;
         thirdPersonRoot.transform.localRotation = Quaternion.identity;
 
+        if (TryCreateGeneratedWorkerVisual(thirdPersonRoot.transform))
+        {
+            thirdPersonWatchModel = CreateThirdPersonWristwatch(thirdPersonRoot.transform);
+            thirdPersonWatchModel.SetActive(hotbar != null && hotbar.HasWristwatch.Value);
+            return;
+        }
+
         CreatePrimitive(PrimitiveType.Cube, "UniformTorso", thirdPersonRoot.transform,
             new Vector3(0f, 1.05f, 0f), new Vector3(0.48f, 0.78f, 0.28f),
             Quaternion.identity, sleeveMaterial);
@@ -134,6 +141,36 @@ public class PlayerFirstPersonRig : NetworkBehaviour
             Quaternion.identity, darkMaterial);
         thirdPersonWatchModel = CreateThirdPersonWristwatch(thirdPersonRoot.transform);
         thirdPersonWatchModel.SetActive(hotbar != null && hotbar.HasWristwatch.Value);
+    }
+
+    bool TryCreateGeneratedWorkerVisual(Transform parent)
+    {
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_WorkerCheapOutsourcedUniform");
+        if (prefab == null) return false;
+
+        GameObject visual = Instantiate(prefab, parent);
+        visual.name = "ASV4_WorkerCheapOutsourcedUniform_Visual";
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.identity;
+        visual.transform.localScale = Vector3.one;
+        RemoveVisualColliders(visual);
+        ConfigureVisualRenderers(visual);
+        return true;
+    }
+
+    static void RemoveVisualColliders(GameObject visual)
+    {
+        foreach (var collider in visual.GetComponentsInChildren<Collider>())
+            Object.Destroy(collider);
+    }
+
+    static void ConfigureVisualRenderers(GameObject visual)
+    {
+        foreach (var renderer in visual.GetComponentsInChildren<Renderer>())
+        {
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            renderer.receiveShadows = true;
+        }
     }
 
     void HideCapsuleBodyMesh()
