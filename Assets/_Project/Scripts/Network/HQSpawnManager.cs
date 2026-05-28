@@ -39,10 +39,9 @@ public class HQSpawnManager : MonoBehaviour
             if (cc == null) continue;
 
             int offsetIndex = GetLocalSpawnOffsetIndex();
-            cc.enabled = false;
-            player.transform.position = spawnPoint.position + Vector3.right * (offsetIndex * 1.5f);
-            player.transform.rotation = spawnPoint.rotation;
-            cc.enabled = true;
+            player.RestoreControlAt(
+                spawnPoint.position + Vector3.right * (offsetIndex * 1.5f),
+                spawnPoint.rotation);
         }
     }
 
