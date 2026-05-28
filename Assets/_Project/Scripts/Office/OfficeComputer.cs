@@ -6,12 +6,28 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(NetworkObject))]
 public class OfficeComputer : NetworkBehaviour, IInteractable
 {
+    const float OfficeGroundStorageUseDistance = 5.2f;
+
     [SerializeField] OfficeTaskDefinition demoTask;
     [SerializeField] string returnOfficeScene = "HQ";
     [SerializeField] bool allowNonNetworkSoloStart = false;
     [SerializeField] float dispatchTransitSeconds = 8f;
 
+    static int storedMedkits;
+    static int storedDecoys;
+    static int storedStunSprays;
+    static int storedFlashlights;
+
     bool missionLaunching;
+    public NetworkVariable<int> StoredMedkitCount = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> StoredDecoyCount = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> StoredStunSprayCount = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public NetworkVariable<int> StoredFlashlightCount = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public bool HasSelectedDemoTask => demoTask != null && MvpMissionRuntime.SelectedTask == demoTask;
     public string DemoTaskTitle => demoTask != null ? demoTask.title : "被遗忘的作业本";
     public string DemoTaskClient => demoTask != null ? demoTask.client : "家长";
@@ -24,6 +40,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     public override void OnNetworkSpawn()
     {
         if (!IsServer || NetworkManager.Singleton == null) return;
+        RestoreGroundStorageCounts();
         NetworkManager.Singleton.OnClientConnectedCallback += HandleClientConnected;
         BroadcastCompanyState();
     }
@@ -93,6 +110,65 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     public void OnInteractEnd(PlayerController player) { }
 
+    public int GetDroppedItemCount(MvpHotbarItemId itemId)
+    {
+        switch (itemId)
+        {
+            case MvpHotbarItemId.Medkit:
+                return StoredMedkitCount.Value;
+            case MvpHotbarItemId.Decoy:
+                return StoredDecoyCount.Value;
+            case MvpHotbarItemId.StunSpray:
+                return StoredStunSprayCount.Value;
+            case MvpHotbarItemId.Flashlight:
+                return StoredFlashlightCount.Value;
+            default:
+                return 0;
+        }
+    }
+
+    public bool TryStoreDroppedItemServer(MvpHotbarItemId itemId, int quantity)
+    {
+        if (itemId == MvpHotbarItemId.None || quantity <= 0) return false;
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !IsServer)
+            return false;
+
+        SetDroppedItemCount(itemId, GetDroppedItemCount(itemId) + quantity);
+        return true;
+    }
+
+    public void TryTakeDroppedItem(MvpHotbarItemId itemId)
+    {
+        if (itemId == MvpHotbarItemId.None || GetDroppedItemCount(itemId) <= 0) return;
+
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            PlayerHotbar hotbar = Object.FindAnyObjectByType<PlayerHotbar>();
+            if (hotbar != null && hotbar.TryReceiveLocalItem(itemId, 1))
+                SetDroppedItemCount(itemId, Mathf.Max(0, GetDroppedItemCount(itemId) - 1));
+            return;
+        }
+
+        RequestTakeDroppedItemServerRpc(itemId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void RequestTakeDroppedItemServerRpc(MvpHotbarItemId itemId, ServerRpcParams rpcParams = default)
+    {
+        if (itemId == MvpHotbarItemId.None || GetDroppedItemCount(itemId) <= 0) return;
+
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null) return;
+        if (!network.ConnectedClients.TryGetValue(rpcParams.Receive.SenderClientId, out var client)) return;
+        if (client.PlayerObject == null) return;
+        if (Vector3.Distance(client.PlayerObject.transform.position, transform.position) > OfficeGroundStorageUseDistance) return;
+        if (client.PlayerObject.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) return;
+        if (!client.PlayerObject.TryGetComponent<PlayerHotbar>(out var hotbar)) return;
+
+        if (!hotbar.GrantItemServer(itemId, 1)) return;
+        SetDroppedItemCount(itemId, Mathf.Max(0, GetDroppedItemCount(itemId) - 1));
+    }
+
     public void LaunchSelectedMissionFromVehicle(PlayerController player)
     {
         if (missionLaunching) return;
@@ -118,6 +194,38 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         MvpMissionRuntime.SelectMission(demoTask, returnOfficeScene);
         if (IsServer && NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
             SyncSelectedDemoTaskClientRpc();
+    }
+
+    void RestoreGroundStorageCounts()
+    {
+        StoredMedkitCount.Value = storedMedkits;
+        StoredDecoyCount.Value = storedDecoys;
+        StoredStunSprayCount.Value = storedStunSprays;
+        StoredFlashlightCount.Value = storedFlashlights;
+    }
+
+    void SetDroppedItemCount(MvpHotbarItemId itemId, int count)
+    {
+        count = Mathf.Max(0, count);
+        switch (itemId)
+        {
+            case MvpHotbarItemId.Medkit:
+                StoredMedkitCount.Value = count;
+                storedMedkits = count;
+                break;
+            case MvpHotbarItemId.Decoy:
+                StoredDecoyCount.Value = count;
+                storedDecoys = count;
+                break;
+            case MvpHotbarItemId.StunSpray:
+                StoredStunSprayCount.Value = count;
+                storedStunSprays = count;
+                break;
+            case MvpHotbarItemId.Flashlight:
+                StoredFlashlightCount.Value = count;
+                storedFlashlights = count;
+                break;
+        }
     }
 
     void StartMissionLocalWithTransit()

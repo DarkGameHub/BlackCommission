@@ -11,7 +11,7 @@ public class SchoolMonsterAI : NetworkBehaviour
     [Header("Detection")]
     [SerializeField] float detectionRadius = 5.5f;
     [SerializeField] float loseRadius = 13f;
-    [SerializeField] float initialGraceSeconds = 8f;
+    [SerializeField] float initialGraceSeconds = 14f;
     [SerializeField] float patrolSpeed = 1.8f;
     [SerializeField] float chaseSpeed = 3.55f;
 

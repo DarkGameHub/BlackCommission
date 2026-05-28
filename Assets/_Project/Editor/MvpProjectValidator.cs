@@ -143,6 +143,8 @@ public static class MvpProjectValidator
 
         if (Object.FindFirstObjectByType<MvpHud>() == null)
             Warning("HQ 缺少 MVP_HUD。", ref warnings);
+        if (Object.FindFirstObjectByType<OfficeGroundItemPickup>() == null)
+            Warning("HQ 未保存地面存放点；运行时风格层会生成 G 丢弃储物垫。", ref warnings);
     }
 
     static void CheckSchoolScene(ref int errors, ref int warnings)
@@ -198,6 +200,8 @@ public static class MvpProjectValidator
             Warning("学校场景缺少 MVP_HUD。", ref warnings);
         if (Object.FindFirstObjectByType<SchoolBonusEvidenceItem>() == null)
             Warning("学校场景未保存可选目标 OverdueLedgerEvidence；运行时风格层会补一个，但建议重新跑 Setup School MVP 写入场景。", ref warnings);
+        if (Object.FindFirstObjectByType<SchoolEntranceDoor>() == null)
+            Warning("学校场景未保存入口门；运行时风格层会补学校正门，但建议重新跑 Setup School MVP 写入场景。", ref warnings);
 
         if (NavMesh.CalculateTriangulation().vertices.Length == 0)
             Warning("学校场景没有检测到已烘焙 NavMesh，怪物可能无法巡逻。", ref warnings);

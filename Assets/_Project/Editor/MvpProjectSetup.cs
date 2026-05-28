@@ -68,7 +68,7 @@ public static class MvpProjectSetup
         task.title = "找回被遗忘的作业本";
         task.category = MvpTaskCategory.LostItemRecovery;
         task.client = "焦急的家长";
-        task.description = "孩子说作业本落在学校了，但晚上校园里好像还有东西在巡逻。找回作业本并安全撤离；记录室里的逾期登记簿可拍照留证，能多拿一点外快。";
+        task.description = "事故车会停在旧校舍门外。推门进校后找回作业本并安全撤离；记录室里的逾期登记簿可拍照留证，能多拿一点外快。";
         task.locationName = "废弃学校";
         task.sceneName = "School_LostItem_01";
         task.recommendedPlayersMin = 1;
@@ -209,7 +209,11 @@ public static class MvpProjectSetup
 
         CreateBox("Wall_North", new Vector3(0f, 1.55f, 9f), new Vector3(24f, 3.1f, 0.3f),
             new Color(0.34f, 0.37f, 0.36f), parent);
-        CreateBox("Wall_South", new Vector3(0f, 1.55f, -9f), new Vector3(24f, 3.1f, 0.3f),
+        CreateBox("Wall_South_LeftOfEntrance", new Vector3(-7.1f, 1.55f, -9f), new Vector3(9.8f, 3.1f, 0.3f),
+            new Color(0.31f, 0.34f, 0.33f), parent);
+        CreateBox("Wall_South_RightOfEntrance", new Vector3(7.1f, 1.55f, -9f), new Vector3(9.8f, 3.1f, 0.3f),
+            new Color(0.31f, 0.34f, 0.33f), parent);
+        CreateBox("Wall_South_EntranceHeader", new Vector3(0f, 2.75f, -9f), new Vector3(3.7f, 0.75f, 0.3f),
             new Color(0.31f, 0.34f, 0.33f), parent);
         CreateBox("Wall_West", new Vector3(-12f, 1.55f, 0f), new Vector3(0.3f, 3.1f, 18f),
             new Color(0.31f, 0.34f, 0.33f), parent);
@@ -223,8 +227,18 @@ public static class MvpProjectSetup
         CreateBox("Back_Classroom_Wall", new Vector3(0f, 1.55f, 5.9f), new Vector3(11.6f, 3.1f, 0.25f),
             new Color(0.39f, 0.42f, 0.4f), parent);
 
-        CreateBox("Entrance_Mat", new Vector3(0f, 0.01f, -7.6f), new Vector3(5f, 0.04f, 1.6f),
+        CreateBox("Exterior_Forecourt", new Vector3(0f, -0.05f, -12.1f), new Vector3(10.5f, 0.1f, 7.0f),
+            new Color(0.12f, 0.13f, 0.13f), parent);
+        CreateBox("Entrance_Mat", new Vector3(0f, 0.01f, -10.05f), new Vector3(5f, 0.04f, 1.6f),
             new Color(0.08f, 0.32f, 0.22f), parent, false);
+        var entranceDoor = CreateBox("SchoolEntranceDoor", new Vector3(0f, 1.18f, -9.1f),
+            new Vector3(1.7f, 2.25f, 0.12f), new Color(0.08f, 0.09f, 0.08f), parent, false);
+        GameObject entranceHandle = CreateBox("SchoolEntranceDoorHandle", new Vector3(0.62f, 1.12f, -9.19f),
+            new Vector3(0.12f, 0.12f, 0.055f), new Color(0.1f, 0.75f, 0.38f), parent, false);
+        entranceHandle.transform.SetParent(entranceDoor.transform, true);
+        entranceDoor.AddComponent<SchoolEntranceDoor>();
+        CreateBox("SchoolEntranceSign", new Vector3(0f, 2.13f, -9.32f),
+            new Vector3(2.35f, 0.34f, 0.035f), new Color(0.8f, 0.08f, 0.04f), parent, false);
         CreateBox("Classroom_Door_Frame_Left", new Vector3(-2.4f, 1.6f, 1.6f), new Vector3(0.25f, 3.2f, 0.25f),
             new Color(0.15f, 0.18f, 0.17f), parent);
         CreateBox("Classroom_Door_Frame_Right", new Vector3(2.4f, 1.6f, 1.6f), new Vector3(0.25f, 3.2f, 0.25f),
@@ -290,7 +304,7 @@ public static class MvpProjectSetup
     {
         var spawn = new GameObject("PlayerSpawnPoint");
         spawn.transform.SetParent(parent);
-        spawn.transform.SetPositionAndRotation(new Vector3(0f, 0.1f, -6.8f), Quaternion.identity);
+        spawn.transform.SetPositionAndRotation(new Vector3(0f, 0.1f, -11.45f), Quaternion.identity);
 
         var spawnManager = new GameObject("SchoolSpawnManager");
         spawnManager.transform.SetParent(parent);
@@ -331,13 +345,13 @@ public static class MvpProjectSetup
         CreateBox("OverdueLedgerStamp", new Vector3(-7.39f, 1.03f, 1.33f),
             new Vector3(0.24f, 0.025f, 0.16f), new Color(0.8f, 0.08f, 0.04f), parent, false);
 
-        var exitSrc = CreateBox("SchoolExitPoint", new Vector3(0f, 0.08f, -7.6f),
+        var exitSrc = CreateBox("SchoolExitPoint", new Vector3(0f, 0.08f, -12.2f),
             new Vector3(4.4f, 0.16f, 1.8f), new Color(0.1f, 0.75f, 0.38f), parent, false);
         exitSrc.AddComponent<NetworkObject>();
         var exitCollider = exitSrc.GetComponent<BoxCollider>();
         if (exitCollider != null) exitCollider.isTrigger = true;
         exitSrc.AddComponent<SchoolExitPoint>();
-        MakePrefabInstance("SchoolExitPoint", exitSrc, new Vector3(0f, 0.08f, -7.6f), parent);
+        MakePrefabInstance("SchoolExitPoint", exitSrc, new Vector3(0f, 0.08f, -12.2f), parent);
         Transform[] patrol = CreatePatrolPoints(parent);
         var monsterSrc = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         monsterSrc.name = "HomeworkDebtCollector";

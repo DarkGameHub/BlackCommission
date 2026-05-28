@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 public class VanTransitOverlay : MonoBehaviour
@@ -15,6 +16,12 @@ public class VanTransitOverlay : MonoBehaviour
     Texture2D black;
     Texture2D panel;
     Texture2D window;
+    Texture2D floor;
+    Texture2D ceiling;
+    Texture2D bench;
+    Texture2D skin;
+    Texture2D coat;
+    Texture2D shadow;
     Texture2D amber;
     Texture2D green;
     Texture2D red;
@@ -87,15 +94,10 @@ public class VanTransitOverlay : MonoBehaviour
         Rect screen = new Rect(0, 0, Screen.width, Screen.height);
         GUI.DrawTexture(screen, black, ScaleMode.StretchToFill);
 
-        float vanWidth = Mathf.Clamp(Screen.width - 64f, 320f, 980f);
-        float vanHeight = Mathf.Clamp(Screen.height - 76f, 260f, 520f);
+        float vanWidth = Mathf.Clamp(Screen.width - 56f, 340f, 1080f);
+        float vanHeight = Mathf.Clamp(Screen.height - 64f, 280f, 600f);
         Rect van = new Rect((Screen.width - vanWidth) * 0.5f, (Screen.height - vanHeight) * 0.5f, vanWidth, vanHeight);
-        GUI.DrawTexture(van, panel, ScaleMode.StretchToFill);
-
-        DrawWindow(new Rect(van.x + 42f, van.y + 72f, van.width * 0.38f, van.height * 0.42f), elapsed, 0f);
-        DrawWindow(new Rect(van.x + van.width * 0.58f, van.y + 72f, van.width * 0.36f, van.height * 0.42f), elapsed, 0.37f);
-        DrawDriver(van);
-        DrawRearSeats(van);
+        DrawCabin(van, elapsed);
         DrawDispatchPlate(van, progress);
 
         GUI.color = oldColor;
@@ -122,26 +124,64 @@ public class VanTransitOverlay : MonoBehaviour
         }
     }
 
-    void DrawDriver(Rect van)
+    void DrawCabin(Rect van, float elapsed)
     {
-        Rect seat = new Rect(van.x + van.width * 0.44f, van.y + 64f, van.width * 0.12f, van.height * 0.34f);
-        GUI.DrawTexture(seat, black, ScaleMode.StretchToFill);
-        GUI.DrawTexture(new Rect(seat.x + seat.width * 0.3f, seat.y - 18f, seat.width * 0.38f, seat.width * 0.38f), amber, ScaleMode.StretchToFill);
-        GUI.Label(new Rect(seat.x - 24f, seat.y + seat.height + 8f, seat.width + 48f, 24f), "外包司机", mutedStyle);
+        GUI.DrawTexture(van, panel, ScaleMode.StretchToFill);
+        GUI.DrawTexture(new Rect(van.x + 20f, van.y + 20f, van.width - 40f, 48f), ceiling, ScaleMode.StretchToFill);
+        GUI.DrawTexture(new Rect(van.x + 30f, van.y + van.height * 0.63f, van.width - 60f, van.height * 0.22f), floor, ScaleMode.StretchToFill);
+
+        DrawWindow(new Rect(van.x + 42f, van.y + 84f, van.width * 0.25f, van.height * 0.34f), elapsed, 0f);
+        DrawWindow(new Rect(van.x + van.width * 0.73f, van.y + 84f, van.width * 0.22f, van.height * 0.34f), elapsed, 0.37f);
+        DrawDriver(van);
+        DrawFacingPassengerSeats(van);
+
+        GUI.DrawTexture(new Rect(van.x + van.width * 0.48f, van.y + 80f, van.width * 0.04f, van.height * 0.48f),
+            shadow, ScaleMode.StretchToFill);
+        GUI.Label(new Rect(van.x + van.width * 0.36f, van.y + 28f, van.width * 0.28f, 26f),
+            outbound ? "事故外勤车厢" : "返程车厢", titleStyle);
     }
 
-    void DrawRearSeats(Rect van)
+    void DrawDriver(Rect van)
     {
-        float seatW = van.width * 0.13f;
-        float seatH = 82f;
-        float startX = van.x + van.width * 0.20f;
-        float y = van.y + van.height - 158f;
-        for (int i = 0; i < 4; i++)
-        {
-            Rect seat = new Rect(startX + i * (seatW + 18f), y + (i % 2) * 14f, seatW, seatH);
-            GUI.DrawTexture(seat, black, ScaleMode.StretchToFill);
-            GUI.Label(new Rect(seat.x, seat.y + seat.height + 8f, seat.width, 22f), $"后座 {i + 1}", mutedStyle);
-        }
+        Rect partition = new Rect(van.x + van.width * 0.35f, van.y + 78f, van.width * 0.3f, van.height * 0.26f);
+        GUI.DrawTexture(partition, shadow, ScaleMode.StretchToFill);
+        Rect head = new Rect(partition.center.x - 16f, partition.y + 18f, 32f, 32f);
+        GUI.DrawTexture(head, amber, ScaleMode.StretchToFill);
+        GUI.DrawTexture(new Rect(partition.center.x - 28f, partition.y + 50f, 56f, 60f), coat, ScaleMode.StretchToFill);
+        GUI.Label(new Rect(partition.x, partition.yMax + 6f, partition.width, 22f), "外包司机", mutedStyle);
+    }
+
+    void DrawFacingPassengerSeats(Rect van)
+    {
+        int passengerCount = GetPassengerCount();
+        Rect leftBench = new Rect(van.x + van.width * 0.15f, van.y + van.height * 0.42f, van.width * 0.23f, van.height * 0.28f);
+        Rect rightBench = new Rect(van.x + van.width * 0.62f, van.y + van.height * 0.42f, van.width * 0.23f, van.height * 0.28f);
+        GUI.DrawTexture(leftBench, bench, ScaleMode.StretchToFill);
+        GUI.DrawTexture(rightBench, bench, ScaleMode.StretchToFill);
+
+        DrawPassenger(new Rect(leftBench.x + leftBench.width * 0.08f, leftBench.y - 20f, leftBench.width * 0.34f, leftBench.height + 12f),
+            0, passengerCount, false);
+        DrawPassenger(new Rect(leftBench.x + leftBench.width * 0.56f, leftBench.y - 20f, leftBench.width * 0.34f, leftBench.height + 12f),
+            1, passengerCount, false);
+        DrawPassenger(new Rect(rightBench.x + rightBench.width * 0.08f, rightBench.y - 20f, rightBench.width * 0.34f, rightBench.height + 12f),
+            2, passengerCount, true);
+        DrawPassenger(new Rect(rightBench.x + rightBench.width * 0.56f, rightBench.y - 20f, rightBench.width * 0.34f, rightBench.height + 12f),
+            3, passengerCount, true);
+    }
+
+    void DrawPassenger(Rect rect, int seatIndex, int passengerCount, bool facingLeft)
+    {
+        bool occupied = seatIndex < passengerCount;
+        Texture2D body = occupied ? coat : shadow;
+        Texture2D head = occupied ? skin : black;
+        float lean = facingLeft ? -rect.width * 0.1f : rect.width * 0.1f;
+        GUI.DrawTexture(new Rect(rect.x + rect.width * 0.18f + lean, rect.y + rect.height * 0.28f, rect.width * 0.64f, rect.height * 0.48f),
+            body, ScaleMode.StretchToFill);
+        GUI.DrawTexture(new Rect(rect.x + rect.width * 0.33f + lean, rect.y + rect.height * 0.08f, rect.width * 0.34f, rect.width * 0.34f),
+            head, ScaleMode.StretchToFill);
+
+        string label = occupied ? GetSeatLabel(seatIndex) : "空座";
+        GUI.Label(new Rect(rect.x - 8f, rect.y + rect.height - 8f, rect.width + 16f, 22f), label, mutedStyle);
     }
 
     void DrawDispatchPlate(Rect van, float progress)
@@ -172,8 +212,14 @@ public class VanTransitOverlay : MonoBehaviour
         if (black != null) return;
 
         black = MakeTexture(new Color(0.02f, 0.024f, 0.022f, 0.98f));
-        panel = MakeTexture(new Color(0.08f, 0.12f, 0.11f, 0.96f));
+        panel = MakeTexture(new Color(0.07f, 0.085f, 0.078f, 0.98f));
         window = MakeTexture(new Color(0.055f, 0.09f, 0.09f, 0.98f));
+        floor = MakeTexture(new Color(0.12f, 0.125f, 0.11f, 0.96f));
+        ceiling = MakeTexture(new Color(0.11f, 0.13f, 0.115f, 0.96f));
+        bench = MakeTexture(new Color(0.16f, 0.18f, 0.15f, 0.98f));
+        skin = MakeTexture(new Color(0.72f, 0.58f, 0.42f, 0.98f));
+        coat = MakeTexture(new Color(0.23f, 0.3f, 0.27f, 0.98f));
+        shadow = MakeTexture(new Color(0.025f, 0.03f, 0.028f, 0.94f));
         amber = MakeTexture(new Color(0.85f, 0.6f, 0.19f, 0.92f));
         green = MakeTexture(new Color(0.48f, 0.81f, 0.54f, 0.92f));
         red = MakeTexture(new Color(0.76f, 0.23f, 0.17f, 0.95f));
@@ -206,5 +252,41 @@ public class VanTransitOverlay : MonoBehaviour
         texture.SetPixel(0, 0, color);
         texture.Apply();
         return texture;
+    }
+
+    static int GetPassengerCount()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network != null && network.IsListening)
+            return Mathf.Clamp(network.ConnectedClientsIds.Count, 1, 4);
+        return 1;
+    }
+
+    static string GetSeatLabel(int seatIndex)
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening)
+            return seatIndex == 0 ? "你" : $"队员 {seatIndex + 1}";
+
+        if (seatIndex < network.ConnectedClientsIds.Count)
+        {
+            ulong clientId = GetConnectedClientIdAt(network, seatIndex);
+            return clientId == network.LocalClientId ? "你" : $"队员 {seatIndex + 1}";
+        }
+
+        return $"队员 {seatIndex + 1}";
+    }
+
+    static ulong GetConnectedClientIdAt(NetworkManager network, int index)
+    {
+        int current = 0;
+        foreach (ulong clientId in network.ConnectedClientsIds)
+        {
+            if (current == index)
+                return clientId;
+            current++;
+        }
+
+        return ulong.MaxValue;
     }
 }
