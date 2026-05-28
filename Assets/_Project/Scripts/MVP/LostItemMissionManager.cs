@@ -46,6 +46,12 @@ public class LostItemMissionManager : NetworkBehaviour
     public NetworkVariable<bool> BonusEvidenceCollected = new(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public NetworkVariable<bool> SchoolEntranceOpened = new(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public NetworkVariable<int> WrongHomeworkAttempts = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public NetworkVariable<bool> RewardsGranted = new(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -61,6 +67,7 @@ public class LostItemMissionManager : NetworkBehaviour
     public bool IsOvertime => OvertimeGameHours > 0f;
     public int OvertimeMoneyPenalty => MvpMissionClock.GetOvertimeMoneyPenalty(ActiveTask, MissionTimer.Value);
     public int OvertimeReputationPenalty => MvpMissionClock.GetOvertimeReputationPenalty(ActiveTask, MissionTimer.Value);
+    public int WrongHomeworkMoneyPenalty => GetWrongHomeworkMoneyPenalty();
     public string CurrentClockLabel => MvpMissionClock.FormatClock(CurrentClockHour);
     public string DeadlineClockLabel => MvpMissionClock.FormatClock(DeadlineClockHour);
 
@@ -72,13 +79,24 @@ public class LostItemMissionManager : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        SchoolEntranceOpened.OnValueChanged += HandleSchoolEntranceOpenedChanged;
+        if (SchoolEntranceOpened.Value)
+            SchoolEntranceDoor.SetAllOpen(true);
+
         if (!IsServer) return;
         CurrentPhase.Value = MissionPhase.Searching;
         LostItemCollected.Value = false;
         CarrierClientId.Value = ulong.MaxValue;
         BonusEvidenceCollected.Value = false;
+        SchoolEntranceOpened.Value = false;
+        WrongHomeworkAttempts.Value = 0;
         RewardsGranted.Value = false;
         MissionTimer.Value = 0f;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        SchoolEntranceOpened.OnValueChanged -= HandleSchoolEntranceOpenedChanged;
     }
 
     void Update()
@@ -103,6 +121,64 @@ public class LostItemMissionManager : NetworkBehaviour
         CurrentPhase.Value = MissionPhase.ReturnToExit;
         if (IsServer)
             HideCollectedItemClientRpc(itemRef, clientId);
+    }
+
+    public void RequestOpenSchoolEntrance()
+    {
+        if (!HasMissionAuthority && NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            RequestOpenSchoolEntranceServerRpc();
+            return;
+        }
+
+        OpenSchoolEntrance();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void RequestOpenSchoolEntranceServerRpc()
+    {
+        OpenSchoolEntrance();
+    }
+
+    void OpenSchoolEntrance()
+    {
+        if (!HasMissionAuthority) return;
+        SchoolEntranceOpened.Value = true;
+        SchoolEntranceDoor.SetAllOpen(true);
+    }
+
+    void HandleSchoolEntranceOpenedChanged(bool previousValue, bool newValue)
+    {
+        SchoolEntranceDoor.SetAllOpen(newValue);
+    }
+
+    public void RequestWrongHomeworkAttempt(Vector3 itemPosition, float requiredDistance = 3f)
+    {
+        if (!HasMissionAuthority && NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            RequestWrongHomeworkAttemptServerRpc(itemPosition, requiredDistance);
+            return;
+        }
+
+        TryRegisterWrongHomeworkAttempt(0, itemPosition, requiredDistance);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void RequestWrongHomeworkAttemptServerRpc(Vector3 itemPosition, float requiredDistance, ServerRpcParams rpcParams = default)
+    {
+        TryRegisterWrongHomeworkAttempt(rpcParams.Receive.SenderClientId, itemPosition, requiredDistance);
+    }
+
+    void TryRegisterWrongHomeworkAttempt(ulong clientId, Vector3 itemPosition, float requiredDistance)
+    {
+        if (!HasMissionAuthority) return;
+        if (CurrentPhase.Value != MissionPhase.Searching) return;
+        if (BonusEvidenceCollected.Value) return;
+        if (!IsPlayerNearExit(clientId, itemPosition, requiredDistance)) return;
+        if (WrongHomeworkAttempts.Value >= 3) return;
+
+        WrongHomeworkAttempts.Value += 1;
+        SchoolMonsterAI.TryDistractNearest(itemPosition, 18f, 6f);
     }
 
     public void RequestCollectBonusEvidence(Vector3 evidencePosition, float requiredDistance = 3f)
@@ -179,6 +255,8 @@ public class LostItemMissionManager : NetworkBehaviour
         int overtimeReputationPenalty = MvpMissionClock.GetOvertimeReputationPenalty(task, MissionTimer.Value);
         money -= overtimeMoneyPenalty;
         reputation -= overtimeReputationPenalty;
+        if (resultKind != MvpMissionResultKind.Failed)
+            money -= GetWrongHomeworkMoneyPenalty();
         string officeScene = MvpMissionRuntime.HasActiveTask ? MvpMissionRuntime.ReturnOfficeScene : fallbackOfficeScene;
         string taskTitle = task != null ? task.title : "委托";
         string locationName = task != null ? task.locationName : "任务地点";
@@ -320,6 +398,7 @@ public class LostItemMissionManager : NetworkBehaviour
     int GetFailureMoney(OfficeTaskDefinition task) => task != null ? task.failureConsolationMoney : fallbackFailureMoney;
     int GetFailureReputation(OfficeTaskDefinition task) => task != null ? task.failureReputationPenalty : fallbackFailureReputation;
     int GetFailureExperience(OfficeTaskDefinition task) => task != null ? task.failureExperience : fallbackFailureExperience;
+    int GetWrongHomeworkMoneyPenalty() => Mathf.Min(WrongHomeworkAttempts.Value, 3) * 30;
 
     bool HasMissionAuthority => IsServer || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening;
 

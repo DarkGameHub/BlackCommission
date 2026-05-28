@@ -42,7 +42,9 @@ public class CarrySystem : NetworkBehaviour
 
     void TryPickUp()
     {
+        if (IsGameplayBlocked()) return;
         if (carriedObject != null) return;
+        if (playerCam == null) return;
 
         Ray ray = new Ray(playerCam.transform.position, playerCam.transform.forward);
         if (!Physics.Raycast(ray, out RaycastHit hit, pickupRange)) return;
@@ -74,11 +76,13 @@ public class CarrySystem : NetworkBehaviour
         if (carriedObject.IsHeavy)
             playerController.SpeedMultiplier *= heavySpeedPenalty;
 
-        playerController.IsCarrying.Value = true;
+        if (playerController != null && playerController.IsOwner)
+            playerController.IsCarrying.Value = true;
     }
 
     public void Drop()
     {
+        if (IsGameplayBlocked()) return;
         if (carriedObject == null) return;
         DropServerRpc(carriedObject.NetworkObject);
     }
@@ -103,7 +107,16 @@ public class CarrySystem : NetworkBehaviour
             playerController.SpeedMultiplier = Mathf.Min(1f, playerController.SpeedMultiplier / heavySpeedPenalty);
 
         carriedObject = null;
-        playerController.IsCarrying.Value = false;
+        if (playerController != null && playerController.IsOwner)
+            playerController.IsCarrying.Value = false;
+    }
+
+    bool IsGameplayBlocked()
+    {
+        if (!IsOwner) return true;
+        if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return true;
+        if (playerController != null && playerController.IsHiddenFromMonsters) return true;
+        return TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value;
     }
 
     public bool IsCarrying => carriedObject != null;

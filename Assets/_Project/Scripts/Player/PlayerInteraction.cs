@@ -32,6 +32,8 @@ public class PlayerInteraction : NetworkBehaviour
 
     void Update()
     {
+        if (!IsOwner || inputActions == null) return;
+
         if (VanTransitOverlay.IsActive || MvpHud.IsBlockingPanelOpen)
         {
             ClearCurrentInteraction();

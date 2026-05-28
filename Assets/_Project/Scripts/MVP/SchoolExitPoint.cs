@@ -93,6 +93,8 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
         string bonus = manager.BonusEvidenceCollected.Value
             ? "额外登记簿已拍下，结算会加一点外快。"
             : "记录室还有一本逾期登记簿，可选拍照后再撤。";
+        if (manager.WrongHomeworkAttempts.Value > 0)
+            bonus += $" 乱翻相似作业本会扣 {manager.WrongHomeworkMoneyPenalty}G。";
         return manager.LostItemCollected.Value
             ? $"目标物已带回车旁，可以完整返程。{bonus}"
             : $"目标尚未完成，房主可提前返程；事务所只会按部分结果结算。{bonus}";

@@ -104,7 +104,9 @@ public class MvpHud : MonoBehaviour
         }
 
         if (hotbar.TryPurchaseItem(itemId))
-            SetShopMessage($"采购申请已盖章: {GetShopItemLabel(itemId)} -{cost}G。");
+            SetShopMessage(IsNetworkedPlay()
+                ? $"采购申请已提交: {GetShopItemLabel(itemId)}，等待账本同步。"
+                : $"采购申请已盖章: {GetShopItemLabel(itemId)} -{cost}G。");
         else
             SetShopMessage($"{GetShopItemLabel(itemId)}采购失败。");
     }
@@ -125,7 +127,9 @@ public class MvpHud : MonoBehaviour
         }
 
         if (hotbar.TryPurchaseWristwatch())
-            SetShopMessage($"采购申请已盖章: 廉价工时表 -{PlayerHotbar.WristwatchCost}G。");
+            SetShopMessage(IsNetworkedPlay()
+                ? "采购申请已提交: 廉价工时表，等待账本同步。"
+                : $"采购申请已盖章: 廉价工时表 -{PlayerHotbar.WristwatchCost}G。");
         else
             SetShopMessage("廉价工时表采购失败。");
     }
@@ -167,10 +171,23 @@ public class MvpHud : MonoBehaviour
         {
             GUILayout.BeginArea(new Rect(18, 18, 320, 74), GUIContent.none, panelStyle);
             GUILayout.Label("Accident Squad", titleStyle);
-            string officeStatus = MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null
-                ? $"委托已接受: {MvpMissionRuntime.SelectedTask.title}。去外面的公司车出发。"
-                : nearShop ? "办公室电脑已连接。" : "事务所待机中。";
-            GUILayout.Label(officeStatus, accentStyle);
+            string officeStatus;
+            GUIStyle statusStyle = accentStyle;
+            if (MvpPendingReward.HasPending)
+            {
+                officeStatus = $"结算待领取: {MvpPendingReward.ResultLabel}。去电脑盖章入账。";
+                statusStyle = warningStyle;
+            }
+            else if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
+            {
+                officeStatus = $"委托已接受: {MvpMissionRuntime.SelectedTask.title}。采购后去公司车。";
+            }
+            else
+            {
+                officeStatus = nearShop ? "办公室电脑已连接，可接单或采购。" : "事务所待机中。";
+            }
+
+            GUILayout.Label(officeStatus, statusStyle);
             GUILayout.EndArea();
             return;
         }
@@ -320,13 +337,14 @@ public class MvpHud : MonoBehaviour
     void DrawOfficeShop(bool nearShop)
     {
         GUILayout.Label("电脑商店", accentStyle);
+        PlayerHotbar activeHotbar = FindLocalHotbar();
+        GUILayout.Label(GetHotbarStorageSummary(activeHotbar), mutedStyle);
         if (MvpPendingReward.HasPending)
         {
             GUILayout.Label("先在电脑上领取本次委托结算，之后才能采购下一单道具。", mutedStyle);
             return;
         }
 
-        PlayerHotbar activeHotbar = FindLocalHotbar();
         bool canBuy = activeHotbar != null && nearShop;
 
         GUILayout.BeginHorizontal();
@@ -344,6 +362,10 @@ public class MvpHud : MonoBehaviour
 
         if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
             GUILayout.Label(shopMessage, shopMessage.Contains("不足") ? warningStyle : accentStyle);
+        GUILayout.Label(canBuy
+            ? "快捷采购: F1回血药 / F2诱饵 / F3定身喷雾 / F4手电 / F5工时表。HQ 内按 G 可把当前热栏道具放到地上存放。"
+            : "站到电脑前才可采购。HQ 内按 G 可把当前热栏道具放到地上存放。",
+            mutedStyle);
     }
 
     void DrawShopButton(PlayerHotbar hotbar, MvpHotbarItemId itemId, string label, bool canBuy)
@@ -430,6 +452,14 @@ public class MvpHud : MonoBehaviour
         }
 
         GUILayout.Space(12);
+        if (GUILayout.Button("继续搜索", GUILayout.Height(32)))
+        {
+            CloseMissionVan();
+            GUILayout.EndArea();
+            return;
+        }
+
+        GUILayout.Space(4);
         bool canReturn = van.CanLocalPlayerRequestReturn();
         GUI.enabled = canReturn;
         if (GUILayout.Button(van.GetReturnButtonLabel(), GUILayout.Height(36)))
@@ -534,6 +564,10 @@ public class MvpHud : MonoBehaviour
                 ScaleMode.ScaleToFit, true);
             GUI.Label(new Rect(rect.x + rect.width - 38, rect.y + rect.height - 22, 34, 16), qty, mutedStyle);
         }
+
+        GUI.Label(new Rect(startX, y - 24f, totalWidth, 22f),
+            "1-5切换  左键/H使用  回到事故车可取补给或提前返程",
+            mutedStyle);
     }
 
     void DrawFooterHint()
@@ -544,12 +578,16 @@ public class MvpHud : MonoBehaviour
 
     static string GetMissionObjective(LostItemMissionManager mission)
     {
+        string paperworkRisk = mission.WrongHomeworkAttempts.Value > 0
+            ? $" 已翻错 {mission.WrongHomeworkAttempts.Value}/3 本，预计扣 {mission.WrongHomeworkMoneyPenalty}G。"
+            : "";
+
         switch (mission.CurrentPhase.Value)
         {
             case LostItemMissionManager.MissionPhase.Searching:
-                return "目标: 找到盖章作业本；记录室里有可选登记簿。";
+                return "目标: 核对记录室登记簿，找到真正盖章作业本。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.ReturnToExit:
-                return "目标: 带着作业本回到校门口的车上。";
+                return "目标: 带着作业本回到校门口的车上。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.Completed:
                 return "目标: 委托完成，返回事务所领取奖励。";
             case LostItemMissionManager.MissionPhase.ReturnedEarly:
@@ -572,9 +610,12 @@ public class MvpHud : MonoBehaviour
 
     static string GetBonusEvidenceText(LostItemMissionManager mission)
     {
-        return mission.BonusEvidenceCollected.Value
-            ? "可选证据: 逾期登记簿已拍照。"
-            : "可选证据: 记录室登记簿尚未拍照。";
+        if (mission.BonusEvidenceCollected.Value)
+            return mission.WrongHomeworkAttempts.Value > 0
+                ? "核验状态: 登记簿已拍照，但之前翻错的作业本仍会扣一点结算。"
+                : "核验状态: 登记簿已拍照，真正作业本更容易确认。";
+
+        return "核验状态: 记录室登记簿尚未拍照，乱翻相似作业本会扣结算。";
     }
 
     static string GetMonsterStatus()
@@ -681,6 +722,12 @@ public class MvpHud : MonoBehaviour
         return network == null || !network.IsListening || network.IsHost;
     }
 
+    static bool IsNetworkedPlay()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        return network != null && network.IsListening;
+    }
+
     Texture2D GetItemIcon(MvpHotbarItemId itemId)
     {
         switch (itemId)
@@ -713,6 +760,43 @@ public class MvpHud : MonoBehaviour
             default:
                 return "道具";
         }
+    }
+
+    static string GetHotbarStorageSummary(PlayerHotbar hotbar)
+    {
+        if (hotbar == null)
+            return "热栏: 未找到本地玩家。";
+
+        int usedSlots = 0;
+        int medkits = 0;
+        int decoys = 0;
+        int sprays = 0;
+        int flashlights = 0;
+        for (int i = 0; i < PlayerHotbar.SlotCount; i++)
+        {
+            HotbarSlot slot = hotbar.GetSlot(i);
+            if (slot == null || slot.IsEmpty) continue;
+
+            usedSlots++;
+            switch (slot.itemId)
+            {
+                case MvpHotbarItemId.Medkit:
+                    medkits += slot.quantity;
+                    break;
+                case MvpHotbarItemId.Decoy:
+                    decoys += slot.quantity;
+                    break;
+                case MvpHotbarItemId.StunSpray:
+                    sprays += slot.quantity;
+                    break;
+                case MvpHotbarItemId.Flashlight:
+                    flashlights += slot.quantity;
+                    break;
+            }
+        }
+
+        string watch = hotbar.HasWristwatchOwned ? "已佩戴工时表" : "未购工时表";
+        return $"热栏: {usedSlots}/{PlayerHotbar.SlotCount}格  回血药x{medkits} / 诱饵x{decoys} / 定身喷雾x{sprays} / 手电x{flashlights}  {watch}";
     }
 
     void EnsureStyles()
