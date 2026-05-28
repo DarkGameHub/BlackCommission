@@ -356,7 +356,8 @@ public class MvpHud : MonoBehaviour
             MvpHotbarItemId itemId = van.GetLockerItemId(i);
             int quantity = van.GetLockerQuantity(i);
             GUILayout.Label($"{i + 1}. {GetShopItemLabel(itemId)}  x{quantity}", labelStyle);
-            bool canReceive = localHotbar != null && localHotbar.CanReceiveItem(itemId, out string lockerReason);
+            string lockerReason = string.Empty;
+            bool canReceive = localHotbar != null && localHotbar.CanReceiveItem(itemId, out lockerReason);
             GUI.enabled = quantity > 0 && canReceive;
             if (GUILayout.Button("取出", GUILayout.Width(88), GUILayout.Height(28)))
             {
