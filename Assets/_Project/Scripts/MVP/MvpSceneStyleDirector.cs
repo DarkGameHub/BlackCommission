@@ -318,12 +318,12 @@ public static class MvpSceneStyleDirector
             new Vector3(0.7f, 0.02f, 0.12f), terminalGreen);
         outsideArrowRight.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
 
-        CreateBox("HQDispatchDeskTop", root, new Vector3(-1.35f, 0.72f, 1.62f),
-            new Vector3(1.55f, 0.1f, 0.64f), wood);
-        CreateBox("HQDispatchDeskLeftLeg", root, new Vector3(-1.98f, 0.37f, 1.62f),
-            new Vector3(0.1f, 0.68f, 0.52f), darkMetal);
-        CreateBox("HQDispatchDeskRightLeg", root, new Vector3(-0.72f, 0.37f, 1.62f),
-            new Vector3(0.1f, 0.68f, 0.52f), darkMetal);
+        CreateBox("HQDispatchDeskTop", root, new Vector3(-1.35f, 0.58f, 1.62f),
+            new Vector3(1.55f, 0.09f, 0.64f), wood);
+        CreateBox("HQDispatchDeskLeftLeg", root, new Vector3(-1.98f, 0.3f, 1.62f),
+            new Vector3(0.1f, 0.56f, 0.52f), darkMetal);
+        CreateBox("HQDispatchDeskRightLeg", root, new Vector3(-0.72f, 0.3f, 1.62f),
+            new Vector3(0.1f, 0.56f, 0.52f), darkMetal);
         CreateReadableComputerTerminal(root, darkMetal, terminalGreen, paper, lightPanel);
 
         CreateBox("HQDebtBoard", root, new Vector3(-2.45f, 1.65f, 2.49f),
@@ -342,18 +342,18 @@ public static class MvpSceneStyleDirector
             CreateBox($"HQSimpleNotice_{i + 1}", root, new Vector3(-1.08f + i * 0.32f, 1.58f, 2.49f),
                 new Vector3(0.22f, 0.28f, 0.03f), i == 1 ? warningRed : paper);
 
-        CreateBox("HQEquipmentShelfFrame", root, new Vector3(2.55f, 1f, 1.8f),
+        CreateBox("HQEquipmentShelfFrame", root, new Vector3(2.55f, 0.8f, 1.8f),
             new Vector3(0.85f, 1.55f, 0.28f), darkMetal);
-        CreateBox("HQMedkitBox", root, new Vector3(2.22f, 1.37f, 1.58f),
+        CreateBox("HQMedkitBox", root, new Vector3(2.22f, 1.17f, 1.58f),
             new Vector3(0.32f, 0.2f, 0.16f), paper);
-        CreateBox("HQToolBox", root, new Vector3(2.58f, 0.86f, 1.58f),
+        CreateBox("HQToolBox", root, new Vector3(2.58f, 0.66f, 1.58f),
             new Vector3(0.36f, 0.2f, 0.18f), warningRed);
-        CreateBox("HQCardboardSupplyBox", root, new Vector3(2.88f, 0.22f, 1.72f),
+        CreateBox("HQCardboardSupplyBox", root, new Vector3(2.88f, 0.14f, 1.72f),
             new Vector3(0.28f, 0.18f, 0.22f), cardboard);
-        CreateBox("HQSofaSeat", root, new Vector3(1.05f, 0.32f, 2.18f),
-            new Vector3(1.1f, 0.24f, 0.5f), fabric);
-        CreateBox("HQSofaBack", root, new Vector3(1.05f, 0.64f, 2.43f),
-            new Vector3(1.1f, 0.56f, 0.16f), fabric);
+        CreateBox("HQSofaSeat", root, new Vector3(1.05f, 0.22f, 2.18f),
+            new Vector3(1.1f, 0.4f, 0.5f), fabric);
+        CreateBox("HQSofaBack", root, new Vector3(1.05f, 0.45f, 2.43f),
+            new Vector3(1.1f, 0.82f, 0.16f), fabric);
 
         CreateBox("HQOfficeMainLightPanel", root, new Vector3(0f, 2.82f, 0.75f),
             new Vector3(1.9f, 0.045f, 0.2f), lightPanel);
@@ -393,14 +393,14 @@ public static class MvpSceneStyleDirector
         var yardLight = yardLightGo.AddComponent<Light>();
         yardLight.type = LightType.Point;
         yardLight.color = new Color(1f, 0.78f, 0.45f);
-        yardLight.intensity = 1.4f;
-        yardLight.range = 6f;
+        yardLight.intensity = 0.9f;
+        yardLight.range = 5.2f;
         CreatePointLight("HQGarageWorkLight", root, new Vector3(2.1f, 2.18f, -3.05f),
-            new Color(1f, 0.82f, 0.48f), 2.2f, 6.2f);
+            new Color(1f, 0.82f, 0.48f), 1.25f, 4.8f);
         CreatePointLight("HQYardFloodLight", root, new Vector3(2.45f, 3.05f, -4.25f),
-            new Color(1f, 0.76f, 0.42f), 2.4f, 8f);
+            new Color(1f, 0.76f, 0.42f), 1.05f, 5.8f);
         CreatePointLight("HQVanHeadlightWash", root, new Vector3(2.65f, 0.72f, -7.65f),
-            new Color(1f, 0.88f, 0.58f), 1.25f, 4.8f);
+            new Color(1f, 0.88f, 0.58f), 0.35f, 2.6f);
     }
 
     static void CreateReadableComputerTerminal(
@@ -424,36 +424,36 @@ public static class MvpSceneStyleDirector
         }
 
         Vector3 p = computer.transform.position;
-        Vector3 screenCenter = new Vector3(p.x, 1.14f, 1.84f);
+        Vector3 screenCenter = new Vector3(p.x, 0.98f, 1.84f);
 
         CreateBox("HQComputerMonitorShell", root, screenCenter + new Vector3(0f, 0f, 0.08f),
-            new Vector3(1.0f, 0.56f, 0.16f), darkMetal);
+            new Vector3(0.92f, 0.46f, 0.16f), darkMetal);
         CreateBox("HQComputerScreenGlass", root, screenCenter,
-            new Vector3(0.78f, 0.4f, 0.035f), terminalGreen);
-        CreateBox("HQComputerScreenScanlineA", root, screenCenter + new Vector3(0f, 0.08f, -0.025f),
-            new Vector3(0.68f, 0.03f, 0.02f), paper);
+            new Vector3(0.7f, 0.32f, 0.035f), terminalGreen);
+        CreateBox("HQComputerScreenScanlineA", root, screenCenter + new Vector3(0f, 0.06f, -0.025f),
+            new Vector3(0.6f, 0.026f, 0.02f), paper);
         CreateBox("HQComputerScreenScanlineB", root, screenCenter + new Vector3(-0.08f, -0.035f, -0.025f),
-            new Vector3(0.52f, 0.024f, 0.02f), paper);
-        CreateBox("HQComputerScreenCursor", root, screenCenter + new Vector3(0.28f, -0.12f, -0.025f),
-            new Vector3(0.08f, 0.08f, 0.02f), lightPanel);
+            new Vector3(0.48f, 0.022f, 0.02f), paper);
+        CreateBox("HQComputerScreenCursor", root, screenCenter + new Vector3(0.24f, -0.1f, -0.025f),
+            new Vector3(0.07f, 0.07f, 0.02f), lightPanel);
 
-        CreateBox("HQComputerNeck", root, new Vector3(p.x, 0.94f, 1.98f),
-            new Vector3(0.16f, 0.28f, 0.14f), darkMetal);
-        CreateBox("HQComputerBase", root, new Vector3(p.x, 0.79f, 1.88f),
-            new Vector3(0.66f, 0.07f, 0.36f), darkMetal);
-        CreateBox("HQComputerKeyboardDeck", root, new Vector3(p.x, 0.82f, 1.33f),
-            new Vector3(0.94f, 0.055f, 0.32f), darkMetal);
+        CreateBox("HQComputerNeck", root, new Vector3(p.x, 0.76f, 1.98f),
+            new Vector3(0.14f, 0.24f, 0.12f), darkMetal);
+        CreateBox("HQComputerBase", root, new Vector3(p.x, 0.63f, 1.88f),
+            new Vector3(0.58f, 0.07f, 0.32f), darkMetal);
+        CreateBox("HQComputerKeyboardDeck", root, new Vector3(p.x, 0.66f, 1.33f),
+            new Vector3(0.86f, 0.05f, 0.3f), darkMetal);
 
         for (int i = 0; i < 4; i++)
-            CreateBox($"HQComputerKeyRow_{i + 1}", root, new Vector3(p.x - 0.3f + i * 0.2f, 0.855f, 1.24f),
-                new Vector3(0.12f, 0.018f, 0.08f), paper);
+            CreateBox($"HQComputerKeyRow_{i + 1}", root, new Vector3(p.x - 0.27f + i * 0.18f, 0.692f, 1.24f),
+                new Vector3(0.1f, 0.016f, 0.07f), paper);
 
-        CreateBox("HQComputerMousePad", root, new Vector3(p.x + 0.68f, 0.82f, 1.34f),
-            new Vector3(0.34f, 0.025f, 0.28f), darkMetal);
-        CreateBox("HQComputerMouse", root, new Vector3(p.x + 0.68f, 0.855f, 1.34f),
-            new Vector3(0.16f, 0.055f, 0.22f), terminalGreen);
-        CreateBox("HQComputerStatusLight", root, screenCenter + new Vector3(-0.5f, 0.29f, -0.08f),
-            new Vector3(0.12f, 0.12f, 0.025f), lightPanel);
+        CreateBox("HQComputerMousePad", root, new Vector3(p.x + 0.62f, 0.66f, 1.34f),
+            new Vector3(0.3f, 0.022f, 0.25f), darkMetal);
+        CreateBox("HQComputerMouse", root, new Vector3(p.x + 0.62f, 0.69f, 1.34f),
+            new Vector3(0.14f, 0.045f, 0.19f), terminalGreen);
+        CreateBox("HQComputerStatusLight", root, screenCenter + new Vector3(-0.44f, 0.23f, -0.08f),
+            new Vector3(0.1f, 0.1f, 0.025f), lightPanel);
 
         var glowGo = new GameObject("HQComputerReadableScreenGlow");
         glowGo.transform.SetParent(root, false);
@@ -502,7 +502,7 @@ public static class MvpSceneStyleDirector
         CreateBox("FallbackExteriorVanHeadlightR", root, center + new Vector3(0.5f, -0.18f, -1.72f),
             new Vector3(0.28f, 0.16f, 0.04f), headlight);
         CreatePointLight("FallbackExteriorVanHeadlightSpill", root, center + new Vector3(0f, -0.08f, -1.95f),
-            new Color(1f, 0.86f, 0.48f), 1.15f, 4.8f);
+            new Color(1f, 0.86f, 0.48f), 0.45f, 2.6f);
 
         CreateCylinder("FallbackExteriorVanWheelFL", root, center + new Vector3(-0.93f, -0.48f, -0.88f),
             Quaternion.Euler(0f, 0f, 90f), new Vector3(0.34f, 0.18f, 0.34f), rubber);
@@ -1202,6 +1202,26 @@ public static class MvpSceneStyleDirector
         van.transform.localRotation = Quaternion.identity;
         van.transform.localScale = Vector3.one;
 
+        Material repairPanel = MakeOfficeMaterial("Office_ASV4VanClosedSidePanel",
+            new Color(0.62f, 0.61f, 0.53f), new Color(0.36f, 0.38f, 0.34f), OfficePattern.Scratched);
+        Material repairGlass = MakeOfficeMaterial("Office_ASV4VanClosedDirtyGlass",
+            new Color(0.025f, 0.06f, 0.065f), new Color(0.08f, 0.16f, 0.14f), OfficePattern.Scanline);
+        Material repairDirt = MakeOfficeMaterial("Office_ASV4VanLowerDirtPatch",
+            new Color(0.25f, 0.27f, 0.24f), new Color(0.08f, 0.09f, 0.08f), OfficePattern.Grime);
+        Vector3 vanCenter = new Vector3(2.65f, 0.08f, -6.35f);
+        CreateBox("DispatchVanASV4ClosedSidePanelNear", root, vanCenter + new Vector3(0f, 0.78f, -0.78f),
+            new Vector3(3.25f, 0.82f, 0.055f), repairPanel);
+        CreateBox("DispatchVanASV4ClosedSidePanelFar", root, vanCenter + new Vector3(0f, 0.78f, 0.78f),
+            new Vector3(3.25f, 0.82f, 0.055f), repairPanel);
+        CreateBox("DispatchVanASV4ClosedLowerPanelNear", root, vanCenter + new Vector3(0f, 0.4f, -0.81f),
+            new Vector3(3.35f, 0.22f, 0.065f), repairDirt);
+        CreateBox("DispatchVanASV4ClosedLowerPanelFar", root, vanCenter + new Vector3(0f, 0.4f, 0.81f),
+            new Vector3(3.35f, 0.22f, 0.065f), repairDirt);
+        CreateBox("DispatchVanASV4WindowPatchNear", root, vanCenter + new Vector3(-0.65f, 1.08f, -0.835f),
+            new Vector3(0.74f, 0.28f, 0.035f), repairGlass);
+        CreateBox("DispatchVanASV4WindowPatchFar", root, vanCenter + new Vector3(-0.65f, 1.08f, 0.835f),
+            new Vector3(0.74f, 0.28f, 0.035f), repairGlass);
+
         GameObject trigger = CreateInteractionTrigger("DispatchVanASV4DepartureTrigger", root,
             new Vector3(2.65f, 0.92f, -6.35f), new Vector3(2.8f, 1.9f, 3.5f));
         trigger.AddComponent<OfficeDepartureVan>();
@@ -1212,8 +1232,8 @@ public static class MvpSceneStyleDirector
         var beacon = beaconGo.AddComponent<Light>();
         beacon.type = LightType.Point;
         beacon.color = new Color(0.25f, 1f, 0.55f);
-        beacon.intensity = 0.9f;
-        beacon.range = 3.8f;
+        beacon.intensity = 0.55f;
+        beacon.range = 2.8f;
 
         var bayLightGo = new GameObject("GarageAmberBayLight");
         bayLightGo.transform.SetParent(root, false);
@@ -1221,10 +1241,10 @@ public static class MvpSceneStyleDirector
         var bayLight = bayLightGo.AddComponent<Light>();
         bayLight.type = LightType.Point;
         bayLight.color = new Color(1f, 0.74f, 0.32f);
-        bayLight.intensity = 1.65f;
-        bayLight.range = 6.2f;
+        bayLight.intensity = 0.95f;
+        bayLight.range = 4.5f;
         CreatePointLight("DispatchVanASV4HeadlightSpill", root, new Vector3(2.65f, 0.7f, -7.7f),
-            new Color(1f, 0.86f, 0.5f), 1.2f, 4.8f);
+            new Color(1f, 0.86f, 0.5f), 0.35f, 2.6f);
 
         CreateBox("DispatchVanASV4GroundGlow", root, new Vector3(2.65f, 0.1f, -6.35f),
             new Vector3(2.1f, 0.018f, 3.1f), terminalGreen);
