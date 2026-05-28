@@ -20,6 +20,8 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] float standClearancePadding = 0.04f;
     [SerializeField] float gravity = -20f;
     [SerializeField] float jumpForce = 5f;
+    [SerializeField] float groundProbeDistance = 0.14f;
+    [SerializeField] float jumpGraceSeconds = 0.12f;
 
     [Header("Stamina")]
     [SerializeField] float maxStamina = 100f;
@@ -36,6 +38,7 @@ public class PlayerController : NetworkBehaviour
     PlayerInputActions inputActions;
     Vector3 velocity;
     Vector3 standCameraLocalPosition;
+    float lastGroundedTime;
     bool hasCameraStandPosition;
     bool isCrouching;
     bool isSprinting;
@@ -156,24 +159,61 @@ public class PlayerController : NetworkBehaviour
         // Water slowdown is applied from outside (WaterLevelManager)
         currentSpeed *= SpeedMultiplier;
 
+        bool groundedBeforeMove = HasGroundContact();
+        if (groundedBeforeMove)
+            lastGroundedTime = Time.time;
+
         Vector3 move = transform.right * moveInput.x + transform.forward * moveInput.y;
         CollisionFlags horizontalFlags = cc.Move(move * currentSpeed * Time.deltaTime);
 
-        bool grounded = cc.isGrounded || (horizontalFlags & CollisionFlags.Below) != 0;
+        bool grounded = groundedBeforeMove || cc.isGrounded || (horizontalFlags & CollisionFlags.Below) != 0;
+        if (grounded)
+            lastGroundedTime = Time.time;
+
         if (grounded && velocity.y < 0f)
         {
             velocity.y = -2f;
         }
 
-        if (grounded && jumpPressed && !isCrouching)
+        bool canJump = grounded || Time.time - lastGroundedTime <= jumpGraceSeconds;
+        if (canJump && jumpPressed && !isCrouching)
+        {
             velocity.y = jumpForce;
+            lastGroundedTime = -999f;
+        }
 
         velocity.y += gravity * Time.deltaTime;
         CollisionFlags verticalFlags = cc.Move(velocity * Time.deltaTime);
         if ((verticalFlags & CollisionFlags.Below) != 0 && velocity.y < 0f)
+        {
             velocity.y = -2f;
+            lastGroundedTime = Time.time;
+        }
         if ((verticalFlags & CollisionFlags.Above) != 0 && velocity.y > 0f)
             velocity.y = 0f;
+    }
+
+    bool HasGroundContact()
+    {
+        if (cc == null) return true;
+
+        Vector3 center = transform.TransformPoint(cc.center);
+        float radius = Mathf.Max(0.05f, cc.radius * 0.86f);
+        float halfHeight = Mathf.Max(cc.height * 0.5f, radius);
+        Vector3 castOrigin = center + Vector3.down * (halfHeight - radius - 0.02f);
+
+        bool wasEnabled = cc.enabled;
+        if (wasEnabled) cc.enabled = false;
+        bool grounded = Physics.SphereCast(
+            castOrigin,
+            radius,
+            Vector3.down,
+            out _,
+            groundProbeDistance,
+            ~0,
+            QueryTriggerInteraction.Ignore);
+        if (wasEnabled) cc.enabled = true;
+        return grounded;
     }
 
     void RecoverFromFall()

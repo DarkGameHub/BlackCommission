@@ -1,11 +1,13 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(PlayerController))]
 public class PlayerInteraction : NetworkBehaviour
 {
     [SerializeField] float interactRange = 2.5f;
     [SerializeField] float aimAssistRadius = 0.12f;
+    [SerializeField] float nearbyInteractRadius = 1.75f;
 
     PlayerController player;
     PlayerInputActions inputActions;
@@ -87,7 +89,27 @@ public class PlayerInteraction : NetworkBehaviour
             return interactable;
         }
 
-        return null;
+        return FindNearbyTarget(origin);
+    }
+
+    IInteractable FindNearbyTarget(Vector3 origin)
+    {
+        Collider[] colliders = Physics.OverlapSphere(origin, nearbyInteractRadius, ~0, QueryTriggerInteraction.Collide);
+        IInteractable best = null;
+        float bestDistance = float.MaxValue;
+        foreach (var collider in colliders)
+        {
+            if (collider == null || collider.transform.root == transform) continue;
+            var interactable = collider.GetComponentInParent<IInteractable>();
+            if (interactable == null || string.IsNullOrEmpty(interactable.InteractHint)) continue;
+
+            float distance = Vector3.Distance(origin, collider.ClosestPoint(origin));
+            if (distance >= bestDistance) continue;
+            bestDistance = distance;
+            best = interactable;
+        }
+
+        return best;
     }
 
     Transform GetAimTransform()
@@ -112,6 +134,8 @@ public class PlayerInteraction : NetworkBehaviour
     {
         if (currentTarget == null) return;
         bool held = inputActions.Player.Interact.IsPressed();
+        if (Keyboard.current != null)
+            held |= Keyboard.current.eKey.isPressed;
 
         if (held && !isInteracting)
         {

@@ -25,14 +25,9 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
         {
             var manager = LostItemMissionManager.Instance;
             if (manager == null) return "打开事故车后舱";
-            if (!manager.LostItemCollected.Value) return "打开后舱: 补给 / 提前返程";
+            if (!manager.LostItemCollected.Value) return "打开事故车后舱: 补给 / 提前返程";
 
-            ulong localClientId = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening
-                ? NetworkManager.Singleton.LocalClientId
-                : 0;
-            return manager.CarrierClientId.Value == localClientId
-                ? "打开后舱: 完成委托并返程"
-                : "打开后舱: 等拿目标物的人返程";
+            return "打开事故车后舱: 完成委托并返程";
         }
     }
 
@@ -119,11 +114,7 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
         var manager = LostItemMissionManager.Instance;
         if (manager == null) return true;
         if (!manager.LostItemCollected.Value) return IsLocalHostOrSolo();
-
-        ulong localClientId = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening
-            ? NetworkManager.Singleton.LocalClientId
-            : 0;
-        return manager.CarrierClientId.Value == localClientId;
+        return true;
     }
 
     public string GetReturnBlockedReason()
@@ -131,8 +122,7 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
         var manager = LostItemMissionManager.Instance;
         if (manager != null && !manager.LostItemCollected.Value)
             return "提前返程会拉全队回事务所，需要房主确认。";
-        if (manager == null || !manager.LostItemCollected.Value) return "";
-        return "完整返程需要由拿着目标物的人关门。";
+        return "";
     }
 
     public void TryTakeLockerItem(int slotIndex)
