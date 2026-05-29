@@ -74,9 +74,16 @@ MonoBehaviour:
   fallbackMoneyReward: 300
   fallbackReputationReward: 5
   fallbackExperienceReward: 80
+  fallbackPartialMoneyReward: 60
+  fallbackPartialReputationReward: 0
+  fallbackPartialExperienceReward: 15
+  bonusEvidenceMoneyReward: 90
+  bonusEvidenceReputationReward: 1
+  bonusEvidenceExperienceReward: 20
   fallbackFailureMoney: 20
   fallbackFailureReputation: -2
   fallbackFailureExperience: 0
+  departureTransitSeconds: 6
   fallbackOfficeScene: HQ
   CurrentPhase:
     UpdateTraits:
@@ -93,6 +100,21 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 18446744073709551615
+  BonusEvidenceCollected:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  SchoolEntranceOpened:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  WrongHomeworkAttempts:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
   RewardsGranted:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0

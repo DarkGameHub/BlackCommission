@@ -10,7 +10,7 @@ public static class GeneratedArtImporter
     const string PlayableVanPrefabPath = "Assets/_Project/Prefabs/Art/ASV4_PlayableDepartureVan.prefab";
     const string PlayableVanResourcesPath = "Assets/Resources/GeneratedArt/ASV4_PlayableDepartureVan.prefab";
     const string VanModelPath = "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Second_Hand_Dispatch_Van.fbx";
-    const string AutoSetupDoneKey = "AccidentSquad.GeneratedArt.ASV4AutoSetupDone.v1";
+    const string AutoSetupDoneKey = "AccidentSquad.GeneratedArt.ASV4AutoSetupDone.v2";
 
     struct AssetSpec
     {
@@ -62,6 +62,22 @@ public static class GeneratedArtImporter
             "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Second_Hand_Dispatch_Van.fbx",
             "ASV4_SecondHandDispatchVan",
             new Vector3(6f, 0f, -4f)),
+        new AssetSpec(
+            "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Van_Transit_Interior.fbx",
+            "ASV4_VanTransitInterior",
+            new Vector3(3f, 0f, -9f)),
+        new AssetSpec(
+            "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_FirstPerson_Gloves.fbx",
+            "ASV4_FirstPerson_Gloves",
+            new Vector3(-6f, 0f, -8f)),
+        new AssetSpec(
+            "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Item_Flashlight.fbx",
+            "ASV4_Item_Flashlight",
+            new Vector3(-4f, 0f, -8f)),
+        new AssetSpec(
+            "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Item_Battery.fbx",
+            "ASV4_Item_Battery",
+            new Vector3(-2f, 0f, -8f)),
     };
 
     static GeneratedArtImporter()

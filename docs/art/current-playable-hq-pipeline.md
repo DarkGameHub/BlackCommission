@@ -9,10 +9,11 @@ Style source of truth: [AccidentSquad Style Lock v1](accidentsquad-style-lock-v1
 1. `MvpProjectSetup` creates the base HQ scene objects, including the real
    `OfficeComputer` interaction component.
 2. `MvpSceneStyleDirector.BuildOfficeStyle()` runs when the `HQ` scene loads.
-   It hides the original blockout props and builds the visible office, garage,
-   lighting, route paint, colliders, furniture, floor storage mat, and set
-   dressing from Unity primitives. The computer desk is a standing interaction
-   point; there is no chair in front of the terminal.
+   It first creates the playable colliders, camera, and atmosphere, then uses
+   the ASV4 Blender HQ prefab when available. If that prefab is missing, it
+   falls back to the Unity-primitive office, garage, route paint, furniture,
+   floor storage mat, and set dressing. The computer desk is a standing
+   interaction point; there is no chair in front of the terminal.
 3. `GeneratedArtImporter` creates ASV4 prefabs from Blender FBX files.
 4. The dispatch van can load `Resources/GeneratedArt/ASV4_PlayableDepartureVan`
    in Play Mode. If that prefab is missing, the runtime fallback van is used.
@@ -27,9 +28,10 @@ Style source of truth: [AccidentSquad Style Lock v1](accidentsquad-style-lock-v1
    return-van dressing, and extra debt-office set dressing even if the saved
    school scene is still a simple MVP layout.
 
-`CreateGeneratedOfficeVisualIfAvailable()` exists, but it is not called by the
-current HQ flow. Regenerating the Blender HQ model will not change the playable
-office unless the runtime scene code is also changed to use it.
+`CreateGeneratedOfficeVisualIfAvailable()` is active in the current HQ flow.
+Regenerating the Blender HQ model now changes the playable HQ visual, while
+gameplay colliders and interaction components remain owned by Unity runtime
+setup.
 
 ## Current Direction
 

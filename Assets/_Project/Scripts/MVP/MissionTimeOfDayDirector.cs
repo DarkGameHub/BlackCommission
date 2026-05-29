@@ -41,20 +41,23 @@ public class MissionTimeOfDayDirector : MonoBehaviour
 
         Color dayAmbient = new Color(0.18f, 0.22f, 0.21f);
         Color duskAmbient = new Color(0.16f, 0.13f, 0.1f);
-        Color nightAmbient = new Color(0.035f, 0.055f, 0.065f);
+        // Playability floor: at 8pm+ the mission previously crushed to near-black ambient. Keep it readable.
+        Color nightAmbient = new Color(0.10f, 0.12f, 0.13f);
         RenderSettings.ambientLight = Color.Lerp(
             Color.Lerp(nightAmbient, dayAmbient, daylight),
             duskAmbient,
             dusk * 0.55f);
         if (lateNight > 0f)
-            RenderSettings.ambientLight = Color.Lerp(RenderSettings.ambientLight, nightAmbient, 0.65f);
+            RenderSettings.ambientLight = Color.Lerp(RenderSettings.ambientLight, nightAmbient, 0.45f);
 
-        RenderSettings.fogColor = Color.Lerp(new Color(0.04f, 0.07f, 0.075f), new Color(0.1f, 0.12f, 0.105f), daylight);
-        RenderSettings.fogDensity = Mathf.Lerp(0.038f, 0.014f, daylight);
+        RenderSettings.fogColor = Color.Lerp(new Color(0.06f, 0.09f, 0.10f), new Color(0.1f, 0.12f, 0.105f), daylight);
+        // Cap nighttime fog so a 12-minute run doesn't swallow the corridors.
+        RenderSettings.fogDensity = Mathf.Lerp(0.020f, 0.014f, daylight);
 
         if (directionalLight == null) return;
 
-        directionalLight.intensity = Mathf.Lerp(0.08f, 0.82f, daylight);
+        // Hold a minimum keylight so the player can still read silhouettes at night.
+        directionalLight.intensity = Mathf.Lerp(0.28f, 0.82f, daylight);
         directionalLight.color = Color.Lerp(new Color(0.18f, 0.36f, 0.52f), new Color(1f, 0.88f, 0.62f), daylight);
         directionalLight.transform.rotation = Quaternion.Euler(Mathf.Lerp(8f, 58f, daylight), 35f + hour * 4f, 0f);
     }

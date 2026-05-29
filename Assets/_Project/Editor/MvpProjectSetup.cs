@@ -130,34 +130,29 @@ public static class MvpProjectSetup
     {
         var scene = EditorSceneManager.OpenScene(HqScenePath, OpenSceneMode.Single);
         EnsureMvpHud();
+        EnsureMainMenuUi();
 
         GameObject computer = GameObject.Find("MVP_OfficeComputer");
         if (computer == null)
         {
             computer = GameObject.CreatePrimitive(PrimitiveType.Cube);
             computer.name = "MVP_OfficeComputer";
-            computer.transform.position = new Vector3(-1.2f, 1.05f, 2.4f);
+            // Aligned with the Blender HQ FBX's CRT screen position so the interaction collider sits on the visible monitor.
+            computer.transform.position = new Vector3(-1.55f, 1.02f, 1.755f);
             computer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-            computer.transform.localScale = new Vector3(1.2f, 0.7f, 0.2f);
-            ApplyMaterial(computer, "office_computer_case", new Color(0.06f, 0.07f, 0.08f));
+            computer.transform.localScale = new Vector3(0.7f, 0.6f, 0.25f);
 
-            var screen = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            screen.name = "GreenScreen";
-            screen.transform.SetParent(computer.transform);
-            screen.transform.localPosition = new Vector3(0f, 0.06f, -0.56f);
-            screen.transform.localScale = new Vector3(0.8f, 0.55f, 0.04f);
-            ApplyMaterial(screen, "office_monitor_green", new Color(0.05f, 0.85f, 0.42f));
-            Object.DestroyImmediate(screen.GetComponent<BoxCollider>());
-
-            var glow = new GameObject("ScreenGlow");
-            glow.transform.SetParent(computer.transform);
-            glow.transform.localPosition = new Vector3(0f, 0.1f, -0.9f);
-            var light = glow.AddComponent<Light>();
-            light.type = LightType.Point;
-            light.range = 3.5f;
-            light.intensity = 1.4f;
-            light.color = new Color(0.35f, 1f, 0.65f);
-
+            // No renderer/material/light: the Blender HQ already models a CRT, this cube is collider-only.
+            if (computer.TryGetComponent<Renderer>(out var renderer)) renderer.enabled = false;
+        }
+        else
+        {
+            // Re-align an existing computer to the Blender CRT so a re-run picks up the layout fix.
+            computer.transform.position = new Vector3(-1.55f, 1.02f, 1.755f);
+            computer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            computer.transform.localScale = new Vector3(0.7f, 0.6f, 0.25f);
+            foreach (var r in computer.GetComponentsInChildren<Renderer>()) r.enabled = false;
+            foreach (var l in computer.GetComponentsInChildren<Light>()) l.enabled = false;
         }
 
         if (computer.GetComponent<NetworkObject>() == null)
@@ -467,6 +462,13 @@ public static class MvpProjectSetup
         if (Object.FindFirstObjectByType<MvpHud>() != null) return;
         var hud = new GameObject("MVP_HUD");
         hud.AddComponent<MvpHud>();
+    }
+
+    static void EnsureMainMenuUi()
+    {
+        if (Object.FindFirstObjectByType<MainMenuUI>() != null) return;
+        var menu = new GameObject("MainMenu_UGUI");
+        menu.AddComponent<MainMenuUI>();
     }
 
     static void PatchNetworkManagerPlayerPrefab()

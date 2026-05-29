@@ -30,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 8432890611707130463}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.08, z: -7.6}
+  m_LocalPosition: {x: 0, y: 0.08, z: -12.2}
   m_LocalScale: {x: 4.4, y: 0.16, z: 1.8}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -153,3 +153,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SchoolExitPoint
   ShowTopMostFoldoutHeaderGroup: 1
   exitUseRadius: 3.5
+  returnTransitSeconds: 6
+  FlashlightCount:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 1
+  BatteryCount:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 2

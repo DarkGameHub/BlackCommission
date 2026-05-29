@@ -106,6 +106,7 @@ public static class MvpSceneStyleDirector
 
         if (CreateGeneratedOfficeVisualIfAvailable(root.transform))
         {
+            CreateBlenderOfficeGameplayOverlays(root.transform);
             Debug.Log("[MvpSceneStyleDirector] Using Blender-generated HQ model.");
             return;
         }
@@ -1513,6 +1514,9 @@ public static class MvpSceneStyleDirector
         camera.fieldOfView = 62f;
         camera.nearClipPlane = 0.05f;
         camera.farClipPlane = 80f;
+        var listener = cameraGo.AddComponent<AudioListener>();
+        listener.enabled = false;
+        cameraGo.AddComponent<HqMenuAudioListenerGate>().Configure(listener);
     }
 
     static GameObject CreateHidingLocker(Transform parent, Vector3 position, Quaternion rotation, Material body, Material warning)
@@ -1918,15 +1922,14 @@ public static class MvpSceneStyleDirector
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
         RenderSettings.fogColor = CivicTealDark;
-        RenderSettings.fogDensity = 0.006f;
-        RenderSettings.ambientLight = new Color(0.18f, 0.2f, 0.17f);
-
-        foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
-        {
-            if (light == null || light.name != "OfficeLight") continue;
-            light.intensity = Mathf.Max(light.intensity, 1.15f);
-            light.color = SodiumAmberPale;
-        }
+        // Less fog inside the office — it was crushing the room to black.
+        RenderSettings.fogDensity = 0.0025f;
+        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+        // Brighter ambient: warm overhead, neutral mid, cool floor — readable not flat.
+        RenderSettings.ambientSkyColor = new Color(0.34f, 0.35f, 0.30f);
+        RenderSettings.ambientEquatorColor = new Color(0.26f, 0.28f, 0.25f);
+        RenderSettings.ambientGroundColor = new Color(0.10f, 0.12f, 0.11f);
+        RenderSettings.ambientIntensity = 1.15f;
     }
 
     static void ApplySchoolAtmosphere()
@@ -2193,6 +2196,153 @@ public static class MvpSceneStyleDirector
         return true;
     }
 
+    static void CreateBlenderOfficeGameplayOverlays(Transform root)
+    {
+        CreateWalkableCollider("BlenderHQ_OfficeWalkableFloor", root,
+            new Vector3(-1.45f, -0.04f, 0.55f), new Vector3(6.45f, 0.22f, 5.25f));
+        CreateWalkableCollider("BlenderHQ_GarageWalkableFloor", root,
+            new Vector3(2.58f, -0.04f, -1.85f), new Vector3(4.65f, 0.22f, 3.7f));
+        CreateWalkableCollider("BlenderHQ_OpenGarageThreshold", root,
+            new Vector3(2.58f, -0.04f, -3.48f), new Vector3(3.9f, 0.22f, 0.7f));
+
+        // Trigger now spans boarding pad through van rear so the prompt appears wherever the van is visibly parked.
+        GameObject trigger = CreateInteractionTrigger("BlenderHQ_ASV4DepartureTrigger", root,
+            new Vector3(2.58f, 0.86f, -1.5f), new Vector3(4.35f, 1.85f, 2.8f));
+        trigger.AddComponent<OfficeDepartureVan>();
+
+        CreateBlockingCollider("BlenderHQ_ASV4VanBodyCollider", root,
+            new Vector3(2.58f, 0.86f, -2.18f), new Vector3(3.55f, 1.45f, 1.7f));
+        CreateBlockingCollider("BlenderHQ_ASV4VanFrontCollider", root,
+            new Vector3(0.93f, 0.68f, -2.18f), new Vector3(0.55f, 0.92f, 1.35f));
+        CreateBlockingCollider("BlenderHQ_ASV4VanRearCollider", root,
+            new Vector3(4.13f, 0.66f, -2.18f), new Vector3(0.36f, 0.82f, 1.28f));
+
+        // ─── Office interior fluorescents (3 along the office Z-axis) ─────
+        // Blender placed hq_fluoro_* meshes at these positions but did not include
+        // Light components. Add real Unity lights so the office reads properly.
+        CreatePointLight("BlenderHQ_OfficeFluoro_Front", root, new Vector3(-1.45f, 2.65f, -1.40f),
+            DirtyBoneCool, 1.35f, 5.5f);
+        CreatePointLight("BlenderHQ_OfficeFluoro_Mid", root, new Vector3(-1.45f, 2.65f, 1.00f),
+            DirtyBoneCool, 1.35f, 5.5f);
+        CreatePointLight("BlenderHQ_OfficeFluoro_Back", root, new Vector3(-1.45f, 2.65f, 2.80f),
+            DirtyBoneCool, 1.10f, 4.5f);
+
+        // CRT spill light at the dispatch desk so the screen casts onto the room.
+        CreatePointLight("BlenderHQ_CrtScreenSpill", root, new Vector3(-1.55f, 1.10f, 1.45f),
+            DispatchGreen, 1.05f, 2.6f);
+
+        // ─── Garage work lights ───────────────────────────────────────────
+        // Overhead sodium spot illuminates the parked van.
+        CreateSpotLight("BlenderHQ_GarageOverheadSpot", root, new Vector3(2.58f, 2.85f, -2.18f),
+            new Vector3(2.58f, 0.20f, -2.18f), SodiumAmberPale, 5.5f, 7.5f, 76f);
+        // Side fill so the van side facing the office isn't pitch black.
+        CreatePointLight("BlenderHQ_GarageInteriorFill", root, new Vector3(0.95f, 1.55f, -1.85f),
+            SodiumAmberPale, 1.6f, 5.5f);
+        // Front of garage (toward the iron gate) — backlight the bars.
+        CreatePointLight("BlenderHQ_GarageGateBackLight", root, new Vector3(2.58f, 1.50f, -3.40f),
+            SodiumAmber, 1.3f, 4.0f);
+
+        // ─── Dispatch route guide light (subtle floor wash) ───────────────
+        CreatePointLight("BlenderHQ_DispatchGreenGuideLight", root, new Vector3(0.65f, 0.72f, -0.85f),
+            DispatchGreen, 0.9f, 4.0f);
+
+        // ─── Brighten the scene's directional light if it's still dim ─────
+        BoostSceneDirectionalLight();
+
+        // ─── Close off the south side of the office ───────────────────────
+        // The Blender HQ has walls on N / W / E (partial), but the south face
+        // was left open — making the office feel like an unfinished void.
+        // Add a south wall here, leaving an east-side door opening that leads
+        // into the garage area, which in turn opens to the outside via the
+        // iron gate. Architecture: office (N-W) -> doorway -> garage -> gate.
+        CreateOfficeSouthWallAndDoor(root);
+
+        AlignMvpComputerWithBlenderCrt();
+        RepositionPlayerSpawnIfStale();
+    }
+
+    static void CreateOfficeSouthWallAndDoor(Transform root)
+    {
+        // Office X range -4.7 .. 1.8 (from Blender tile_floor). South face at Z=-2.10.
+        // Wall section covers X=-4.7 to X=0.30 (width 5.0), leaving X=0.30..1.80
+        // as the doorway into the garage corridor.
+        Material wallMat = MakeOfficeMaterial("Office_CivicTealSouthWall", CivicTeal, CivicTealDark, OfficePattern.Grime);
+        Material trimMat = MakeMaterial(DeadRubber);
+        Material doorFrameMat = MakeMaterial(DispatchGreenDark);
+
+        // Main wall block (X=-4.7..0.30, Z=-2.10, height 2.85).
+        CreateBox("BlenderHQ_OfficeSouthWall_Main", root,
+            new Vector3(-2.20f, 1.43f, -2.10f), new Vector3(5.00f, 2.85f, 0.10f), wallMat);
+
+        // Baseboard accent at the floor line.
+        CreateBox("BlenderHQ_OfficeSouthWall_Baseboard", root,
+            new Vector3(-2.20f, 0.08f, -2.06f), new Vector3(5.00f, 0.12f, 0.04f), trimMat);
+
+        // Header beam above the doorway (X=0.30..1.80, Z=-2.10, top at 2.85).
+        CreateBox("BlenderHQ_OfficeSouthWall_DoorHeader", root,
+            new Vector3(1.05f, 2.65f, -2.10f), new Vector3(1.50f, 0.45f, 0.10f), wallMat);
+
+        // Door frame (left + right vertical jambs around the opening).
+        CreateBox("BlenderHQ_OfficeSouthWall_DoorJamb_L", root,
+            new Vector3(0.30f, 1.21f, -2.06f), new Vector3(0.10f, 2.20f, 0.18f), doorFrameMat);
+        CreateBox("BlenderHQ_OfficeSouthWall_DoorJamb_R", root,
+            new Vector3(1.80f, 1.21f, -2.06f), new Vector3(0.10f, 2.20f, 0.18f), doorFrameMat);
+
+        // Small dispatch-green "OFFICE -> GARAGE" sign above the doorway.
+        CreateBox("BlenderHQ_OfficeSouthWall_DoorSign", root,
+            new Vector3(1.05f, 2.40f, -2.04f), new Vector3(0.80f, 0.16f, 0.02f), doorFrameMat);
+
+        // Solid blocking collider on the wall so player can't walk through.
+        CreateBlockingCollider("BlenderHQ_OfficeSouthWall_Collider", root,
+            new Vector3(-2.20f, 1.43f, -2.10f), new Vector3(5.00f, 2.85f, 0.12f));
+    }
+
+    static readonly Color DirtyBoneCool = new(0.69f, 0.74f, 0.74f);
+
+    static void BoostSceneDirectionalLight()
+    {
+        foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Exclude))
+        {
+            if (light == null || light.type != LightType.Directional) continue;
+            if (light.intensity < 0.55f) light.intensity = 0.55f;
+            if (light.color.r < 0.6f) light.color = new Color(0.78f, 0.82f, 0.76f);
+        }
+    }
+
+    // The Blender HQ FBX includes a fully-modeled CRT on the dispatch desk. The procedural
+    // MVP_OfficeComputer cube exists only to host gameplay components (OfficeComputer + NetworkObject).
+    // Move its collider over the Blender CRT and hide its primitive visuals so it stops floating above the desk.
+    static void AlignMvpComputerWithBlenderCrt()
+    {
+        GameObject computer = GameObject.Find("MVP_OfficeComputer");
+        if (computer == null) return;
+
+        // CRT screen world position from Blender v4 (post-stack-fix): Blender (-1.55, 1.755, 1.020)
+        // → Unity (-1.55, 1.020, 1.755) (Blender Y → Unity Z, Blender Z → Unity Y).
+        computer.transform.position = new Vector3(-1.55f, 1.02f, 1.755f);
+        computer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+        computer.transform.localScale = new Vector3(0.7f, 0.6f, 0.25f);
+
+        foreach (Renderer renderer in computer.GetComponentsInChildren<Renderer>())
+            renderer.enabled = false;
+        foreach (Light light in computer.GetComponentsInChildren<Light>())
+            light.enabled = false;
+    }
+
+    // Player spawn (0, 1.1, 0) was placed for the old primitive layout; in the Blender HQ
+    // that point lands on the office/garage boundary facing the wrong way. Move them into
+    // the office so the dispatch CRT and the route to the garage are immediately visible.
+    static void RepositionPlayerSpawnIfStale()
+    {
+        GameObject spawn = GameObject.Find("PlayerSpawnPoint");
+        if (spawn == null) return;
+
+        if (Vector3.Distance(spawn.transform.position, new Vector3(0f, 1.1f, 0f)) > 0.25f) return;
+
+        spawn.transform.position = new Vector3(-1.45f, 1.1f, -1.5f);
+        spawn.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+    }
+
     static void ClearExistingOfficeStyleRoots()
     {
         GameObject[] objects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include);
@@ -2236,7 +2386,14 @@ public static class MvpSceneStyleDirector
             "Whiteboard",
             "Sign_ZeroAccident",
             "OldFan",
-            "DoorFrame"
+            "DoorFrame",
+            "Floor",
+            "Ceiling",
+            "Wall_Back",
+            "Wall_Front",
+            "Wall_Left",
+            "Wall_Right",
+            "OfficeLight"
         };
 
         foreach (string name in names)
@@ -2248,6 +2405,8 @@ public static class MvpSceneStyleDirector
                 collider.enabled = false;
             foreach (Renderer renderer in obj.GetComponentsInChildren<Renderer>())
                 renderer.enabled = false;
+            foreach (Light light in obj.GetComponentsInChildren<Light>())
+                light.enabled = false;
         }
     }
 
@@ -2380,5 +2539,33 @@ public static class MvpSceneStyleDirector
     static Color Rgb(int r, int g, int b)
     {
         return new Color(r / 255f, g / 255f, b / 255f);
+    }
+}
+
+public sealed class HqMenuAudioListenerGate : MonoBehaviour
+{
+    AudioListener listener;
+
+    public void Configure(AudioListener target)
+    {
+        listener = target;
+    }
+
+    void LateUpdate()
+    {
+        if (listener == null)
+            listener = GetComponent<AudioListener>();
+        if (listener == null) return;
+
+        bool otherEnabledListenerExists = false;
+        AudioListener[] listeners = FindObjectsByType<AudioListener>(FindObjectsInactive.Exclude);
+        foreach (AudioListener candidate in listeners)
+        {
+            if (candidate == null || candidate == listener || !candidate.enabled) continue;
+            otherEnabledListenerExists = true;
+            break;
+        }
+
+        listener.enabled = !otherEnabledListenerExists;
     }
 }

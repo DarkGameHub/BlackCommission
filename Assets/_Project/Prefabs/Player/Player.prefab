@@ -309,8 +309,11 @@ MonoBehaviour:
   crouchSpeed: 2
   crouchHeight: 1
   standHeight: 2
+  standClearancePadding: 0.04
   gravity: -20
   jumpForce: 5
+  groundProbeDistance: 0.14
+  jumpGraceSeconds: 0.12
   maxStamina: 100
   staminaDrainRate: 20
   staminaRegenRate: 10
@@ -323,6 +326,21 @@ MonoBehaviour:
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
   HiddenFromMonsters:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  CharacterIndex:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  GestureId:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  NetworkMoveSpeed:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
@@ -357,6 +375,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
   ShowTopMostFoldoutHeaderGroup: 1
   interactRange: 2.5
+  aimAssistRadius: 0.12
+  nearbyInteractRadius: 1.75
 --- !u!114 &8417771090113601477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -408,12 +428,12 @@ MonoBehaviour:
     quantity: 0
   - itemId: 0
     quantity: 0
-  medkitHealAmount: 30
-  stunSprayRadius: 6
-  stunSprayDuration: 2.5
-  decoyRadius: 12
-  decoyDuration: 4
   SelectedSlot:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  HasWristwatch:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
@@ -446,7 +466,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FlashlightController
   ShowTopMostFoldoutHeaderGroup: 1
   maxBattery: 100
-  normalDrainRate: 2
   strongDrainCost: 15
   strongLightDuration: 0.5
   strongLightCooldown: 10

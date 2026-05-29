@@ -226,7 +226,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   detectionRadius: 5.5
   loseRadius: 13
-  initialGraceSeconds: 8
+  initialGraceSeconds: 14
   patrolSpeed: 1.8
   chaseSpeed: 3.55
   attackRange: 1.4

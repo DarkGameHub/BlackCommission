@@ -133,7 +133,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (!IsValidSlot(index) || slots[index].IsEmpty) return false;
 
         // Find any OfficeComputer in the scene — no range restriction
-        OfficeComputer computer = Object.FindAnyObjectByType<OfficeComputer>();
+        OfficeComputer computer = UnityEngine.Object.FindAnyObjectByType<OfficeComputer>();
         if (computer == null) return false;
 
         MvpHotbarItemId itemId = slots[index].itemId;
@@ -302,7 +302,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (slot.IsEmpty || slot.itemId != itemId) return;
         if (TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) return;
 
-        OfficeComputer computer = Object.FindAnyObjectByType<OfficeComputer>();
+        OfficeComputer computer = UnityEngine.Object.FindAnyObjectByType<OfficeComputer>();
         if (computer == null) return;
         if (!computer.TryStoreDroppedItemServer(itemId, 1)) return;
 
@@ -349,7 +349,7 @@ public class PlayerHotbar : NetworkBehaviour
         mat.color = itemColor;
         go.GetComponent<Renderer>().material = mat;
 
-        Object.Destroy(go.GetComponent<Collider>());
+        UnityEngine.Object.Destroy(go.GetComponent<Collider>());
 
         // Add interactable so player can pick up from drop location
         go.AddComponent<DroppedItemVisual>().Init(itemId);

@@ -70,7 +70,7 @@ public class QuickNetworkUI : MonoBehaviour
         if (stylesReady) return;
         stylesReady = true;
 
-        screenTex = MakeTex(new Color(0.012f, 0.016f, 0.014f, 1f));
+        screenTex = MakeTex(new Color(0.012f, 0.016f, 0.014f, 0.72f));
         panelTex = MakeTex(new Color(0.055f, 0.078f, 0.070f, 0.98f));
         panelBorderTex = MakeTex(new Color(0.184f, 0.310f, 0.294f, 0.6f));
         fieldTex = MakeTex(new Color(0.020f, 0.028f, 0.024f, 1f));
@@ -183,6 +183,8 @@ public class QuickNetworkUI : MonoBehaviour
     void OnGUI()
     {
         if (NetworkManager.Singleton == null) return;
+        // New UGUI-based menu (MainMenuUI) supersedes this OnGUI panel when present.
+        if (Object.FindFirstObjectByType<MainMenuUI>() != null) return;
         InitStyles();
 
         if (NetworkManager.Singleton.IsListening)
@@ -233,56 +235,90 @@ public class QuickNetworkUI : MonoBehaviour
 
     void DrawMainMenu()
     {
-        float pw = 380, ph = showDirectConnect ? 510 : 410;
+        float pw = Mathf.Min(420f, Mathf.Max(340f, Screen.width - 56f));
+        float ph = Mathf.Min(showDirectConnect ? 520f : 420f, Screen.height - 32f);
         float px = (Screen.width - pw) * 0.5f;
         float py = (Screen.height - ph) * 0.5f;
 
         GUI.DrawTexture(new Rect(px - 2, py - 2, pw + 4, ph + 4), panelBorderTex);
         GUI.DrawTexture(new Rect(px, py, pw, ph), panelTex);
 
-        float cx = px + 28;
-        float bw = pw - 56;
-        float cy = py + 24;
+        float cx = px + 24;
+        float bw = pw - 48;
+        float cy = py + 18;
 
-        // AS logo decoration
-        GUI.DrawTexture(new Rect(px + 28, cy + 2, bw, 2), MakeTex(new Color(0.482f, 0.812f, 0.541f, 0.3f)));
+        GUIStyle titleLeft = new GUIStyle(titleStyle)
+        {
+            alignment = TextAnchor.MiddleLeft,
+            fontSize = 24
+        };
+        GUIStyle subtitleLeft = new GUIStyle(subtitleStyle)
+        {
+            alignment = TextAnchor.MiddleLeft,
+            padding = new RectOffset(0, 0, 0, 0)
+        };
+        GUIStyle smallLabel = new GUIStyle(hintStyle)
+        {
+            alignment = TextAnchor.MiddleLeft,
+            fontSize = 11,
+            padding = new RectOffset(0, 0, 0, 0)
+        };
+        GUIStyle stampStyle = new GUIStyle(hintStyle)
+        {
+            alignment = TextAnchor.MiddleCenter,
+            fontSize = 10,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = new Color(0.96f, 0.42f, 0.34f) },
+            padding = new RectOffset(0, 0, 0, 0)
+        };
 
-        GUI.Label(new Rect(cx, cy + 8, bw, 36), "ACCIDENT SQUAD", titleStyle);
-        cy += 48;
+        GUI.DrawTexture(new Rect(cx, cy, bw, 2), panelBorderTex);
+        cy += 9;
+        GUI.Label(new Rect(cx, cy, bw - 88, 32), "ACCIDENT SQUAD", titleLeft);
 
-        // Debt slash decoration
-        Matrix4x4 savedMatrix = GUI.matrix;
-        GUIUtility.RotateAroundPivot(-18f, new Vector2(px + pw * 0.5f, cy + 2));
-        GUI.DrawTexture(new Rect(px + pw * 0.3f, cy, pw * 0.4f, 3), debtSlashTex);
-        GUI.matrix = savedMatrix;
+        Rect stamp = new Rect(cx + bw - 80, cy + 4, 78, 24);
+        GUI.DrawTexture(stamp, fieldTex);
+        GUI.DrawTexture(new Rect(stamp.x, stamp.y, stamp.width, 2), debtSlashTex);
+        GUI.DrawTexture(new Rect(stamp.x, stamp.yMax - 2, stamp.width, 2), debtSlashTex);
+        GUI.Label(stamp, "DEBT", stampStyle);
+        cy += 34;
 
-        GUI.Label(new Rect(cx, cy + 4, bw, 22), MvpLocale.T("subtitle"), subtitleStyle);
-        cy += 38;
+        GUI.Label(new Rect(cx, cy, bw, 20), MvpLocale.T("subtitle"), subtitleLeft);
+        cy += 26;
 
-        GUI.DrawTexture(new Rect(cx, cy, bw, 1), MakeTex(new Color(0.184f, 0.310f, 0.294f, 0.4f)));
+        GUI.DrawTexture(new Rect(cx, cy, bw, 1), panelBorderTex);
         cy += 12;
 
+        GUI.Label(new Rect(cx, cy, bw, 16), "UNIFORM FILE", smallLabel);
+        cy += 18;
+        GUI.DrawTexture(new Rect(cx, cy - 2, bw, 46), fieldTex);
         DrawCharacterSelector(cx, cy, bw);
-        cy += 52;
-
-        if (GUI.Button(new Rect(cx, cy, bw, 48), MvpLocale.T("create_office"), hostBtnStyle))
-            StartHost();
-        cy += 60;
-
-        if (GUI.Button(new Rect(cx, cy, bw, 42), MvpLocale.T("join_office"), joinBtnStyle))
-            state = MenuState.JoinInput;
         cy += 56;
+
+        GUI.Label(new Rect(cx, cy, bw, 16), "DISPATCH", smallLabel);
+        cy += 18;
+
+        if (GUI.Button(new Rect(cx, cy, bw, 46), MvpLocale.T("create_office"), hostBtnStyle))
+            StartHost();
+        cy += 54;
+
+        if (GUI.Button(new Rect(cx, cy, bw, 40), MvpLocale.T("join_office"), joinBtnStyle))
+            state = MenuState.JoinInput;
+        cy += 50;
+
+        GUI.DrawTexture(new Rect(cx, cy, bw, 1), panelBorderTex);
+        cy += 10;
 
         if (!string.IsNullOrEmpty(statusMessage) && Time.unscaledTime < statusMessageUntil)
         {
             GUIStyle msgStyle = new GUIStyle(hintStyle) { normal = { textColor = new Color(0.761f, 0.227f, 0.169f) } };
-            GUI.Label(new Rect(cx, cy, bw, 36), statusMessage, msgStyle);
-            cy += 38;
+            GUI.Label(new Rect(cx, cy, bw, 32), statusMessage, msgStyle);
+            cy += 34;
         }
         else
         {
-            GUI.Label(new Rect(cx, cy, bw, 36), MvpLocale.T("create_hint"), hintStyle);
-            cy += 38;
+            GUI.Label(new Rect(cx, cy, bw, 32), MvpLocale.T("create_hint"), hintStyle);
+            cy += 34;
         }
 
         // Settings button (gear symbol)
@@ -446,7 +482,7 @@ public class QuickNetworkUI : MonoBehaviour
 
     void StartHost()
     {
-        if (ConnectionManager.Instance != null)
+        if (ConnectionManager.Instance != null && ConnectionManager.Instance.ServicesReady)
         {
             state = MenuState.Connecting;
             ConnectionManager.Instance.OnJoinCodeReady += HandleJoinCodeReady;

@@ -205,77 +205,170 @@ def prism(name: str, points: list[tuple[float, float]], half_width: float, mat, 
 
 def build_hq(m) -> bpy.types.Collection:
     coll = collection("ASV4_HQ_Rundown_Commission_Office")
-    tile_floor("hq", (0, 0, -0.035), 5.2, 3.8, m["floor"], m["floor_line"], coll)
-    cube("hq_back_corrugated_wall", (0, 3.78, 1.48), (5.2, 0.08, 1.48), m["wall"], coll, edge=0.008)
-    cube("hq_left_wall", (-5.2, 0, 1.48), (0.08, 3.8, 1.48), m["wall_shadow"], coll, edge=0.008)
-    cube("hq_right_wall", (5.2, 0.4, 1.48), (0.08, 3.4, 1.48), m["wall_shadow"], coll, edge=0.008)
-    cube("hq_ceiling_tiles", (0, 0, 2.92), (5.12, 3.72, 0.035), m["metal"], coll, edge=0.003)
+    tile_floor("hq_office", (-1.45, 0.55, -0.035), 3.25, 2.65, m["floor"], m["floor_line"], coll)
+    tile_floor("hq_garage", (2.55, -1.85, -0.035), 2.35, 1.85, m["wall_shadow"], m["floor_line"], coll)
+    cube("hq_back_office_wall", (-1.45, 3.22, 1.36), (3.25, 0.08, 1.36), m["wall"], coll, edge=0.008)
+    cube("hq_left_office_wall", (-4.72, 0.55, 1.36), (0.08, 2.65, 1.36), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_garage_right_wall", (4.92, -1.80, 1.36), (0.08, 1.90, 1.36), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_back_garage_wall", (2.55, -0.05, 1.36), (2.35, 0.07, 1.36), m["wall"], coll, edge=0.008)
+    cube("hq_partial_divider_wall", (0.86, 0.84, 1.16), (0.08, 1.56, 1.16), m["wall_shadow"], coll, edge=0.006)
+    cube("hq_open_garage_header", (2.55, -3.72, 2.42), (1.90, 0.07, 0.22), m["metal"], coll, edge=0.004)
+    cube("hq_ceiling_office", (-1.45, 0.55, 2.72), (3.22, 2.62, 0.035), m["black"], coll, edge=0.002)
+    cube("hq_ceiling_garage", (2.55, -1.85, 2.86), (2.30, 1.82, 0.035), m["black"], coll, edge=0.002)
 
-    cube("hq_counter_front", (-1.35, 2.72, 0.267), (1.45, 0.32, 0.58), m["wood"], coll, edge=0.008)
-    cube("hq_counter_top", (-1.35, 2.40, 0.585), (1.52, 0.14, 0.055), m["metal"], coll, edge=0.004)
-    cube("hq_crt_base", (-1.35, 2.20, 0.640), (0.52, 0.24, 0.040), m["metal"], coll, edge=0.004)
-    cube("hq_crt_neck", (-1.35, 2.20, 0.710), (0.10, 0.10, 0.13), m["metal"], coll, edge=0.004)
-    cube("hq_crt_body", (-1.35, 2.22, 0.875), (0.42, 0.26, 0.22), m["metal"], coll, edge=0.012)
-    cube("hq_crt_screen", (-1.35, 1.93, 0.875), (0.30, 0.022, 0.13), m["terminal"], coll, edge=0.004)
-    txt("hq_terminal_readout", "JOBS  DEBT  SHOP", (-1.35, 1.905, 0.985), (math.radians(90), 0, 0), 0.064, m["terminal"], coll)
-    cube("hq_keyboard_keys", (-1.35, 2.16, 0.645), (0.48, 0.15, 0.018), m["black"], coll, edge=0.002)
-    for i in range(6):
-        cube(f"hq_keyboard_key_row_{i}", (-1.56 + i * 0.082, 2.02, 0.670), (0.022, 0.011, 0.005), m["paper_dark"], coll, edge=0)
-    cube("hq_receipt_printer", (-1.92, 2.18, 0.665), (0.30, 0.20, 0.11), m["paper"], coll, edge=0.004)
-    cube("hq_receipt_trail_a", (-2.02, 1.98, 0.630), (0.18, 0.26, 0.012), m["paper"], coll, edge=0.001)
-    cube("hq_receipt_trail_b", (-2.04, 1.72, 0.630), (0.18, 0.24, 0.010), m["paper"], coll, rot=(0, 0, math.radians(7)), edge=0.001)
+    # Dispatch computer area — items stack on a proper office-height desk so nothing floats.
+    # Desk: human-scale height (0.74m top), centered at z = 0.37.
+    cube("hq_dispatch_desk", (-1.55, 2.38, 0.37), (1.55, 0.62, 0.74), m["wood"], coll, edge=0.010)
+    # Drawer band: visible band of darker metal at the desk front face for readable silhouette.
+    cube("hq_dispatch_desk_drawer_band", (-1.55, 2.075, 0.55), (1.40, 0.014, 0.18), m["metal_worn"], coll, edge=0.002)
+    # Keyboard rests on the desk top (0.74m). Bottom of keyboard at z = 0.74 + small contact gap.
+    cube("hq_keyboard", (-1.55, 2.18, 0.755), (0.52, 0.18, 0.030), m["black"], coll, edge=0.002)
+    cube("hq_keyboard_keys", (-1.55, 2.18, 0.772), (0.48, 0.16, 0.006), m["metal_worn"], coll, edge=0)
+    # CRT sits at the back of the desk.
+    cube("hq_crt_base", (-1.55, 1.97, 0.770), (0.50, 0.30, 0.060), m["metal"], coll, edge=0.004)
+    cube("hq_crt_body", (-1.55, 1.97, 1.020), (0.50, 0.42, 0.500), m["metal"], coll, edge=0.014)
+    cube("hq_crt_screen", (-1.55, 1.755, 1.020), (0.34, 0.020, 0.28), m["terminal"], coll, edge=0.004)
+    txt("hq_terminal_readout", "JOBS", (-1.55, 1.741, 1.060), (math.radians(90), 0, 0), 0.100, m["black"], coll)
+    txt("hq_terminal_readout_2", "READY", (-1.55, 1.741, 0.940), (math.radians(90), 0, 0), 0.055, m["black"], coll)
+    # Power/eject indicator strip below the screen.
+    cube("hq_crt_indicator", (-1.55, 1.755, 0.830), (0.20, 0.014, 0.020), m["terminal"], coll, edge=0)
+    # Receipt printer on the desk corner — touches the top.
+    cube("hq_receipt_printer", (-2.18, 2.18, 0.835), (0.34, 0.26, 0.180), m["paper"], coll, edge=0.005)
+    cube("hq_receipt_printer_top", (-2.18, 2.18, 0.929), (0.32, 0.24, 0.012), m["metal"], coll, edge=0)
+    # Receipt curling out of the printer slot, draping forward off the desk edge.
+    cube("hq_receipt_trail_a", (-2.18, 1.97, 0.745), (0.18, 0.06, 0.012), m["paper"], coll, rot=(0, math.radians(-22), 0), edge=0.001)
+    cube("hq_receipt_trail_b", (-2.20, 1.86, 0.62), (0.18, 0.34, 0.010), m["paper"], coll, rot=(0, 0, math.radians(5)), edge=0.001)
+    # Desk chair so the spawn-facing CRT reads as a workstation, not a wall mount.
+    cube("hq_chair_seat", (-1.55, 1.55, 0.46), (0.46, 0.44, 0.06), m["uniform"], coll, edge=0.006)
+    cube("hq_chair_back", (-1.55, 1.36, 0.74), (0.44, 0.07, 0.50), m["uniform"], coll, edge=0.006)
+    cyl("hq_chair_post", (-1.55, 1.55, 0.22), 0.030, 0.42, m["metal"], coll, vertices=8, edge=0.002)
+    for i, ang in enumerate((0, 72, 144, 216, 288)):
+        cyl(f"hq_chair_wheel_{i}", (-1.55 + math.cos(math.radians(ang)) * 0.24, 1.55 + math.sin(math.radians(ang)) * 0.24, 0.05), 0.03, 0.06, m["black"], coll, vertices=6, edge=0)
 
-    cube("hq_debt_board", (2.05, 3.70, 1.56), (1.28, 0.035, 0.78), m["debt"], coll, edge=0.005)
-    txt("hq_debt_board_text", "OVERDUE\nTAKEOVER\nPRESSURE", (2.05, 3.655, 1.58), (math.radians(90), 0, 0), 0.15, m["paper"], coll)
-    for i in range(14):
-        cube(f"hq_wall_notice_{i}", (0.86 + (i % 7) * 0.35, 3.64, 0.58 + (i // 7) * 0.28), (0.11, 0.010, 0.070), m["paper" if i % 5 else "debt"], coll, edge=0.001)
+    # Company identity wall, no random poster clutter.
+    cube("hq_company_panel", (-0.28, 3.16, 1.72), (0.82, 0.026, 0.46), m["black"], coll, edge=0.003)
+    cube("hq_company_mark_top", (-0.28, 3.13, 1.90), (0.48, 0.012, 0.035), m["terminal"], coll, edge=0.001)
+    cube("hq_company_mark_left", (-0.51, 3.13, 1.72), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
+    cube("hq_company_mark_right", (-0.05, 3.13, 1.72), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
+    cube("hq_company_mark_debt_slash", (-0.28, 3.12, 1.72), (0.07, 0.010, 0.52), m["debt"], coll, rot=(0, math.radians(-24), 0), edge=0)
+    txt("hq_company_sign", "ACCIDENT SQUAD", (-2.75, 3.15, 1.94), (math.radians(90), 0, 0), 0.16, m["terminal"], coll)
+    cube("hq_debt_status_card", (0.55, 3.12, 1.36), (0.38, 0.015, 0.24), m["debt"], coll, edge=0.002)
+    txt("hq_debt_status_text", "DEBT\nWATCH", (0.55, 3.10, 1.37), (math.radians(90), 0, 0), 0.052, m["paper"], coll)
 
-    cube("hq_company_mark_backplate", (0.10, 3.70, 1.82), (0.78, 0.024, 0.44), m["black"], coll, edge=0.003)
-    cube("hq_company_mark_top", (0.10, 3.665, 1.98), (0.48, 0.012, 0.035), m["terminal"], coll, edge=0.001)
-    cube("hq_company_mark_left", (-0.13, 3.665, 1.82), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
-    cube("hq_company_mark_right", (0.33, 3.665, 1.82), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
-    cube("hq_company_mark_debt_slash", (0.10, 3.650, 1.82), (0.07, 0.010, 0.52), m["debt"], coll, rot=(0, math.radians(-24), 0), edge=0)
+    # Equipment shelf — proper office-storage rack, items actually rest on plank surfaces.
+    # Frame: 1.0m wide x 0.40m deep x 1.85m tall, mounted against the back wall.
+    shelf_cx, shelf_cy = -3.40, 2.62
+    cube("hq_equipment_shelf_frame_l", (shelf_cx - 0.50, shelf_cy, 0.925), (0.06, 0.40, 1.85), m["metal"], coll, edge=0.004)
+    cube("hq_equipment_shelf_frame_r", (shelf_cx + 0.50, shelf_cy, 0.925), (0.06, 0.40, 1.85), m["metal"], coll, edge=0.004)
+    cube("hq_equipment_shelf_back_panel", (shelf_cx, shelf_cy + 0.18, 0.925), (1.00, 0.020, 1.85), m["metal_worn"], coll, edge=0.002)
+    # Three plank shelves: 0.45m, 0.90m, 1.35m. Plank top z = plank_z + 0.018.
+    plank_zs = (0.45, 0.90, 1.35)
+    for pz in plank_zs:
+        cube(f"hq_equipment_shelf_plank_{pz}", (shelf_cx, shelf_cy, pz), (0.98, 0.36, 0.036), m["metal_worn"], coll, edge=0.002)
+    # Plank top surface heights (used for stacking items so nothing floats).
+    p0_top, p1_top, p2_top = plank_zs[0] + 0.018, plank_zs[1] + 0.018, plank_zs[2] + 0.018
 
-    cube("hq_equipment_shelf_left_upright", (-4.56, 3.42, 0.79), (0.08, 0.16, 1.54), m["metal"], coll, edge=0.006)
-    cube("hq_equipment_shelf_right_upright", (-3.74, 3.42, 0.79), (0.08, 0.16, 1.54), m["metal"], coll, edge=0.006)
-    cube("hq_equipment_shelf_back_brace", (-4.15, 3.48, 1.52), (0.86, 0.06, 0.08), m["metal"], coll, edge=0.003)
-    for z in (0.36, 0.84, 1.32):
-        cube(f"hq_equipment_shelf_plank_{z}", (-4.15, 3.18, z), (0.90, 0.10, 0.035), m["metal_worn"], coll, edge=0.002)
-    cube("hq_medkit", (-4.58, 3.02, 0.50), (0.17, 0.13, 0.12), m["paper"], coll, edge=0.004)
-    cube("hq_medkit_cross_h", (-4.58, 2.875, 0.50), (0.10, 0.009, 0.018), m["debt"], coll, edge=0)
-    cube("hq_medkit_cross_v", (-4.58, 2.875, 0.50), (0.025, 0.009, 0.065), m["debt"], coll, edge=0)
-    cyl("hq_spray_can", (-4.16, 2.99, 0.52), 0.060, 0.26, m["cyan"], coll, vertices=10, edge=0.002)
-    cyl("hq_decoy_bell", (-4.48, 2.99, 0.88), 0.075, 0.08, m["cardboard"], coll, vertices=12, edge=0.002)
-    cyl("hq_flashlight", (-3.73, 2.99, 1.00), 0.050, 0.36, m["black"], coll, vertices=10, rot=(0, math.radians(90), 0), edge=0.002)
+    # Bottom shelf: medkit (resting on top, so item_z = p0_top + half_height).
+    medkit_h = 0.12
+    cube("hq_medkit", (shelf_cx - 0.30, shelf_cy - 0.05, p0_top + medkit_h * 0.5), (0.22, 0.16, medkit_h), m["paper"], coll, edge=0.004)
+    cube("hq_medkit_cross_h", (shelf_cx - 0.30, shelf_cy - 0.140, p0_top + medkit_h * 0.5),
+         (0.10, 0.010, 0.020), m["debt"], coll, edge=0)
+    cube("hq_medkit_cross_v", (shelf_cx - 0.30, shelf_cy - 0.140, p0_top + medkit_h * 0.5),
+         (0.024, 0.010, 0.070), m["debt"], coll, edge=0)
+    # Battery pack (cylinder) on bottom plank.
+    cyl("hq_shelf_battery", (shelf_cx + 0.05, shelf_cy - 0.08, p0_top + 0.10), 0.038, 0.20, m["cardboard"], coll, vertices=8, edge=0.001)
+    cyl("hq_shelf_battery_band", (shelf_cx + 0.05, shelf_cy - 0.08, p0_top + 0.10), 0.039, 0.038, m["debt"], coll, vertices=8, edge=0)
 
-    cube("hq_garage_floor_lane", (2.50, -1.82, 0.010), (2.00, 1.18, 0.018), m["wall_shadow"], coll, edge=0.002)
-    for i in range(8):
-        stripe = cube(f"hq_garage_hazard_chevron_{i}", (1.55 + i * 0.28, -0.75, 0.045), (0.17, 0.018, 0.035), m["helmet"] if i % 2 == 0 else m["black"], coll, rot=(0, 0, math.radians(24 if i % 2 == 0 else -24)), edge=0)
-        stripe.name = f"hq_garage_hazard_chevron_{i}"
-    for i in range(7):
-        cube(f"hq_rollup_door_panel_{i}", (2.50, -3.72, 0.48 + i * 0.26), (1.72, 0.050, 0.095), m["metal"], coll, edge=0.002)
-    cube("hq_green_departure_beacon", (2.50, -3.62, 2.30), (0.22, 0.035, 0.055), m["terminal"], coll, edge=0.006)
-    cube("hq_garage_amber_work_light", (2.50, -3.54, 2.12), (1.10, 0.035, 0.045), m["amber"], coll, edge=0.004)
-    cube("hq_garage_flood_lamp_housing", (2.50, -3.48, 2.22), (1.25, 0.055, 0.055), m["black"], coll, edge=0.004)
+    # Middle shelf: flashlight (lies on its side, so item half-radius = 0.045).
+    cyl("hq_shelf_flashlight", (shelf_cx - 0.25, shelf_cy - 0.05, p1_top + 0.045), 0.044, 0.34, m["black"], coll,
+        vertices=10, rot=(0, math.radians(90), 0), edge=0.002)
+    cyl("hq_shelf_flashlight_head", (shelf_cx - 0.25 + 0.16, shelf_cy - 0.05, p1_top + 0.045), 0.052, 0.045,
+        m["metal_worn"], coll, vertices=10, rot=(0, math.radians(90), 0), edge=0.001)
+    # Spray can on middle shelf.
+    cyl("hq_shelf_spray", (shelf_cx + 0.18, shelf_cy - 0.06, p1_top + 0.110), 0.038, 0.22, m["amber"], coll, vertices=8, edge=0.001)
+    cyl("hq_shelf_spray_nozzle", (shelf_cx + 0.18, shelf_cy - 0.06, p1_top + 0.230), 0.022, 0.020, m["black"], coll, vertices=6, edge=0)
 
-    cube("hq_sofa_contact_shadow", (3.42, 2.04, -0.010), (1.05, 0.40, 0.018), m["black"], coll, edge=0.001)
-    cube("hq_sofa_base", (3.42, 2.04, 0.158), (0.95, 0.34, 0.36), m["uniform"], coll, edge=0.006)
-    cube("hq_sofa_back", (3.42, 2.32, 0.388), (0.95, 0.08, 0.82), m["uniform"], coll, edge=0.006)
-    cube("hq_missing_cushion_dark", (3.05, 2.04, 0.338), (0.24, 0.25, 0.030), m["black"], coll, edge=0.002)
-    # No chair in front of the terminal: players stand at the only office interaction point.
-    cube("hq_filing_cabinet_contact_shadow", (-2.75, 3.32, -0.010), (0.52, 0.40, 0.018), m["black"], coll, edge=0.001)
-    cube("hq_filing_cabinet_grounded", (-2.75, 3.32, 0.578), (0.44, 0.34, 1.20), m["metal_worn"], coll, edge=0.005)
+    # Top shelf: toolbox + decoy bell.
+    toolbox_h = 0.14
+    cube("hq_shelf_toolbox", (shelf_cx - 0.18, shelf_cy - 0.04, p2_top + toolbox_h * 0.5), (0.36, 0.20, toolbox_h), m["metal"], coll, edge=0.004)
+    cube("hq_shelf_toolbox_latch", (shelf_cx - 0.18, shelf_cy - 0.14, p2_top + toolbox_h * 0.5 + 0.04), (0.06, 0.010, 0.030), m["debt"], coll, edge=0)
+    cube("hq_shelf_toolbox_handle", (shelf_cx - 0.18, shelf_cy - 0.04, p2_top + toolbox_h + 0.012), (0.18, 0.024, 0.018), m["metal_worn"], coll, edge=0)
+    # Tag/label on the toolbox.
+    cube("hq_shelf_toolbox_tag", (shelf_cx - 0.18 + 0.10, shelf_cy - 0.14, p2_top + toolbox_h * 0.5),
+         (0.060, 0.012, 0.050), m["paper"], coll, edge=0)
+    # Decoy bell (small dome) on the top shelf.
+    sphere("hq_shelf_decoy_bell", (shelf_cx + 0.22, shelf_cy - 0.04, p2_top + 0.080), (0.075, 0.075, 0.060), m["amber"], coll)
+    cube("hq_shelf_decoy_clapper", (shelf_cx + 0.22, shelf_cy - 0.04, p2_top + 0.075), (0.010, 0.010, 0.030), m["metal"], coll, edge=0)
+
+    # Label strip on the shelf face describing what each level is for.
+    cube("hq_shelf_label_strip", (shelf_cx, shelf_cy - 0.205, 1.80), (0.84, 0.014, 0.080), m["paper"], coll, edge=0.001)
+    txt("hq_shelf_label_text", "OUTSOURCED GEAR", (shelf_cx, shelf_cy - 0.215, 1.80), (math.radians(90), 0, 0), 0.052, m["black"], coll)
+
+    # Small waiting corner: grounded, secondary, not blocking routes.
+    cube("hq_sofa_base", (-3.25, 0.05, 0.20), (0.86, 0.32, 0.26), m["uniform"], coll, edge=0.006)
+    cube("hq_sofa_back", (-3.25, 0.30, 0.50), (0.86, 0.07, 0.54), m["uniform"], coll, edge=0.006)
+    cube("hq_filing_cabinet", (-0.05, 2.55, 0.56), (0.38, 0.26, 0.98), m["metal_worn"], coll, edge=0.005)
     for i in range(3):
-        cube(f"hq_filing_cabinet_handle_{i}", (-2.75, 3.13, 0.91 - i * 0.26), (0.24, 0.010, 0.026), m["paper_dark"], coll, edge=0)
-    for i in range(8):
-        x = -4.45 + (i % 2) * 0.50
-        z = 0.35 + (i // 2) * 0.33
-        cube(f"hq_archive_box_{i}", (x, -2.65, z), (0.22, 0.20, 0.15), m["cardboard"], coll, edge=0.003)
-        cube(f"hq_archive_label_{i}", (x, -2.865, z + 0.02), (0.13, 0.010, 0.040), m["paper"], coll, edge=0)
-    sign("hq_company_sign", "ACCIDENT SQUAD", (0, 3.72, 2.40), (1.25, 0.020, 0.13), m["black"], m["terminal"], coll)
+        cube(f"hq_filing_cabinet_handle_{i}", (-0.05, 2.405, 0.86 - i * 0.22), (0.22, 0.010, 0.022), m["paper_dark"], coll, edge=0)
 
-    _build_hq_infrastructure(m, coll)
-    _build_hq_environmental_storytelling(m, coll)
+    # Dispatch route: computer -> shelf -> open garage -> van.
+    cube("hq_route_from_computer", (-1.58, 1.15, 0.018), (0.12, 0.85, 0.010), m["terminal"], coll, edge=0)
+    cube("hq_route_to_shelf", (-2.38, 1.15, 0.020), (0.78, 0.10, 0.010), m["terminal"], coll, edge=0)
+    cube("hq_route_to_garage", (0.92, -0.80, 0.022), (2.20, 0.10, 0.010), m["terminal"], coll, rot=(0, 0, math.radians(-18)), edge=0)
+    cube("hq_route_van_lane", (2.58, -1.30, 0.024), (0.16, 1.35, 0.010), m["terminal"], coll, edge=0)
+    cube("hq_van_boarding_pad", (2.58, -0.64, 0.030), (1.85, 0.34, 0.012), m["terminal"], coll, edge=0.001)
+
+    # Garage is open enough to drive through, but a proper iron gate (vertical bars)
+    # is partially raised — visible from inside as a clear "this is a gated bay" cue.
+    # Header beam + lintel at the top of the opening.
+    cube("hq_garage_gate_header", (2.58, -3.72, 2.72), (1.96, 0.18, 0.16), m["metal"], coll, edge=0.004)
+    cube("hq_garage_gate_header_band", (2.58, -3.65, 2.62), (1.94, 0.020, 0.040), m["debt"], coll, edge=0)
+    txt("hq_garage_gate_header_text", "BAY 01", (2.58, -3.64, 2.62), (math.radians(90), 0, 0), 0.10, m["paper"], coll)
+    # Side jambs framing the opening.
+    cube("hq_garage_gate_jamb_l", (1.46, -3.72, 1.30), (0.16, 0.22, 2.60), m["metal"], coll, edge=0.005)
+    cube("hq_garage_gate_jamb_r", (3.70, -3.72, 1.30), (0.16, 0.22, 2.60), m["metal"], coll, edge=0.005)
+    # Iron gate — vertical bars, partially raised (bars hang down from header to mid-height).
+    bar_top_z = 2.62
+    bar_bot_z = 1.55  # gate is half-raised, so bars hang from header down to ~chest height
+    bar_z_center = (bar_top_z + bar_bot_z) * 0.5
+    bar_height = bar_top_z - bar_bot_z
+    for i in range(11):
+        bx = 1.62 + i * 0.20  # 11 bars across the ~2m opening
+        cyl(f"hq_garage_gate_bar_{i}", (bx, -3.72, bar_z_center), 0.022, bar_height, m["metal_worn"], coll, vertices=6, edge=0.001)
+    # Horizontal rails on the gate (top and bottom of the lowered section).
+    cube("hq_garage_gate_rail_top", (2.58, -3.72, bar_top_z - 0.02), (1.92, 0.060, 0.045), m["metal_worn"], coll, edge=0.002)
+    cube("hq_garage_gate_rail_bot", (2.58, -3.72, bar_bot_z + 0.02), (1.92, 0.060, 0.060), m["metal_worn"], coll, edge=0.002)
+    # Padlock hanging from the bottom-left bar.
+    cube("hq_garage_gate_lock", (1.62, -3.72, bar_bot_z - 0.05), (0.055, 0.090, 0.075), m["amber"], coll, edge=0.002)
+    cyl("hq_garage_gate_lock_loop", (1.62, -3.72, bar_bot_z + 0.02), 0.018, 0.040, m["metal"], coll, vertices=6, edge=0)
+    # Warning placard on the right jamb.
+    cube("hq_garage_gate_warning_plate", (3.62, -3.62, 1.45), (0.22, 0.014, 0.16), m["debt"], coll, edge=0.002)
+    txt("hq_garage_gate_warning_text", "GATE\nALARM", (3.62, -3.61, 1.45), (math.radians(90), 0, 0), 0.038, m["paper"], coll)
+    # Ground threshold (still amber for readability), and reinforced black scuff plate.
+    cube("hq_garage_threshold", (2.58, -3.50, 0.040), (1.90, 0.15, 0.030), m["amber"], coll, edge=0.001)
+    cube("hq_garage_scuff_plate", (2.58, -3.70, 0.018), (1.90, 0.10, 0.012), m["black"], coll, edge=0)
+    # Overhead amber work light just inside the gate.
+    cube("hq_garage_work_light", (2.58, -3.30, 2.55), (1.05, 0.045, 0.040), m["amber"], coll, edge=0.004)
+    # Hazard chevrons on the floor at the gate threshold.
+    for i in range(8):
+        cube(f"hq_garage_hazard_mark_{i}", (1.45 + i * 0.32, -3.36, 0.052), (0.22, 0.022, 0.030),
+             m["helmet"] if i % 2 == 0 else m["black"], coll, rot=(0, 0, math.radians(25 if i % 2 == 0 else -25)), edge=0)
+
+    _build_van_exterior(m, coll)
+    _build_van_interior(m, coll)
+    for obj in coll.objects:
+        if obj.name.startswith("van_"):
+            obj.location.x += 2.58
+            obj.location.y += -2.18
+
+    # Minimal coherent infrastructure.
+    for i, yy in enumerate((1.55, -0.55, -2.35)):
+        cube(f"hq_fluoro_housing_{i}", (-0.85 if i == 0 else 2.55, yy, 2.58), (0.76, 0.05, 0.035), m["metal"], coll, edge=0.003)
+        cube(f"hq_fluoro_tube_{i}", (-0.85 if i == 0 else 2.55, yy, 2.53), (0.62, 0.020, 0.014), m["cyan"], coll, edge=0.001)
+    cyl("hq_left_wall_pipe", (-4.54, 0.40, 2.38), 0.035, 4.60, m["metal_worn"], coll,
+        vertices=8, rot=(math.radians(90), 0, 0), edge=0.002)
+    cube("hq_fire_extinguisher_bracket", (-4.62, -1.76, 0.72), (0.035, 0.12, 0.030), m["metal"], coll, edge=0.001)
+    cyl("hq_fire_extinguisher", (-4.58, -1.76, 0.52), 0.055, 0.34, m["debt"], coll, vertices=10, edge=0.003)
     return coll
 
 
@@ -481,30 +574,90 @@ def build_school_map(m) -> bpy.types.Collection:
 def build_worker(m) -> bpy.types.Collection:
     coll = collection("ASV4_Worker_Cheap_Outsourced_Uniform")
     x, y = 0.0, 0.0
+
+    # --- Lower body ---
     cube("worker_left_boot", (x - 0.19, y, 0.08), (0.17, 0.26, 0.08), m["black"], coll, edge=0.006)
     cube("worker_right_boot", (x + 0.19, y, 0.08), (0.17, 0.26, 0.08), m["black"], coll, edge=0.006)
     cube("worker_left_leg", (x - 0.19, y, 0.52), (0.13, 0.14, 0.40), m["uniform"], coll, edge=0.008)
     cube("worker_right_leg", (x + 0.19, y, 0.52), (0.13, 0.14, 0.40), m["uniform"], coll, edge=0.008)
+    cube("worker_left_knee_pad", (x - 0.19, y - 0.145, 0.52), (0.12, 0.018, 0.09), m["black"], coll, edge=0.002)
+    cube("worker_right_knee_pad", (x + 0.19, y - 0.145, 0.52), (0.12, 0.018, 0.09), m["black"], coll, edge=0.002)
+
+    # --- Torso + safety vest ---
     cube("worker_torso", (x, y, 1.12), (0.42, 0.22, 0.52), m["uniform"], coll, edge=0.012)
     cube("worker_vest_front", (x, y - 0.232, 1.14), (0.44, 0.018, 0.43), m["vest"], coll, edge=0.003)
     cube("worker_reflective_strip_a", (x, y - 0.248, 1.27), (0.36, 0.008, 0.022), m["paper"], coll, edge=0)
     cube("worker_reflective_strip_b", (x, y - 0.248, 1.03), (0.34, 0.008, 0.022), m["paper"], coll, edge=0)
     cube("worker_badge_green", (x + 0.13, y - 0.251, 1.38), (0.085, 0.006, 0.040), m["terminal"], coll, edge=0)
+    txt("worker_badge_as_text", "AS", (x + 0.13, y - 0.258, 1.383), (math.radians(90), 0, 0), 0.028, m["black"], coll)
+    for i, px in enumerate((-0.22, -0.07, 0.08, 0.23)):
+        cube(f"worker_belt_pouch_{i}", (x + px, y - 0.225, 0.82), (0.060, 0.015, 0.070), m["cardboard"], coll, edge=0.001)
+
+    # --- Arms ---
     cube("worker_left_arm_upper", (x - 0.50, y - 0.02, 1.26), (0.09, 0.10, 0.31), m["uniform"], coll, edge=0.006)
     cube("worker_left_arm_lower", (x - 0.53, y - 0.10, 0.84), (0.085, 0.09, 0.31), m["uniform"], coll, rot=(0, 0, math.radians(-7)), edge=0.006)
-    cube("worker_right_arm_upper", (x + 0.50, y - 0.02, 1.24), (0.09, 0.10, 0.33), m["uniform"], coll, edge=0.006)
-    cube("worker_right_arm_lower", (x + 0.56, y - 0.14, 0.78), (0.085, 0.09, 0.34), m["uniform"], coll, rot=(0, 0, math.radians(8)), edge=0.006)
-    cube("worker_left_glove", (x - 0.55, y - 0.13, 0.49), (0.105, 0.10, 0.075), m["black"], coll, edge=0.004)
-    cube("worker_right_glove", (x + 0.58, y - 0.18, 0.42), (0.105, 0.10, 0.075), m["black"], coll, edge=0.004)
-    sphere("worker_head", (x, y, 1.72), (0.22, 0.19, 0.24), m["skin"], coll)
+    cube("worker_right_arm_upper", (x + 0.50, y - 0.02, 1.26), (0.09, 0.10, 0.31), m["uniform"], coll, edge=0.006)
+    cube("worker_right_arm_lower", (x + 0.53, y - 0.10, 0.84), (0.085, 0.09, 0.31), m["uniform"], coll, rot=(0, 0, math.radians(7)), edge=0.006)
+    cube("worker_left_glove", (x - 0.55, y - 0.13, 0.62), (0.105, 0.10, 0.075), m["black"], coll, edge=0.004)
+    cube("worker_right_glove", (x + 0.55, y - 0.13, 0.62), (0.105, 0.10, 0.075), m["black"], coll, edge=0.004)
+
+    # --- Neck + head shell (slightly squarer than a pure sphere for stronger silhouette) ---
+    cube("worker_neck", (x, y, 1.50), (0.13, 0.13, 0.10), m["skin"], coll, edge=0.004)
+    sphere("worker_head", (x, y, 1.72), (0.22, 0.20, 0.24), m["skin"], coll)
+    cube("worker_jaw", (x, y - 0.06, 1.58), (0.20, 0.13, 0.06), m["skin"], coll, edge=0.005)
+
+    # --- Face details (front of head faces -Y so all detail cubes sit at y < 0) ---
+    # Eye sockets: shadowed recess so the eyes read in mid-distance silhouette.
+    cube("worker_eye_socket_l", (x - 0.085, y - 0.195, 1.755), (0.085, 0.010, 0.060), m["wall_shadow"], coll, edge=0.001)
+    cube("worker_eye_socket_r", (x + 0.085, y - 0.195, 1.755), (0.085, 0.010, 0.060), m["wall_shadow"], coll, edge=0.001)
+    # Eye whites.
+    cube("worker_eye_white_l", (x - 0.085, y - 0.200, 1.760), (0.060, 0.006, 0.034), m["paper"], coll, edge=0)
+    cube("worker_eye_white_r", (x + 0.085, y - 0.200, 1.760), (0.060, 0.006, 0.034), m["paper"], coll, edge=0)
+    # Pupils — small, slightly looking down-forward (tired).
+    cube("worker_pupil_l", (x - 0.075, y - 0.205, 1.752), (0.022, 0.006, 0.022), m["black"], coll, edge=0)
+    cube("worker_pupil_r", (x + 0.075, y - 0.205, 1.752), (0.022, 0.006, 0.022), m["black"], coll, edge=0)
+    # Eyebrows — slight inward tilt for a worn-out look.
+    cube("worker_brow_l", (x - 0.090, y - 0.198, 1.808), (0.085, 0.012, 0.018), m["black"], coll, rot=(0, math.radians(-6), 0), edge=0.001)
+    cube("worker_brow_r", (x + 0.090, y - 0.198, 1.808), (0.085, 0.012, 0.018), m["black"], coll, rot=(0, math.radians(6), 0), edge=0.001)
+    # Nose — small triangular prism reading as nose-shadow at distance.
+    cube("worker_nose_bridge", (x, y - 0.205, 1.715), (0.030, 0.030, 0.060), m["skin"], coll, edge=0.002)
+    cube("worker_nose_tip", (x, y - 0.220, 1.680), (0.036, 0.022, 0.024), m["skin"], coll, edge=0.001)
+    cube("worker_nose_shadow", (x, y - 0.214, 1.665), (0.022, 0.014, 0.012), m["wall_shadow"], coll, edge=0)
+    # Mouth — closed, faintly pressed, tired worker.
+    cube("worker_mouth", (x, y - 0.210, 1.612), (0.075, 0.012, 0.011), m["debt"], coll, edge=0)
+    cube("worker_mouth_shadow", (x, y - 0.205, 1.598), (0.060, 0.010, 0.008), m["wall_shadow"], coll, edge=0)
+    # Cheekbones — subtle shadow.
+    cube("worker_cheek_shadow_l", (x - 0.145, y - 0.198, 1.685), (0.060, 0.010, 0.050), m["wall_shadow"], coll, edge=0)
+    cube("worker_cheek_shadow_r", (x + 0.145, y - 0.198, 1.685), (0.060, 0.010, 0.050), m["wall_shadow"], coll, edge=0)
+    # Ears.
+    sphere("worker_ear_l", (x - 0.225, y + 0.005, 1.72), (0.030, 0.045, 0.060), m["skin"], coll)
+    sphere("worker_ear_r", (x + 0.225, y + 0.005, 1.72), (0.030, 0.045, 0.060), m["skin"], coll)
+    cube("worker_ear_canal_l", (x - 0.232, y + 0.012, 1.715), (0.012, 0.018, 0.022), m["wall_shadow"], coll, edge=0)
+    cube("worker_ear_canal_r", (x + 0.232, y + 0.012, 1.715), (0.012, 0.018, 0.022), m["wall_shadow"], coll, edge=0)
+    # Hair tuft below the helmet brim (forehead) — dark, matted.
+    for i, px in enumerate((-0.13, -0.05, 0.05, 0.13)):
+        cube(f"worker_hair_front_{i}", (x + px, y - 0.180, 1.860), (0.060, 0.020, 0.048), m["black"], coll, edge=0)
+    # Side hair — a band along the temple under the helmet.
+    cube("worker_hair_temple_l", (x - 0.205, y - 0.04, 1.85), (0.022, 0.180, 0.060), m["black"], coll, edge=0)
+    cube("worker_hair_temple_r", (x + 0.205, y - 0.04, 1.85), (0.022, 0.180, 0.060), m["black"], coll, edge=0)
+    # Stubble shadow on jaw.
+    cube("worker_stubble", (x, y - 0.150, 1.595), (0.140, 0.075, 0.022), m["wall_shadow"], coll, edge=0)
+
+    # --- Helmet ---
     cube("worker_helmet_cap", (x, y, 1.94), (0.30, 0.24, 0.075), m["helmet"], coll, edge=0.014)
     cube("worker_helmet_brim", (x, y - 0.20, 1.90), (0.22, 0.08, 0.022), m["helmet"], coll, edge=0.004)
+    cube("worker_helmet_debt_sticker", (x + 0.09, y - 0.205, 1.935), (0.08, 0.006, 0.025), m["debt"], coll, edge=0)
+    cube("worker_helmet_strap_l", (x - 0.15, y - 0.05, 1.78), (0.014, 0.012, 0.140), m["black"], coll, edge=0)
+    cube("worker_helmet_strap_r", (x + 0.15, y - 0.05, 1.78), (0.014, 0.012, 0.140), m["black"], coll, edge=0)
+
+    # --- Backpack + carried gear ---
     cube("worker_backpack", (x, y + 0.25, 1.10), (0.28, 0.10, 0.36), m["metal"], coll, edge=0.006)
     cube("worker_left_pack_strap", (x - 0.17, y - 0.232, 1.17), (0.040, 0.010, 0.40), m["black"], coll, edge=0)
     cube("worker_right_pack_strap", (x + 0.17, y - 0.232, 1.17), (0.040, 0.010, 0.40), m["black"], coll, edge=0)
     cyl("worker_flashlight", (x + 0.62, y - 0.23, 0.46), 0.044, 0.34, m["black"], coll, vertices=10, rot=(math.radians(90), 0, 0), edge=0.001)
-    for i, px in enumerate((-0.22, -0.07, 0.08, 0.23)):
-        cube(f"worker_belt_pouch_{i}", (x + px, y - 0.225, 0.82), (0.060, 0.015, 0.070), m["cardboard"], coll, edge=0.001)
+    cube("worker_radio", (x - 0.32, y - 0.235, 1.22), (0.065, 0.018, 0.12), m["black"], coll, edge=0.002)
+    cube("worker_radio_green_led", (x - 0.32, y - 0.248, 1.27), (0.030, 0.006, 0.018), m["terminal"], coll, edge=0)
+    cyl("worker_radio_antenna", (x - 0.36, y - 0.242, 1.36), 0.006, 0.24, m["black"], coll, vertices=5, rot=(0, math.radians(8), 0), edge=0)
     return coll
 
 
@@ -518,6 +671,8 @@ def build_monster(m) -> bpy.types.Collection:
     cube("collector_coat_tail_right", (x + 0.22, y + 0.04, 0.32), (0.13, 0.06, 0.34), m["debt"], coll, rot=(0, 0, math.radians(6)), edge=0.004)
     cube("collector_paper_collar", (x, y - 0.19, 2.00), (0.44, 0.022, 0.16), m["paper"], coll, edge=0.004)
     sphere("collector_receipt_head", (x, y, 2.40), (0.24, 0.18, 0.34), m["paper"], coll)
+    cube("collector_final_notice_forehead", (x, y - 0.190, 2.62), (0.22, 0.010, 0.055), m["debt"], coll, edge=0.001)
+    txt("collector_final_notice_text", "FINAL", (x, y - 0.202, 2.622), (math.radians(90), 0, 0), 0.040, m["paper"], coll)
     cube("collector_eye_bar_glow", (x, y - 0.188, 2.47), (0.32, 0.006, 0.058), m["eye"], coll, edge=0.008)
     cube("collector_eye_left", (x - 0.10, y - 0.196, 2.47), (0.045, 0.010, 0.026), m["black"], coll, edge=0)
     cube("collector_eye_right", (x + 0.10, y - 0.196, 2.47), (0.045, 0.010, 0.026), m["black"], coll, edge=0)
@@ -528,10 +683,16 @@ def build_monster(m) -> bpy.types.Collection:
     cube("collector_ledger", (x - 0.96, y - 0.17, 0.56), (0.20, 0.032, 0.27), m["black"], coll, edge=0.004)
     cube("collector_ledger_label", (x - 0.96, y - 0.204, 0.65), (0.13, 0.006, 0.044), m["paper"], coll, edge=0)
     txt("collector_ledger_text", "LATE", (x - 0.96, y - 0.214, 0.652), (math.radians(90), 0, 0), 0.043, m["debt"], coll)
+    cube("collector_ledger_clip", (x - 0.96, y - 0.211, 0.78), (0.14, 0.008, 0.026), m["metal"], coll, edge=0.001)
+    cube("collector_stamp_block", (x + 0.92, y - 0.13, 0.52), (0.18, 0.055, 0.10), m["black"], coll, edge=0.003)
+    cube("collector_stamp_face_red", (x + 0.92, y - 0.19, 0.48), (0.16, 0.010, 0.050), m["debt"], coll, edge=0.001)
     for i in range(8):
         cube(f"collector_back_receipt_{i}", (x, y + 0.19, 2.18 - i * 0.082), (0.16, 0.014, 0.028), m["paper"], coll, edge=0.001)
     for i in range(5):
         cube(f"collector_loose_form_trail_{i}", (x + 0.25 - i * 0.09, y + 0.23 + i * 0.04, 2.10 - i * 0.16), (0.12, 0.008, 0.060), m["paper"], coll, rot=(0, 0, math.radians(12 - i * 5)), edge=0)
+    for i in range(4):
+        cube(f"collector_ground_invoice_shadow_{i}", (x - 0.36 + i * 0.24, y - 0.35 - (i % 2) * 0.08, 0.018),
+             (0.13, 0.070, 0.004), m["paper"], coll, rot=(0, 0, math.radians(-18 + i * 11)), edge=0)
     return coll
 
 
@@ -579,11 +740,18 @@ def _build_van_exterior(m, coll) -> None:
     cube("van_front_bumper", (-2.08, 0, 0.44), (0.08, 0.68, 0.085), m["metal"], coll, edge=0.006)
     cube("van_rear_bumper", (1.72, 0, 0.44), (0.08, 0.68, 0.085), m["metal"], coll, edge=0.006)
     cube("van_front_grille", (-2.10, 0, 0.62), (0.014, 0.34, 0.08), m["black"], coll, edge=0)
+    cube("van_left_mirror_arm", (-1.32, -0.86, 1.08), (0.18, 0.012, 0.012), m["metal"], coll, rot=(0, 0, math.radians(-8)), edge=0)
+    cube("van_right_mirror_arm", (-1.32, 0.86, 1.08), (0.18, 0.012, 0.012), m["metal"], coll, rot=(0, 0, math.radians(8)), edge=0)
+    cube("van_left_mirror", (-1.20, -0.94, 1.10), (0.08, 0.018, 0.12), m["glass"], coll, edge=0.002)
+    cube("van_right_mirror", (-1.20, 0.94, 1.10), (0.08, 0.018, 0.12), m["glass"], coll, edge=0.002)
 
     # Rear doors (closed from outside, heavy institutional look)
     cube("van_rear_door_L", (1.74, -0.34, 0.92), (0.04, 0.34, 0.56), m["metal_worn"], coll, edge=0.006)
     cube("van_rear_door_R", (1.74, 0.34, 0.92), (0.04, 0.34, 0.56), m["metal_worn"], coll, edge=0.006)
     cube("van_rear_door_seam", (1.74, 0, 0.92), (0.045, 0.015, 0.56), m["black"], coll, edge=0)
+    for i, z in enumerate((0.64, 0.93, 1.22)):
+        cube(f"van_rear_hinge_L_{i}", (1.785, -0.66, z), (0.030, 0.045, 0.070), m["metal"], coll, edge=0.001)
+        cube(f"van_rear_hinge_R_{i}", (1.785, 0.66, z), (0.030, 0.045, 0.070), m["metal"], coll, edge=0.001)
     cube("van_rear_door_handle_L", (1.78, -0.16, 0.88), (0.020, 0.06, 0.035), m["metal"], coll, edge=0.002)
     cube("van_rear_door_handle_R", (1.78, 0.16, 0.88), (0.020, 0.06, 0.035), m["metal"], coll, edge=0.002)
     # Small wire-mesh window slit in rear door
@@ -600,6 +768,11 @@ def _build_van_exterior(m, coll) -> None:
     cube("van_service_label_R", (-0.12, 0.792, 0.62), (0.40, 0.009, 0.050), m["paper"], coll, edge=0)
     txt("van_service_text_L", "CIVIC JOBS", (-0.12, -0.808, 0.62), (math.radians(90), 0, 0), 0.052, m["black"], coll)
     txt("van_service_text_R", "CIVIC JOBS", (-0.12, 0.808, 0.62), (math.radians(90), 0, math.radians(180)), 0.052, m["black"], coll)
+    for i, x in enumerate((-0.42, 0.05, 0.52, 0.99)):
+        cube(f"van_side_dent_L_{i}", (x, -0.796, 1.05 - (i % 2) * 0.18), (0.20, 0.006, 0.035), m["van_shadow"], coll,
+             rot=(0, 0, math.radians(-5 + i * 3)), edge=0)
+        cube(f"van_side_dent_R_{i}", (x, 0.796, 1.05 - (i % 2) * 0.18), (0.20, 0.006, 0.035), m["van_shadow"], coll,
+             rot=(0, 0, math.radians(5 - i * 3)), edge=0)
     cube("van_debt_slash_L", (1.04, -0.792, 0.85), (0.25, 0.010, 0.035), m["debt"], coll, rot=(0, 0, math.radians(-10)), edge=0)
     cube("van_debt_slash_R", (1.04, 0.792, 0.85), (0.25, 0.010, 0.035), m["debt"], coll, rot=(0, 0, math.radians(-10)), edge=0)
 
@@ -687,6 +860,10 @@ def _build_van_interior(m, coll, prefix: str = "van") -> None:
     # --- Interior fluorescent strip (dim amber) ---
     cube(f"{prefix}_int_light_housing", (0.45, 0, 1.42), (0.85, 0.05, 0.025), m["metal"], coll, edge=0.002)
     cube(f"{prefix}_int_light_tube", (0.45, 0, 1.39), (0.72, 0.025, 0.012), m["amber"], coll, edge=0.001)
+    cube(f"{prefix}_mission_locker", (1.16, 0, 0.88), (0.18, 0.54, 0.32), m["metal"], coll, edge=0.004)
+    for i, z in enumerate((0.72, 0.86, 1.00, 1.14)):
+        cube(f"{prefix}_locker_slot_{i}", (1.04, -0.010, z), (0.018, 0.48, 0.045), m["black"], coll, edge=0.001)
+        cube(f"{prefix}_locker_label_{i}", (1.02, -0.26 + i * 0.17, z), (0.020, 0.055, 0.018), m["paper"], coll, edge=0)
 
     # --- Floor scuff marks ---
     for i in range(5):
