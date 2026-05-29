@@ -37,7 +37,22 @@ public class CarrySystem : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        inputActions?.Disable();
+        CleanupInputActions();
+    }
+
+    public override void OnDestroy()
+    {
+        CleanupInputActions();
+        base.OnDestroy();
+    }
+
+    void CleanupInputActions()
+    {
+        if (inputActions == null) return;
+        inputActions.Player.Disable();
+        inputActions.Disable();
+        inputActions.Dispose();
+        inputActions = null;
     }
 
     void TryPickUp()

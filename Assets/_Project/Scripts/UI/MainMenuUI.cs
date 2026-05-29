@@ -220,8 +220,6 @@ public class MainMenuUI : MonoBehaviour
         subRt.anchoredPosition = new Vector2(0f, -86f);
         subRt.sizeDelta = new Vector2(-64f, 28f);
 
-        CreateDivider(panel.transform, new Vector2(0f, -126f), 836f);
-
         // ─── Two columns: character preview (left) + dispatch (right) ──
         BuildCharacterColumn(panel.transform);
         BuildDispatchColumn(panel.transform);
@@ -237,7 +235,6 @@ public class MainMenuUI : MonoBehaviour
         statusRt.sizeDelta = new Vector2(-64f, 36f);
 
         // ─── Footer row (settings + direct connect) ────────────────────
-        CreateDivider(panel.transform, new Vector2(0f, 64f), 836f);
         var footer = CreateRow(panel.transform, "FooterRow", 48f, 0f, 16f);
         var footerRt = footer.GetComponent<RectTransform>();
         footerRt.anchorMin = new Vector2(0f, 0f);
@@ -297,22 +294,22 @@ public class MainMenuUI : MonoBehaviour
         prRt.anchorMax = new Vector2(0.5f, 1f);
         prRt.pivot = new Vector2(0.5f, 1f);
         prRt.anchoredPosition = new Vector2(0f, -36f);
-        prRt.sizeDelta = new Vector2(280f, 232f);
+        prRt.sizeDelta = new Vector2(280f, 254f);
 
         // Variant name label (e.g. "Standard"). Smaller than before.
         uniformLabelText = AddText(card.transform, "VariantLabel", "Standard", 18,
             DispatchGreen, TextAlignmentOptions.Center);
         uniformLabelText.fontStyle = FontStyles.Bold;
-        AnchorTopStretch(uniformLabelText.rectTransform, yFromTop: 278f, height: 24f, sidePadding: 20f);
+        AnchorTopStretch(uniformLabelText.rectTransform, yFromTop: 298f, height: 24f, sidePadding: 20f);
 
         // Swatch row — smaller swatches, accent role only.
         var swatchRow = new GameObject("SwatchRow", typeof(RectTransform));
         swatchRow.transform.SetParent(card.transform, false);
-        AnchorTopStretch(swatchRow.GetComponent<RectTransform>(), yFromTop: 310f, height: 24f, sidePadding: 24f);
+        AnchorTopStretch(swatchRow.GetComponent<RectTransform>(), yFromTop: 330f, height: 30f, sidePadding: 54f);
 
-        const float swatchWidth = 50f;
+        const float swatchWidth = 42f;
         const float swatchHeight = 22f;
-        const float swatchGap = 14f;
+        const float swatchGap = 10f;
         const float totalSwatchSpan = swatchWidth * 3 + swatchGap * 2;
         for (int i = 0; i < 3; i++)
         {
@@ -330,8 +327,8 @@ public class MainMenuUI : MonoBehaviour
         pbRt.anchorMin = new Vector2(0f, 1f);
         pbRt.anchorMax = new Vector2(0f, 1f);
         pbRt.pivot = new Vector2(0f, 1f);
-        pbRt.anchoredPosition = new Vector2(24f, -346f);
-        pbRt.sizeDelta = new Vector2(44f, 30f);
+        pbRt.anchoredPosition = new Vector2(24f, -330f);
+        pbRt.sizeDelta = new Vector2(34f, 30f);
 
         charNextBtn = CreateButton(card.transform, "CharNextBtn", ">", 18,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
@@ -339,8 +336,8 @@ public class MainMenuUI : MonoBehaviour
         nbRt.anchorMin = new Vector2(1f, 1f);
         nbRt.anchorMax = new Vector2(1f, 1f);
         nbRt.pivot = new Vector2(1f, 1f);
-        nbRt.anchoredPosition = new Vector2(-24f, -346f);
-        nbRt.sizeDelta = new Vector2(44f, 30f);
+        nbRt.anchoredPosition = new Vector2(-24f, -330f);
+        nbRt.sizeDelta = new Vector2(34f, 30f);
     }
 
     Image CreateSwatch(Transform parent, string name, float xCenter, float width, float height)
@@ -588,7 +585,7 @@ public class MainMenuUI : MonoBehaviour
 
         AddText(panel.transform, "Header", MvpLocale.T("game"), 22,
             DispatchGreen, TextAlignmentOptions.Left)
-            .rectTransform.anchoredPosition = new Vector2(-160f, 140f);
+            .rectTransform.anchoredPosition = new Vector2(0f, 140f);
 
         settingsCloseBtn = CreateButton(panel.transform, "Close", "X", 18,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
@@ -610,7 +607,7 @@ public class MainMenuUI : MonoBehaviour
     {
         AddText(parent, "LangLabel", "语言 / Language", 14,
             HintText, TextAlignmentOptions.Left)
-            .rectTransform.anchoredPosition = position + new Vector2(-160f, 18f);
+            .rectTransform.anchoredPosition = position + new Vector2(0f, 18f);
 
         var zhBtn = CreateButton(parent, "ZhBtn", "简体中文", 16,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
@@ -629,7 +626,7 @@ public class MainMenuUI : MonoBehaviour
     {
         AddText(parent, "VolumeLabel", "音量 / Master Volume", 14,
             HintText, TextAlignmentOptions.Left)
-            .rectTransform.anchoredPosition = position + new Vector2(-160f, 18f);
+            .rectTransform.anchoredPosition = position + new Vector2(0f, 18f);
 
         var sliderObj = new GameObject("VolumeSlider", typeof(RectTransform), typeof(Slider));
         sliderObj.transform.SetParent(parent, false);
@@ -689,7 +686,7 @@ public class MainMenuUI : MonoBehaviour
     {
         AddText(parent, "SensLabel", "鼠标灵敏度 / Sensitivity", 14,
             HintText, TextAlignmentOptions.Left)
-            .rectTransform.anchoredPosition = position + new Vector2(-160f, 18f);
+            .rectTransform.anchoredPosition = position + new Vector2(0f, 18f);
 
         var sliderObj = new GameObject("SensSlider", typeof(RectTransform), typeof(Slider));
         sliderObj.transform.SetParent(parent, false);

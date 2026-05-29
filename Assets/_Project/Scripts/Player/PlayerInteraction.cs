@@ -8,6 +8,7 @@ public class PlayerInteraction : NetworkBehaviour
     [SerializeField] float interactRange = 2.5f;
     [SerializeField] float aimAssistRadius = 0.12f;
     [SerializeField] float nearbyInteractRadius = 1.75f;
+    [SerializeField] float officeComputerFallbackRadius = 3.6f;
 
     PlayerController player;
     PlayerInputActions inputActions;
@@ -31,7 +32,22 @@ public class PlayerInteraction : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        inputActions?.Disable();
+        CleanupInputActions();
+    }
+
+    public override void OnDestroy()
+    {
+        CleanupInputActions();
+        base.OnDestroy();
+    }
+
+    void CleanupInputActions()
+    {
+        if (inputActions == null) return;
+        inputActions.Player.Disable();
+        inputActions.Disable();
+        inputActions.Dispose();
+        inputActions = null;
     }
 
     void Update()
@@ -91,7 +107,8 @@ public class PlayerInteraction : NetworkBehaviour
             return interactable;
         }
 
-        return FindNearbyTarget(origin);
+        IInteractable nearbyTarget = FindNearbyTarget(origin);
+        return nearbyTarget ?? FindNearestOfficeComputer(origin);
     }
 
     IInteractable FindNearbyTarget(Vector3 origin)
@@ -112,6 +129,28 @@ public class PlayerInteraction : NetworkBehaviour
         }
 
         return best;
+    }
+
+    IInteractable FindNearestOfficeComputer(Vector3 origin)
+    {
+        OfficeComputer[] computers = Object.FindObjectsByType<OfficeComputer>(FindObjectsInactive.Exclude);
+        OfficeComputer nearest = null;
+        float nearestDistance = officeComputerFallbackRadius;
+
+        foreach (var computer in computers)
+        {
+            if (computer == null || string.IsNullOrEmpty(computer.InteractHint)) continue;
+
+            Collider collider = computer.GetComponent<Collider>();
+            Vector3 point = collider != null ? collider.ClosestPoint(origin) : computer.transform.position;
+            float distance = Vector3.Distance(origin, point);
+            if (distance > nearestDistance) continue;
+
+            nearest = computer;
+            nearestDistance = distance;
+        }
+
+        return nearest;
     }
 
     Transform GetAimTransform()

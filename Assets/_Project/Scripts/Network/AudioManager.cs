@@ -37,8 +37,14 @@ public class AudioManager : MonoBehaviour
 
     void Awake()
     {
-        if (Instance != null) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        // Persist across scene loads. Without this, the AudioManager living in HQ
+        // gets destroyed when the school scene loads, but the static Instance still
+        // references it — then any AudioSource field access throws MissingReferenceException
+        // (which is exactly what happens during van transit -> PlayEngineIdle).
+        DontDestroyOnLoad(gameObject);
+
         sfxSource = GetComponent<AudioSource>();
         if (sfxSource == null) sfxSource = gameObject.AddComponent<AudioSource>();
 
@@ -48,6 +54,11 @@ public class AudioManager : MonoBehaviour
         ambientSource.volume = 0.4f;
 
         GenerateSynthClips();
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     void GenerateSynthClips()
@@ -98,6 +109,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlayEngineIdle()
     {
+        if (ambientSource == null) return;
         if (ambientSource.clip == synthEngineIdle && ambientSource.isPlaying) return;
         ambientSource.clip = synthEngineIdle;
         ambientSource.volume = 0.25f;
@@ -106,6 +118,7 @@ public class AudioManager : MonoBehaviour
 
     public void StopEngineIdle()
     {
+        if (ambientSource == null) return;
         if (ambientSource.clip == synthEngineIdle)
             ambientSource.Stop();
     }
@@ -164,6 +177,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlayOfficeAmbient()
     {
+        if (ambientSource == null) return;
         ambientSource.clip = synthFluorescentHum;
         ambientSource.volume = 0.15f;
         ambientSource.Play();
@@ -171,6 +185,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlaySchoolAmbient()
     {
+        if (ambientSource == null) return;
         ambientSource.clip = synthWindAmbient;
         ambientSource.volume = 0.12f;
         ambientSource.Play();
@@ -178,6 +193,7 @@ public class AudioManager : MonoBehaviour
 
     public void StopAmbient()
     {
+        if (ambientSource == null) return;
         ambientSource.Stop();
     }
 

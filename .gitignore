@@ -15,6 +15,10 @@
 # Unity3D Generated File On Crash Reports
 sysinfo.txt
 
+# Blender local backups
+*.blend1
+*.blend1.meta
+
 # Builds
 *.apk
 *.aab

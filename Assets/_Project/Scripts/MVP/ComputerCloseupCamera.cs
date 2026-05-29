@@ -36,8 +36,8 @@ public class ComputerCloseupCamera : MonoBehaviour
         TeardownCloseup();
         DisablePlayerCamera();
 
-        Vector3 screenCenter = new Vector3(computerTransform.position.x, 0.98f, 1.84f);
-        Vector3 camPos = screenCenter + new Vector3(0f, 0.12f, -0.55f);
+        Vector3 screenCenter = new Vector3(computerTransform.position.x, 1.085f, 1.704f);
+        Vector3 camPos = screenCenter + new Vector3(0f, 0.10f, -0.68f);
 
         var camGo = new GameObject("CloseupCam");
         camGo.transform.SetParent(transform);
@@ -46,7 +46,7 @@ public class ComputerCloseupCamera : MonoBehaviour
         baseRotation = camGo.transform.eulerAngles;
 
         closeupCamera = camGo.AddComponent<Camera>();
-        closeupCamera.fieldOfView = 48f;
+        closeupCamera.fieldOfView = 44f;
         closeupCamera.nearClipPlane = 0.05f;
         closeupCamera.farClipPlane = 20f;
         closeupCamera.depth = 100f;

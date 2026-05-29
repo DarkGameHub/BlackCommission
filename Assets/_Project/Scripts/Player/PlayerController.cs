@@ -92,14 +92,22 @@ public class PlayerController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         if (!IsOwner) return;
-        inputActions?.Disable();
-        inputActions = null;
+        CleanupInputActions();
         Cursor.lockState = CursorLockMode.None;
     }
 
-    new void OnDestroy()
+    public override void OnDestroy()
     {
-        inputActions?.Disable();
+        CleanupInputActions();
+        base.OnDestroy();
+    }
+
+    void CleanupInputActions()
+    {
+        if (inputActions == null) return;
+        inputActions.Player.Disable();
+        inputActions.Disable();
+        inputActions.Dispose();
         inputActions = null;
     }
 

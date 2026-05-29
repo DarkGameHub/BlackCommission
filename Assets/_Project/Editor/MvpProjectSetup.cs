@@ -137,23 +137,29 @@ public static class MvpProjectSetup
         {
             computer = GameObject.CreatePrimitive(PrimitiveType.Cube);
             computer.name = "MVP_OfficeComputer";
-            // Aligned with the Blender HQ FBX's CRT screen position so the interaction collider sits on the visible monitor.
-            computer.transform.position = new Vector3(-1.55f, 1.02f, 1.755f);
-            computer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-            computer.transform.localScale = new Vector3(0.7f, 0.6f, 0.25f);
+            computer.transform.position = new Vector3(-1.55f, 1.085f, 1.704f);
+            computer.transform.rotation = Quaternion.identity;
+            computer.transform.localScale = Vector3.one;
 
-            // No renderer/material/light: the Blender HQ already models a CRT, this cube is collider-only.
+            // No renderer/material/light: the Blender HQ already models a CRT, this object is collider-only.
             if (computer.TryGetComponent<Renderer>(out var renderer)) renderer.enabled = false;
         }
         else
         {
             // Re-align an existing computer to the Blender CRT so a re-run picks up the layout fix.
-            computer.transform.position = new Vector3(-1.55f, 1.02f, 1.755f);
-            computer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-            computer.transform.localScale = new Vector3(0.7f, 0.6f, 0.25f);
+            computer.transform.position = new Vector3(-1.55f, 1.085f, 1.704f);
+            computer.transform.rotation = Quaternion.identity;
+            computer.transform.localScale = Vector3.one;
             foreach (var r in computer.GetComponentsInChildren<Renderer>()) r.enabled = false;
             foreach (var l in computer.GetComponentsInChildren<Light>()) l.enabled = false;
         }
+
+        var computerTrigger = computer.GetComponent<BoxCollider>();
+        if (computerTrigger == null)
+            computerTrigger = computer.AddComponent<BoxCollider>();
+        computerTrigger.isTrigger = true;
+        computerTrigger.center = new Vector3(0f, -0.035f, -0.754f);
+        computerTrigger.size = new Vector3(2.20f, 1.75f, 2.15f);
 
         if (computer.GetComponent<NetworkObject>() == null)
             computer.AddComponent<NetworkObject>();
@@ -429,7 +435,7 @@ public static class MvpProjectSetup
         go.transform.localScale = scale;
         ApplyMaterial(go, name.ToLowerInvariant(), color);
         if (navStatic)
-            GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.NavigationStatic);
+            GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.ContributeGI);
         return go;
     }
 

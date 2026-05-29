@@ -80,9 +80,44 @@ public static class GeneratedArtImporter
             new Vector3(-2f, 0f, -8f)),
     };
 
+    static bool isRunningSetup;
+
     static GeneratedArtImporter()
     {
         EditorApplication.delayCall += AutoSetupGeneratedArtForPlay;
+    }
+
+    // Listens for FBX re-imports during the editor session (e.g. after Blender
+    // re-exports while Unity is open). When any ASV4 FBX is touched, regenerate
+    // the prefab wrappers so Resources/GeneratedArt stays in sync.
+    //
+    // Re-entry guard: SetupGeneratedArtForPlay itself calls SaveAndReimport on
+    // each FBX, which fires OnPostprocessAllAssets again. Without the isRunningSetup
+    // flag we would recurse infinitely and Unity would hang at "loading".
+    class GeneratedArtFbxPostprocessor : AssetPostprocessor
+    {
+        static void OnPostprocessAllAssets(string[] imported, string[] deleted,
+            string[] moved, string[] movedFrom)
+        {
+            if (isRunningSetup) return;
+
+            bool touchedAsv4 = false;
+            foreach (string path in imported)
+            {
+                if (path != null && path.Contains("OutsourcedCivicCommercial_v4") && path.EndsWith(".fbx"))
+                {
+                    touchedAsv4 = true;
+                    break;
+                }
+            }
+            if (!touchedAsv4) return;
+
+            EditorApplication.delayCall += () =>
+            {
+                if (isRunningSetup) return;
+                SetupGeneratedArtForPlay(showDialogs: false);
+            };
+        }
     }
 
     [MenuItem("Tools/Accident Squad/Art/Setup ASV4 Art For Play")]
@@ -168,48 +203,92 @@ public static class GeneratedArtImporter
     static void AutoSetupGeneratedArtForPlay()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) return;
-        if (EditorPrefs.GetBool(AutoSetupDoneKey, false)) return;
         if (AssetImporter.GetAtPath(VanModelPath) == null) return;
 
-        bool ok = SetupGeneratedArtForPlay(showDialogs: false);
-        if (ok)
-            EditorPrefs.SetBool(AutoSetupDoneKey, true);
+        // Re-run setup whenever any FBX is newer than its corresponding prefab.
+        // Without this check the old logic only ran once per machine (gated by
+        // EditorPrefs), so re-exporting from Blender did not propagate to the
+        // Resources/GeneratedArt prefabs that the runtime loads.
+        if (!EditorPrefs.GetBool(AutoSetupDoneKey, false) || AnyFbxNewerThanPrefab())
+        {
+            bool ok = SetupGeneratedArtForPlay(showDialogs: false);
+            if (ok) EditorPrefs.SetBool(AutoSetupDoneKey, true);
+        }
+    }
+
+    static bool AnyFbxNewerThanPrefab()
+    {
+        foreach (AssetSpec spec in Specs)
+        {
+            string fbxFull = System.IO.Path.GetFullPath(spec.ModelPath);
+            string prefabFull = System.IO.Path.GetFullPath(spec.PrefabPath);
+            string resourcesFull = System.IO.Path.GetFullPath(
+                $"{ResourcesGeneratedArtFolder}/{spec.PrefabName}.prefab");
+
+            if (!System.IO.File.Exists(fbxFull)) continue;
+            var fbxTime = System.IO.File.GetLastWriteTimeUtc(fbxFull);
+            if (System.IO.File.Exists(prefabFull) &&
+                fbxTime > System.IO.File.GetLastWriteTimeUtc(prefabFull)) return true;
+            if (System.IO.File.Exists(resourcesFull) &&
+                fbxTime > System.IO.File.GetLastWriteTimeUtc(resourcesFull)) return true;
+            if (!System.IO.File.Exists(prefabFull) || !System.IO.File.Exists(resourcesFull)) return true;
+        }
+
+        if (System.IO.File.Exists(VanModelPath))
+        {
+            var vanTime = System.IO.File.GetLastWriteTimeUtc(VanModelPath);
+            if (!System.IO.File.Exists(PlayableVanResourcesPath) ||
+                vanTime > System.IO.File.GetLastWriteTimeUtc(PlayableVanResourcesPath)) return true;
+        }
+
+        return false;
     }
 
     static bool SetupGeneratedArtForPlay(bool showDialogs)
     {
-        EnsureFolder(PrefabFolder);
-        EnsureFolder(ResourcesGeneratedArtFolder);
-
-        var missing = new List<string>();
-        foreach (AssetSpec spec in Specs)
-            ConfigureModelImporter(spec.ModelPath, missing);
-
-        AssetDatabase.Refresh();
-
-        int created = 0;
-        foreach (AssetSpec spec in Specs)
+        // Re-entry guard so the AssetPostprocessor that watches FBX changes does not
+        // recurse into us while SaveAndReimport / AssetDatabase.Refresh fire below.
+        if (isRunningSetup) return true;
+        isRunningSetup = true;
+        try
         {
-            if (CreatePrefabWrapper(spec))
-                created++;
+            EnsureFolder(PrefabFolder);
+            EnsureFolder(ResourcesGeneratedArtFolder);
+
+            var missing = new List<string>();
+            foreach (AssetSpec spec in Specs)
+                ConfigureModelImporter(spec.ModelPath, missing);
+
+            AssetDatabase.Refresh();
+
+            int created = 0;
+            foreach (AssetSpec spec in Specs)
+            {
+                if (CreatePrefabWrapper(spec))
+                    created++;
+            }
+
+            bool playableVanCreated = CreatePlayableDepartureVanPrefabAssets();
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            if (showDialogs)
+            {
+                string message = missing.Count == 0
+                    ? $"Ready for Play Mode.\nCreated/updated {created} art prefabs and playable departure van resources."
+                    : $"Created/updated {created} art prefabs. Missing FBX files:\n{string.Join("\n", missing)}";
+                if (!playableVanCreated)
+                    message += $"\n\nPlayable van was not created. Missing:\n{VanModelPath}";
+                EditorUtility.DisplayDialog("ASV4 art setup", message, "OK");
+            }
+
+            return missing.Count == 0 && playableVanCreated;
         }
-
-        bool playableVanCreated = CreatePlayableDepartureVanPrefabAssets();
-
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-
-        if (showDialogs)
+        finally
         {
-            string message = missing.Count == 0
-                ? $"Ready for Play Mode.\nCreated/updated {created} art prefabs and playable departure van resources."
-                : $"Created/updated {created} art prefabs. Missing FBX files:\n{string.Join("\n", missing)}";
-            if (!playableVanCreated)
-                message += $"\n\nPlayable van was not created. Missing:\n{VanModelPath}";
-            EditorUtility.DisplayDialog("ASV4 art setup", message, "OK");
+            isRunningSetup = false;
         }
-
-        return missing.Count == 0 && playableVanCreated;
     }
 
     static void ConfigureModelImporter(string modelPath, List<string> missing)

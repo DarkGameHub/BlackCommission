@@ -211,7 +211,6 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_left_office_wall", (-4.72, 0.55, 1.36), (0.08, 2.65, 1.36), m["wall_shadow"], coll, edge=0.008)
     cube("hq_garage_right_wall", (4.92, -1.80, 1.36), (0.08, 1.90, 1.36), m["wall_shadow"], coll, edge=0.008)
     cube("hq_back_garage_wall", (2.55, -0.05, 1.36), (2.35, 0.07, 1.36), m["wall"], coll, edge=0.008)
-    cube("hq_partial_divider_wall", (0.86, 0.84, 1.16), (0.08, 1.56, 1.16), m["wall_shadow"], coll, edge=0.006)
     cube("hq_open_garage_header", (2.55, -3.72, 2.42), (1.90, 0.07, 0.22), m["metal"], coll, edge=0.004)
     cube("hq_ceiling_office", (-1.45, 0.55, 2.72), (3.22, 2.62, 0.035), m["black"], coll, edge=0.002)
     cube("hq_ceiling_garage", (2.55, -1.85, 2.86), (2.30, 1.82, 0.035), m["black"], coll, edge=0.002)
@@ -224,26 +223,34 @@ def build_hq(m) -> bpy.types.Collection:
     # Keyboard rests on the desk top (0.74m). Bottom of keyboard at z = 0.74 + small contact gap.
     cube("hq_keyboard", (-1.55, 2.18, 0.755), (0.52, 0.18, 0.030), m["black"], coll, edge=0.002)
     cube("hq_keyboard_keys", (-1.55, 2.18, 0.772), (0.48, 0.16, 0.006), m["metal_worn"], coll, edge=0)
-    # CRT sits at the back of the desk.
-    cube("hq_crt_base", (-1.55, 1.97, 0.770), (0.50, 0.30, 0.060), m["metal"], coll, edge=0.004)
-    cube("hq_crt_body", (-1.55, 1.97, 1.020), (0.50, 0.42, 0.500), m["metal"], coll, edge=0.014)
-    cube("hq_crt_screen", (-1.55, 1.755, 1.020), (0.34, 0.020, 0.28), m["terminal"], coll, edge=0.004)
-    txt("hq_terminal_readout", "JOBS", (-1.55, 1.741, 1.060), (math.radians(90), 0, 0), 0.100, m["black"], coll)
-    txt("hq_terminal_readout_2", "READY", (-1.55, 1.741, 0.940), (math.radians(90), 0, 0), 0.055, m["black"], coll)
-    # Power/eject indicator strip below the screen.
-    cube("hq_crt_indicator", (-1.55, 1.755, 0.830), (0.20, 0.014, 0.020), m["terminal"], coll, edge=0)
+    # CRT sits at the back of the desk. The screen center converts to Unity
+    # (-1.55, 1.085, 1.704), which the runtime interaction collider uses.
+    cube("hq_crt_base", (-1.55, 1.96, 0.775), (0.68, 0.34, 0.070), m["metal"], coll, edge=0.004)
+    cube("hq_crt_neck", (-1.55, 1.90, 0.855), (0.20, 0.16, 0.13), m["metal"], coll, edge=0.004)
+    cube("hq_crt_body", (-1.55, 1.95, 1.045), (0.72, 0.46, 0.52), m["metal"], coll, edge=0.014)
+    cube("hq_crt_back_hump", (-1.55, 2.18, 1.045), (0.62, 0.26, 0.42), m["metal_worn"], coll, edge=0.010)
+    cube("hq_crt_bezel_top", (-1.55, 1.696, 1.275), (0.58, 0.026, 0.045), m["black"], coll, edge=0.002)
+    cube("hq_crt_bezel_bottom", (-1.55, 1.696, 0.895), (0.58, 0.026, 0.045), m["black"], coll, edge=0.002)
+    cube("hq_crt_bezel_left", (-1.85, 1.696, 1.085), (0.045, 0.026, 0.34), m["black"], coll, edge=0.002)
+    cube("hq_crt_bezel_right", (-1.25, 1.696, 1.085), (0.045, 0.026, 0.34), m["black"], coll, edge=0.002)
+    cube("hq_crt_screen", (-1.55, 1.704, 1.085), (0.48, 0.018, 0.32), m["terminal"], coll, edge=0.004)
+    txt("hq_terminal_readout", "JOBS", (-1.55, 1.686, 1.125), (math.radians(90), 0, 0), 0.110, m["black"], coll)
+    txt("hq_terminal_readout_2", "READY", (-1.55, 1.686, 0.990), (math.radians(90), 0, 0), 0.058, m["black"], coll)
+    cube("hq_crt_indicator", (-1.30, 1.690, 0.825), (0.12, 0.014, 0.024), m["terminal"], coll, edge=0)
+    cube("hq_crt_power_button", (-1.78, 1.690, 0.825), (0.052, 0.014, 0.052), m["debt"], coll, edge=0.002)
+    for i in range(4):
+        cube(f"hq_crt_side_vent_{i}", (-1.92, 1.96, 0.94 + i * 0.07), (0.012, 0.20, 0.014), m["black"], coll, edge=0)
     # Receipt printer on the desk corner — touches the top.
     cube("hq_receipt_printer", (-2.18, 2.18, 0.835), (0.34, 0.26, 0.180), m["paper"], coll, edge=0.005)
     cube("hq_receipt_printer_top", (-2.18, 2.18, 0.929), (0.32, 0.24, 0.012), m["metal"], coll, edge=0)
     # Receipt curling out of the printer slot, draping forward off the desk edge.
     cube("hq_receipt_trail_a", (-2.18, 1.97, 0.745), (0.18, 0.06, 0.012), m["paper"], coll, rot=(0, math.radians(-22), 0), edge=0.001)
     cube("hq_receipt_trail_b", (-2.20, 1.86, 0.62), (0.18, 0.34, 0.010), m["paper"], coll, rot=(0, 0, math.radians(5)), edge=0.001)
-    # Desk chair so the spawn-facing CRT reads as a workstation, not a wall mount.
-    cube("hq_chair_seat", (-1.55, 1.55, 0.46), (0.46, 0.44, 0.06), m["uniform"], coll, edge=0.006)
-    cube("hq_chair_back", (-1.55, 1.36, 0.74), (0.44, 0.07, 0.50), m["uniform"], coll, edge=0.006)
-    cyl("hq_chair_post", (-1.55, 1.55, 0.22), 0.030, 0.42, m["metal"], coll, vertices=8, edge=0.002)
-    for i, ang in enumerate((0, 72, 144, 216, 288)):
-        cyl(f"hq_chair_wheel_{i}", (-1.55 + math.cos(math.radians(ang)) * 0.24, 1.55 + math.sin(math.radians(ang)) * 0.24, 0.05), 0.03, 0.06, m["black"], coll, vertices=6, edge=0)
+    # Standing dispatch point: clear 1.1m x 0.72m player space in front of the CRT.
+    cube("hq_dispatch_standing_mat", (-1.55, 1.12, 0.014), (1.10, 0.72, 0.010), m["floor_line"], coll, edge=0.001)
+    cube("hq_dispatch_mat_front_tape", (-1.55, 0.77, 0.024), (0.88, 0.035, 0.006), m["terminal"], coll, edge=0)
+    cube("hq_dispatch_mat_left_wear", (-1.86, 1.08, 0.026), (0.18, 0.12, 0.005), m["black"], coll, rot=(0, 0, math.radians(-8)), edge=0)
+    cube("hq_dispatch_mat_right_wear", (-1.30, 1.02, 0.026), (0.16, 0.11, 0.005), m["black"], coll, rot=(0, 0, math.radians(6)), edge=0)
 
     # Company identity wall, no random poster clutter.
     cube("hq_company_panel", (-0.28, 3.16, 1.72), (0.82, 0.026, 0.46), m["black"], coll, edge=0.003)
@@ -318,6 +325,13 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_route_van_lane", (2.58, -1.30, 0.024), (0.16, 1.35, 0.010), m["terminal"], coll, edge=0)
     cube("hq_van_boarding_pad", (2.58, -0.64, 0.030), (1.85, 0.34, 0.012), m["terminal"], coll, edge=0.001)
 
+    # Low garage edge treatment: not a wall, just clear bay protection outside the walking route.
+    cube("hq_garage_left_floor_curb", (0.32, -2.42, 0.075), (0.10, 1.62, 0.09), m["black"], coll, edge=0.002)
+    cube("hq_garage_left_guard_rail", (0.32, -2.42, 0.72), (0.08, 1.62, 0.08), m["metal"], coll, edge=0.003)
+    for i, yy in enumerate((-3.05, -2.42, -1.79)):
+        cube(f"hq_garage_left_guard_post_{i}", (0.32, yy, 0.42), (0.10, 0.10, 0.72), m["metal"], coll, edge=0.003)
+    cube("hq_garage_van_floor_stop", (2.58, -1.08, 0.070), (2.10, 0.10, 0.08), m["black"], coll, edge=0.002)
+
     # Garage is open enough to drive through, but a proper iron gate (vertical bars)
     # is partially raised — visible from inside as a clear "this is a gated bay" cue.
     # Header beam + lintel at the top of the opening.
@@ -355,7 +369,6 @@ def build_hq(m) -> bpy.types.Collection:
              m["helmet"] if i % 2 == 0 else m["black"], coll, rot=(0, 0, math.radians(25 if i % 2 == 0 else -25)), edge=0)
 
     _build_van_exterior(m, coll)
-    _build_van_interior(m, coll)
     for obj in coll.objects:
         if obj.name.startswith("van_"):
             obj.location.x += 2.58
@@ -963,7 +976,14 @@ def origin_offset(objs: list[bpy.types.Object]) -> Vector:
 
 def export_collection(coll: bpy.types.Collection, filename: str) -> None:
     objs = select_collection(coll)
-    offset = origin_offset(objs)
+    # The HQ collection is exported at raw Blender coordinates so that Unity-side
+    # overlays (interaction collider for the dispatch CRT, walkable floors, lights,
+    # van boarding trigger) can use the Blender script's source-of-truth positions
+    # without compensating for a recentering offset. Other collections (worker, van,
+    # notebook, etc.) still get recentered so their FBX origin sits at the asset's
+    # bottom-center, which is convenient for character / prop placement.
+    recenter = "HQ" not in coll.name
+    offset = origin_offset(objs) if recenter else Vector((0, 0, 0))
     for obj in objs:
         obj.location -= offset
     try:
@@ -1027,11 +1047,12 @@ def build_first_person_gloves(m) -> bpy.types.Collection:
 
     # fingers
     finger_x_offsets = [-0.024, -0.008, 0.008, 0.024]
-    finger_lengths = [0.05, 0.06, 0.058, 0.045]
+    finger_lengths = [0.026, 0.032, 0.031, 0.024]
+    finger_base_z = 0.135
     for i, (fx, fl) in enumerate(zip(finger_x_offsets, finger_lengths)):
-        cube(f"fp_right_finger_{i}_base", (rx + fx, ry - 0.005, 0.155), (0.016, 0.018, 0.02), m["black"], coll, edge=0.002)
-        cube(f"fp_right_finger_{i}_mid", (rx + fx, ry - 0.005, 0.155 + fl * 0.5), (0.014, 0.015, fl * 0.55), m["black"], coll, edge=0.002)
-        cube(f"fp_right_finger_{i}_tip", (rx + fx, ry - 0.005, 0.155 + fl * 0.9), (0.012, 0.013, fl * 0.3), m["black"], coll, edge=0.001)
+        cube(f"fp_right_finger_{i}_base", (rx + fx, ry - 0.010, finger_base_z), (0.018, 0.020, 0.018), m["black"], coll, edge=0.002)
+        cube(f"fp_right_finger_{i}_mid", (rx + fx, ry - 0.012, finger_base_z + fl * 0.35), (0.015, 0.017, fl * 0.35), m["black"], coll, edge=0.002)
+        cube(f"fp_right_finger_{i}_tip", (rx + fx, ry - 0.016, finger_base_z + fl * 0.62), (0.013, 0.014, fl * 0.22), m["black"], coll, edge=0.001)
 
     # knuckle ridge
     cube("fp_right_knuckle_ridge", (rx, ry - 0.025, 0.145), (0.058, 0.008, 0.012), m["black"], coll, edge=0.002)
@@ -1049,9 +1070,9 @@ def build_first_person_gloves(m) -> bpy.types.Collection:
          rot=(0, 0, math.radians(-15)), edge=0.002)
 
     for i, (fx, fl) in enumerate(zip(finger_x_offsets, finger_lengths)):
-        cube(f"fp_left_finger_{i}_base", (lx - fx, ry - 0.005, 0.155), (0.016, 0.018, 0.02), m["black"], coll, edge=0.002)
-        cube(f"fp_left_finger_{i}_mid", (lx - fx, ry - 0.005, 0.155 + fl * 0.5), (0.014, 0.015, fl * 0.55), m["black"], coll, edge=0.002)
-        cube(f"fp_left_finger_{i}_tip", (lx - fx, ry - 0.005, 0.155 + fl * 0.9), (0.012, 0.013, fl * 0.3), m["black"], coll, edge=0.001)
+        cube(f"fp_left_finger_{i}_base", (lx - fx, ry - 0.010, finger_base_z), (0.018, 0.020, 0.018), m["black"], coll, edge=0.002)
+        cube(f"fp_left_finger_{i}_mid", (lx - fx, ry - 0.012, finger_base_z + fl * 0.35), (0.015, 0.017, fl * 0.35), m["black"], coll, edge=0.002)
+        cube(f"fp_left_finger_{i}_tip", (lx - fx, ry - 0.016, finger_base_z + fl * 0.62), (0.013, 0.014, fl * 0.22), m["black"], coll, edge=0.001)
 
     cube("fp_left_knuckle_ridge", (lx, ry - 0.025, 0.145), (0.058, 0.008, 0.012), m["black"], coll, edge=0.002)
 

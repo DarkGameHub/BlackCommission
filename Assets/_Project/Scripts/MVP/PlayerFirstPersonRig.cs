@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlayerFirstPersonRig : NetworkBehaviour
 {
-    [SerializeField] Vector3 rigLocalPosition = new(0f, -0.2f, 0.48f);
+    [SerializeField] Vector3 rigLocalPosition = new(0f, -0.34f, 0.46f);
 
     PlayerHotbar hotbar;
     PlayerController controller;
@@ -59,9 +59,10 @@ public class PlayerFirstPersonRig : NetworkBehaviour
             Destroy(thirdPersonRoot);
     }
 
-    void OnDestroy()
+    public override void OnDestroy()
     {
         RestoreLocalBodyMesh();
+        base.OnDestroy();
     }
 
     void LateUpdate()
@@ -364,9 +365,9 @@ public class PlayerFirstPersonRig : NetworkBehaviour
 
         GameObject gloves = Instantiate(prefab, parent);
         gloves.name = "ASV4_Gloves";
-        gloves.transform.localPosition = new Vector3(0f, -0.05f, 0.18f);
-        gloves.transform.localRotation = Quaternion.Euler(18f, 0f, 0f);
-        gloves.transform.localScale = Vector3.one;
+        gloves.transform.localPosition = new Vector3(0f, -0.20f, 0.08f);
+        gloves.transform.localRotation = Quaternion.Euler(58f, 0f, 0f);
+        gloves.transform.localScale = Vector3.one * 0.78f;
 
         foreach (Collider c in gloves.GetComponentsInChildren<Collider>())
             Destroy(c);

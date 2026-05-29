@@ -6,6 +6,9 @@ public static class MvpSceneStyleDirector
 {
     const string OfficeRootName = "MVP_RuntimeStyle_Office_ExteriorDispatch";
     const string SchoolRootName = "MVP_RuntimeStyle_School";
+    static readonly Vector3 HqComputerScreenCenter = new(-1.55f, 1.085f, 1.704f);
+    static readonly Vector3 HqComputerReachCenter = new(-1.55f, 1.05f, 0.95f);
+    static readonly Vector3 HqComputerReachSize = new(2.20f, 1.75f, 2.15f);
 
     static readonly Color CivicTeal = Rgb(0x2F, 0x4F, 0x4B);
     static readonly Color CivicTealDark = Rgb(0x17, 0x24, 0x22);
@@ -140,6 +143,8 @@ public static class MvpSceneStyleDirector
         BuildCleanReadableOfficeAndExterior(root.transform, stainedWall, dirtyFloor, paper, warningRed,
             terminalGreen, darkMetal, tiredFabric, cardboard, wood, garageConcrete, bayDoor, hazardStripe,
             vanBody, vanGlass, rubber, headlight);
+        AlignMvpComputerWithBlenderCrt();
+        RepositionPlayerSpawnIfStale();
     }
 
     static void BuildCleanReadableOfficeAndExterior(
@@ -384,18 +389,8 @@ public static class MvpSceneStyleDirector
         OfficeComputer computer = Object.FindAnyObjectByType<OfficeComputer>();
         if (computer == null) return;
 
-        if (computer.TryGetComponent<Renderer>(out var renderer))
-            renderer.enabled = false;
-
-        if (computer.TryGetComponent<BoxCollider>(out var collider))
-        {
-            collider.isTrigger = true;
-            collider.center = new Vector3(0f, -0.05f, 3f);
-            collider.size = new Vector3(1.25f, 1.35f, 2.6f);
-        }
-
-        Vector3 p = computer.transform.position;
-        Vector3 screenCenter = new Vector3(p.x, 0.98f, 1.84f);
+        Vector3 screenCenter = HqComputerScreenCenter;
+        ConfigureOfficeComputerInteraction(computer.gameObject, screenCenter, HqComputerReachCenter, HqComputerReachSize);
 
         CreateBox("HQComputerMonitorShell", root, screenCenter + new Vector3(0f, 0f, 0.08f),
             new Vector3(0.92f, 0.46f, 0.16f), darkMetal);
@@ -408,20 +403,20 @@ public static class MvpSceneStyleDirector
         CreateBox("HQComputerScreenCursor", root, screenCenter + new Vector3(0.24f, -0.1f, -0.025f),
             new Vector3(0.07f, 0.07f, 0.02f), lightPanel);
 
-        CreateBox("HQComputerNeck", root, new Vector3(p.x, 0.76f, 1.98f),
+        CreateBox("HQComputerNeck", root, new Vector3(screenCenter.x, 0.76f, 1.98f),
             new Vector3(0.14f, 0.24f, 0.12f), darkMetal);
-        CreateBox("HQComputerBase", root, new Vector3(p.x, 0.63f, 1.88f),
+        CreateBox("HQComputerBase", root, new Vector3(screenCenter.x, 0.63f, 1.88f),
             new Vector3(0.58f, 0.07f, 0.32f), darkMetal);
-        CreateBox("HQComputerKeyboardDeck", root, new Vector3(p.x, 0.652f, 1.37f),
+        CreateBox("HQComputerKeyboardDeck", root, new Vector3(screenCenter.x, 0.652f, 1.37f),
             new Vector3(0.78f, 0.05f, 0.24f), darkMetal);
 
         for (int i = 0; i < 4; i++)
-            CreateBox($"HQComputerKeyRow_{i + 1}", root, new Vector3(p.x - 0.24f + i * 0.16f, 0.685f, 1.305f),
+            CreateBox($"HQComputerKeyRow_{i + 1}", root, new Vector3(screenCenter.x - 0.24f + i * 0.16f, 0.685f, 1.305f),
                 new Vector3(0.09f, 0.016f, 0.055f), paper);
 
-        CreateBox("HQComputerMousePad", root, new Vector3(p.x + 0.46f, 0.637f, 1.4f),
+        CreateBox("HQComputerMousePad", root, new Vector3(screenCenter.x + 0.46f, 0.637f, 1.4f),
             new Vector3(0.24f, 0.022f, 0.2f), darkMetal);
-        CreateBox("HQComputerMouse", root, new Vector3(p.x + 0.46f, 0.672f, 1.4f),
+        CreateBox("HQComputerMouse", root, new Vector3(screenCenter.x + 0.46f, 0.672f, 1.4f),
             new Vector3(0.12f, 0.045f, 0.15f), terminalGreen);
         CreateBox("HQComputerStatusLight", root, screenCenter + new Vector3(-0.44f, 0.23f, -0.08f),
             new Vector3(0.1f, 0.1f, 0.025f), lightPanel);
@@ -2186,7 +2181,11 @@ public static class MvpSceneStyleDirector
 
         GameObject office = Object.Instantiate(prefab, root);
         office.name = "HQ_ASV4_BlenderOfficeVisual";
-        office.transform.localPosition = new Vector3(0f, 0.035f, 0f);
+        // FBX is exported with raw Blender coords (origin_offset skipped for HQ in
+        // export_collection), so dropping it at world origin lands every mesh at the
+        // Blender script's source position. Unity overlays and MvpProjectSetup's
+        // interaction collider positions are computed from the same raw coords.
+        office.transform.localPosition = Vector3.zero;
         office.transform.localRotation = Quaternion.identity;
         office.transform.localScale = Vector3.one;
 
@@ -2198,18 +2197,31 @@ public static class MvpSceneStyleDirector
 
     static void CreateBlenderOfficeGameplayOverlays(Transform root)
     {
+        // ─── Walkable floor colliders ─────────────────────────────────────
+        // Coordinates derived directly from Blender build_hq tile_floor calls:
+        //   tile_floor("hq_office",  center=(-1.45, 0.55, -0.035), size=(3.25, 2.65, 0.025))
+        //   tile_floor("hq_garage",  center=(2.55, -1.85, -0.035), size=(2.35, 1.85, 0.025))
+        // Unity coords: X = Blender X, Y = Blender Z, Z = Blender Y.
         CreateWalkableCollider("BlenderHQ_OfficeWalkableFloor", root,
-            new Vector3(-1.45f, -0.04f, 0.55f), new Vector3(6.45f, 0.22f, 5.25f));
+            new Vector3(-1.45f, -0.04f, 0.55f), new Vector3(3.25f, 0.22f, 2.65f));
         CreateWalkableCollider("BlenderHQ_GarageWalkableFloor", root,
-            new Vector3(2.58f, -0.04f, -1.85f), new Vector3(4.65f, 0.22f, 3.7f));
+            new Vector3(2.55f, -0.04f, -1.85f), new Vector3(2.35f, 0.22f, 1.85f));
+        // Connector strip so the player can walk between office south edge (Z=-0.775)
+        // and garage north edge (Z=-0.925) without falling through the gap.
+        CreateWalkableCollider("BlenderHQ_OfficeGarageConnector", root,
+            new Vector3(1.05f, -0.04f, -0.85f), new Vector3(3.50f, 0.22f, 0.45f));
+        // Threshold strip at the iron gate so the player can stand near the gate.
         CreateWalkableCollider("BlenderHQ_OpenGarageThreshold", root,
-            new Vector3(2.58f, -0.04f, -3.48f), new Vector3(3.9f, 0.22f, 0.7f));
+            new Vector3(2.55f, -0.04f, -3.20f), new Vector3(2.35f, 0.22f, 0.7f));
 
-        // Trigger now spans boarding pad through van rear so the prompt appears wherever the van is visibly parked.
+        // ─── Van boarding trigger ──────────────────────────────────────────
+        // Van mesh sits at Blender (2.58, -2.18, ?) — Unity Z=-2.18. Trigger spans the
+        // visible van length so the prompt shows wherever the player stands near it.
         GameObject trigger = CreateInteractionTrigger("BlenderHQ_ASV4DepartureTrigger", root,
-            new Vector3(2.58f, 0.86f, -1.5f), new Vector3(4.35f, 1.85f, 2.8f));
+            new Vector3(2.58f, 0.86f, -1.8f), new Vector3(3.50f, 1.85f, 2.0f));
         trigger.AddComponent<OfficeDepartureVan>();
 
+        // ─── Van solid colliders (block walking through the van mesh) ─────
         CreateBlockingCollider("BlenderHQ_ASV4VanBodyCollider", root,
             new Vector3(2.58f, 0.86f, -2.18f), new Vector3(3.55f, 1.45f, 1.7f));
         CreateBlockingCollider("BlenderHQ_ASV4VanFrontCollider", root,
@@ -2217,85 +2229,82 @@ public static class MvpSceneStyleDirector
         CreateBlockingCollider("BlenderHQ_ASV4VanRearCollider", root,
             new Vector3(4.13f, 0.66f, -2.18f), new Vector3(0.36f, 0.82f, 1.28f));
 
-        // ─── Office interior fluorescents (3 along the office Z-axis) ─────
-        // Blender placed hq_fluoro_* meshes at these positions but did not include
-        // Light components. Add real Unity lights so the office reads properly.
-        CreatePointLight("BlenderHQ_OfficeFluoro_Front", root, new Vector3(-1.45f, 2.65f, -1.40f),
-            DirtyBoneCool, 1.35f, 5.5f);
-        CreatePointLight("BlenderHQ_OfficeFluoro_Mid", root, new Vector3(-1.45f, 2.65f, 1.00f),
-            DirtyBoneCool, 1.35f, 5.5f);
-        CreatePointLight("BlenderHQ_OfficeFluoro_Back", root, new Vector3(-1.45f, 2.65f, 2.80f),
-            DirtyBoneCool, 1.10f, 4.5f);
+        // ─── Office interior fluorescents ─────────────────────────────────
+        // Office Blender bounds: X [-3.075, 0.175], Z [-0.775, 1.875]. Ceiling Y=2.72.
+        // Three points spaced along the office Z axis, centered on X=-1.45.
+        CreatePointLight("BlenderHQ_OfficeFluoro_Front", root, new Vector3(-1.45f, 2.55f, -0.30f),
+            DirtyBoneCool, 1.20f, 3.5f);
+        CreatePointLight("BlenderHQ_OfficeFluoro_Mid", root, new Vector3(-1.45f, 2.55f, 0.60f),
+            DirtyBoneCool, 1.20f, 3.5f);
+        CreatePointLight("BlenderHQ_OfficeFluoro_Back", root, new Vector3(-1.45f, 2.55f, 1.50f),
+            DirtyBoneCool, 1.10f, 3.5f);
 
-        // CRT spill light at the dispatch desk so the screen casts onto the room.
-        CreatePointLight("BlenderHQ_CrtScreenSpill", root, new Vector3(-1.55f, 1.10f, 1.45f),
-            DispatchGreen, 1.05f, 2.6f);
+        // CRT screen spill — sits in front of the dispatch CRT (CRT at Z=1.704).
+        CreatePointLight("BlenderHQ_CrtScreenSpill", root, new Vector3(-1.55f, 1.10f, 1.40f),
+            DispatchGreen, 0.70f, 2.0f);
 
         // ─── Garage work lights ───────────────────────────────────────────
-        // Overhead sodium spot illuminates the parked van.
-        CreateSpotLight("BlenderHQ_GarageOverheadSpot", root, new Vector3(2.58f, 2.85f, -2.18f),
-            new Vector3(2.58f, 0.20f, -2.18f), SodiumAmberPale, 5.5f, 7.5f, 76f);
-        // Side fill so the van side facing the office isn't pitch black.
-        CreatePointLight("BlenderHQ_GarageInteriorFill", root, new Vector3(0.95f, 1.55f, -1.85f),
-            SodiumAmberPale, 1.6f, 5.5f);
-        // Front of garage (toward the iron gate) — backlight the bars.
-        CreatePointLight("BlenderHQ_GarageGateBackLight", root, new Vector3(2.58f, 1.50f, -3.40f),
-            SodiumAmber, 1.3f, 4.0f);
+        // Garage Blender bounds: X [1.375, 3.725], Z [-2.775, -0.925]. Ceiling Y=2.86.
+        // Overhead spot illuminates the parked van.
+        CreateSpotLight("BlenderHQ_GarageOverheadSpot", root, new Vector3(2.58f, 2.80f, -2.18f),
+            new Vector3(2.58f, 0.20f, -2.18f), SodiumAmberPale, 5.0f, 6.0f, 72f);
+        // Side fill so the office-facing side of the van isn't black.
+        CreatePointLight("BlenderHQ_GarageInteriorFill", root, new Vector3(2.20f, 1.55f, -1.20f),
+            SodiumAmberPale, 1.4f, 3.5f);
+        // Backlight near the iron gate (gate at Z=-3.72; this is just inside the garage).
+        CreatePointLight("BlenderHQ_GarageGateBackLight", root, new Vector3(2.55f, 1.50f, -2.70f),
+            SodiumAmber, 1.1f, 3.0f);
 
-        // ─── Dispatch route guide light (subtle floor wash) ───────────────
-        CreatePointLight("BlenderHQ_DispatchGreenGuideLight", root, new Vector3(0.65f, 0.72f, -0.85f),
-            DispatchGreen, 0.9f, 4.0f);
+        // ─── Dispatch guide accent on the connector zone ─────────────────
+        // Place between office south edge and garage north edge so it lights the path.
+        CreatePointLight("BlenderHQ_DispatchGreenGuideLight", root, new Vector3(1.05f, 0.60f, -0.85f),
+            DispatchGreen, 0.40f, 2.2f);
 
         // ─── Brighten the scene's directional light if it's still dim ─────
         BoostSceneDirectionalLight();
 
-        // ─── Close off the south side of the office ───────────────────────
-        // The Blender HQ has walls on N / W / E (partial), but the south face
-        // was left open — making the office feel like an unfinished void.
-        // Add a south wall here, leaving an east-side door opening that leads
-        // into the garage area, which in turn opens to the outside via the
-        // iron gate. Architecture: office (N-W) -> doorway -> garage -> gate.
-        CreateOfficeSouthWallAndDoor(root);
+        // South wall + door frame previously generated here have been removed —
+        // the door jambs were landing in front of the dispatch CRT and blocking
+        // the interaction raycast. The Blender HQ FBX walls are used as-is.
+
+        // ─── Clean up door-frame leftovers from earlier installs ─────────
+        // If an earlier session built those jambs into the scene, destroy them
+        // on entry so existing scenes don't carry the obstruction.
+        ClearLegacyOfficeDoorFrameObjects();
 
         AlignMvpComputerWithBlenderCrt();
         RepositionPlayerSpawnIfStale();
     }
 
-    static void CreateOfficeSouthWallAndDoor(Transform root)
+    // The procedural south wall was added in a prior commit and instantiated as
+    // scene GameObjects. Even after removing the code, those GameObjects may persist
+    // if they were saved into HQ.unity. Hunt them down by name and destroy them so
+    // the dispatch CRT becomes interactable again.
+    static void ClearLegacyOfficeDoorFrameObjects()
     {
-        // Office X range -4.7 .. 1.8 (from Blender tile_floor). South face at Z=-2.10.
-        // Wall section covers X=-4.7 to X=0.30 (width 5.0), leaving X=0.30..1.80
-        // as the doorway into the garage corridor.
-        Material wallMat = MakeOfficeMaterial("Office_CivicTealSouthWall", CivicTeal, CivicTealDark, OfficePattern.Grime);
-        Material trimMat = MakeMaterial(DeadRubber);
-        Material doorFrameMat = MakeMaterial(DispatchGreenDark);
-
-        // Main wall block (X=-4.7..0.30, Z=-2.10, height 2.85).
-        CreateBox("BlenderHQ_OfficeSouthWall_Main", root,
-            new Vector3(-2.20f, 1.43f, -2.10f), new Vector3(5.00f, 2.85f, 0.10f), wallMat);
-
-        // Baseboard accent at the floor line.
-        CreateBox("BlenderHQ_OfficeSouthWall_Baseboard", root,
-            new Vector3(-2.20f, 0.08f, -2.06f), new Vector3(5.00f, 0.12f, 0.04f), trimMat);
-
-        // Header beam above the doorway (X=0.30..1.80, Z=-2.10, top at 2.85).
-        CreateBox("BlenderHQ_OfficeSouthWall_DoorHeader", root,
-            new Vector3(1.05f, 2.65f, -2.10f), new Vector3(1.50f, 0.45f, 0.10f), wallMat);
-
-        // Door frame (left + right vertical jambs around the opening).
-        CreateBox("BlenderHQ_OfficeSouthWall_DoorJamb_L", root,
-            new Vector3(0.30f, 1.21f, -2.06f), new Vector3(0.10f, 2.20f, 0.18f), doorFrameMat);
-        CreateBox("BlenderHQ_OfficeSouthWall_DoorJamb_R", root,
-            new Vector3(1.80f, 1.21f, -2.06f), new Vector3(0.10f, 2.20f, 0.18f), doorFrameMat);
-
-        // Small dispatch-green "OFFICE -> GARAGE" sign above the doorway.
-        CreateBox("BlenderHQ_OfficeSouthWall_DoorSign", root,
-            new Vector3(1.05f, 2.40f, -2.04f), new Vector3(0.80f, 0.16f, 0.02f), doorFrameMat);
-
-        // Solid blocking collider on the wall so player can't walk through.
-        CreateBlockingCollider("BlenderHQ_OfficeSouthWall_Collider", root,
-            new Vector3(-2.20f, 1.43f, -2.10f), new Vector3(5.00f, 2.85f, 0.12f));
+        string[] legacyNames =
+        {
+            "BlenderHQ_OfficeSouthWall_Main",
+            "BlenderHQ_OfficeSouthWall_Baseboard",
+            "BlenderHQ_OfficeSouthWall_DoorHeader",
+            "BlenderHQ_OfficeSouthWall_DoorJamb_L",
+            "BlenderHQ_OfficeSouthWall_DoorJamb_R",
+            "BlenderHQ_OfficeSouthWall_DoorSign",
+            "BlenderHQ_OfficeSouthWall_Collider"
+        };
+        foreach (string name in legacyNames)
+        {
+            GameObject obj = GameObject.Find(name);
+            if (obj != null) Object.Destroy(obj);
+        }
     }
+
+    // Removed: previous procedural south wall + dispatch-green door frame.
+    // The door jambs ended up positioned in front of the dispatch CRT (my Blender
+    // scale-vs-half-extent assumption was wrong, putting them mid-office instead
+    // of at the office south boundary), which blocked the interaction raycast
+    // to the OfficeComputer. Walls will be re-added in the Blender FBX source so
+    // they stay attached to the correct coordinates.
 
     static readonly Color DirtyBoneCool = new(0.69f, 0.74f, 0.74f);
 
@@ -2309,6 +2318,26 @@ public static class MvpSceneStyleDirector
         }
     }
 
+    static void ConfigureOfficeComputerInteraction(GameObject computer, Vector3 screenCenter, Vector3 interactionCenter, Vector3 interactionSize)
+    {
+        if (computer == null) return;
+
+        computer.transform.position = screenCenter;
+        computer.transform.rotation = Quaternion.identity;
+        computer.transform.localScale = Vector3.one;
+
+        BoxCollider trigger = computer.GetComponent<BoxCollider>();
+        if (trigger == null) trigger = computer.AddComponent<BoxCollider>();
+        trigger.isTrigger = true;
+        SetBoxColliderWorldCenter(trigger, interactionCenter);
+        SetBoxColliderWorldSize(trigger, interactionSize);
+
+        foreach (Renderer renderer in computer.GetComponentsInChildren<Renderer>())
+            renderer.enabled = false;
+        foreach (Light light in computer.GetComponentsInChildren<Light>())
+            light.enabled = false;
+    }
+
     // The Blender HQ FBX includes a fully-modeled CRT on the dispatch desk. The procedural
     // MVP_OfficeComputer cube exists only to host gameplay components (OfficeComputer + NetworkObject).
     // Move its collider over the Blender CRT and hide its primitive visuals so it stops floating above the desk.
@@ -2319,9 +2348,18 @@ public static class MvpSceneStyleDirector
 
         // CRT screen world position from Blender v4 (post-stack-fix): Blender (-1.55, 1.755, 1.020)
         // → Unity (-1.55, 1.020, 1.755) (Blender Y → Unity Z, Blender Z → Unity Y).
-        computer.transform.position = new Vector3(-1.55f, 1.02f, 1.755f);
-        computer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-        computer.transform.localScale = new Vector3(0.7f, 0.6f, 0.25f);
+        Vector3 screenCenter = HqComputerScreenCenter;
+        Vector3 interactionCenter = HqComputerReachCenter;
+
+        computer.transform.position = screenCenter;
+        computer.transform.rotation = Quaternion.identity;
+        computer.transform.localScale = Vector3.one;
+
+        BoxCollider trigger = computer.GetComponent<BoxCollider>();
+        if (trigger == null) trigger = computer.AddComponent<BoxCollider>();
+        trigger.isTrigger = true;
+        SetBoxColliderWorldCenter(trigger, interactionCenter);
+        SetBoxColliderWorldSize(trigger, HqComputerReachSize);
 
         foreach (Renderer renderer in computer.GetComponentsInChildren<Renderer>())
             renderer.enabled = false;
@@ -2337,9 +2375,7 @@ public static class MvpSceneStyleDirector
         GameObject spawn = GameObject.Find("PlayerSpawnPoint");
         if (spawn == null) return;
 
-        if (Vector3.Distance(spawn.transform.position, new Vector3(0f, 1.1f, 0f)) > 0.25f) return;
-
-        spawn.transform.position = new Vector3(-1.45f, 1.1f, -1.5f);
+        spawn.transform.position = new Vector3(-1.55f, 1.1f, 0.62f);
         spawn.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
     }
 

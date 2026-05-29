@@ -1089,8 +1089,7 @@ public static class ProjectSetup
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
         go.name = name; go.transform.position = pos; go.transform.localScale = scale;
         SetColor(go, new Color(0.4f, 0.4f, 0.42f));
-        GameObjectUtility.SetStaticEditorFlags(go,
-            StaticEditorFlags.NavigationStatic | StaticEditorFlags.ContributeGI);
+        GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.ContributeGI);
         return go;
     }
 

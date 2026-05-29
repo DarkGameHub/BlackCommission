@@ -86,13 +86,21 @@ public class PlayerCameraController : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
-        inputActions?.Disable();
-        inputActions = null;
+        CleanupInputActions();
     }
 
-    void OnDestroy()
+    public override void OnDestroy()
     {
-        inputActions?.Disable();
+        CleanupInputActions();
+        base.OnDestroy();
+    }
+
+    void CleanupInputActions()
+    {
+        if (inputActions == null) return;
+        inputActions.Player.Disable();
+        inputActions.Disable();
+        inputActions.Dispose();
         inputActions = null;
     }
 
