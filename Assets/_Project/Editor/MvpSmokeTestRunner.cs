@@ -13,7 +13,7 @@ public static class MvpSmokeTestRunner
     const string InputActionsPath = "Assets/_Project/Scripts/Player/PlayerInputActions.inputactions";
     const string ReportPath = "Logs/codex-mvp-smoke-test.txt";
 
-    [MenuItem("Tools/Accident Squad/MVP/Run Smoke Test")]
+    [MenuItem("Tools/Black Commission/MVP/Run Smoke Test")]
     public static void RunMenu()
     {
         bool passed = Run();
@@ -45,7 +45,7 @@ public static class MvpSmokeTestRunner
         Directory.CreateDirectory("Logs");
         var lines = new List<string>
         {
-            $"AccidentSquad MVP Smoke Test",
+            $"Black Commission MVP Smoke Test",
             $"Errors: {errors.Count}",
             $"Warnings: {warnings.Count}",
             ""

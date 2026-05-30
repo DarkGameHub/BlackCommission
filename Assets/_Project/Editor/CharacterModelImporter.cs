@@ -63,7 +63,7 @@ public static class CharacterModelImporter
         };
     }
 
-    [MenuItem("Tools/Accident Squad/Art/Build Player Character Prefabs")]
+    [MenuItem("Tools/Black Commission/Art/Build Player Character Prefabs")]
     public static void BuildPlayerCharacterPrefabs()
     {
         Build(showDialog: true);

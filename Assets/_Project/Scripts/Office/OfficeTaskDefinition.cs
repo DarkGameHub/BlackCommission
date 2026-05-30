@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "AccidentSquad/Office Task Definition")]
+[CreateAssetMenu(menuName = "Black Commission/Office Task Definition")]
 public class OfficeTaskDefinition : ScriptableObject
 {
     [Header("Identity")]

@@ -4,12 +4,12 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Tools → Accident Squad → Validate Project
+/// Tools → Black Commission → Validate Project
 /// Checks for common mistakes before running the game.
 /// </summary>
 public static class ProjectValidator
 {
-    [MenuItem("Tools/Accident Squad/Validate Project")]
+    [MenuItem("Tools/Black Commission/Validate Project")]
     static void Validate()
     {
         int errors = 0;

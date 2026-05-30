@@ -10,7 +10,7 @@ public static class GeneratedArtImporter
     const string PlayableVanPrefabPath = "Assets/_Project/Prefabs/Art/ASV4_PlayableDepartureVan.prefab";
     const string PlayableVanResourcesPath = "Assets/Resources/GeneratedArt/ASV4_PlayableDepartureVan.prefab";
     const string VanModelPath = "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Second_Hand_Dispatch_Van.fbx";
-    const string AutoSetupDoneKey = "AccidentSquad.GeneratedArt.ASV4AutoSetupDone.v2";
+    const string AutoSetupDoneKey = "BlackCommission.GeneratedArt.ASV4AutoSetupDone.v2";
 
     struct AssetSpec
     {
@@ -120,7 +120,7 @@ public static class GeneratedArtImporter
         }
     }
 
-    [MenuItem("Tools/Accident Squad/Art/Setup ASV4 Art For Play")]
+    [MenuItem("Tools/Black Commission/Art/Setup ASV4 Art For Play")]
     public static void SetupGeneratedArtForPlayMenu()
     {
         SetupGeneratedArtForPlay(showDialogs: true);
@@ -133,7 +133,7 @@ public static class GeneratedArtImporter
             throw new System.InvalidOperationException("ASV4 generated art setup failed. Check missing FBX paths in Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4.");
     }
 
-    [MenuItem("Tools/Accident Squad/Art/Import Generated Blender Kit")]
+    [MenuItem("Tools/Black Commission/Art/Import Generated Blender Kit")]
     public static void ImportGeneratedBlenderKit()
     {
         EnsureFolder(PrefabFolder);
@@ -157,12 +157,12 @@ public static class GeneratedArtImporter
         AssetDatabase.Refresh();
 
         string message = missing.Count == 0
-            ? $"Imported {created} ASV4 commercial AccidentSquad art prefabs into {PrefabFolder}."
+            ? $"Imported {created} ASV4 commercial Black Commission art prefabs into {PrefabFolder}."
             : $"Imported {created} prefabs. Missing FBX files:\n{string.Join("\n", missing)}";
         EditorUtility.DisplayDialog("Generated art import complete", message, "OK");
     }
 
-    [MenuItem("Tools/Accident Squad/Art/Create Generated Art Gallery In Open Scene")]
+    [MenuItem("Tools/Black Commission/Art/Create Generated Art Gallery In Open Scene")]
     public static void CreateGeneratedArtGallery()
     {
         ImportGeneratedBlenderKit();
@@ -187,7 +187,7 @@ public static class GeneratedArtImporter
         Selection.activeGameObject = root;
     }
 
-    [MenuItem("Tools/Accident Squad/Art/Create Playable ASV4 Departure Van Prefab")]
+    [MenuItem("Tools/Black Commission/Art/Create Playable ASV4 Departure Van Prefab")]
     public static void CreatePlayableDepartureVanPrefab()
     {
         bool created = CreatePlayableDepartureVanPrefabAssets();

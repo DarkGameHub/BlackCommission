@@ -4,7 +4,7 @@
 
 The playable HQ is currently a Unity runtime set, not the Blender HQ prefab.
 
-Style source of truth: [AccidentSquad Style Lock v1](accidentsquad-style-lock-v1.md).
+Style source of truth: [Black Commission Style Lock v1](black-commission-style-lock-v1.md).
 
 1. `MvpProjectSetup` creates the base HQ scene objects, including the real
    `OfficeComputer` interaction component.
@@ -43,14 +43,14 @@ as an asset reference:
 - darkness and practical lights that preserve navigation;
 - one memorable company mark, not generic office decoration.
 
-AccidentSquad's own identity anchors are:
+Black Commission's own identity anchors are:
 
 - civic-teal municipal surfaces and a dirty paper/dead-rubber base palette;
 - small dispatch-green system accents for computer, route, and extraction;
 - stamp-red debt and hostile-takeover pressure;
 - the AS dispatch seal crossed by a stamp-red debt slash;
 - a cheap civic fleet dispatch van as the mission gateway;
-- a school-gate threshold: accident van outside, door into danger, door back to
+- a school-gate threshold: dispatch van outside, door into danger, door back to
   the return van;
 - a four-slot mission van locker for shared medkit/decoy/spray/flashlight
   supplies;

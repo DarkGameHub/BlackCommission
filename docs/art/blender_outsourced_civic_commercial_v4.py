@@ -1,5 +1,5 @@
 """
-AccidentSquad outsourced civic horror commercial vertical-slice assets.
+Black Commission outsourced civic horror commercial vertical-slice assets.
 
 Run from Blender:
   blender --background --factory-startup --python docs/art/blender_outsourced_civic_commercial_v4.py
@@ -29,8 +29,8 @@ def _find_project_root() -> Path:
         if (ancestor / "Assets").is_dir() and (ancestor / "ProjectSettings").is_dir():
             return ancestor
     if sys.platform == "win32":
-        return Path(r"D:/AccidentSquad")
-    return Path.home() / "Desktop" / "codespace" / "AccidentSquad"
+        return Path(r"D:/BlackCommission")
+    return Path.home() / "Desktop" / "codespace" / "BlackCommission"
 
 
 OUT = _find_project_root() / "Assets" / "_Project" / "Art" / "Generated" / "OutsourcedCivicCommercial_v4"
@@ -300,7 +300,7 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_company_mark_left", (-0.51, 3.13, 1.72), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
     cube("hq_company_mark_right", (-0.05, 3.13, 1.72), (0.055, 0.012, 0.34), m["terminal"], coll, edge=0.001)
     cube("hq_company_mark_debt_slash", (-0.28, 3.12, 1.72), (0.07, 0.010, 0.52), m["debt"], coll, rot=(0, math.radians(-24), 0), edge=0)
-    txt("hq_company_sign", "ACCIDENT SQUAD", (-2.75, 3.15, 1.94), (math.radians(90), 0, 0), 0.16, m["terminal"], coll)
+    txt("hq_company_sign", "BLACK COMMISSION", (-2.75, 3.15, 1.94), (math.radians(90), 0, 0), 0.16, m["terminal"], coll)
     cube("hq_debt_status_card", (0.55, 3.12, 1.36), (0.38, 0.015, 0.24), m["debt"], coll, edge=0.002)
     txt("hq_debt_status_text", "DEBT\nWATCH", (0.55, 3.10, 1.37), (math.radians(90), 0, 0), 0.052, m["paper"], coll)
 
@@ -1104,10 +1104,10 @@ def export_collection(coll: bpy.types.Collection, filename: str) -> None:
 
 def export_all(assets: dict[str, bpy.types.Collection]) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    bpy.ops.wm.save_as_mainfile(filepath=str(OUT / "accidentsquad_outsourced_civic_commercial_v4.blend"))
+    bpy.ops.wm.save_as_mainfile(filepath=str(OUT / "black-commission_outsourced_civic_commercial_v4.blend"))
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.export_scene.fbx(
-        filepath=str(OUT / "accidentsquad_outsourced_civic_commercial_v4_showcase.fbx"),
+        filepath=str(OUT / "black-commission_outsourced_civic_commercial_v4_showcase.fbx"),
         use_selection=True,
         apply_unit_scale=True,
         object_types={"MESH", "LIGHT", "CAMERA"},
@@ -1121,7 +1121,7 @@ def export_all(assets: dict[str, bpy.types.Collection]) -> None:
     bpy.context.scene.render.engine = "BLENDER_EEVEE"
     bpy.context.scene.render.resolution_x = 1600
     bpy.context.scene.render.resolution_y = 900
-    bpy.context.scene.render.filepath = str(OUT / "accidentsquad_outsourced_civic_commercial_v4_preview.png")
+    bpy.context.scene.render.filepath = str(OUT / "black-commission_outsourced_civic_commercial_v4_preview.png")
     bpy.ops.render.render(write_still=True)
 
 

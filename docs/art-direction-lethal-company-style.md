@@ -1,15 +1,15 @@
-# AccidentSquad Art Bible: Low-Cost Outsourced Horror Style
+# Black Commission Art Bible: Low-Cost Outsourced Horror Style
 
 Owner: Banach, Art Direction Agent  
 PM: Yan Dai  
 Document scope: MVP visual direction for the rundown office, the school lost-item map, and future maps.  
 Current target: 1-4 player MVP loop, `HQ -> School_LostItem_01 -> HQ`, primitive geometry, URP Lit/Simple Lit materials, OnGUI HUD.
 
-Style lock: [AccidentSquad Style Lock v1](art/accidentsquad-style-lock-v1.md) is the current source of truth for production art decisions. This file remains the broader art bible, but the lock document decides naming, motifs, acceptance tests, and copy-risk boundaries.
+Style lock: [Black Commission Style Lock v1](art/black-commission-style-lock-v1.md) is the current source of truth for production art decisions. This file remains the broader art bible, but the lock document decides naming, motifs, acceptance tests, and copy-risk boundaries.
 
 ## North Star
 
-AccidentSquad should look like a broke commission office taking tiny outsourced jobs in spaces that society has stopped caring for. The first mission is not "epic horror"; it is a parent's missing homework request that becomes dangerous because bureaucracy, debt, and neglected public spaces have turned hostile.
+Black Commission should look like a broke commission office taking tiny outsourced jobs in spaces that society has stopped caring for. The first mission is not "epic horror"; it is a parent's missing homework request that becomes dangerous because bureaucracy, debt, and neglected public spaces have turned hostile.
 
 The visual promise:
 
@@ -21,11 +21,11 @@ This style is intentionally low-cost. The goal is not realism through asset dens
 
 Use references as methods, not as asset sources.
 
-| Reference | What AccidentSquad can learn | What to avoid copying |
+| Reference | What Black Commission can learn | What to avoid copying |
 |---|---|---|
 | Lethal Company | Primitive-friendly environments, simple silhouettes, comedy from low-budget labor, strong flashlight/darkness contrast, diegetic company tools. | Do not copy scrap quota framing, company terminal wording, employee suits, facility layouts, monsters, UI sounds, or exact scan/sell loop. |
 | Buckshot Roulette | One intense room can carry a whole mood; objects on a table can feel dangerous when the framing is tight. | Do not copy gambling ritual, shotgun/table composition, dealer imagery, or high-contrast black room identity. |
-| The Stanley Parable | Banal office spaces become funny and uncanny through signage, repetition, corporate blandness, and voice-of-system attitude. | Do not copy narrator structure, office maze identity, or clean corporate satire tone. AccidentSquad is poorer and dirtier. |
+| The Stanley Parable | Banal office spaces become funny and uncanny through signage, repetition, corporate blandness, and voice-of-system attitude. | Do not copy narrator structure, office maze identity, or clean corporate satire tone. Black Commission is poorer and dirtier. |
 | Control | Institutional architecture, red warning language, paranormal bureaucracy, strong signage hierarchy. | Do not copy Federal Bureau brutalism, levitating objects, Hiss/red-room treatment, or polished paranormal government identity. |
 | Phasmophobia | Familiar locations, co-op readability, handheld equipment, tension from audio/light clues. | Do not copy ghost-hunting premise, EMF/spirit-box identity, house map style, evidence board loop, or ghost taxonomy. |
 | The Exit 8 / Observation Duty | Repetition makes anomalies noticeable; small environment changes can become gameplay. | Do not copy endless passage format, exact anomaly-spotting rules, or sterile transit aesthetic. Use the principle for future tasks. |
@@ -48,7 +48,7 @@ The shared takeaway is: fewer assets, stronger rules. Every prop should either g
    Players must instantly read: where to go, what to grab, what can kill them, what room they are in, who has the objective, and where the exit is.
 
 5. **Comedy Through Specificity**  
-   A generic spooky school is weak. A school with "HOMEWORK DEBT OFFICE", overdue stickers on lockers, and a monster carrying a ledger is AccidentSquad.
+   A generic spooky school is weak. A school with "HOMEWORK DEBT OFFICE", overdue stickers on lockers, and a monster carrying a ledger is Black Commission.
 
 ## Global Visual Language
 
@@ -428,7 +428,7 @@ The two-week target is a style-complete MVP slice, not final asset production.
 
 - Do not chase realistic asset packs before the MVP loop is validated.
 - Do not add decorative clutter that breaks NavMesh, interaction, or player movement.
-- Do not create a one-note dark blue horror palette or a neon red/green game. AccidentSquad needs civic teal, dead rubber, aged paper, sodium light, dispatch-green systems, and stamp-red debt.
+- Do not create a one-note dark blue horror palette or a neon red/green game. Black Commission needs civic teal, dead rubber, aged paper, sodium light, dispatch-green systems, and stamp-red debt.
 - Do not copy any reference game's exact monster, terminal, room layout, logo, or gameplay-facing iconography.
 - Do not make the office aspirational too early. Its brokenness is the progression baseline.
 - Do not make the school pure haunted-house horror. It is a civic/institutional job site that has become absurdly dangerous.

@@ -6,13 +6,19 @@ public static class MvpSceneStyleDirector
 {
     const string OfficeRootName = "MVP_RuntimeStyle_Office_ExteriorDispatch";
     const string SchoolRootName = "MVP_RuntimeStyle_School";
+
+    // false → use the code-built office (full control over colours/textures/colliders,
+    // the reference-art target). true → fall back to the baked Blender HQ FBX look.
+    const bool PreferBlenderOfficeFbx = false;
     static readonly Vector3 HqComputerScreenCenter = new(-1.55f, 1.085f, 1.704f);
     static readonly Vector3 HqComputerReachCenter = new(-1.55f, 1.05f, 0.95f);
     static readonly Vector3 HqComputerReachSize = new(2.20f, 1.75f, 2.15f);
 
-    static readonly Color CivicTeal = Rgb(0x2F, 0x4F, 0x4B);
+    static readonly Color CivicTeal = Rgb(0x2C, 0x4A, 0x3E);       // reference: 深市政绿 wall
     static readonly Color CivicTealDark = Rgb(0x17, 0x24, 0x22);
     static readonly Color CivicTealShadow = Rgb(0x20, 0x35, 0x32);
+    static readonly Color WornConcrete = Rgb(0x48, 0x48, 0x4A);    // reference: 磨损灰 floor
+    static readonly Color DirtyOfficeWall = Rgb(0x5E, 0x60, 0x57); // reference: 灰白基调 wall (faint warm-grey, not green)
     static readonly Color DeadRubber = Rgb(0x11, 0x14, 0x13);
     static readonly Color DeadRubberSoft = Rgb(0x23, 0x28, 0x25);
     static readonly Color AgedPaper = Rgb(0xD6, 0xC8, 0x9B);
@@ -85,7 +91,7 @@ public static class MvpSceneStyleDirector
             QueueEditorHqRefresh();
     }
 
-    [UnityEditor.MenuItem("Tools/Accident Squad/Art/Refresh HQ Blender Office Visual")]
+    [UnityEditor.MenuItem("Tools/Black Commission/Art/Refresh HQ Blender Office Visual")]
     static void RefreshEditorHqMenu()
     {
         RefreshEditorHqIfOpen();
@@ -161,52 +167,94 @@ public static class MvpSceneStyleDirector
         CreateOfficeBoundaryColliders(root.transform);
         ApplyOfficeAtmosphere();
 
-        if (CreateGeneratedOfficeVisualIfAvailable(root.transform))
+        if (PreferBlenderOfficeFbx && CreateGeneratedOfficeVisualIfAvailable(root.transform))
         {
             CreateBlenderOfficeGameplayOverlays(root.transform);
             Debug.Log("[MvpSceneStyleDirector] Using Blender-generated HQ model.");
             return;
         }
 
-#if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
-            Debug.LogWarning("[MvpSceneStyleDirector] ASV4 HQ prefab was not available; skipped old procedural office fallback in edit mode.");
-            return;
-        }
-#endif
+        Debug.Log("[MvpSceneStyleDirector] Building code office shell (reference-art target, colour/collider controlled).");
 
-        Material stainedWall = MakeOfficeMaterial("Office_CivicTealWall", CivicTeal, CivicTealDark, OfficePattern.Grime);
-        Material dirtyFloor = MakeOfficeMaterial("Office_WornCivicFloor", DeadRubberSoft, CivicTealShadow, OfficePattern.Tile);
-        Material paper = MakeOfficeMaterial("Office_AgedPaper", AgedPaper, StampRedDark, OfficePattern.Notice);
-        Material warningRed = MakeOfficeMaterial("Office_StampRedDebt", StampRed, AgedPaper, OfficePattern.Warning);
-        Material terminalGreen = MakeOfficeMaterial("Office_DispatchGreen", DispatchGreenDark, DispatchGreen, OfficePattern.Scanline);
+        Material wall = MakeOfficeMaterial("Office_DirtyGreyWall", DirtyOfficeWall, CivicTealShadow, OfficePattern.Grime);
+        Material floor = MakeOfficeMaterial("Office_WornCivicFloor", WornConcrete, CivicTealShadow, OfficePattern.Tile);
+        Material ceiling = MakeOfficeMaterial("Office_CheapCeilingTile", Rgb(0x7C, 0x78, 0x66), DeadRubberSoft, OfficePattern.Tile);
         Material darkMetal = MakeOfficeMaterial("Office_DeadRubberMetal", DeadRubber, DeadRubberSoft, OfficePattern.Scratched);
-        Material tiredFabric = MakeOfficeMaterial("Office_TiredFabric", TiredFabric, DeadRubber, OfficePattern.Fabric);
-        Material cardboard = MakeOfficeMaterial("Office_CheapCardboard", CheapCardboard, AgedPaperDark, OfficePattern.Cardboard);
-        Material wood = MakeOfficeMaterial("Office_SecondHandWood", SecondHandWood, CheapCardboard, OfficePattern.Wood);
-        Material cable = MakeMaterial(DeadRubber);
-        Material black = MakeMaterial(DeadRubber);
-        Material grime = MakeMaterial(CivicTealDark);
-        Material oldTape = MakeMaterial(SodiumAmberPale);
-        Material oldPlaster = MakeOfficeMaterial("Office_PeeledPlaster", DirtyBone, CivicTealDark, OfficePattern.Grime);
-        Material columnRed = MakeOfficeMaterial("Office_DarkStampColumnPaint", StampRedDark, DeadRubber, OfficePattern.Scratched);
-        Material tileLight = MakeMaterial(DirtyBone);
-        Material tileDark = MakeMaterial(DeadRubberSoft);
-        Material carpet = MakeOfficeMaterial("Office_ThreadbareCarpet", TiredFabric, CivicTealDark, OfficePattern.Fabric);
-        Material garageConcrete = MakeOfficeMaterial("Office_GarageConcrete", DeadRubberSoft, DeadRubber, OfficePattern.Grime);
-        Material bayDoor = MakeOfficeMaterial("Office_DentedBayDoor", CivicTealShadow, DeadRubber, OfficePattern.Scratched);
         Material hazardStripe = MakeOfficeMaterial("Office_SodiumHazardStripe", SodiumAmber, DeadRubber, OfficePattern.Warning);
+        Material bayDoor = MakeOfficeMaterial("Office_DentedBayDoor", CivicTealShadow, DeadRubber, OfficePattern.Scratched);
         Material vanBody = MakeOfficeMaterial("Office_CivicFleetVanBody", CivicTeal, DirtyBone, OfficePattern.Scratched);
         Material vanGlass = MakeOfficeMaterial("Office_OldGlass", OldGlass, DeadRubber, OfficePattern.Scanline);
-        Material rubber = MakeMaterial(DeadRubber);
-        Material headlight = MakeEmissiveMaterial(SodiumAmberPale, SodiumAmberPale, 0.9f);
 
-        BuildCleanReadableOfficeAndExterior(root.transform, stainedWall, dirtyFloor, paper, warningRed,
-            terminalGreen, darkMetal, tiredFabric, cardboard, wood, garageConcrete, bayDoor, hazardStripe,
-            vanBody, vanGlass, rubber, headlight);
-        AlignMvpComputerWithBlenderCrt();
-        RepositionPlayerSpawnIfStale();
+        // Visual shell only (no furniture). Coordinates mirror CreateOfficeBoundaryColliders
+        // exactly, so every visible wall lines up with its collider — no gaps, no floating walls.
+        BuildOfficeShellVisual(root.transform, wall, floor, ceiling, darkMetal, hazardStripe, bayDoor, vanBody, vanGlass);
+        // Gameplay layer (coordinate-based, not FBX-mesh-based): interior walkable floor,
+        // van interaction trigger + blocking colliders, incandescent + CRT lights,
+        // computer guides, and player spawn fix.
+        CreateBlenderOfficeGameplayOverlays(root.transform);
+    }
+
+    // Sealed room shell that matches CreateOfficeBoundaryColliders 1:1. Furniture is left
+    // out on purpose — it gets added later as Meshy props. A simple placeholder van keeps
+    // the departure point readable until a real van mesh replaces it.
+    static void BuildOfficeShellVisual(Transform root, Material wall, Material floor, Material ceiling,
+        Material darkMetal, Material hazardStripe, Material bayDoor, Material vanBody, Material vanGlass)
+    {
+        // Floor + ceiling spanning the whole footprint (X:[-5.1,5.3], Z:[-3.25,3.25]).
+        CreateBox("ShellFloor", root, new Vector3(0.10f, 0.01f, 0f), new Vector3(10.40f, 0.04f, 6.50f), floor);
+        CreateBox("ShellCeiling", root, new Vector3(0.10f, 2.72f, 0f), new Vector3(10.40f, 0.06f, 6.50f), ceiling);
+
+        // Perimeter + divider walls — identical centers/sizes to the boundary colliders.
+        CreateBox("ShellNorthWallOffice", root, new Vector3(-2.55f, 1.35f, 3.25f), new Vector3(5.0f, 2.7f, 0.28f), wall);
+        CreateBox("ShellNorthWallGarage", root, new Vector3(2.75f, 1.35f, 3.25f), new Vector3(5.0f, 2.7f, 0.28f), wall);
+        CreateBox("ShellWestWall", root, new Vector3(-5.10f, 1.35f, 0f), new Vector3(0.28f, 2.7f, 6.55f), wall);
+        CreateBox("ShellEastWall", root, new Vector3(5.30f, 1.35f, 0f), new Vector3(0.28f, 2.7f, 6.55f), wall);
+        CreateBox("ShellSouthWallOfficeLeft", root, new Vector3(-4.10f, 1.35f, -3.25f), new Vector3(1.85f, 2.7f, 0.28f), wall);
+        CreateBox("ShellSouthWallOfficeRight", root, new Vector3(-1.15f, 1.35f, -3.25f), new Vector3(1.20f, 2.7f, 0.28f), wall);
+        CreateBox("ShellSouthWallGarageLeft", root, new Vector3(0.85f, 1.35f, -3.25f), new Vector3(1.20f, 2.7f, 0.28f), wall);
+        CreateBox("ShellSouthWallGarageRight", root, new Vector3(4.65f, 1.35f, -3.25f), new Vector3(1.20f, 2.7f, 0.28f), wall);
+        CreateBox("ShellDividerWall", root, new Vector3(0.05f, 1.35f, 0.90f), new Vector3(0.28f, 2.7f, 4.70f), wall);
+        CreateBox("ShellDividerStub", root, new Vector3(0.05f, 1.35f, -2.75f), new Vector3(0.28f, 2.7f, 0.90f), wall);
+
+        // Garage roll-door opening (X:[1.45,4.05], south wall): header + rolled-up door + threshold stripe.
+        CreateBox("ShellGarageDoorHeader", root, new Vector3(2.75f, 2.45f, -3.25f), new Vector3(2.60f, 0.55f, 0.28f), wall);
+        CreateBox("ShellGarageRollDoor", root, new Vector3(2.75f, 2.30f, -3.30f), new Vector3(2.55f, 0.30f, 0.12f), bayDoor);
+        CreateBox("ShellGarageDoorThreshold", root, new Vector3(2.75f, 0.04f, -3.18f), new Vector3(2.60f, 0.03f, 0.32f), hazardStripe);
+
+        BuildPlaceholderVan(root, vanBody, vanGlass, darkMetal);
+        BuildComputerStation(root, darkMetal);
+    }
+
+    // Core interactable + the reference's signature green focal point. Not "furniture" —
+    // the dispatch loop needs a visible screen to walk up to. Sits at the CRT interaction
+    // anchor (HqComputerScreenCenter ≈ (-1.55, 1.085, 1.704)), screen facing the player (−Z).
+    static void BuildComputerStation(Transform root, Material darkMetal)
+    {
+        Material screenGlow = MakeEmissiveMaterial(DispatchGreenDark, DispatchGreen, 0.9f);
+
+        CreateBox("ShellComputerDeskTop", root, new Vector3(-1.55f, 0.74f, 1.78f), new Vector3(1.5f, 0.08f, 0.78f), darkMetal);
+        CreateBox("ShellComputerDeskLegL", root, new Vector3(-2.18f, 0.37f, 1.78f), new Vector3(0.08f, 0.72f, 0.66f), darkMetal);
+        CreateBox("ShellComputerDeskLegR", root, new Vector3(-0.92f, 0.37f, 1.78f), new Vector3(0.08f, 0.72f, 0.66f), darkMetal);
+        CreateBox("ShellComputerCrtShell", root, new Vector3(-1.55f, 1.085f, 1.86f), new Vector3(0.56f, 0.46f, 0.42f), darkMetal);
+        CreateBox("ShellComputerScreen", root, new Vector3(-1.55f, 1.085f, 1.63f), new Vector3(0.42f, 0.33f, 0.03f), screenGlow);
+        CreateBox("ShellComputerKeyboard", root, new Vector3(-1.55f, 0.80f, 1.42f), new Vector3(0.52f, 0.04f, 0.2f), darkMetal);
+    }
+
+    // Low-poly placeholder van parked in the garage bay, matching the van blocking
+    // colliders (center X=2.75, spanning Z about [-1.8, 1.8]). Faces the garage door (−Z).
+    static void BuildPlaceholderVan(Transform root, Material vanBody, Material vanGlass, Material darkMetal)
+    {
+        Vector3 c = new(2.75f, 0f, 0.05f);
+        CreateBox("ShellVanBody", root, c + new Vector3(0f, 0.92f, 0f), new Vector3(1.62f, 1.05f, 3.30f), vanBody);
+        CreateBox("ShellVanCab", root, c + new Vector3(0f, 1.34f, -1.02f), new Vector3(1.52f, 0.52f, 1.20f), vanBody);
+        CreateBox("ShellVanWindshield", root, c + new Vector3(0f, 1.18f, -1.66f), new Vector3(1.20f, 0.42f, 0.06f), vanGlass);
+        CreateBox("ShellVanSideWindowL", root, c + new Vector3(-0.78f, 1.20f, -1.02f), new Vector3(0.05f, 0.36f, 0.62f), vanGlass);
+        CreateBox("ShellVanSideWindowR", root, c + new Vector3(0.78f, 1.20f, -1.02f), new Vector3(0.05f, 0.36f, 0.62f), vanGlass);
+        CreateBox("ShellVanBumper", root, c + new Vector3(0f, 0.46f, -1.70f), new Vector3(1.62f, 0.18f, 0.16f), darkMetal);
+        CreateCylinder("ShellVanWheelFL", root, c + new Vector3(-0.84f, 0.34f, -1.05f), Quaternion.Euler(0f, 0f, 90f), new Vector3(0.36f, 0.16f, 0.36f), darkMetal);
+        CreateCylinder("ShellVanWheelFR", root, c + new Vector3(0.84f, 0.34f, -1.05f), Quaternion.Euler(0f, 0f, 90f), new Vector3(0.36f, 0.16f, 0.36f), darkMetal);
+        CreateCylinder("ShellVanWheelBL", root, c + new Vector3(-0.84f, 0.34f, 1.10f), Quaternion.Euler(0f, 0f, 90f), new Vector3(0.36f, 0.16f, 0.36f), darkMetal);
+        CreateCylinder("ShellVanWheelBR", root, c + new Vector3(0.84f, 0.34f, 1.10f), Quaternion.Euler(0f, 0f, 90f), new Vector3(0.36f, 0.16f, 0.36f), darkMetal);
     }
 
     static void BuildCleanReadableOfficeAndExterior(
@@ -2024,20 +2072,18 @@ public static class MvpSceneStyleDirector
 
     static void ApplyOfficeAtmosphere()
     {
-        // Bright incandescent office, but with a touch of civic-teal in the shadows
-        // for the reference board's "脏旧但可读 / 保留少量阴影氛围" mood. Kept light —
-        // NOT the old debt-noir amber fog that crushed the room to black.
+        // Reference basis: grey-white walls + warm/amber incandescent light, NOT a green
+        // room. Neutral warm ambient so the place reads bright and dirty-grey, with the
+        // green only on the CRT as an accent. No teal tint in the fog/ambient.
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
-        RenderSettings.fogColor = new Color(0.12f, 0.16f, 0.15f); // subtle dark civic teal
-        RenderSettings.fogDensity = 0.0019f;
+        RenderSettings.fogColor = new Color(0.17f, 0.17f, 0.16f); // neutral warm grey
+        RenderSettings.fogDensity = 0.0016f;
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
-        // Warm overhead, slightly cooler/teal mid + floor so the point lights carry the
-        // bright reads and the corners fall into a dirty teal shadow instead of flat grey.
-        RenderSettings.ambientSkyColor = new Color(0.60f, 0.58f, 0.51f);
-        RenderSettings.ambientEquatorColor = new Color(0.40f, 0.45f, 0.43f);
-        RenderSettings.ambientGroundColor = new Color(0.18f, 0.24f, 0.22f);
-        RenderSettings.ambientIntensity = 1.12f;
+        RenderSettings.ambientSkyColor = new Color(0.64f, 0.62f, 0.56f);
+        RenderSettings.ambientEquatorColor = new Color(0.50f, 0.49f, 0.45f);
+        RenderSettings.ambientGroundColor = new Color(0.27f, 0.26f, 0.23f);
+        RenderSettings.ambientIntensity = 1.25f;
     }
 
     static void ApplySchoolAtmosphere()
@@ -2359,10 +2405,9 @@ public static class MvpSceneStyleDirector
         CreatePointLight("BlenderHQ_OfficeIncandescent_RightFill", root, new Vector3(-0.20f, 2.45f, 0.55f),
             IncandescentWhite, 1.4f, 4.5f);
 
-        // CRT screen spill — the focal green "COMPUTER" beacon from the reference, so
-        // push it brighter/wider to read as the room's signature glow.
+        // CRT screen spill — a small green accent right at the screen, not a room flood.
         CreatePointLight("BlenderHQ_CrtScreenSpill", root, new Vector3(-1.55f, 1.10f, 1.40f),
-            DispatchGreen, 1.25f, 2.9f);
+            DispatchGreen, 0.5f, 1.6f);
 
         // ─── Garage work lights ───────────────────────────────────────────
         // Garage Blender bounds: X [1.375, 3.725], Z [-2.775, -0.925]. Ceiling Y=2.86.
@@ -2402,30 +2447,28 @@ public static class MvpSceneStyleDirector
 
     static void CreateBlenderComputerGuides(Transform root)
     {
-        Material guide = MakeEmissiveMaterial(DispatchGreenDark, DispatchGreen, 0.65f);
-        Material guideDim = MakeMaterial(DispatchGreenDark);
+        // No floating beacon column / flood light anymore — the CRT itself is visible.
+        // Small green "COMPUTER" light box on the back wall (reference item 3) + a YELLOW
+        // painted floor guide to the desk (reference item 11 黄漆导向线).
+        Material sign = MakeEmissiveMaterial(DispatchGreenDark, DispatchGreen, 0.5f);
+        Material yellowGuide = MakeOfficeMaterial("Office_YellowFloorGuide", SodiumAmber, DeadRubber, OfficePattern.Warning);
         Material label = MakeMaterial(DeadRubber);
 
-        CreateBox("BlenderHQ_ComputerBeaconColumn", root, new Vector3(-1.55f, 1.75f, 1.42f),
-            new Vector3(0.10f, 1.25f, 0.10f), guide);
-        CreateBox("BlenderHQ_ComputerBeaconCap", root, new Vector3(-1.55f, 2.42f, 1.42f),
-            new Vector3(0.62f, 0.10f, 0.18f), guide);
-        CreateBox("BlenderHQ_ComputerSignBackplate", root, new Vector3(-1.55f, 1.70f, 1.28f),
-            new Vector3(1.10f, 0.34f, 0.045f), guide);
+        // Wall-mounted green sign above the desk (flush on the north wall at Z≈3.1).
+        CreateBox("BlenderHQ_ComputerSignBackplate", root, new Vector3(-1.55f, 2.05f, 3.10f),
+            new Vector3(0.95f, 0.28f, 0.05f), sign);
         CreateWorldText("Text_BlenderHQ_ComputerLabel", "COMPUTER", root,
-            new Vector3(-1.55f, 1.69f, 1.245f), Quaternion.Euler(0f, 180f, 0f), 0.18f, label);
+            new Vector3(-1.55f, 2.05f, 3.07f), Quaternion.Euler(0f, 180f, 0f), 0.16f, label);
 
+        // Yellow floor guide line + arrowhead leading to the desk.
         CreateBox("BlenderHQ_ComputerFloorGuide_Main", root, new Vector3(-1.55f, 0.07f, 0.52f),
-            new Vector3(0.24f, 0.018f, 1.24f), guide);
-        GameObject arrowL = CreateBox("BlenderHQ_ComputerFloorGuide_ArrowL", root, new Vector3(-1.78f, 0.075f, 1.03f),
-            new Vector3(0.48f, 0.018f, 0.11f), guideDim);
+            new Vector3(0.20f, 0.018f, 1.24f), yellowGuide);
+        GameObject arrowL = CreateBox("BlenderHQ_ComputerFloorGuide_ArrowL", root, new Vector3(-1.74f, 0.075f, 1.03f),
+            new Vector3(0.42f, 0.018f, 0.10f), yellowGuide);
         arrowL.transform.rotation = Quaternion.Euler(0f, 35f, 0f);
-        GameObject arrowR = CreateBox("BlenderHQ_ComputerFloorGuide_ArrowR", root, new Vector3(-1.32f, 0.075f, 1.03f),
-            new Vector3(0.48f, 0.018f, 0.11f), guideDim);
+        GameObject arrowR = CreateBox("BlenderHQ_ComputerFloorGuide_ArrowR", root, new Vector3(-1.36f, 0.075f, 1.03f),
+            new Vector3(0.42f, 0.018f, 0.10f), yellowGuide);
         arrowR.transform.rotation = Quaternion.Euler(0f, -35f, 0f);
-
-        CreatePointLight("BlenderHQ_ComputerBeaconLight", root, new Vector3(-1.55f, 1.80f, 1.18f),
-            DispatchGreen, 1.35f, 3.2f);
     }
 
     // The procedural south wall was added in a prior commit and instantiated as

@@ -274,7 +274,7 @@ public class QuickNetworkUI : MonoBehaviour
 
         GUI.DrawTexture(new Rect(cx, cy, bw, 2), panelBorderTex);
         cy += 9;
-        GUI.Label(new Rect(cx, cy, bw - 88, 32), "ACCIDENT SQUAD", titleLeft);
+        GUI.Label(new Rect(cx, cy, bw - 88, 32), "BLACK COMMISSION", titleLeft);
 
         Rect stamp = new Rect(cx + bw - 80, cy + 4, 78, 24);
         GUI.DrawTexture(stamp, fieldTex);

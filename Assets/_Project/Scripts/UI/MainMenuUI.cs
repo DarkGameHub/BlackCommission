@@ -194,7 +194,7 @@ public class MainMenuUI : MonoBehaviour
 
         // ─── Title block (top of panel) ────────────────────────────────
         var titleRow = CreateRow(panel.transform, "TitleRow", 80f, 0f, 24f);
-        titleText = AddText(titleRow.transform, "Title", "ACCIDENT SQUAD", 42,
+        titleText = AddText(titleRow.transform, "Title", "BLACK COMMISSION", 42,
             DispatchGreen, TextAlignmentOptions.Left);
         var titleRt = titleText.rectTransform;
         titleRt.anchorMin = new Vector2(0f, 0f);

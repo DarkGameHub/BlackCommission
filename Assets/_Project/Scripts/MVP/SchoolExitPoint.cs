@@ -76,7 +76,7 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
     public string GetReturnSummary()
     {
         var manager = LostItemMissionManager.Instance;
-        if (manager == null) return "事故车已停在门口。";
+        if (manager == null) return "委托车已停在门口。";
         string bonus = manager.BonusEvidenceCollected.Value
             ? "额外登记簿已拍下，结算会加一点外快。"
             : "记录室还有一本逾期登记簿，可选拍照后再撤。";

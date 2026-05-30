@@ -11,7 +11,7 @@ using UnityEngine.Rendering.Universal;
 public static class ProjectSetup
 {
     static Material _baseMat;
-    [MenuItem("Tools/Accident Squad/Setup All (Run This First!)")]
+    [MenuItem("Tools/Black Commission/Setup All (Run This First!)")]
     static void SetupAll()
     {
         if (UnityEditor.EditorApplication.isPlaying)

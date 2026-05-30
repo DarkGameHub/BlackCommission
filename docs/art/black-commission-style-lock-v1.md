@@ -1,4 +1,4 @@
-# AccidentSquad Style Lock v1
+# Black Commission Style Lock v1
 
 Status: locked direction for MVP and ASV4 asset work
 Working title: **Municipal Debt Noir**
@@ -15,7 +15,7 @@ Research sources:
 
 ## One-Sentence Style
 
-AccidentSquad is a cheap outsourced accident office where failed civic spaces,
+Black Commission is a cheap outsourced commission office where failed civic spaces,
 debt paperwork, sodium-lit dispatch gear, and stamp-red bureaucracy have become
 a survival-horror ritual.
 
@@ -42,7 +42,7 @@ What to learn:
   remain readable.
 - Comedy comes from treating absurd danger like ordinary bad employment.
 
-What AccidentSquad must not copy:
+What Black Commission must not copy:
 
 - no scrap quota loop;
 - no moons/facility identity;
@@ -61,7 +61,7 @@ What to learn:
 - The safe-room-to-mission-to-safe-room rhythm is legible even with simple art.
 - Team comedy is stronger when the objective is absurdly specific.
 
-What AccidentSquad must not copy:
+What Black Commission must not copy:
 
 - no filming/social-media goal;
 - no diving bell identity;
@@ -78,7 +78,7 @@ What to learn:
 - Familiar places become scarier when ordinary layouts stay navigable.
 - Players accept dark spaces when tools and exits remain understandable.
 
-What AccidentSquad must not copy:
+What Black Commission must not copy:
 
 - no ghost-hunting profession;
 - no evidence-board taxonomy;
@@ -94,7 +94,7 @@ What to learn:
 - Mundane office language can carry humor and unease without high asset cost.
 - Repetition, signage, and banal corporate fixtures can be funny and uncanny.
 
-What AccidentSquad must not copy:
+What Black Commission must not copy:
 
 - no narrator structure;
 - no clean office maze;
@@ -110,11 +110,11 @@ What to learn:
   space.
 - Less visual noise can feel more premium than dense random clutter.
 
-What AccidentSquad must not copy:
+What Black Commission must not copy:
 
 - no side-scroller composition;
 - no pure monochrome prestige gloom;
-- no silent art-house tone. AccidentSquad needs comedy and office specificity.
+- no silent art-house tone. Black Commission needs comedy and office specificity.
 
 ## Locked Identity
 
@@ -429,14 +429,14 @@ If a feature fails two or more tests, it is not style-locked.
 
 ## Final Direction Statement
 
-AccidentSquad should feel like a tiny company that should not exist, operating
+Black Commission should feel like a tiny company that should not exist, operating
 from a debt-stained office, sending underpaid workers into failed public spaces
 where paperwork has teeth.
 
 The game is memorable when players can describe it as:
 
 ```text
-That co-op horror game where your broke accident office sends you out in the
+That co-op horror game where your broke commission office sends you out in the
 stamp-slashed civic van to fix absurd public problems before the paperwork eats
 you.
 ```

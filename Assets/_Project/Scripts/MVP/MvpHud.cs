@@ -348,7 +348,7 @@ public class MvpHud : MonoBehaviour
         if (!computerOpen)
         {
             GUILayout.BeginArea(new Rect(18, 18, 320, 74), GUIContent.none, panelStyle);
-            GUILayout.Label("Accident Squad", titleStyle);
+            GUILayout.Label("Black Commission", titleStyle);
             string officeStatus;
             GUIStyle statusStyle = accentStyle;
             if (MvpPendingReward.HasPending)
@@ -726,7 +726,7 @@ public class MvpHud : MonoBehaviour
         }
 
         GUILayout.Label($"天光判断: {MvpMissionClock.GetDaylightLabel(mission.CurrentClockHour)}", labelStyle);
-        GUILayout.Label("准确时间: 回事故车看车载钟，或在事务所购买廉价工时表。", mutedStyle);
+        GUILayout.Label("准确时间: 回委托车看车载钟，或在事务所购买廉价工时表。", mutedStyle);
         if (mission.IsOvertime)
             GUILayout.Label("你感觉已经拖过合同窗口了，返程结算会被扣。", warningStyle);
     }
@@ -859,7 +859,7 @@ public class MvpHud : MonoBehaviour
             case LostItemMissionManager.MissionPhase.Searching:
                 return "目标: 核对记录室登记簿，找到真正盖章作业本。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.ReturnToExit:
-                return "目标: 带着作业本回到校门口的事故车尾，按 E 打开后舱返程。" + paperworkRisk;
+                return "目标: 带着作业本回到校门口的委托车尾，按 E 打开后舱返程。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.Completed:
                 return "目标: 委托完成，返回事务所领取奖励。";
             case LostItemMissionManager.MissionPhase.ReturnedEarly:

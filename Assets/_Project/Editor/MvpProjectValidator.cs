@@ -15,7 +15,7 @@ public static class MvpProjectValidator
     const string TaskAssetPath = "Assets/_Project/Settings/Tasks/MissingHomeworkNotebook.asset";
     const string PlayerPrefabPath = "Assets/_Project/Prefabs/Player/Player.prefab";
 
-    [MenuItem("Tools/Accident Squad/MVP/Validate School MVP")]
+    [MenuItem("Tools/Black Commission/MVP/Validate School MVP")]
     static void ValidateSchoolMvp()
     {
         if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
@@ -46,7 +46,7 @@ public static class MvpProjectValidator
         var task = AssetDatabase.LoadAssetAtPath<OfficeTaskDefinition>(TaskAssetPath);
         if (task == null)
         {
-            Error("缺少任务资产。请运行 Tools > Accident Squad > MVP > Setup School MVP。", ref errors);
+            Error("缺少任务资产。请运行 Tools > Black Commission > MVP > Setup School MVP。", ref errors);
         }
         else
         {

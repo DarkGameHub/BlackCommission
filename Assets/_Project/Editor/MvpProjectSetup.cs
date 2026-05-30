@@ -18,7 +18,7 @@ public static class MvpProjectSetup
 
     static readonly Dictionary<string, Material> MaterialCache = new Dictionary<string, Material>();
 
-    [MenuItem("Tools/Accident Squad/MVP/Setup School MVP")]
+    [MenuItem("Tools/Black Commission/MVP/Setup School MVP")]
     public static void SetupSchoolMvpMenu() => SetupSchoolMvp();
 
     public static void SetupSchoolMvp()
@@ -68,7 +68,7 @@ public static class MvpProjectSetup
         task.title = "找回被遗忘的作业本";
         task.category = MvpTaskCategory.LostItemRecovery;
         task.client = "焦急的家长";
-        task.description = "事故车会停在旧校舍门外。推门进校后找回作业本并安全撤离；记录室里的逾期登记簿可拍照留证，能多拿一点外快。";
+        task.description = "委托车会停在旧校舍门外。推门进校后找回作业本并安全撤离；记录室里的逾期登记簿可拍照留证，能多拿一点外快。";
         task.locationName = "废弃学校";
         task.sceneName = "School_LostItem_01";
         task.recommendedPlayersMin = 1;

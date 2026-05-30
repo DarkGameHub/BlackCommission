@@ -1,15 +1,15 @@
-# AccidentSquad Agent Rules
+# Black Commission Agent Rules
 
 Yan Dai is the PM and final design decision maker.
 
-AccidentSquad is a 1-4 player co-op commission-running game about a nearly bankrupt accident-handling office taking strange outsourced jobs. The current signature loop is:
+Black Commission is a 1-4 player co-op commission-running game about a nearly bankrupt commission office taking strange outsourced jobs. The current signature loop is:
 
 `HQ office -> office computer -> gear/shop -> team boards dispatch van -> in-van transit -> mission site -> objective / partial return choice -> van return -> HQ settlement`.
 
 ## Long-Term Project Rules
 
 - Treat Lethal Company as a production-method reference only: strong repeatable rituals, low-cost readable staging, co-op extraction tension, and darkness with clear navigation. Do not copy its assets, UI, monsters, ship, quota fiction, item list, or map layouts.
-- AccidentSquad's own identity is Municipal Debt Noir: civic teal, dead rubber black, aged paper, sodium amber, restrained dispatch green, and stamp red.
+- Black Commission's own identity is Municipal Debt Noir: civic teal, dead rubber black, aged paper, sodium amber, restrained dispatch green, and stamp red.
 - The memorable pillars are the broke office, the dispatch van ritual, suspicious civic paperwork, partial settlement choices, hostile takeover pressure, and weird local-client jobs.
 - Prioritize playability and logical scale before visual decoration. Furniture, characters, monsters, vehicles, doors, props, and colliders must make physical sense in Unity.
 - The playable HQ is currently runtime-generated in `MvpSceneStyleDirector`; Blender assets are supporting/imported assets unless the runtime flow explicitly uses them.
@@ -38,7 +38,7 @@ Use them explicitly, for example:
 When possible, run:
 
 - `git diff --check`
-- `Tools > Accident Squad > MVP > Validate School MVP`
-- `Tools > Accident Squad > MVP > Run Smoke Test`
+- `Tools > Black Commission > MVP > Validate School MVP`
+- `Tools > Black Commission > MVP > Run Smoke Test`
 
 If Unity is unavailable, state that clearly and run local static checks only.

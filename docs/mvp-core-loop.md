@@ -1,12 +1,12 @@
-# AccidentSquad MVP Core Loop
+# Black Commission MVP Core Loop
 
 ## Status
 
-Code-level MVP slice is implemented. The Unity editor must run `Tools > Accident Squad > MVP > Setup School MVP` once to generate and wire the playable school scene, task asset, office computer, HUD, and Build Settings.
+Code-level MVP slice is implemented. The Unity editor must run `Tools > Black Commission > MVP > Setup School MVP` once to generate and wire the playable school scene, task asset, office computer, HUD, and Build Settings.
 
 ## Core Premise
 
-Players run a nearly bankrupt "accident handling" office in a city where every uncomfortable problem has been outsourced. Parents, schools, companies, landlords, and executives all post jobs they do not want to handle themselves.
+Players run a nearly bankrupt "black commission" office in a city where every uncomfortable problem has been outsourced. Parents, schools, companies, landlords, and executives all post jobs they do not want to handle themselves.
 
 The office starts at level 1: broken furniture, debt notices, a second-hand computer, and almost no clients. The first available category is simple lost-item recovery. The demo job is from a parent who wants the team to recover a child's homework notebook from a school after hours.
 
@@ -42,15 +42,15 @@ flowchart TD
 
     F --> G["寻找作业本 / 可选登记簿"]
     G --> H{"任务中发生什么?"}
-    H -->|找到作业本| I["作业本携带者前往校门事故车"]
+    H -->|找到作业本| I["作业本携带者前往校门委托车"]
     H -->|找到登记簿| H2["拍照留证\n增加外快"]
     H -->|被怪物追击| J["用走位 / 喷雾 / 诱饵 / 回血药求生"]
-    H -->|主动止损| M["事故车提前返程\n部分结算"]
+    H -->|主动止损| M["委托车提前返程\n部分结算"]
     H2 --> G
     J --> G
     H -->|全员倒地| K["任务失败"]
 
-    I --> L["事故车完整返程\n任务成功"]
+    I --> L["委托车完整返程\n任务成功"]
     K --> M["返回事务所"]
     L --> M
     M --> N["办公室电脑领取结算"]
@@ -200,7 +200,7 @@ The current virtual team is:
 
 PM owner: Yan Dai.
 
-Project-specific Codex custom agents live in `.codex/agents/`. Longer-term product direction lives in [AccidentSquad Long-Term Roadmap](accidentsquad-long-term-roadmap.md).
+Project-specific Codex custom agents live in `.codex/agents/`. Longer-term product direction lives in [Black Commission Long-Term Roadmap](black-commission-long-term-roadmap.md).
 
 ## First Implementation Slice
 
@@ -238,7 +238,7 @@ Current script slice:
 
 ## Unity Hookup Checklist
 
-Run `Tools > Accident Squad > MVP > Setup School MVP` after the base project setup. The menu action performs the hookup below:
+Run `Tools > Black Commission > MVP > Setup School MVP` after the base project setup. The menu action performs the hookup below:
 
 1. Creates `Assets/_Project/Settings/Tasks/MissingHomeworkNotebook.asset`.
 2. Adds a new `MVP_OfficeComputer` to `HQ.unity` and assigns the task asset.
@@ -251,7 +251,7 @@ Run `Tools > Accident Squad > MVP > Setup School MVP` after the base project set
 9. Bakes NavMesh for the school scene when Unity's NavMesh builder is available.
 10. Updates Build Settings to `HQ -> School_LostItem_01 -> Mall_B2`.
 
-Then run `Tools > Accident Squad > MVP > Validate School MVP` before Play Mode.
+Then run `Tools > Black Commission > MVP > Validate School MVP` before Play Mode.
 
 MVP single-player should still use host mode. Non-network offline mode is intentionally not the target for the first playable build.
 

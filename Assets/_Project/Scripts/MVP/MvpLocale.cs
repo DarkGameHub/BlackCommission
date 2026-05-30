@@ -14,7 +14,7 @@ public static class MvpLocale
         ["room_code_share"] = new[] { "房间代码 (分享给队友)", "Room Code (share with teammates)" },
         ["room_code_join_hint"] = new[] { "队友输入此代码即可加入", "Teammates enter this code to join" },
         ["hide"] = new[] { "隐藏", "Hide" },
-        ["subtitle"] = new[] { "外包事故处理事务所", "Outsourced Accident Handling Office" },
+        ["subtitle"] = new[] { "外包黑色委托事务所", "Outsourced Commission Office" },
         ["create_office"] = new[] { "创建事务所", "Create Office" },
         ["join_office"] = new[] { "加入事务所", "Join Office" },
         ["create_hint"] = new[] { "创建后邀请队友输入房间代码加入。", "Create and share the room code with teammates." },
@@ -42,7 +42,7 @@ public static class MvpLocale
         // ─── VanTransitOverlay ───
         ["commission"] = new[] { "委托", "Commission" },
         ["mission_location"] = new[] { "任务地点", "Mission Site" },
-        ["van_cabin"] = new[] { "事故车后舱", "Van Rear Cabin" },
+        ["van_cabin"] = new[] { "委托车后舱", "Van Rear Cabin" },
         ["all_aboard"] = new[] { "全员到齐 {0}/{1}", "All aboard {0}/{1}" },
         ["waiting_team"] = new[] { "等待队友... {0}/{1}", "Waiting... {0}/{1}" },
         ["driver_waiting"] = new[] { "司机在前面等着", "Driver waiting up front" },
@@ -81,7 +81,7 @@ public static class MvpLocale
         ["task_accepted"] = new[] { "委托已接受: {0}。采购后去公司车。", "Commission accepted: {0}. Buy gear, then to van." },
         ["computer_connected"] = new[] { "办公室电脑已连接，可接单或采购。", "Computer online. Accept jobs or buy gear." },
         ["office_idle"] = new[] { "事务所待机中。", "Office on standby." },
-        ["terminal_title"] = new[] { "ACCIDENT SQUAD 委托终端", "ACCIDENT SQUAD TERMINAL" },
+        ["terminal_title"] = new[] { "BLACK COMMISSION 委托终端", "BLACK COMMISSION TERMINAL" },
         ["close_computer"] = new[] { "关闭电脑", "Close" },
         ["funds_debt"] = new[] { "资金: {0} G    债务: {1} G", "Funds: {0} G    Debt: {1} G" },
         ["rep_level_xp"] = new[] { "声望: {0}    等级: {1}    经验: {2}/{3}", "Rep: {0}    Level: {1}    XP: {2}/{3}" },
@@ -148,7 +148,7 @@ public static class MvpLocale
         ["downed_all"] = new[] { "已倒地 — 全员倒地", "Downed — All players down" },
 
         // ─── MvpHud: Mission Van ───
-        ["mission_van"] = new[] { "事故车后舱", "Van Rear Cabin" },
+        ["mission_van"] = new[] { "委托车后舱", "Van Rear Cabin" },
         ["close_door"] = new[] { "关门", "Close" },
         ["van_decide_hint"] = new[] { "先决定是否返程；补给柜只是可选物资，不影响关门回事务所。", "Decide whether to return first; locker supplies are optional." },
         ["van_locker"] = new[] { "车载补给柜", "Van Locker" },
@@ -164,7 +164,7 @@ public static class MvpLocale
         // ─── MvpHud: Field Clock ───
         ["wristwatch_time"] = new[] { "工时表: {0}    合同截止: {1}", "Watch: {0}    Deadline: {1}" },
         ["daylight_label"] = new[] { "天光判断: {0}", "Daylight: {0}" },
-        ["no_watch_hint"] = new[] { "准确时间: 回事故车看车载钟，或在事务所购买廉价工时表。", "Check the van clock or buy a wristwatch for exact time." },
+        ["no_watch_hint"] = new[] { "准确时间: 回委托车看车载钟，或在事务所购买廉价工时表。", "Check the van clock or buy a wristwatch for exact time." },
         ["overtime_feeling"] = new[] { "你感觉已经拖过合同窗口了，返程结算会被扣。", "You feel you've gone past the contract window. Penalties apply." },
         ["van_clock"] = new[] { "车载时钟: {0}    标准下班: {1}", "Van clock: {0}    End of shift: {1}" },
         ["remaining_window"] = new[] { "剩余窗口: {0}", "Remaining: {0}" },

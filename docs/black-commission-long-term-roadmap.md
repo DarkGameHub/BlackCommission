@@ -1,10 +1,10 @@
-# AccidentSquad Long-Term Roadmap
+# Black Commission Long-Term Roadmap
 
 This roadmap keeps long-term direction separate from reusable agent roles.
 
 ## North Star
 
-AccidentSquad should feel like a tiny, debt-buried civic contractor that survives by taking increasingly strange outsourced accident jobs. The game can learn from Lethal Company's clarity, ritual, and co-op pressure, but its memory hook must be the rundown office, dispatch van, municipal paperwork, partial settlements, and hostile business pressure.
+Black Commission should feel like a tiny, debt-buried civic contractor that survives by taking increasingly strange outsourced commissions. The game can learn from Lethal Company's clarity, ritual, and co-op pressure, but its memory hook must be the rundown office, dispatch van, municipal paperwork, partial settlements, and hostile business pressure.
 
 ## Pillars
 
@@ -67,4 +67,4 @@ AccidentSquad should feel like a tiny, debt-buried civic contractor that survive
 - Do not let art polish outrun playable logic.
 - Do not add eight job categories before two categories are fun.
 - Do not add complex inventory before the van and hotbar are satisfying.
-- Do not make failure binary when partial settlement is one of AccidentSquad's strongest differentiators.
+- Do not make failure binary when partial settlement is one of Black Commission's strongest differentiators.
