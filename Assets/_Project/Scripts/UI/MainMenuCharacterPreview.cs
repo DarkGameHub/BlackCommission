@@ -19,6 +19,7 @@ public class MainMenuCharacterPreview : MonoBehaviour
     Light keyLight;
     Light backLight;
     int currentIndex = -1;
+    bool usingCharacterModel;
     float yaw;
 
     public RenderTexture Texture => renderTexture;
@@ -64,7 +65,9 @@ public class MainMenuCharacterPreview : MonoBehaviour
         backdrop.name = "Backdrop";
         backdrop.transform.SetParent(stageRoot, false);
         backdrop.transform.localPosition = new Vector3(0f, 1.0f, 2.6f);
-        backdrop.transform.localScale = new Vector3(4f, 3.5f, 1f);
+        // Must cover the camera frustum (~4.7 x 4.1 at this distance) or the uncovered
+        // edges show the near-black clear colour as a border.
+        backdrop.transform.localScale = new Vector3(6.2f, 5.2f, 1f);
         var backdropRenderer = backdrop.GetComponent<Renderer>();
         backdropRenderer.sharedMaterial = MakeMaterial(new Color(0.040f, 0.063f, 0.055f), 0f);
         SetLayer(backdrop, PreviewLayer);
@@ -83,7 +86,9 @@ public class MainMenuCharacterPreview : MonoBehaviour
         keyLight.type = LightType.Directional;
         keyLight.color = new Color(1f, 0.93f, 0.82f);
         keyLight.intensity = 1.05f;
-        keyLight.shadows = LightShadows.Soft;
+        // No shadows in the preview: with only a vertical backdrop (no floor) the
+        // directional shadow projects onto the back card as a misaligned blob.
+        keyLight.shadows = LightShadows.None;
         keyLight.cullingMask = 1 << PreviewLayer;
 
         var backGo = new GameObject("BackLight");
@@ -96,18 +101,18 @@ public class MainMenuCharacterPreview : MonoBehaviour
         backLight.intensity = 0.55f;
         backLight.cullingMask = 1 << PreviewLayer;
 
-        // Worker is ~2.05m tall, feet at local Y=0, helmet top at Y~2.05.
-        // Frame the full body: camera at mid-body height, distance set so a 32° FOV
-        // sees ~2.6m of vertical extent (leaves headroom + foot margin).
+        // Character is ~1.8m tall, feet at local Y=0. Camera at mid-body height; closer
+        // + narrower FOV than before so the body fills more of the frame (bigger read).
         var camGo = new GameObject("PreviewCamera");
         camGo.transform.SetParent(stageRoot, false);
-        camGo.transform.localPosition = new Vector3(0f, 1.0f, -4.6f);
+        camGo.transform.localPosition = new Vector3(0f, 0.95f, -3.9f);
         camGo.transform.localRotation = Quaternion.Euler(2f, 0f, 0f);
         previewCamera = camGo.AddComponent<Camera>();
         previewCamera.clearFlags = CameraClearFlags.SolidColor;
-        previewCamera.backgroundColor = new Color(0.020f, 0.028f, 0.024f, 1f);
+        // Match the backdrop wash so any sliver outside it doesn't read as a black border.
+        previewCamera.backgroundColor = new Color(0.040f, 0.063f, 0.055f, 1f);
         previewCamera.orthographic = false;
-        previewCamera.fieldOfView = 32f;
+        previewCamera.fieldOfView = 28f;
         previewCamera.nearClipPlane = 0.1f;
         previewCamera.farClipPlane = 14f;
         previewCamera.cullingMask = 1 << PreviewLayer;
@@ -118,15 +123,27 @@ public class MainMenuCharacterPreview : MonoBehaviour
 
     void InstantiateWorker()
     {
-        var prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_WorkerCheapOutsourcedUniform");
-        if (prefab == null)
+        // Prefer the new generated character mesh; fall back to the old worker, then a capsule.
+        if (TryInstantiateModel(PlayerCharacterModels.Get(PlayerCharacterPalette.SavedIndex), "PreviewCharacter"))
         {
-            CreateFallbackCapsule();
+            usingCharacterModel = true;
+            TintPreviewModel(PlayerCharacterModels.TintFor(PlayerCharacterPalette.SavedIndex));
             return;
         }
+        if (TryInstantiateModel("GeneratedArt/ASV4_WorkerCheapOutsourcedUniform", "PreviewWorker"))
+            return;
+
+        CreateFallbackCapsule();
+    }
+
+    bool TryInstantiateModel(string resourceName, string instanceName)
+    {
+        if (string.IsNullOrEmpty(resourceName)) return false;
+        var prefab = Resources.Load<GameObject>(resourceName);
+        if (prefab == null) return false;
 
         modelInstance = Instantiate(prefab, modelMount);
-        modelInstance.name = "PreviewWorker";
+        modelInstance.name = instanceName;
         modelInstance.transform.localPosition = Vector3.zero;
         modelInstance.transform.localRotation = Quaternion.identity;
         modelInstance.transform.localScale = Vector3.one;
@@ -142,6 +159,7 @@ public class MainMenuCharacterPreview : MonoBehaviour
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             renderer.receiveShadows = true;
         }
+        return true;
     }
 
     void CreateFallbackCapsule()
@@ -160,6 +178,15 @@ public class MainMenuCharacterPreview : MonoBehaviour
         if (index == currentIndex) return;
         currentIndex = index;
 
+        // One shared mesh, six colour-ways: reuse the model and multiply by the slot tint.
+        if (usingCharacterModel)
+        {
+            if (modelInstance == null)
+                TryInstantiateModel(PlayerCharacterModels.Get(index), "PreviewCharacter");
+            TintPreviewModel(PlayerCharacterModels.TintFor(index));
+            return;
+        }
+
         var colors = PlayerCharacterPalette.Get(index);
         foreach (var renderer in modelInstance.GetComponentsInChildren<Renderer>())
         {
@@ -174,6 +201,17 @@ public class MainMenuCharacterPreview : MonoBehaviour
                 renderer.material.color = new Color(0.067f, 0.078f, 0.075f);
             else if (n.Contains("skin") || n.Contains("head") || n.Contains("ear") || n.Contains("jaw") || n.Contains("neck") || n.Contains("nose"))
                 renderer.material.color = PlayerCharacterPalette.Skin;
+        }
+    }
+
+    void TintPreviewModel(Color tint)
+    {
+        if (modelInstance == null) return;
+        foreach (var renderer in modelInstance.GetComponentsInChildren<Renderer>())
+        {
+            Material mat = renderer.material;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", tint);
+            else mat.color = tint;
         }
     }
 

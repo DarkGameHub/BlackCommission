@@ -185,6 +185,11 @@ public class VanTransitOverlay : MonoBehaviour
         foreach (Collider c in interiorRoot.GetComponentsInChildren<Collider>())
             c.enabled = false;
 
+        // The interior lives 80m above the world, away from every scene light, and the
+        // FBX/procedural cabin uses dark materials — without its own lights the boarding
+        // and transit views render as a black screen. Light the cabin so it reads.
+        AddTransitInteriorLights();
+
         SetupTransitCamera();
         DisablePlayerCamera();
 
@@ -299,6 +304,31 @@ public class VanTransitOverlay : MonoBehaviour
         return mat;
     }
 
+    void AddTransitInteriorLights()
+    {
+        if (interiorRoot == null) return;
+
+        // Main warm cabin dome light near the ceiling above the seats.
+        var domeGo = new GameObject("TransitCabinLight");
+        domeGo.transform.SetParent(interiorRoot.transform, false);
+        domeGo.transform.localPosition = new Vector3(0.45f, 1.30f, 0f);
+        var dome = domeGo.AddComponent<Light>();
+        dome.type = LightType.Point;
+        dome.color = new Color(1.0f, 0.92f, 0.78f);
+        dome.intensity = 3.2f;
+        dome.range = 4.5f;
+
+        // Fill light up by the driver/cab so the front of the cabin isn't black.
+        var fillGo = new GameObject("TransitCabinFillLight");
+        fillGo.transform.SetParent(interiorRoot.transform, false);
+        fillGo.transform.localPosition = new Vector3(-1.0f, 1.05f, 0f);
+        var fill = fillGo.AddComponent<Light>();
+        fill.type = LightType.Point;
+        fill.color = new Color(1.0f, 0.88f, 0.72f);
+        fill.intensity = 2.0f;
+        fill.range = 3.5f;
+    }
+
     void SetupTransitCamera()
     {
         var camGo = new GameObject("TransitCamera");
@@ -311,7 +341,9 @@ public class VanTransitOverlay : MonoBehaviour
         transitCamera.nearClipPlane = 0.05f;
         transitCamera.farClipPlane = 20f;
         transitCamera.clearFlags = CameraClearFlags.SolidColor;
-        transitCamera.backgroundColor = new Color(0.014f, 0.016f, 0.015f);
+        // Dim warm cabin-dark rather than pure black, so a slightly off frame never
+        // reads as a "black screen" while the next scene streams in.
+        transitCamera.backgroundColor = new Color(0.05f, 0.045f, 0.04f);
         transitCamera.depth = 100f;
 
         camGo.AddComponent<AudioListener>();
@@ -360,11 +392,28 @@ public class VanTransitOverlay : MonoBehaviour
         if (interiorRoot == null) return;
         if (seatIndex < 0 || seatIndex >= SeatPositions.Length) return;
 
-        var colors = GetCharacterColorsForSeat(seatIndex);
+        int charIndex = GetCharacterIndexForSeat(seatIndex);
+        var colors = PlayerCharacterPalette.Get(charIndex);
 
-        GameObject workerPrefab = Resources.Load<GameObject>("GeneratedArt/ASV4_WorkerCheapOutsourcedUniform");
+        // Prefer the new textured character mesh (per seat's chosen slot); fall back to
+        // the old worker, then primitives.
+        GameObject characterPrefab = Resources.Load<GameObject>(PlayerCharacterModels.Get(charIndex));
+        GameObject workerPrefab = characterPrefab == null
+            ? Resources.Load<GameObject>("GeneratedArt/ASV4_WorkerCheapOutsourcedUniform")
+            : null;
         GameObject model;
-        if (workerPrefab != null)
+        if (characterPrefab != null)
+        {
+            model = Instantiate(characterPrefab, interiorRoot.transform);
+            Color tint = PlayerCharacterModels.TintFor(charIndex);
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>())
+            {
+                Material mat = r.material;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", tint);
+                else mat.color = tint;
+            }
+        }
+        else if (workerPrefab != null)
         {
             model = Instantiate(workerPrefab, interiorRoot.transform);
             ApplyColorsToModel(model, colors);
@@ -388,6 +437,27 @@ public class VanTransitOverlay : MonoBehaviour
             Destroy(no);
 
         cosmeticPlayers.Add(model);
+    }
+
+    static int GetCharacterIndexForSeat(int seatIndex)
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening)
+            return seatIndex % PlayerCharacterPalette.Count;
+
+        int playerIndex = 0;
+        foreach (ulong clientId in network.ConnectedClientsIds)
+        {
+            if (playerIndex == seatIndex && network.ConnectedClients.TryGetValue(clientId, out var client))
+            {
+                if (client.PlayerObject != null && client.PlayerObject.TryGetComponent<PlayerController>(out var ctrl))
+                    return ctrl.CharacterIndex.Value;
+                break;
+            }
+            playerIndex++;
+        }
+
+        return seatIndex % PlayerCharacterPalette.Count;
     }
 
     static PlayerCharacterPalette.CharacterColors GetCharacterColorsForSeat(int seatIndex)

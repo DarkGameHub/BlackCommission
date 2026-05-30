@@ -19,7 +19,7 @@ public class OfficeDepartureVan : MonoBehaviour, IInteractable
             if (MvpPendingReward.HasPending) return "先去电脑领取结算";
             if (VanTransitOverlay.IsActive) return "司机已经发车";
             if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return "先创建主机再出车";
-            if (!computer.HasSelectedDemoTask) return "先在电脑锁定委托";
+            if (!computer.HasSelectedDemoTask) return "先去绿光 COMPUTER 终端锁定委托";
             GetBoardingCounts(out int boarded, out int total);
             if (!NetworkManager.Singleton.IsHost) return $"上车等候 {boarded}/{total}";
             if (total > 0 && boarded < total)

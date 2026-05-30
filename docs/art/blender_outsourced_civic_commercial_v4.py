@@ -66,30 +66,34 @@ def material(name: str, color: tuple[float, float, float, float], emission: floa
 
 def palette() -> dict[str, bpy.types.Material]:
     return {
-        "wall": material("ASV4_civic_teal_wall", (0.184, 0.310, 0.294, 1)),
-        "wall_shadow": material("ASV4_deep_civic_teal_shadow", (0.090, 0.141, 0.133, 1)),
-        "floor": material("ASV4_dead_rubber_civic_floor", (0.137, 0.157, 0.145, 1)),
-        "floor_line": material("ASV4_dead_rubber_grout", (0.067, 0.078, 0.075, 1)),
-        "paper": material("ASV4_aged_paper", (0.839, 0.784, 0.608, 1)),
-        "paper_dark": material("ASV4_old_notice_back", (0.525, 0.478, 0.345, 1)),
-        "cardboard": material("ASV4_cheap_cardboard", (0.451, 0.314, 0.165, 1)),
-        "wood": material("ASV4_second_hand_wood", (0.290, 0.192, 0.098, 1)),
-        "metal": material("ASV4_dead_rubber_metal", (0.067, 0.078, 0.075, 1)),
-        "metal_worn": material("ASV4_worn_civic_teal_metal", (0.125, 0.208, 0.196, 1)),
-        "black": material("ASV4_dead_rubber_black", (0.067, 0.078, 0.075, 1)),
-        "terminal": material("ASV4_dispatch_green", (0.482, 0.812, 0.541, 1), 0.24),
-        "exit": material("ASV4_muted_dispatch_exit_green", (0.133, 0.349, 0.227, 1), 0.18),
-        "debt": material("ASV4_stamp_red_debt", (0.761, 0.227, 0.169, 1), 0.02),
+        "wall": material("ASV4_old_concrete_wall", (0.430, 0.398, 0.325, 1)),
+        "wall_shadow": material("ASV4_deep_green_black_wall", (0.095, 0.135, 0.112, 1)),
+        "ceiling_tile": material("ASV4_smoke_stained_ceiling_tile", (0.220, 0.212, 0.180, 1)),
+        "ceiling_shadow": material("ASV4_tar_black_ceiling_grid", (0.050, 0.057, 0.052, 1)),
+        "floor": material("ASV4_oil_stained_concrete_floor", (0.285, 0.275, 0.240, 1)),
+        "floor_line": material("ASV4_dark_concrete_grout", (0.080, 0.082, 0.072, 1)),
+        "paper": material("ASV4_aged_yellowed_paper", (0.820, 0.760, 0.565, 1)),
+        "paper_dark": material("ASV4_old_notice_brown_back", (0.455, 0.395, 0.265, 1)),
+        "cardboard": material("ASV4_cheap_cardboard", (0.500, 0.345, 0.170, 1)),
+        "wood": material("ASV4_scratched_second_hand_wood", (0.350, 0.220, 0.105, 1)),
+        "metal": material("ASV4_blackened_shop_metal", (0.055, 0.063, 0.060, 1)),
+        "metal_worn": material("ASV4_worn_gunmetal_green", (0.155, 0.180, 0.162, 1)),
+        "black": material("ASV4_dead_rubber_black", (0.045, 0.050, 0.048, 1)),
+        "terminal": material("ASV4_dispatch_terminal_green", (0.570, 0.875, 0.380, 1), 0.32),
+        "exit": material("ASV4_muted_dispatch_exit_green", (0.180, 0.420, 0.235, 1), 0.22),
+        "debt": material("ASV4_rust_red_debt_stamp", (0.600, 0.170, 0.125, 1), 0.02),
         "eye": material("ASV4_monster_eye_red", (1.0, 0.025, 0.0, 1), 1.4),
         "cyan": material("ASV4_sickly_fluorescent_bone", (0.790, 0.761, 0.667, 1), 0.22),
         "skin": material("ASV4_worker_skin", (0.56, 0.40, 0.30, 1)),
+        "mask": material("ASV4_gas_mask_rubber", (0.082, 0.090, 0.082, 1)),
         "uniform": material("ASV4_worker_tired_fabric", (0.173, 0.196, 0.169, 1)),
         "vest": material("ASV4_sodium_safety_vest", (0.851, 0.604, 0.192, 1)),
         "helmet": material("ASV4_dirty_bone_helmet", (0.788, 0.761, 0.667, 1)),
-        "glass": material("ASV4_dirty_green_black_glass", (0.110, 0.235, 0.243, 1)),
-        "van_body": material("ASV4_civic_fleet_teal_van_body", (0.184, 0.310, 0.294, 1)),
-        "van_shadow": material("ASV4_van_dead_rubber_lower_panel", (0.137, 0.157, 0.145, 1)),
-        "amber": material("ASV4_old_sodium_amber_light", (0.851, 0.604, 0.192, 1), 0.32),
+        "glass": material("ASV4_dirty_green_black_glass", (0.100, 0.180, 0.170, 1)),
+        "van_body": material("ASV4_dirty_ivory_service_van", (0.620, 0.585, 0.500, 1)),
+        "van_shadow": material("ASV4_van_dead_rubber_lower_panel", (0.150, 0.150, 0.130, 1)),
+        "amber": material("ASV4_old_sodium_amber_light", (0.900, 0.635, 0.190, 1), 0.38),
+        "incandescent": material("ASV4_warm_incandescent_panel", (1.0, 0.910, 0.720, 1), 1.25),
     }
 
 
@@ -205,15 +209,39 @@ def prism(name: str, points: list[tuple[float, float]], half_width: float, mat, 
 
 def build_hq(m) -> bpy.types.Collection:
     coll = collection("ASV4_HQ_Rundown_Commission_Office")
-    tile_floor("hq_office", (-1.45, 0.55, -0.035), 3.25, 2.65, m["floor"], m["floor_line"], coll)
-    tile_floor("hq_garage", (2.55, -1.85, -0.035), 2.35, 1.85, m["wall_shadow"], m["floor_line"], coll)
-    cube("hq_back_office_wall", (-1.45, 3.22, 1.36), (3.25, 0.08, 1.36), m["wall"], coll, edge=0.008)
-    cube("hq_left_office_wall", (-4.72, 0.55, 1.36), (0.08, 2.65, 1.36), m["wall_shadow"], coll, edge=0.008)
-    cube("hq_garage_right_wall", (4.92, -1.80, 1.36), (0.08, 1.90, 1.36), m["wall_shadow"], coll, edge=0.008)
-    cube("hq_back_garage_wall", (2.55, -0.05, 1.36), (2.35, 0.07, 1.36), m["wall"], coll, edge=0.008)
-    cube("hq_open_garage_header", (2.55, -3.72, 2.42), (1.90, 0.07, 0.22), m["metal"], coll, edge=0.004)
-    cube("hq_ceiling_office", (-1.45, 0.55, 2.72), (3.22, 2.62, 0.035), m["black"], coll, edge=0.002)
-    cube("hq_ceiling_garage", (2.55, -1.85, 2.86), (2.30, 1.82, 0.035), m["black"], coll, edge=0.002)
+    # Top-down plan matches the art reference: left office, right garage,
+    # shared rectangular footprint, bottom office entry and bottom garage door.
+    tile_floor("hq_office", (-2.55, 0.00, -0.035), 4.90, 6.40, m["floor"], m["floor_line"], coll)
+    tile_floor("hq_garage", (2.75, 0.00, -0.035), 4.90, 6.40, m["wall_shadow"], m["floor_line"], coll)
+    cube("hq_back_office_wall", (-2.55, 3.25, 1.35), (4.90, 0.08, 2.76), m["wall"], coll, edge=0.008)
+    cube("hq_back_garage_wall", (2.75, 3.25, 1.35), (4.90, 0.08, 2.76), m["wall"], coll, edge=0.008)
+    cube("hq_left_office_wall", (-5.05, 0.00, 1.35), (0.08, 6.48, 2.76), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_garage_outer_right_wall", (5.25, 0.00, 1.35), (0.08, 6.48, 2.76), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_front_office_wall_left", (-4.10, -3.25, 1.35), (1.85, 0.08, 2.76), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_front_office_wall_right", (-1.15, -3.25, 1.35), (1.20, 0.08, 2.76), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_front_garage_wall_left", (0.85, -3.25, 1.35), (1.20, 0.08, 2.76), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_front_garage_wall_right", (4.65, -3.25, 1.35), (1.20, 0.08, 2.76), m["wall_shadow"], coll, edge=0.008)
+    # Central divider: a real wall between office and garage, with a bottom
+    # passage so the route can turn from the office into the van bay.
+    cube("hq_office_garage_divider_wall", (0.05, 0.90, 1.35), (0.10, 4.70, 2.76), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_office_garage_divider_stub", (0.05, -2.75, 1.35), (0.10, 0.90, 2.76), m["wall_shadow"], coll, edge=0.008)
+    cube("hq_open_garage_header", (2.75, -3.25, 2.42), (2.45, 0.07, 0.22), m["metal"], coll, edge=0.004)
+    # Roof/ceiling structure sits directly on the wall tops. It is made from
+    # tiles and perimeter bands rather than one solid lid, so the top-down plan
+    # stays readable while the first-person view has an actual ceiling.
+    cube("hq_office_wall_cap_back", (-2.55, 3.25, 2.78), (4.95, 0.12, 0.10), m["ceiling_shadow"], coll, edge=0.002)
+    cube("hq_garage_wall_cap_back", (2.75, 3.25, 2.78), (4.95, 0.12, 0.10), m["ceiling_shadow"], coll, edge=0.002)
+    cube("hq_office_wall_cap_left", (-5.05, 0.00, 2.78), (0.12, 6.50, 0.10), m["ceiling_shadow"], coll, edge=0.002)
+    cube("hq_garage_wall_cap_right", (5.25, 0.00, 2.78), (0.12, 6.50, 0.10), m["ceiling_shadow"], coll, edge=0.002)
+    cube("hq_divider_wall_cap", (0.05, 0.90, 2.78), (0.14, 4.72, 0.10), m["ceiling_shadow"], coll, edge=0.002)
+    cube("hq_office_front_ceiling_band", (-2.60, -3.25, 2.78), (4.95, 0.12, 0.10), m["ceiling_shadow"], coll, edge=0.002)
+    cube("hq_garage_front_ceiling_band", (2.75, -3.25, 2.78), (4.95, 0.12, 0.10), m["ceiling_shadow"], coll, edge=0.002)
+    for ix, x in enumerate((-4.10, -2.55, -1.00)):
+        for iy, y in enumerate((-1.75, 0.00, 1.75)):
+            cube(f"hq_office_ceiling_tile_{ix}_{iy}", (x, y, 2.73), (1.26, 1.18, 0.035), m["ceiling_tile"], coll, edge=0.002)
+    for ix, x in enumerate((1.45, 2.75, 4.05)):
+        for iy, y in enumerate((-1.75, 0.00, 1.75)):
+            cube(f"hq_garage_ceiling_tile_{ix}_{iy}", (x, y, 2.73), (1.06, 1.18, 0.035), m["ceiling_tile"], coll, edge=0.002)
 
     # Dispatch computer area — items stack on a proper office-height desk so nothing floats.
     # Desk: human-scale height (0.74m top), centered at z = 0.37.
@@ -238,6 +266,9 @@ def build_hq(m) -> bpy.types.Collection:
     txt("hq_terminal_readout_2", "READY", (-1.55, 1.686, 0.990), (math.radians(90), 0, 0), 0.058, m["black"], coll)
     cube("hq_crt_indicator", (-1.30, 1.690, 0.825), (0.12, 0.014, 0.024), m["terminal"], coll, edge=0)
     cube("hq_crt_power_button", (-1.78, 1.690, 0.825), (0.052, 0.014, 0.052), m["debt"], coll, edge=0.002)
+    cube("hq_computer_beacon_column", (-1.55, 1.54, 1.88), (0.08, 0.08, 0.70), m["terminal"], coll, edge=0.002)
+    cube("hq_computer_beacon_cap", (-1.55, 1.54, 2.42), (0.42, 0.10, 0.06), m["terminal"], coll, edge=0.003)
+    txt("hq_computer_label", "COMPUTER", (-1.55, 1.50, 2.26), (math.radians(90), 0, 0), 0.115, m["black"], coll)
     for i in range(4):
         cube(f"hq_crt_side_vent_{i}", (-1.92, 1.96, 0.94 + i * 0.07), (0.012, 0.20, 0.014), m["black"], coll, edge=0)
     # Receipt printer on the desk corner — touches the top.
@@ -251,6 +282,17 @@ def build_hq(m) -> bpy.types.Collection:
     cube("hq_dispatch_mat_front_tape", (-1.55, 0.77, 0.024), (0.88, 0.035, 0.006), m["terminal"], coll, edge=0)
     cube("hq_dispatch_mat_left_wear", (-1.86, 1.08, 0.026), (0.18, 0.12, 0.005), m["black"], coll, rot=(0, 0, math.radians(-8)), edge=0)
     cube("hq_dispatch_mat_right_wear", (-1.30, 1.02, 0.026), (0.16, 0.11, 0.005), m["black"], coll, rot=(0, 0, math.radians(6)), edge=0)
+
+    # Player-readable floor plan: spawn box, green computer route, yellow van route.
+    cube("hq_player_spawn_box", (-2.55, -2.45, 0.032), (0.86, 0.58, 0.012), m["amber"], coll, edge=0.001)
+    cube("hq_player_spawn_box_inner", (-2.55, -2.45, 0.045), (0.64, 0.38, 0.010), m["floor"], coll, edge=0.001)
+    txt("hq_spawn_label", "START", (-2.55, -2.45, 0.058), (0, 0, 0), 0.17, m["paper"], coll)
+    txt("hq_use_computer_floor_text", "USE COMPUTER", (-2.05, -1.35, 0.058), (0, 0, math.radians(-8)), 0.16, m["terminal"], coll)
+    cube("hq_green_route_spawn_to_computer_a", (-2.55, -1.85, 0.050), (0.06, 0.34, 0.010), m["terminal"], coll, edge=0)
+    cube("hq_green_route_spawn_to_computer_b", (-2.25, -1.15, 0.050), (0.06, 0.42, 0.010), m["terminal"], coll, rot=(0, 0, math.radians(-28)), edge=0)
+    cube("hq_green_route_spawn_to_computer_c", (-1.82, -0.45, 0.050), (0.06, 0.42, 0.010), m["terminal"], coll, rot=(0, 0, math.radians(-12)), edge=0)
+    cube("hq_green_route_arrow_head_l", (-1.92, 0.12, 0.052), (0.26, 0.05, 0.010), m["terminal"], coll, rot=(0, 0, math.radians(35)), edge=0)
+    cube("hq_green_route_arrow_head_r", (-1.66, 0.12, 0.052), (0.26, 0.05, 0.010), m["terminal"], coll, rot=(0, 0, math.radians(-35)), edge=0)
 
     # Company identity wall, no random poster clutter.
     cube("hq_company_panel", (-0.28, 3.16, 1.72), (0.82, 0.026, 0.46), m["black"], coll, edge=0.003)
@@ -312,72 +354,120 @@ def build_hq(m) -> bpy.types.Collection:
     txt("hq_shelf_label_text", "OUTSOURCED GEAR", (shelf_cx, shelf_cy - 0.215, 1.80), (math.radians(90), 0, 0), 0.052, m["black"], coll)
 
     # Small waiting corner: grounded, secondary, not blocking routes.
-    cube("hq_sofa_base", (-3.25, 0.05, 0.20), (0.86, 0.32, 0.26), m["uniform"], coll, edge=0.006)
-    cube("hq_sofa_back", (-3.25, 0.30, 0.50), (0.86, 0.07, 0.54), m["uniform"], coll, edge=0.006)
+    cube("hq_sofa_base", (-4.00, -1.75, 0.20), (0.95, 0.38, 0.26), m["uniform"], coll, edge=0.006)
+    cube("hq_sofa_back", (-4.00, -1.48, 0.50), (0.95, 0.07, 0.54), m["uniform"], coll, edge=0.006)
+    cube("hq_waiting_table", (-3.05, -1.88, 0.24), (0.48, 0.30, 0.08), m["wood"], coll, edge=0.004)
+    cube("hq_waiting_table_leg_l", (-3.36, -2.08, 0.13), (0.04, 0.04, 0.24), m["wood"], coll, edge=0.002)
+    cube("hq_waiting_table_leg_r", (-2.74, -2.08, 0.13), (0.04, 0.04, 0.24), m["wood"], coll, edge=0.002)
+    cube("hq_waiting_newspaper", (-3.05, -1.88, 0.292), (0.25, 0.16, 0.006), m["paper"], coll, rot=(0, 0, math.radians(-8)), edge=0)
     cube("hq_filing_cabinet", (-0.05, 2.55, 0.56), (0.38, 0.26, 0.98), m["metal_worn"], coll, edge=0.005)
     for i in range(3):
         cube(f"hq_filing_cabinet_handle_{i}", (-0.05, 2.405, 0.86 - i * 0.22), (0.22, 0.010, 0.022), m["paper_dark"], coll, edge=0)
 
-    # Dispatch route: computer -> shelf -> open garage -> van.
+    # Dispatch route: computer -> office passage -> garage bay -> van door.
     cube("hq_route_from_computer", (-1.58, 1.15, 0.018), (0.12, 0.85, 0.010), m["terminal"], coll, edge=0)
     cube("hq_route_to_shelf", (-2.38, 1.15, 0.020), (0.78, 0.10, 0.010), m["terminal"], coll, edge=0)
-    cube("hq_route_to_garage", (0.92, -0.80, 0.022), (2.20, 0.10, 0.010), m["terminal"], coll, rot=(0, 0, math.radians(-18)), edge=0)
-    cube("hq_route_van_lane", (2.58, -1.30, 0.024), (0.16, 1.35, 0.010), m["terminal"], coll, edge=0)
-    cube("hq_van_boarding_pad", (2.58, -0.64, 0.030), (1.85, 0.34, 0.012), m["terminal"], coll, edge=0.001)
+    cube("hq_route_to_garage", (-0.45, -2.30, 0.022), (1.35, 0.10, 0.010), m["amber"], coll, rot=(0, 0, math.radians(-8)), edge=0)
+    cube("hq_route_van_lane", (2.75, -1.25, 0.024), (0.16, 2.20, 0.010), m["amber"], coll, edge=0)
+    cube("hq_van_boarding_pad", (2.75, -1.35, 0.030), (1.55, 0.42, 0.012), m["terminal"], coll, edge=0.001)
+    for i in range(7):
+        cube(f"hq_yellow_route_dash_{i}", (-0.55 + i * 0.55, -2.35 + i * 0.05, 0.056), (0.24, 0.030, 0.010),
+             m["amber"], coll, rot=(0, 0, math.radians(8)), edge=0)
+    for i in range(9):
+        cube(f"hq_garage_lane_mark_l_{i}", (1.35, -2.80 + i * 0.58, 0.054), (0.045, 0.26, 0.010), m["amber"], coll, edge=0)
+        cube(f"hq_garage_lane_mark_r_{i}", (4.15, -2.80 + i * 0.58, 0.054), (0.045, 0.26, 0.010), m["amber"], coll, edge=0)
 
-    # Low garage edge treatment: not a wall, just clear bay protection outside the walking route.
-    cube("hq_garage_left_floor_curb", (0.32, -2.42, 0.075), (0.10, 1.62, 0.09), m["black"], coll, edge=0.002)
-    cube("hq_garage_left_guard_rail", (0.32, -2.42, 0.72), (0.08, 1.62, 0.08), m["metal"], coll, edge=0.003)
-    for i, yy in enumerate((-3.05, -2.42, -1.79)):
-        cube(f"hq_garage_left_guard_post_{i}", (0.32, yy, 0.42), (0.10, 0.10, 0.72), m["metal"], coll, edge=0.003)
-    cube("hq_garage_van_floor_stop", (2.58, -1.08, 0.070), (2.10, 0.10, 0.08), m["black"], coll, edge=0.002)
+    # Bay safety curb and wheel stop, kept low so the floor plan remains readable.
+    cube("hq_garage_left_floor_curb", (0.72, -1.20, 0.075), (0.10, 3.10, 0.09), m["black"], coll, edge=0.002)
+    cube("hq_garage_left_guard_rail", (0.72, -1.20, 0.72), (0.08, 3.10, 0.08), m["metal"], coll, edge=0.003)
+    for i, yy in enumerate((-2.65, -1.55, -0.45, 0.65)):
+        cube(f"hq_garage_left_guard_post_{i}", (0.72, yy, 0.42), (0.10, 0.10, 0.72), m["metal"], coll, edge=0.003)
+    cube("hq_garage_van_floor_stop", (2.75, -2.32, 0.070), (1.80, 0.10, 0.08), m["black"], coll, edge=0.002)
 
     # Garage is open enough to drive through, but a proper iron gate (vertical bars)
     # is partially raised — visible from inside as a clear "this is a gated bay" cue.
     # Header beam + lintel at the top of the opening.
-    cube("hq_garage_gate_header", (2.58, -3.72, 2.72), (1.96, 0.18, 0.16), m["metal"], coll, edge=0.004)
-    cube("hq_garage_gate_header_band", (2.58, -3.65, 2.62), (1.94, 0.020, 0.040), m["debt"], coll, edge=0)
-    txt("hq_garage_gate_header_text", "BAY 01", (2.58, -3.64, 2.62), (math.radians(90), 0, 0), 0.10, m["paper"], coll)
+    cube("hq_garage_gate_header", (2.75, -3.30, 2.72), (2.55, 0.18, 0.16), m["metal"], coll, edge=0.004)
+    cube("hq_garage_gate_header_band", (2.75, -3.23, 2.62), (2.50, 0.020, 0.040), m["debt"], coll, edge=0)
+    txt("hq_garage_gate_header_text", "BAY 01", (2.75, -3.22, 2.62), (math.radians(90), 0, 0), 0.10, m["paper"], coll)
     # Side jambs framing the opening.
-    cube("hq_garage_gate_jamb_l", (1.46, -3.72, 1.30), (0.16, 0.22, 2.60), m["metal"], coll, edge=0.005)
-    cube("hq_garage_gate_jamb_r", (3.70, -3.72, 1.30), (0.16, 0.22, 2.60), m["metal"], coll, edge=0.005)
+    cube("hq_garage_gate_jamb_l", (1.35, -3.30, 1.30), (0.16, 0.22, 2.60), m["metal"], coll, edge=0.005)
+    cube("hq_garage_gate_jamb_r", (4.15, -3.30, 1.30), (0.16, 0.22, 2.60), m["metal"], coll, edge=0.005)
     # Iron gate — vertical bars, partially raised (bars hang down from header to mid-height).
     bar_top_z = 2.62
     bar_bot_z = 1.55  # gate is half-raised, so bars hang from header down to ~chest height
     bar_z_center = (bar_top_z + bar_bot_z) * 0.5
     bar_height = bar_top_z - bar_bot_z
     for i in range(11):
-        bx = 1.62 + i * 0.20  # 11 bars across the ~2m opening
-        cyl(f"hq_garage_gate_bar_{i}", (bx, -3.72, bar_z_center), 0.022, bar_height, m["metal_worn"], coll, vertices=6, edge=0.001)
+        bx = 1.55 + i * 0.24
+        cyl(f"hq_garage_gate_bar_{i}", (bx, -3.30, bar_z_center), 0.022, bar_height, m["metal_worn"], coll, vertices=6, edge=0.001)
     # Horizontal rails on the gate (top and bottom of the lowered section).
-    cube("hq_garage_gate_rail_top", (2.58, -3.72, bar_top_z - 0.02), (1.92, 0.060, 0.045), m["metal_worn"], coll, edge=0.002)
-    cube("hq_garage_gate_rail_bot", (2.58, -3.72, bar_bot_z + 0.02), (1.92, 0.060, 0.060), m["metal_worn"], coll, edge=0.002)
+    cube("hq_garage_gate_rail_top", (2.75, -3.30, bar_top_z - 0.02), (2.55, 0.060, 0.045), m["metal_worn"], coll, edge=0.002)
+    cube("hq_garage_gate_rail_bot", (2.75, -3.30, bar_bot_z + 0.02), (2.55, 0.060, 0.060), m["metal_worn"], coll, edge=0.002)
     # Padlock hanging from the bottom-left bar.
-    cube("hq_garage_gate_lock", (1.62, -3.72, bar_bot_z - 0.05), (0.055, 0.090, 0.075), m["amber"], coll, edge=0.002)
-    cyl("hq_garage_gate_lock_loop", (1.62, -3.72, bar_bot_z + 0.02), 0.018, 0.040, m["metal"], coll, vertices=6, edge=0)
+    cube("hq_garage_gate_lock", (1.55, -3.30, bar_bot_z - 0.05), (0.055, 0.090, 0.075), m["amber"], coll, edge=0.002)
+    cyl("hq_garage_gate_lock_loop", (1.55, -3.30, bar_bot_z + 0.02), 0.018, 0.040, m["metal"], coll, vertices=6, edge=0)
     # Warning placard on the right jamb.
-    cube("hq_garage_gate_warning_plate", (3.62, -3.62, 1.45), (0.22, 0.014, 0.16), m["debt"], coll, edge=0.002)
-    txt("hq_garage_gate_warning_text", "GATE\nALARM", (3.62, -3.61, 1.45), (math.radians(90), 0, 0), 0.038, m["paper"], coll)
+    cube("hq_garage_gate_warning_plate", (4.05, -3.20, 1.45), (0.22, 0.014, 0.16), m["debt"], coll, edge=0.002)
+    txt("hq_garage_gate_warning_text", "GATE\nALARM", (4.05, -3.19, 1.45), (math.radians(90), 0, 0), 0.038, m["paper"], coll)
     # Ground threshold (still amber for readability), and reinforced black scuff plate.
-    cube("hq_garage_threshold", (2.58, -3.50, 0.040), (1.90, 0.15, 0.030), m["amber"], coll, edge=0.001)
-    cube("hq_garage_scuff_plate", (2.58, -3.70, 0.018), (1.90, 0.10, 0.012), m["black"], coll, edge=0)
+    cube("hq_garage_threshold", (2.75, -3.08, 0.040), (2.55, 0.15, 0.030), m["amber"], coll, edge=0.001)
+    cube("hq_garage_scuff_plate", (2.75, -3.28, 0.018), (2.55, 0.10, 0.012), m["black"], coll, edge=0)
+    cube("hq_garage_rolled_door", (2.75, -3.42, 1.98), (2.65, 0.055, 0.42), m["metal_worn"], coll, edge=0.004)
+    for i in range(4):
+        cube(f"hq_garage_rolled_door_slat_{i}", (2.75, -3.46, 1.82 + i * 0.10), (2.58, 0.018, 0.018), m["metal"], coll, edge=0)
     # Overhead amber work light just inside the gate.
-    cube("hq_garage_work_light", (2.58, -3.30, 2.55), (1.05, 0.045, 0.040), m["amber"], coll, edge=0.004)
+    cube("hq_garage_work_light", (2.75, -2.95, 2.55), (1.25, 0.045, 0.040), m["amber"], coll, edge=0.004)
     # Hazard chevrons on the floor at the gate threshold.
     for i in range(8):
-        cube(f"hq_garage_hazard_mark_{i}", (1.45 + i * 0.32, -3.36, 0.052), (0.22, 0.022, 0.030),
+        cube(f"hq_garage_hazard_mark_{i}", (1.55 + i * 0.34, -3.02, 0.052), (0.22, 0.022, 0.030),
              m["helmet"] if i % 2 == 0 else m["black"], coll, rot=(0, 0, math.radians(25 if i % 2 == 0 else -25)), edge=0)
 
+    # Garage tool wall and supplies, matching the reference art board's right bay.
+    cube("hq_garage_tool_pegboard", (5.24, -1.25, 1.48), (0.020, 0.76, 0.56), m["wood"], coll, edge=0.003)
+    for i, z in enumerate((1.24, 1.42, 1.60, 1.78)):
+        cube(f"hq_garage_tool_rail_{i}", (5.21, -1.25, z), (0.018, 0.70, 0.015), m["metal"], coll, edge=0)
+    for i, yy in enumerate((-1.82, -1.55, -1.27, -0.98, -0.70)):
+        cube(f"hq_garage_hanging_tool_{i}", (5.19, yy, 1.36 + (i % 2) * 0.24), (0.030, 0.030, 0.28), m["metal_worn"], coll,
+             rot=(0, 0, math.radians(-8 + i * 4)), edge=0.001)
+    cube("hq_garage_red_tool_chest", (5.02, -2.40, 0.52), (0.28, 0.36, 0.48), m["debt"], coll, edge=0.005)
+    for i in range(3):
+        cube(f"hq_garage_tool_chest_drawer_{i}", (4.99, -2.56, 0.38 + i * 0.13), (0.20, 0.014, 0.040), m["metal"], coll, edge=0)
+    cube("hq_garage_first_aid_box", (5.25, -0.32, 1.66), (0.020, 0.22, 0.18), m["terminal"], coll, edge=0.002)
+    cube("hq_garage_first_aid_cross_h", (5.23, -0.32, 1.66), (0.010, 0.12, 0.022), m["paper"], coll, edge=0)
+    cube("hq_garage_first_aid_cross_v", (5.23, -0.32, 1.66), (0.010, 0.026, 0.11), m["paper"], coll, edge=0)
+    cyl("hq_garage_extinguisher", (5.14, -0.05, 0.48), 0.060, 0.42, m["debt"], coll, vertices=10, edge=0.003)
+    cube("hq_garage_supply_crate", (4.75, -3.05, 0.20), (0.30, 0.22, 0.20), m["cardboard"], coll, edge=0.004)
+    cyl("hq_garage_oil_stain_a", (2.60, -1.80, 0.050), 0.22, 0.006, m["black"], coll, vertices=12, edge=0)
+
     _build_van_exterior(m, coll)
+    van_center_x, van_center_y = 2.75, 0.05
     for obj in coll.objects:
         if obj.name.startswith("van_"):
-            obj.location.x += 2.58
-            obj.location.y += -2.18
+            local_x, local_y = obj.location.x, obj.location.y
+            # Van source model is lengthwise on Blender X. Rotate it into the
+            # right-hand garage bay so its nose points toward the roll-up door,
+            # matching the reference top-down plan.
+            obj.location.x = van_center_x - local_y
+            obj.location.y = van_center_y + local_x
+            obj.rotation_euler.z += math.radians(90)
 
-    # Minimal coherent infrastructure.
-    for i, yy in enumerate((1.55, -0.55, -2.35)):
-        cube(f"hq_fluoro_housing_{i}", (-0.85 if i == 0 else 2.55, yy, 2.58), (0.76, 0.05, 0.035), m["metal"], coll, edge=0.003)
-        cube(f"hq_fluoro_tube_{i}", (-0.85 if i == 0 else 2.55, yy, 2.53), (0.62, 0.020, 0.014), m["cyan"], coll, edge=0.001)
+    # Bright incandescent ceiling panels: ceiling-only visual geometry. Runtime
+    # colliders are hand-authored in Unity and FBX mesh colliders are disabled.
+    office_panels = [
+        (-4.10, -1.70, 2.66), (-2.55, -1.70, 2.66), (-1.00, -1.70, 2.66),
+        (-4.10, 1.45, 2.66), (-2.55, 1.45, 2.66), (-1.00, 1.45, 2.66),
+    ]
+    garage_panels = [
+        (1.55, -1.70, 2.80), (2.75, -1.70, 2.80), (3.95, -1.70, 2.80),
+        (1.55, 1.45, 2.80), (2.75, 1.45, 2.80), (3.95, 1.45, 2.80),
+    ]
+    for i, (fx, fy, fz) in enumerate(office_panels):
+        cube(f"hq_incandescent_panel_office_{i}_housing", (fx, fy, fz + 0.045), (0.82, 0.36, 0.045), m["metal"], coll, edge=0.003)
+        cube(f"hq_incandescent_panel_office_{i}_diffuser", (fx, fy, fz), (0.74, 0.30, 0.020), m["incandescent"], coll, edge=0.001)
+    for i, (fx, fy, fz) in enumerate(garage_panels):
+        cube(f"hq_incandescent_panel_garage_{i}_housing", (fx, fy, fz + 0.045), (0.82, 0.36, 0.045), m["metal"], coll, edge=0.003)
+        cube(f"hq_incandescent_panel_garage_{i}_diffuser", (fx, fy, fz), (0.74, 0.30, 0.020), m["incandescent"], coll, edge=0.001)
     cyl("hq_left_wall_pipe", (-4.54, 0.40, 2.38), 0.035, 4.60, m["metal_worn"], coll,
         vertices=8, rot=(math.radians(90), 0, 0), edge=0.002)
     cube("hq_fire_extinguisher_bracket", (-4.62, -1.76, 0.72), (0.035, 0.12, 0.030), m["metal"], coll, edge=0.001)
@@ -388,11 +478,10 @@ def build_hq(m) -> bpy.types.Collection:
 def _build_hq_infrastructure(m, coll) -> None:
     """Institutional infrastructure: lights, pipes, baseboards, exit sign, window."""
 
-    # --- Fluorescent ceiling fixtures (3 along Y axis) ---
+    # --- Incandescent ceiling panels (legacy helper; keep it aligned with build_hq) ---
     for i, yy in enumerate((-1.4, 1.0, 3.0)):
-        cube(f"hq_fluoro_housing_{i}", (0, yy, 2.82), (0.85, 0.06, 0.04), m["metal"], coll, edge=0.003)
-        cube(f"hq_fluoro_tube_{i}", (0, yy, 2.76), (0.72, 0.025, 0.018), m["cyan"], coll, edge=0.001)
-        cube(f"hq_fluoro_diffuser_{i}", (0, yy, 2.74), (0.78, 0.045, 0.008), m["paper"], coll, edge=0.001)
+        cube(f"hq_infra_incandescent_panel_{i}_housing", (0, yy, 2.82), (0.85, 0.30, 0.04), m["metal"], coll, edge=0.003)
+        cube(f"hq_infra_incandescent_panel_{i}_diffuser", (0, yy, 2.76), (0.78, 0.24, 0.020), m["incandescent"], coll, edge=0.001)
 
     # --- Baseboard molding (dark metal strip at floor level) ---
     cube("hq_baseboard_back", (0, 3.70, 0.055), (5.12, 0.04, 0.055), m["metal"], coll, edge=0.002)
@@ -614,47 +703,44 @@ def build_worker(m) -> bpy.types.Collection:
     cube("worker_left_glove", (x - 0.55, y - 0.13, 0.62), (0.105, 0.10, 0.075), m["black"], coll, edge=0.004)
     cube("worker_right_glove", (x + 0.55, y - 0.13, 0.62), (0.105, 0.10, 0.075), m["black"], coll, edge=0.004)
 
-    # --- Neck + head shell (slightly squarer than a pure sphere for stronger silhouette) ---
+    # --- Neck + head shell (mostly hidden by the mask, kept for silhouette) ---
     cube("worker_neck", (x, y, 1.50), (0.13, 0.13, 0.10), m["skin"], coll, edge=0.004)
     sphere("worker_head", (x, y, 1.72), (0.22, 0.20, 0.24), m["skin"], coll)
-    cube("worker_jaw", (x, y - 0.06, 1.58), (0.20, 0.13, 0.06), m["skin"], coll, edge=0.005)
 
-    # --- Face details (front of head faces -Y so all detail cubes sit at y < 0) ---
-    # Eye sockets: shadowed recess so the eyes read in mid-distance silhouette.
-    cube("worker_eye_socket_l", (x - 0.085, y - 0.195, 1.755), (0.085, 0.010, 0.060), m["wall_shadow"], coll, edge=0.001)
-    cube("worker_eye_socket_r", (x + 0.085, y - 0.195, 1.755), (0.085, 0.010, 0.060), m["wall_shadow"], coll, edge=0.001)
-    # Eye whites.
-    cube("worker_eye_white_l", (x - 0.085, y - 0.200, 1.760), (0.060, 0.006, 0.034), m["paper"], coll, edge=0)
-    cube("worker_eye_white_r", (x + 0.085, y - 0.200, 1.760), (0.060, 0.006, 0.034), m["paper"], coll, edge=0)
-    # Pupils — small, slightly looking down-forward (tired).
-    cube("worker_pupil_l", (x - 0.075, y - 0.205, 1.752), (0.022, 0.006, 0.022), m["black"], coll, edge=0)
-    cube("worker_pupil_r", (x + 0.075, y - 0.205, 1.752), (0.022, 0.006, 0.022), m["black"], coll, edge=0)
-    # Eyebrows — slight inward tilt for a worn-out look.
-    cube("worker_brow_l", (x - 0.090, y - 0.198, 1.808), (0.085, 0.012, 0.018), m["black"], coll, rot=(0, math.radians(-6), 0), edge=0.001)
-    cube("worker_brow_r", (x + 0.090, y - 0.198, 1.808), (0.085, 0.012, 0.018), m["black"], coll, rot=(0, math.radians(6), 0), edge=0.001)
-    # Nose — small triangular prism reading as nose-shadow at distance.
-    cube("worker_nose_bridge", (x, y - 0.205, 1.715), (0.030, 0.030, 0.060), m["skin"], coll, edge=0.002)
-    cube("worker_nose_tip", (x, y - 0.220, 1.680), (0.036, 0.022, 0.024), m["skin"], coll, edge=0.001)
-    cube("worker_nose_shadow", (x, y - 0.214, 1.665), (0.022, 0.014, 0.012), m["wall_shadow"], coll, edge=0)
-    # Mouth — closed, faintly pressed, tired worker.
-    cube("worker_mouth", (x, y - 0.210, 1.612), (0.075, 0.012, 0.011), m["debt"], coll, edge=0)
-    cube("worker_mouth_shadow", (x, y - 0.205, 1.598), (0.060, 0.010, 0.008), m["wall_shadow"], coll, edge=0)
-    # Cheekbones — subtle shadow.
-    cube("worker_cheek_shadow_l", (x - 0.145, y - 0.198, 1.685), (0.060, 0.010, 0.050), m["wall_shadow"], coll, edge=0)
-    cube("worker_cheek_shadow_r", (x + 0.145, y - 0.198, 1.685), (0.060, 0.010, 0.050), m["wall_shadow"], coll, edge=0)
-    # Ears.
-    sphere("worker_ear_l", (x - 0.225, y + 0.005, 1.72), (0.030, 0.045, 0.060), m["skin"], coll)
-    sphere("worker_ear_r", (x + 0.225, y + 0.005, 1.72), (0.030, 0.045, 0.060), m["skin"], coll)
-    cube("worker_ear_canal_l", (x - 0.232, y + 0.012, 1.715), (0.012, 0.018, 0.022), m["wall_shadow"], coll, edge=0)
-    cube("worker_ear_canal_r", (x + 0.232, y + 0.012, 1.715), (0.012, 0.018, 0.022), m["wall_shadow"], coll, edge=0)
-    # Hair tuft below the helmet brim (forehead) — dark, matted.
-    for i, px in enumerate((-0.13, -0.05, 0.05, 0.13)):
-        cube(f"worker_hair_front_{i}", (x + px, y - 0.180, 1.860), (0.060, 0.020, 0.048), m["black"], coll, edge=0)
-    # Side hair — a band along the temple under the helmet.
-    cube("worker_hair_temple_l", (x - 0.205, y - 0.04, 1.85), (0.022, 0.180, 0.060), m["black"], coll, edge=0)
-    cube("worker_hair_temple_r", (x + 0.205, y - 0.04, 1.85), (0.022, 0.180, 0.060), m["black"], coll, edge=0)
-    # Stubble shadow on jaw.
-    cube("worker_stubble", (x, y - 0.150, 1.595), (0.140, 0.075, 0.022), m["wall_shadow"], coll, edge=0)
+    # --- Full-face gas mask (front of head faces -Y so detail sits at y < 0) ---
+    # The crew run filthy jobs and don't want to be recognised: the entire face is
+    # covered by a rubber respirator with goggle lenses and a screw-on filter canister.
+    # Rubber faceplate wrapping the front of the head.
+    cube("worker_mask_faceplate", (x, y - 0.085, 1.70), (0.40, 0.26, 0.42), m["mask"], coll, edge=0.020)
+    # Lower snout housing the filter screws into.
+    cube("worker_mask_snout", (x, y - 0.225, 1.625), (0.20, 0.16, 0.17), m["mask"], coll, edge=0.012)
+    # Chin cup.
+    cube("worker_mask_chin", (x, y - 0.10, 1.565), (0.24, 0.18, 0.10), m["mask"], coll, edge=0.010)
+    # Goggle rims (dark metal) + tinted glass lenses.
+    cyl("worker_mask_goggle_rim_l", (x - 0.105, y - 0.232, 1.775), 0.082, 0.05, m["metal_worn"], coll,
+        vertices=14, rot=(math.radians(90), 0, 0), edge=0.002)
+    cyl("worker_mask_goggle_rim_r", (x + 0.105, y - 0.232, 1.775), 0.082, 0.05, m["metal_worn"], coll,
+        vertices=14, rot=(math.radians(90), 0, 0), edge=0.002)
+    cyl("worker_mask_lens_l", (x - 0.105, y - 0.252, 1.775), 0.066, 0.03, m["glass"], coll,
+        vertices=14, rot=(math.radians(90), 0, 0), edge=0.001)
+    cyl("worker_mask_lens_r", (x + 0.105, y - 0.252, 1.775), 0.066, 0.03, m["glass"], coll,
+        vertices=14, rot=(math.radians(90), 0, 0), edge=0.001)
+    # Filter canister screwed onto the snout, angled slightly down-forward.
+    cyl("worker_mask_filter", (x, y - 0.345, 1.585), 0.072, 0.20, m["metal_worn"], coll,
+        vertices=14, rot=(math.radians(78), 0, 0), edge=0.004)
+    cyl("worker_mask_filter_cap", (x, y - 0.43, 1.560), 0.075, 0.03, m["black"], coll,
+        vertices=14, rot=(math.radians(78), 0, 0), edge=0.002)
+    cube("worker_mask_filter_band", (x, y - 0.345, 1.585), (0.155, 0.155, 0.022), m["amber"], coll,
+         rot=(math.radians(78), 0, 0), edge=0)
+    # Exhale valve between the lenses.
+    cyl("worker_mask_exhale_valve", (x, y - 0.245, 1.695), 0.034, 0.05, m["black"], coll,
+        vertices=10, rot=(math.radians(90), 0, 0), edge=0.002)
+    # Head straps running from the mask edge back around the skull.
+    cube("worker_mask_strap_top", (x, y + 0.02, 1.86), (0.30, 0.30, 0.030), m["black"], coll, edge=0.002)
+    cube("worker_mask_strap_side_l", (x - 0.205, y - 0.02, 1.74), (0.030, 0.34, 0.10), m["black"], coll, edge=0.002)
+    cube("worker_mask_strap_side_r", (x + 0.205, y - 0.02, 1.74), (0.030, 0.34, 0.10), m["black"], coll, edge=0.002)
+    cube("worker_mask_strap_buckle_l", (x - 0.18, y - 0.20, 1.74), (0.040, 0.030, 0.040), m["metal_worn"], coll, edge=0.001)
+    cube("worker_mask_strap_buckle_r", (x + 0.18, y - 0.20, 1.74), (0.040, 0.030, 0.040), m["metal_worn"], coll, edge=0.001)
 
     # --- Helmet ---
     cube("worker_helmet_cap", (x, y, 1.94), (0.30, 0.24, 0.075), m["helmet"], coll, edge=0.014)
@@ -757,6 +843,20 @@ def _build_van_exterior(m, coll) -> None:
     cube("van_right_mirror_arm", (-1.32, 0.86, 1.08), (0.18, 0.012, 0.012), m["metal"], coll, rot=(0, 0, math.radians(8)), edge=0)
     cube("van_left_mirror", (-1.20, -0.94, 1.10), (0.08, 0.018, 0.12), m["glass"], coll, edge=0.002)
     cube("van_right_mirror", (-1.20, 0.94, 1.10), (0.08, 0.018, 0.12), m["glass"], coll, edge=0.002)
+
+    # Headlights + housings on the nose (the van had none — looked unfinished).
+    for side, hy in (("L", -0.46), ("R", 0.46)):
+        cube(f"van_headlight_housing_{side}", (-2.05, hy, 0.60), (0.05, 0.20, 0.16), m["metal"], coll, edge=0.003)
+        cube(f"van_headlight_lens_{side}", (-2.085, hy, 0.60), (0.02, 0.16, 0.12), m["amber"], coll, edge=0.002)
+        cube(f"van_turn_signal_{side}", (-2.07, hy + (0.13 if hy < 0 else -0.13), 0.49), (0.03, 0.06, 0.05),
+             m["vest"], coll, edge=0.001)
+    # Taillights on the rear doors.
+    for side, ty in (("L", -0.40), ("R", 0.40)):
+        cube(f"van_taillight_{side}", (1.77, ty, 0.62), (0.02, 0.13, 0.11), m["debt"], coll, edge=0.002)
+        cube(f"van_reverse_light_{side}", (1.77, ty, 0.50), (0.02, 0.11, 0.04), m["paper"], coll, edge=0.001)
+    # Rear plate + plate light.
+    cube("van_rear_plate", (1.78, 0, 0.50), (0.014, 0.30, 0.10), m["paper"], coll, edge=0.001)
+    txt("van_rear_plate_text", "AS-04", (1.792, 0, 0.50), (math.radians(90), 0, math.radians(180)), 0.055, m["black"], coll)
 
     # Rear doors (closed from outside, heavy institutional look)
     cube("van_rear_door_L", (1.74, -0.34, 0.92), (0.04, 0.34, 0.56), m["metal_worn"], coll, edge=0.006)

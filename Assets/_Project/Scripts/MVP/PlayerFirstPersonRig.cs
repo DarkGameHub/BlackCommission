@@ -138,10 +138,9 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         rigRoot.transform.localRotation = Quaternion.identity;
 
         EnsureMaterials();
-        if (!TryCreateGeneratedGloves(rigRoot.transform))
-            CreateHands(rigRoot.transform);
-        ApplyFirstPersonColors(rigRoot);
-        CacheFirstPersonHandTransforms(rigRoot.transform);
+        // First-person shows no hands by design — only the held item below. The
+        // body model's hands are posed for standing and can't be reused here, and
+        // we don't want to build/rig a dedicated hand mesh for the MVP.
         watchModel = CreateWristwatch(rigRoot.transform);
         watchModel.SetActive(false);
 
@@ -170,6 +169,15 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         thirdPersonRoot.transform.SetParent(transform, false);
         thirdPersonRoot.transform.localPosition = Vector3.zero;
         thirdPersonRoot.transform.localRotation = Quaternion.identity;
+
+        // Preferred path: a real generated character mesh (already textured and
+        // normalized by CharacterModelImporter), so we don't recolor it.
+        if (TryCreateCharacterVisual(thirdPersonRoot.transform, charIndex))
+        {
+            thirdPersonWatchModel = CreateThirdPersonWristwatch(thirdPersonRoot.transform);
+            thirdPersonWatchModel.SetActive(hotbar != null && hotbar.HasWristwatch.Value);
+            return;
+        }
 
         if (TryCreateGeneratedWorkerVisual(thirdPersonRoot.transform))
         {
@@ -218,6 +226,37 @@ public class PlayerFirstPersonRig : NetworkBehaviour
                 r.material.color = colors.vest;
             else if (n.Contains("helmet") || n.Contains("hat") || n.Contains("hardhat"))
                 r.material.color = colors.helmet;
+        }
+    }
+
+    bool TryCreateCharacterVisual(Transform parent, int charIndex)
+    {
+        string resourceName = PlayerCharacterModels.Get(charIndex);
+        if (string.IsNullOrEmpty(resourceName)) return false;
+
+        GameObject prefab = Resources.Load<GameObject>(resourceName);
+        if (prefab == null) return false;
+
+        GameObject visual = Instantiate(prefab, parent);
+        visual.name = "AS_CharacterVisual";
+        visual.transform.localPosition = Vector3.zero;
+        visual.transform.localRotation = Quaternion.identity;
+        visual.transform.localScale = Vector3.one;
+        RemoveVisualColliders(visual);
+        ConfigureVisualRenderers(visual);
+        TintCharacterVisual(visual, charIndex);
+        return true;
+    }
+
+    // One shared mesh, six colour-ways: multiply the base texture by the slot tint.
+    static void TintCharacterVisual(GameObject visual, int charIndex)
+    {
+        Color tint = PlayerCharacterModels.TintFor(charIndex);
+        foreach (Renderer r in visual.GetComponentsInChildren<Renderer>())
+        {
+            Material mat = r.material; // instance copy, safe to recolor
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", tint);
+            else mat.color = tint;
         }
     }
 

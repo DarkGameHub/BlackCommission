@@ -773,8 +773,8 @@ public static class ProjectSetup
 
         // ── Spawn ─────────────────────────────────────────────
         var spawnPoint = new GameObject("PlayerSpawnPoint");
-        spawnPoint.transform.position = new Vector3(0, 1.1f, 0);
-        spawnPoint.transform.rotation = Quaternion.Euler(0, 180, 0);
+        spawnPoint.transform.position = new Vector3(-2.55f, 1.1f, -2.45f);
+        spawnPoint.transform.rotation = Quaternion.Euler(0, 0, 0);
 
         var spawnMgr = new GameObject("HQSpawnManager");
         var mgr = spawnMgr.AddComponent<HQSpawnManager>();
