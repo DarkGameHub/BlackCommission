@@ -221,8 +221,37 @@ public static class MvpSceneStyleDirector
         CreateBox("ShellGarageRollDoor", root, new Vector3(2.75f, 2.30f, -3.30f), new Vector3(2.55f, 0.30f, 0.12f), bayDoor);
         CreateBox("ShellGarageDoorThreshold", root, new Vector3(2.75f, 0.04f, -3.18f), new Vector3(2.60f, 0.03f, 0.32f), hazardStripe);
 
-        BuildPlaceholderVan(root, vanBody, vanGlass, darkMetal);
+        if (!TryPlaceGeneratedVan(root))
+            BuildPlaceholderVan(root, vanBody, vanGlass, darkMetal);
         BuildComputerStation(root, darkMetal);
+    }
+
+    static bool TryPlaceGeneratedVan(Transform root)
+    {
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/AS_OfficeVan");
+        if (prefab == null) return false;
+
+        GameObject van = Object.Instantiate(prefab, root);
+        van.name = "ShellVan_Generated";
+        // Wrapper at the garage van spot (matches the van blocking colliders).
+        van.transform.localPosition = new Vector3(2.75f, 0f, 0.05f);
+        van.transform.localRotation = Quaternion.identity;
+        van.transform.localScale = Vector3.one;
+
+        // Exact placement the user dialed in on the model child via the Scene Inspector.
+        // Baked because the office regenerates from code each load. Re-report the child
+        // Transform to adjust.
+        if (van.transform.childCount > 0)
+        {
+            Transform model = van.transform.GetChild(0);
+            model.localPosition = new Vector3(-0.09f, 0.9f, -0.33f);
+            model.localEulerAngles = new Vector3(-90f, 0f, 90f);
+            model.localScale = Vector3.one * 239.4f;
+        }
+
+        foreach (Collider c in van.GetComponentsInChildren<Collider>())
+            c.enabled = false;
+        return true;
     }
 
     // Core interactable + the reference's signature green focal point. Not "furniture" —
@@ -230,14 +259,45 @@ public static class MvpSceneStyleDirector
     // anchor (HqComputerScreenCenter ≈ (-1.55, 1.085, 1.704)), screen facing the player (−Z).
     static void BuildComputerStation(Transform root, Material darkMetal)
     {
-        Material screenGlow = MakeEmissiveMaterial(DispatchGreenDark, DispatchGreen, 0.9f);
+        // The Meshy prop is a whole desk-with-terminal — no box desk needed.
+        if (TryPlaceGeneratedComputer(root)) return;
 
+        // Fallback only (prop not imported yet): box desk + box CRT.
+        Material screenGlow = MakeEmissiveMaterial(DispatchGreenDark, DispatchGreen, 0.9f);
         CreateBox("ShellComputerDeskTop", root, new Vector3(-1.55f, 0.74f, 1.78f), new Vector3(1.5f, 0.08f, 0.78f), darkMetal);
         CreateBox("ShellComputerDeskLegL", root, new Vector3(-2.18f, 0.37f, 1.78f), new Vector3(0.08f, 0.72f, 0.66f), darkMetal);
         CreateBox("ShellComputerDeskLegR", root, new Vector3(-0.92f, 0.37f, 1.78f), new Vector3(0.08f, 0.72f, 0.66f), darkMetal);
         CreateBox("ShellComputerCrtShell", root, new Vector3(-1.55f, 1.085f, 1.86f), new Vector3(0.56f, 0.46f, 0.42f), darkMetal);
         CreateBox("ShellComputerScreen", root, new Vector3(-1.55f, 1.085f, 1.63f), new Vector3(0.42f, 0.33f, 0.03f), screenGlow);
         CreateBox("ShellComputerKeyboard", root, new Vector3(-1.55f, 0.80f, 1.42f), new Vector3(0.52f, 0.04f, 0.2f), darkMetal);
+    }
+
+    static bool TryPlaceGeneratedComputer(Transform root)
+    {
+        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/AS_OfficeComputer");
+        if (prefab == null) return false;
+
+        GameObject desk = Object.Instantiate(prefab, root);
+        desk.name = "ShellComputerDesk_Generated";
+        desk.transform.localPosition = new Vector3(-1.55f, 0f, 1.95f);
+        desk.transform.localRotation = Quaternion.identity;
+        desk.transform.localScale = Vector3.one;
+
+        // Exact placement the user dialed in on the model child via the Scene Inspector.
+        // Baked here because the office is regenerated from code on every scene load, so
+        // manual Scene edits don't persist — these values do. Tweak in Scene + re-report
+        // the child's Transform to adjust.
+        if (desk.transform.childCount > 0)
+        {
+            Transform model = desk.transform.GetChild(0);
+            model.localPosition = new Vector3(-0.988f, 0.525f, 0.4f);
+            model.localEulerAngles = new Vector3(-90f, 180f, 0f);
+            model.localScale = Vector3.one * 85.7108f;
+        }
+
+        foreach (Collider c in desk.GetComponentsInChildren<Collider>())
+            c.enabled = false;
+        return true;
     }
 
     // Low-poly placeholder van parked in the garage bay, matching the van blocking

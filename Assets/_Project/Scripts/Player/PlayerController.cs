@@ -328,7 +328,7 @@ public class PlayerController : NetworkBehaviour
 
         string sceneName = SceneManager.GetActiveScene().name;
         if (sceneName == "HQ")
-            return new Vector3(-2.55f, 1.15f, -2.45f);
+            return new Vector3(-1.55f, 1.15f, 0.55f);
         if (sceneName.Contains("School"))
             return new Vector3(0f, 1.15f, -11.45f);
 

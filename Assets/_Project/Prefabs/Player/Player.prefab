@@ -113,8 +113,8 @@ GameObject:
   - component: {fileID: 2779008746678798707}
   - component: {fileID: 8417771090113601477}
   - component: {fileID: 4687816511022707713}
-  - component: {fileID: 7559180119187054012}
   - component: {fileID: 3729408567247584862}
+  - component: {fileID: 6386157325178312606}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -232,7 +232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3174414050
+  GlobalObjectIdHash: 3446074981
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -377,6 +377,7 @@ MonoBehaviour:
   interactRange: 2.5
   aimAssistRadius: 0.12
   nearbyInteractRadius: 1.75
+  officeComputerFallbackRadius: 3.6
 --- !u!114 &8417771090113601477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -438,20 +439,6 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
---- !u!114 &7559180119187054012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3476353687523599177}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8f5d2dc9e3794f88a68e6fc4eaad5721, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerFirstPersonRig
-  ShowTopMostFoldoutHeaderGroup: 1
-  rigLocalPosition: {x: 0, y: -0.2, z: 0.48}
 --- !u!114 &3729408567247584862
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -477,6 +464,20 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
+--- !u!114 &6386157325178312606
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476353687523599177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f5d2dc9e3794f88a68e6fc4eaad5721, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerFirstPersonRig
+  ShowTopMostFoldoutHeaderGroup: 1
+  rigLocalPosition: {x: 0, y: -0.34, z: 0.46}
 --- !u!1 &5764614823530907345
 GameObject:
   m_ObjectHideFlags: 0

@@ -18,8 +18,8 @@ public class MainMenuUI : MonoBehaviour
     // ─── Color tokens (mirrors art bible) ─────────────────────────────────
     static readonly Color CivicTeal = new(0.184f, 0.310f, 0.294f);
     static readonly Color DeepCivicTeal = new(0.090f, 0.141f, 0.133f);
-    static readonly Color PanelBg = new(0.055f, 0.078f, 0.070f, 0.96f);
-    static readonly Color PanelBorder = new(0.184f, 0.310f, 0.294f, 0.85f);
+    static readonly Color PanelBg = new(0.075f, 0.060f, 0.043f, 0.94f);
+    static readonly Color PanelBorder = new(0.47f, 0.34f, 0.17f, 0.62f);
     static readonly Color ScreenFog = new(0.012f, 0.016f, 0.014f, 0.78f);
     static readonly Color DispatchGreen = new(0.482f, 0.812f, 0.541f);
     static readonly Color DispatchGreenDark = new(0.133f, 0.349f, 0.227f);
@@ -27,14 +27,14 @@ public class MainMenuUI : MonoBehaviour
     static readonly Color SodiumAmber = new(0.851f, 0.604f, 0.192f);
     static readonly Color AgedPaper = new(0.839f, 0.784f, 0.608f);
     static readonly Color DirtyBone = new(0.788f, 0.761f, 0.667f);
-    static readonly Color FieldBg = new(0.020f, 0.028f, 0.024f, 1f);
-    static readonly Color BtnPrimary = new(0.133f, 0.349f, 0.227f);
-    static readonly Color BtnPrimaryHover = new(0.180f, 0.480f, 0.310f);
-    static readonly Color BtnPrimaryPressed = new(0.080f, 0.220f, 0.150f);
-    static readonly Color BtnSecondary = new(0.067f, 0.098f, 0.082f);
-    static readonly Color BtnSecondaryHover = new(0.110f, 0.155f, 0.130f);
-    static readonly Color BtnSecondaryPressed = new(0.040f, 0.060f, 0.050f);
-    static readonly Color HintText = new(0.55f, 0.65f, 0.58f);
+    static readonly Color FieldBg = new(0.024f, 0.020f, 0.015f, 0.96f);
+    static readonly Color BtnPrimary = new(0.050f, 0.085f, 0.050f, 0.92f);
+    static readonly Color BtnPrimaryHover = new(0.072f, 0.125f, 0.074f, 0.96f);
+    static readonly Color BtnPrimaryPressed = new(0.040f, 0.065f, 0.040f, 1f);
+    static readonly Color BtnSecondary = new(0.075f, 0.060f, 0.043f, 0.74f);
+    static readonly Color BtnSecondaryHover = new(0.120f, 0.095f, 0.060f, 0.84f);
+    static readonly Color BtnSecondaryPressed = new(0.050f, 0.040f, 0.030f, 0.96f);
+    static readonly Color HintText = new(0.66f, 0.61f, 0.48f);
 
     // ─── State ────────────────────────────────────────────────────────────
     MenuState state = MenuState.Main;
@@ -59,33 +59,29 @@ public class MainMenuUI : MonoBehaviour
 
     TMP_Text titleText;
     TMP_Text subtitleText;
-    TMP_Text uniformLabelText;
     TMP_Text statusText;
     TMP_Text hostCodeText;
     TMP_Text connectingText;
     TMP_Text versionText;
     TMP_Text connectedStatusText;
 
-    Image uniformSwatch;
-    Image vestSwatch;
-    Image helmetSwatch;
-
     TMP_InputField joinCodeInput;
     TMP_InputField directAddressInput;
     TMP_InputField directPortInput;
 
-    RawImage characterPreviewImage;
-    MainMenuCharacterPreview characterPreview;
+    Image backgroundImage;
+    bool usingBakedMenuArt;
 
-    Button hostBtn;
+    Button continueBtn;
+    Button newOfficeBtn;
     Button joinBtn;
     Button settingsBtn;
+    Button quitBtn;
     Button directBtn;
-    Button charPrevBtn;
-    Button charNextBtn;
     Button joinSubmitBtn;
     Button joinCancelBtn;
     Button settingsCloseBtn;
+    Button directCloseBtn;
     Button hostCodeHideBtn;
 
     void Awake()
@@ -93,20 +89,7 @@ public class MainMenuUI : MonoBehaviour
         BuildEventSystemIfMissing();
         BuildHierarchy();
         BindEvents();
-        EnsureCharacterPreviewStage();
-        RefreshCharacterDisplay();
         SetState(MenuState.Main);
-    }
-
-    void EnsureCharacterPreviewStage()
-    {
-        var preview = FindFirstObjectByType<MainMenuCharacterPreview>();
-        if (preview == null)
-        {
-            var stage = new GameObject("MainMenuCharacterPreview");
-            preview = stage.AddComponent<MainMenuCharacterPreview>();
-        }
-        AttachCharacterPreview(preview, preview.Texture);
     }
 
     void OnEnable()
@@ -152,6 +135,7 @@ public class MainMenuUI : MonoBehaviour
         if (gameObject.GetComponent<GraphicRaycaster>() == null)
             gameObject.AddComponent<GraphicRaycaster>();
 
+        backgroundImage = BuildBackground(transform);
         screenVeil = BuildScreenVeil(transform);
         mainPanel = BuildMainPanel(transform);
         joinPanel = BuildJoinPanel(transform);
@@ -169,6 +153,39 @@ public class MainMenuUI : MonoBehaviour
         versionRt.pivot = new Vector2(0.5f, 0f);
         versionRt.anchoredPosition = new Vector2(0f, 16f);
         versionRt.sizeDelta = new Vector2(0f, 24f);
+        if (usingBakedMenuArt)
+            versionText.gameObject.SetActive(false);
+    }
+
+    // Full-screen background art. Drop the menu mockup (ideally without the centre
+    // panel baked in) at Assets/Resources/UI/MainMenuBg.png and it appears here; until
+    // then it falls back to a flat dark fill so the menu still reads.
+    Image BuildBackground(Transform parent)
+    {
+        var go = new GameObject("Background", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero;
+        rt.anchorMax = Vector2.one;
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        var image = go.GetComponent<Image>();
+        image.raycastTarget = false;
+
+        usingBakedMenuArt = false;
+        var tex = Resources.Load<Texture2D>("UI/MainMenuBg");
+        if (tex != null)
+        {
+            image.sprite = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+            image.color = Color.white;
+            image.preserveAspect = false;
+            image.type = Image.Type.Simple;
+        }
+        else
+        {
+            image.color = new Color(0.04f, 0.05f, 0.045f, 1f);
+        }
+        return image;
     }
 
     GameObject BuildScreenVeil(Transform parent)
@@ -181,177 +198,275 @@ public class MainMenuUI : MonoBehaviour
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
         var image = go.GetComponent<Image>();
-        image.color = ScreenFog;
+        image.color = usingBakedMenuArt ? new Color(0f, 0f, 0f, 0f) : new Color(0f, 0f, 0f, 0.08f);
         image.raycastTarget = false; // tints the screen only — must not block panel buttons
         return go;
     }
 
     GameObject BuildMainPanel(Transform parent)
     {
-        var panel = CreatePanel(parent, "MainPanel", new Vector2(900f, 620f));
-        var rt = panel.GetComponent<RectTransform>();
-        rt.anchoredPosition = new Vector2(0f, 0f);
+        // Transparent full-screen container so the background art shows through.
+        var panel = new GameObject("MainPanel", typeof(RectTransform));
+        panel.transform.SetParent(parent, false);
+        var prt = panel.GetComponent<RectTransform>();
+        prt.anchorMin = Vector2.zero;
+        prt.anchorMax = Vector2.one;
+        prt.offsetMin = Vector2.zero;
+        prt.offsetMax = Vector2.zero;
 
-        // ─── Title block (top of panel) ────────────────────────────────
-        var titleRow = CreateRow(panel.transform, "TitleRow", 80f, 0f, 24f);
-        titleText = AddText(titleRow.transform, "Title", "BLACK COMMISSION", 42,
-            DispatchGreen, TextAlignmentOptions.Left);
-        var titleRt = titleText.rectTransform;
-        titleRt.anchorMin = new Vector2(0f, 0f);
-        titleRt.anchorMax = new Vector2(0.7f, 1f);
-        titleRt.offsetMin = new Vector2(32f, 0f);
-        titleRt.offsetMax = new Vector2(0f, 0f);
+        // ─── Title block (top-left of the screen) ──────────────────────
+        if (!usingBakedMenuArt)
+        {
+        titleText = AddText(panel.transform, "Title", "BLACK COMMISSION", 54,
+            AgedPaper, TextAlignmentOptions.Left);
         titleText.fontStyle = FontStyles.Bold;
-
-        var debtStamp = CreateDebtStamp(titleRow.transform);
-        var stampRt = debtStamp.GetComponent<RectTransform>();
-        stampRt.anchorMin = new Vector2(1f, 0.5f);
-        stampRt.anchorMax = new Vector2(1f, 0.5f);
-        stampRt.pivot = new Vector2(1f, 0.5f);
-        stampRt.anchoredPosition = new Vector2(-32f, 0f);
-        stampRt.sizeDelta = new Vector2(120f, 40f);
+        var titleRt = titleText.rectTransform;
+        titleRt.anchorMin = new Vector2(0f, 1f);
+        titleRt.anchorMax = new Vector2(0f, 1f);
+        titleRt.pivot = new Vector2(0f, 1f);
+        titleRt.anchoredPosition = new Vector2(48f, -40f);
+        titleRt.sizeDelta = new Vector2(760f, 64f);
 
         subtitleText = AddText(panel.transform, "Subtitle", MvpLocale.T("subtitle"), 20,
-            AgedPaper, TextAlignmentOptions.Left);
+            DispatchGreen, TextAlignmentOptions.Left);
         var subRt = subtitleText.rectTransform;
         subRt.anchorMin = new Vector2(0f, 1f);
-        subRt.anchorMax = new Vector2(1f, 1f);
-        subRt.pivot = new Vector2(0.5f, 1f);
-        subRt.anchoredPosition = new Vector2(0f, -86f);
-        subRt.sizeDelta = new Vector2(-64f, 28f);
+        subRt.anchorMax = new Vector2(0f, 1f);
+        subRt.pivot = new Vector2(0f, 1f);
+        subRt.anchoredPosition = new Vector2(50f, -104f);
+        subRt.sizeDelta = new Vector2(760f, 28f);
+        }
 
-        // ─── Two columns: character preview (left) + dispatch (right) ──
-        BuildCharacterColumn(panel.transform);
-        BuildDispatchColumn(panel.transform);
+        // ─── Central commission terminal menu ──────────────────────────
+        BuildTerminalMenu(panel.transform);
 
-        // ─── Status message bar (above footer) ─────────────────────────
+        // ─── Status message bar (bottom centre) ────────────────────────
         statusText = AddText(panel.transform, "StatusBar", "", 16,
             HintText, TextAlignmentOptions.Center);
         var statusRt = statusText.rectTransform;
-        statusRt.anchorMin = new Vector2(0f, 0f);
-        statusRt.anchorMax = new Vector2(1f, 0f);
+        statusRt.anchorMin = new Vector2(0.5f, 0f);
+        statusRt.anchorMax = new Vector2(0.5f, 0f);
         statusRt.pivot = new Vector2(0.5f, 0f);
-        statusRt.anchoredPosition = new Vector2(0f, 80f);
-        statusRt.sizeDelta = new Vector2(-64f, 36f);
-
-        // ─── Footer row (settings + direct connect) ────────────────────
-        var footer = CreateRow(panel.transform, "FooterRow", 48f, 0f, 16f);
-        var footerRt = footer.GetComponent<RectTransform>();
-        footerRt.anchorMin = new Vector2(0f, 0f);
-        footerRt.anchorMax = new Vector2(1f, 0f);
-        footerRt.pivot = new Vector2(0.5f, 0f);
-        footerRt.anchoredPosition = new Vector2(0f, 16f);
-        footerRt.sizeDelta = new Vector2(-64f, 48f);
-
-        settingsBtn = CreateButton(footer.transform, "SettingsBtn",
-            "⚙  " + MvpLocale.T("game"), 18, BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        var sbRt = settingsBtn.GetComponent<RectTransform>();
-        sbRt.anchorMin = new Vector2(0f, 0.5f);
-        sbRt.anchorMax = new Vector2(0f, 0.5f);
-        sbRt.pivot = new Vector2(0f, 0.5f);
-        sbRt.anchoredPosition = new Vector2(0f, 0f);
-        sbRt.sizeDelta = new Vector2(220f, 44f);
-
-        directBtn = CreateButton(footer.transform, "DirectBtn",
-            "▶  " + MvpLocale.T("show_direct"), 18, BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        var dbRt = directBtn.GetComponent<RectTransform>();
-        dbRt.anchorMin = new Vector2(1f, 0.5f);
-        dbRt.anchorMax = new Vector2(1f, 0.5f);
-        dbRt.pivot = new Vector2(1f, 0.5f);
-        dbRt.anchoredPosition = new Vector2(0f, 0f);
-        dbRt.sizeDelta = new Vector2(260f, 44f);
+        statusRt.anchoredPosition = new Vector2(0f, 60f);
+        statusRt.sizeDelta = new Vector2(720f, 32f);
 
         return panel;
     }
 
-    void BuildCharacterColumn(Transform panel)
+    void BuildTerminalMenu(Transform parent)
     {
-        // Layout budget (310 wide × 380 tall, top-down, every section has explicit gap):
-        //   12 pad | 18 header | 6 gap | 232 preview | 10 gap | 24 label | 8 gap
-        //     | 24 swatches | 12 gap | 38 buttons | 6 pad        sum = 380
-        // Preview is now the dominant element; swatches and arrows reduced so they
-        // don't compete with the character art.
-        var card = CreatePanel(panel, "CharacterCard", new Vector2(310f, 380f));
-        card.GetComponent<Image>().color = FieldBg;
-        var cardRt = card.GetComponent<RectTransform>();
-        cardRt.anchorMin = new Vector2(0f, 0.5f);
-        cardRt.anchorMax = new Vector2(0f, 0.5f);
-        cardRt.pivot = new Vector2(0f, 0.5f);
-        cardRt.anchoredPosition = new Vector2(32f, -10f);
-
-        // Header: "UNIFORM FILE"
-        var header = AddText(card.transform, "Header", "UNIFORM FILE", 13,
-            HintText, TextAlignmentOptions.Center);
-        AnchorTopStretch(header.rectTransform, yFromTop: 12f, height: 18f, sidePadding: 10f);
-
-        // 3D character preview window — taller, dominates the card.
-        characterPreviewImage = new GameObject("PreviewWindow",
-            typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
-        characterPreviewImage.transform.SetParent(card.transform, false);
-        characterPreviewImage.color = Color.white;
-        var prRt = characterPreviewImage.rectTransform;
-        prRt.anchorMin = new Vector2(0.5f, 1f);
-        prRt.anchorMax = new Vector2(0.5f, 1f);
-        prRt.pivot = new Vector2(0.5f, 1f);
-        prRt.anchoredPosition = new Vector2(0f, -36f);
-        prRt.sizeDelta = new Vector2(280f, 254f);
-
-        // Variant name label (e.g. "Standard"). Smaller than before.
-        uniformLabelText = AddText(card.transform, "VariantLabel", "Standard", 18,
-            DispatchGreen, TextAlignmentOptions.Center);
-        uniformLabelText.fontStyle = FontStyles.Bold;
-        AnchorTopStretch(uniformLabelText.rectTransform, yFromTop: 298f, height: 24f, sidePadding: 20f);
-
-        // Swatch row — smaller swatches, accent role only.
-        var swatchRow = new GameObject("SwatchRow", typeof(RectTransform));
-        swatchRow.transform.SetParent(card.transform, false);
-        AnchorTopStretch(swatchRow.GetComponent<RectTransform>(), yFromTop: 330f, height: 30f, sidePadding: 54f);
-
-        const float swatchWidth = 42f;
-        const float swatchHeight = 22f;
-        const float swatchGap = 10f;
-        const float totalSwatchSpan = swatchWidth * 3 + swatchGap * 2;
-        for (int i = 0; i < 3; i++)
+        if (usingBakedMenuArt)
         {
-            float xCenter = -totalSwatchSpan * 0.5f + swatchWidth * 0.5f + i * (swatchWidth + swatchGap);
-            var swatch = CreateSwatch(swatchRow.transform, $"Swatch_{i}", xCenter, swatchWidth, swatchHeight);
-            if (i == 0) uniformSwatch = swatch;
-            else if (i == 1) vestSwatch = swatch;
-            else helmetSwatch = swatch;
+            BuildReferenceMenuHotspots(parent);
+            return;
         }
 
-        // Prev / next buttons — smaller, accent role only.
-        charPrevBtn = CreateButton(card.transform, "CharPrevBtn", "<", 18,
-            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        var pbRt = charPrevBtn.GetComponent<RectTransform>();
-        pbRt.anchorMin = new Vector2(0f, 1f);
-        pbRt.anchorMax = new Vector2(0f, 1f);
-        pbRt.pivot = new Vector2(0f, 1f);
-        pbRt.anchoredPosition = new Vector2(24f, -330f);
-        pbRt.sizeDelta = new Vector2(34f, 30f);
+        var card = CreateMenuPanel(parent);
+        var cardRt = card.GetComponent<RectTransform>();
+        cardRt.anchorMin = new Vector2(0.5f, 0.5f);
+        cardRt.anchorMax = new Vector2(0.5f, 0.5f);
+        cardRt.pivot = new Vector2(0.5f, 0.5f);
+        cardRt.anchoredPosition = new Vector2(0f, 20f);
+        cardRt.sizeDelta = new Vector2(600f, 790f);
 
-        charNextBtn = CreateButton(card.transform, "CharNextBtn", ">", 18,
-            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        var nbRt = charNextBtn.GetComponent<RectTransform>();
-        nbRt.anchorMin = new Vector2(1f, 1f);
-        nbRt.anchorMax = new Vector2(1f, 1f);
-        nbRt.pivot = new Vector2(1f, 1f);
-        nbRt.anchoredPosition = new Vector2(-24f, -330f);
-        nbRt.sizeDelta = new Vector2(34f, 30f);
+        // Five stacked options, primary (green) first — matches the mockup.
+        continueBtn = CreateMenuRow(card.transform, "ContinueBtn", "CONTINUE SHIFT",
+            "Resume previous shift", -202f, true);
+        newOfficeBtn = CreateMenuRow(card.transform, "NewOfficeBtn", "NEW OFFICE",
+            "Accept a clean commission", -325f, false);
+        joinBtn = CreateMenuRow(card.transform, "JoinBtn", "JOIN OFFICE",
+            "Join another office", -430f, false);
+        settingsBtn = CreateMenuRow(card.transform, "SettingsBtn", "SETTINGS",
+            "Adjust preferences", -535f, false);
+        quitBtn = CreateMenuRow(card.transform, "QuitBtn", "QUIT",
+            "Exit to desktop", -630f, false);
+
+        // Small direct-connect (LAN) link at the bottom of the card.
+        directBtn = CreateButton(card.transform, "DirectBtn", "LAN DIRECT", 14,
+            new Color(0.02f, 0.016f, 0.010f, 0.18f),
+            new Color(0.28f, 0.22f, 0.12f, 0.28f),
+            new Color(0.12f, 0.09f, 0.05f, 0.42f));
+        var dRt = directBtn.GetComponent<RectTransform>();
+        dRt.anchorMin = new Vector2(0.5f, 0f);
+        dRt.anchorMax = new Vector2(0.5f, 0f);
+        dRt.pivot = new Vector2(0.5f, 0f);
+        dRt.anchoredPosition = new Vector2(0f, 74f);
+        dRt.sizeDelta = new Vector2(190f, 32f);
+        var directLabel = directBtn.GetComponentInChildren<TMP_Text>();
+        if (directLabel != null)
+        {
+            directLabel.color = new Color(0.66f, 0.58f, 0.40f, 0.78f);
+            directLabel.fontStyle = FontStyles.Bold;
+            directLabel.characterSpacing = 8f;
+        }
     }
 
-    Image CreateSwatch(Transform parent, string name, float xCenter, float width, float height)
+    GameObject CreateMenuPanel(Transform parent)
     {
-        var root = new GameObject(name, typeof(RectTransform), typeof(Image));
-        root.transform.SetParent(parent, false);
-        var rt = root.GetComponent<RectTransform>();
+        var go = new GameObject("CommissionTerminal", typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(600f, 790f);
+
+        var image = go.GetComponent<Image>();
+        image.raycastTarget = false;
+        var tex = Resources.Load<Texture2D>("UI/MenuPanel");
+        if (tex != null)
+        {
+            float horizontalCrop = tex.width * 0.045f;
+            image.sprite = Sprite.Create(tex,
+                new Rect(horizontalCrop, 0f, tex.width - horizontalCrop * 2f, tex.height),
+                new Vector2(0.5f, 0.5f));
+            image.color = Color.white;
+            image.preserveAspect = false;
+        }
+        else
+        {
+            image.color = new Color(0.075f, 0.060f, 0.043f, 0.92f);
+            AddInsetFrame(go.transform, "FallbackFrame", PanelBorder, 10f, 2f);
+        }
+        return go;
+    }
+
+    void BuildReferenceMenuHotspots(Transform parent)
+    {
+        // The reference art already paints the full menu. These transparent
+        // buttons sit over its rows so input still works without duplicate UI.
+        continueBtn = CreateMenuHotspot(parent, "ContinueHotspot", new Vector2(3f, 279f), new Vector2(512f, 128f));
+        newOfficeBtn = CreateMenuHotspot(parent, "NewOfficeHotspot", new Vector2(3f, 134f), new Vector2(512f, 124f));
+        joinBtn = CreateMenuHotspot(parent, "JoinHotspot", new Vector2(3f, -4f), new Vector2(512f, 120f));
+        settingsBtn = CreateMenuHotspot(parent, "SettingsHotspot", new Vector2(3f, -133f), new Vector2(512f, 92f));
+        quitBtn = CreateMenuHotspot(parent, "QuitHotspot", new Vector2(3f, -232f), new Vector2(512f, 88f));
+
+        // Hidden fallback access for LAN testing. The visible mockup intentionally
+        // has no direct-connect label, so this stays below the painted quit row.
+        directBtn = CreateMenuHotspot(parent, "DirectConnectHotspot", new Vector2(3f, -322f), new Vector2(512f, 70f));
+    }
+
+    Button CreateMenuHotspot(Transform parent, string name, Vector2 anchoredPos, Vector2 size)
+    {
+        var btn = CreateButton(parent, name, "", 1,
+            new Color(0f, 0f, 0f, 0.001f),
+            new Color(0.48f, 0.81f, 0.54f, 0.03f),
+            new Color(0.48f, 0.81f, 0.54f, 0.08f));
+        var rt = btn.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0.5f, 0.5f);
         rt.anchorMax = new Vector2(0.5f, 0.5f);
         rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = new Vector2(xCenter, 0f);
-        rt.sizeDelta = new Vector2(width, height);
-        root.GetComponent<Image>().color = Color.white;
-        return root.GetComponent<Image>();
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = size;
+
+        var label = btn.GetComponentInChildren<TMP_Text>();
+        if (label != null) Destroy(label.gameObject);
+        return btn;
+    }
+
+    // A wide menu row: bold title + small description, left-aligned, like the mockup.
+    Button CreateMenuRow(Transform parent, string name, string title, string desc, float yFromTop, bool primary)
+    {
+        Color bg = new Color(0.015f, 0.012f, 0.008f, 0.06f);
+        Color bgHover = new Color(0.10f, 0.18f, 0.10f, 0.24f);
+        Color bgPressed = new Color(0.06f, 0.12f, 0.06f, 0.38f);
+
+        var btn = CreateButton(parent, name, "", 1, bg, bgHover, bgPressed);
+        var rt = btn.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 1f);
+        rt.anchorMax = new Vector2(0.5f, 1f);
+        rt.pivot = new Vector2(0.5f, 1f);
+        rt.anchoredPosition = new Vector2(0f, yFromTop);
+        rt.sizeDelta = new Vector2(440f, primary ? 96f : 76f);
+
+        // Drop the default centred empty label; we add our own title + description.
+        var emptyLabel = btn.GetComponentInChildren<TMP_Text>();
+        if (emptyLabel != null) Destroy(emptyLabel.gameObject);
+
+        var accent = new GameObject("Accent", typeof(RectTransform), typeof(Image));
+        accent.transform.SetParent(btn.transform, false);
+        var aImg = accent.GetComponent<Image>();
+        aImg.color = new Color(0.55f, 0.86f, 0.58f, 0f);
+        aImg.raycastTarget = false;
+        var aRt = accent.GetComponent<RectTransform>();
+        aRt.anchorMin = new Vector2(0f, 0f);
+        aRt.anchorMax = new Vector2(0f, 1f);
+        aRt.pivot = new Vector2(0f, 0.5f);
+        aRt.anchoredPosition = new Vector2(28f, 0f);
+        aRt.sizeDelta = new Vector2(5f, -14f);
+
+        var rowIcon = AddText(btn.transform, "Icon", "-", primary ? 28 : 20,
+            new Color(0.54f, 0.46f, 0.31f, 0.58f), TextAlignmentOptions.Center);
+        rowIcon.fontStyle = FontStyles.Bold;
+        rowIcon.raycastTarget = false;
+        var iRt = rowIcon.rectTransform;
+        iRt.anchorMin = new Vector2(0f, 0.5f);
+        iRt.anchorMax = new Vector2(0f, 0.5f);
+        iRt.pivot = new Vector2(0.5f, 0.5f);
+        iRt.anchoredPosition = new Vector2(54f, primary ? 1f : 0f);
+        iRt.sizeDelta = new Vector2(36f, 40f);
+
+        var rowTitle = AddText(btn.transform, "Title", title, primary ? 30 : 27,
+            new Color(0.80f, 0.73f, 0.58f, 0.92f), TextAlignmentOptions.Left);
+        rowTitle.fontStyle = FontStyles.Bold;
+        rowTitle.raycastTarget = false;
+        var tRt = rowTitle.rectTransform;
+        tRt.anchorMin = new Vector2(0f, 1f);
+        tRt.anchorMax = new Vector2(1f, 1f);
+        tRt.pivot = new Vector2(0.5f, 1f);
+        tRt.anchoredPosition = new Vector2(84f, primary ? -20f : -12f);
+        tRt.sizeDelta = new Vector2(-128f, 34f);
+        rowTitle.characterSpacing = primary ? 5f : 3f;
+
+        var rowDesc = AddText(btn.transform, "Desc", desc, 14,
+            new Color(0.58f, 0.53f, 0.42f, 0.80f), TextAlignmentOptions.Left);
+        rowDesc.raycastTarget = false;
+        var dRt = rowDesc.rectTransform;
+        dRt.anchorMin = new Vector2(0f, 0f);
+        dRt.anchorMax = new Vector2(1f, 0f);
+        dRt.pivot = new Vector2(0.5f, 0f);
+        dRt.anchoredPosition = new Vector2(84f, primary ? 22f : 12f);
+        dRt.sizeDelta = new Vector2(-128f, 22f);
+
+        ConfigureMenuRowHover(btn, rowIcon, rowTitle, rowDesc, aImg, primary);
+
+        return btn;
+    }
+
+    void ConfigureMenuRowHover(Button btn, TMP_Text icon, TMP_Text title, TMP_Text desc,
+        Image accent, bool primary)
+    {
+        Color normalTitle = new Color(0.80f, 0.73f, 0.58f, 0.92f);
+        Color normalIcon = new Color(0.54f, 0.46f, 0.31f, 0.58f);
+        Color normalDesc = new Color(0.58f, 0.53f, 0.42f, 0.80f);
+        Color green = new Color(0.55f, 0.86f, 0.58f, 0.96f);
+        Color greenDim = new Color(0.55f, 0.86f, 0.58f, 0.72f);
+
+        void ApplyHover(bool hovered)
+        {
+            title.color = hovered ? green : normalTitle;
+            icon.color = hovered ? green : normalIcon;
+            desc.color = hovered ? greenDim : normalDesc;
+            accent.color = hovered
+                ? new Color(0.55f, 0.86f, 0.58f, 1f)
+                : new Color(0.55f, 0.86f, 0.58f, 0f);
+            icon.text = hovered ? ">" : "-";
+        }
+
+        var trigger = btn.gameObject.AddComponent<EventTrigger>();
+        var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+        enter.callback.AddListener(_ => ApplyHover(true));
+        trigger.triggers.Add(enter);
+
+        var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+        exit.callback.AddListener(_ => ApplyHover(false));
+        trigger.triggers.Add(exit);
+    }
+
+    static string MenuIconFor(string title)
+    {
+        if (title.Contains("NEW")) return "++";
+        if (title.Contains("JOIN")) return "o-";
+        if (title.Contains("SETTINGS")) return "*";
+        if (title.Contains("QUIT")) return "[]";
+        return ">";
     }
 
     // Stretches a rect to fill horizontally inside its parent at a given y-offset from
@@ -364,72 +479,6 @@ public class MainMenuUI : MonoBehaviour
         rt.pivot = new Vector2(0.5f, 1f);
         rt.anchoredPosition = new Vector2(0f, -yFromTop);
         rt.sizeDelta = new Vector2(-sidePadding * 2f, height);
-    }
-
-    void BuildDispatchColumn(Transform panel)
-    {
-        var card = CreatePanel(panel, "DispatchCard", new Vector2(480f, 380f));
-        card.GetComponent<Image>().color = new Color(0.030f, 0.045f, 0.038f, 0.65f);
-        var cardRt = card.GetComponent<RectTransform>();
-        cardRt.anchorMin = new Vector2(1f, 0.5f);
-        cardRt.anchorMax = new Vector2(1f, 0.5f);
-        cardRt.pivot = new Vector2(1f, 0.5f);
-        cardRt.anchoredPosition = new Vector2(-32f, -10f);
-
-        var header = AddText(card.transform, "Header", "DISPATCH", 14,
-            HintText, TextAlignmentOptions.Left);
-        var hRt = header.rectTransform;
-        hRt.anchorMin = new Vector2(0f, 1f);
-        hRt.anchorMax = new Vector2(1f, 1f);
-        hRt.pivot = new Vector2(0.5f, 1f);
-        hRt.anchoredPosition = new Vector2(0f, -16f);
-        hRt.sizeDelta = new Vector2(-24f, 18f);
-
-        // ─── Host (primary) button ─────────────────────────────────────
-        hostBtn = CreateButton(card.transform, "HostBtn",
-            MvpLocale.T("create_office"), 24,
-            BtnPrimary, BtnPrimaryHover, BtnPrimaryPressed);
-        var hbRt = hostBtn.GetComponent<RectTransform>();
-        hbRt.anchorMin = new Vector2(0f, 1f);
-        hbRt.anchorMax = new Vector2(1f, 1f);
-        hbRt.pivot = new Vector2(0.5f, 1f);
-        hbRt.anchoredPosition = new Vector2(0f, -52f);
-        hbRt.sizeDelta = new Vector2(-32f, 72f);
-        var hbLabel = hostBtn.GetComponentInChildren<TMP_Text>();
-        if (hbLabel != null) hbLabel.fontStyle = FontStyles.Bold;
-
-        // Subtle dispatch-green tag bar inside the host button (left edge accent).
-        var accent = new GameObject("Accent", typeof(RectTransform), typeof(Image));
-        accent.transform.SetParent(hostBtn.transform, false);
-        accent.GetComponent<Image>().color = DispatchGreen;
-        var accentRt = accent.GetComponent<RectTransform>();
-        accentRt.anchorMin = new Vector2(0f, 0f);
-        accentRt.anchorMax = new Vector2(0f, 1f);
-        accentRt.pivot = new Vector2(0f, 0.5f);
-        accentRt.anchoredPosition = new Vector2(0f, 0f);
-        accentRt.sizeDelta = new Vector2(6f, 0f);
-
-        // ─── Join (secondary) button ───────────────────────────────────
-        joinBtn = CreateButton(card.transform, "JoinBtn",
-            MvpLocale.T("join_office"), 22,
-            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        var jbRt = joinBtn.GetComponent<RectTransform>();
-        jbRt.anchorMin = new Vector2(0f, 1f);
-        jbRt.anchorMax = new Vector2(1f, 1f);
-        jbRt.pivot = new Vector2(0.5f, 1f);
-        jbRt.anchoredPosition = new Vector2(0f, -140f);
-        jbRt.sizeDelta = new Vector2(-32f, 56f);
-
-        // Hint text.
-        var hint = AddText(card.transform, "Hint", MvpLocale.T("create_hint"), 16,
-            HintText, TextAlignmentOptions.Center);
-        var hintRt = hint.rectTransform;
-        hint.enableWordWrapping = true;
-        hintRt.anchorMin = new Vector2(0f, 0f);
-        hintRt.anchorMax = new Vector2(1f, 0f);
-        hintRt.pivot = new Vector2(0.5f, 0f);
-        hintRt.anchoredPosition = new Vector2(0f, 24f);
-        hintRt.sizeDelta = new Vector2(-32f, 80f);
     }
 
     GameObject CreateDebtStamp(Transform parent)
@@ -743,35 +792,74 @@ public class MainMenuUI : MonoBehaviour
 
     GameObject BuildDirectConnectPanel(Transform parent)
     {
-        var panel = CreatePanel(parent, "DirectConnectPanel", new Vector2(480f, 220f));
+        var panel = CreateMenuPanel(parent);
+        panel.name = "DirectConnectPanel";
         panel.SetActive(false);
         var rt = panel.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 0f);
-        rt.anchorMax = new Vector2(0.5f, 0f);
-        rt.pivot = new Vector2(0.5f, 0f);
-        rt.anchoredPosition = new Vector2(0f, 80f);
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(0f, 20f);
+        rt.sizeDelta = new Vector2(440f, 660f);
 
-        AddText(panel.transform, "Header", MvpLocale.T("show_direct"), 16,
-            HintText, TextAlignmentOptions.Left)
-            .rectTransform.anchoredPosition = new Vector2(-200f, 80f);
+        directCloseBtn = CreateButton(panel.transform, "Close", "X", 16,
+            new Color(0.02f, 0.016f, 0.010f, 0.20f),
+            new Color(0.24f, 0.18f, 0.10f, 0.28f),
+            new Color(0.15f, 0.10f, 0.05f, 0.40f));
+        var closeRt = directCloseBtn.GetComponent<RectTransform>();
+        closeRt.anchorMin = new Vector2(1f, 1f);
+        closeRt.anchorMax = new Vector2(1f, 1f);
+        closeRt.pivot = new Vector2(1f, 1f);
+        closeRt.anchoredPosition = new Vector2(-62f, -142f);
+        closeRt.sizeDelta = new Vector2(42f, 34f);
+        var closeLabel = directCloseBtn.GetComponentInChildren<TMP_Text>();
+        if (closeLabel != null)
+            closeLabel.color = new Color(0.80f, 0.73f, 0.58f, 0.92f);
+
+        var header = AddText(panel.transform, "Header", "LAN DIRECT", 28,
+            DispatchGreen, TextAlignmentOptions.Center);
+        header.fontStyle = FontStyles.Bold;
+        header.characterSpacing = 6f;
+        header.rectTransform.anchoredPosition = new Vector2(0f, 126f);
+        header.rectTransform.sizeDelta = new Vector2(300f, 38f);
+
+        AddText(panel.transform, "Hint", "Local host or join by IP", 14,
+            new Color(0.58f, 0.53f, 0.42f, 0.82f), TextAlignmentOptions.Center)
+            .rectTransform.anchoredPosition = new Vector2(0f, 88f);
 
         directAddressInput = CreateInputField(panel.transform, "AddressInput",
-            connectAddress, new Vector2(-110f, 30f), new Vector2(220f, 38f));
+            connectAddress, new Vector2(-70f, 22f), new Vector2(218f, 44f));
         directPortInput = CreateInputField(panel.transform, "PortInput",
-            connectPort, new Vector2(120f, 30f), new Vector2(120f, 38f));
+            connectPort, new Vector2(106f, 22f), new Vector2(96f, 44f));
 
         var hostDirectBtn = CreateButton(panel.transform, "DirectHost",
             MvpLocale.T("direct_create"), 16,
-            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        hostDirectBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(-110f, -30f);
-        hostDirectBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(220f, 38f);
+            new Color(0.015f, 0.012f, 0.008f, 0.22f),
+            new Color(0.10f, 0.18f, 0.10f, 0.30f),
+            new Color(0.06f, 0.12f, 0.06f, 0.44f));
+        hostDirectBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(-84f, -56f);
+        hostDirectBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(150f, 46f);
+        var hostLabel = hostDirectBtn.GetComponentInChildren<TMP_Text>();
+        if (hostLabel != null)
+        {
+            hostLabel.color = DispatchGreen;
+            hostLabel.fontStyle = FontStyles.Bold;
+        }
         hostDirectBtn.onClick.AddListener(StartHostDirect);
 
         var joinDirectBtn = CreateButton(panel.transform, "DirectJoin",
             MvpLocale.T("direct_join"), 16,
-            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        joinDirectBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(120f, -30f);
-        joinDirectBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(220f, 38f);
+            new Color(0.015f, 0.012f, 0.008f, 0.22f),
+            new Color(0.24f, 0.18f, 0.10f, 0.30f),
+            new Color(0.15f, 0.10f, 0.05f, 0.44f));
+        joinDirectBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(84f, -56f);
+        joinDirectBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(150f, 46f);
+        var joinLabel = joinDirectBtn.GetComponentInChildren<TMP_Text>();
+        if (joinLabel != null)
+        {
+            joinLabel.color = new Color(0.80f, 0.73f, 0.58f, 0.94f);
+            joinLabel.fontStyle = FontStyles.Bold;
+        }
         joinDirectBtn.onClick.AddListener(StartClientDirect);
 
         return panel;
@@ -828,6 +916,42 @@ public class MainMenuUI : MonoBehaviour
     }
 
     // ─── Primitives ───────────────────────────────────────────────────────
+
+    void AddInsetFrame(Transform parent, string name, Color color, float inset, float thickness)
+    {
+        var root = new GameObject(name, typeof(RectTransform));
+        root.transform.SetParent(parent, false);
+        var rootRt = root.GetComponent<RectTransform>();
+        rootRt.anchorMin = Vector2.zero;
+        rootRt.anchorMax = Vector2.one;
+        rootRt.offsetMin = new Vector2(inset, inset);
+        rootRt.offsetMax = new Vector2(-inset, -inset);
+
+        AddFrameEdge(root.transform, "Top", color, new Vector2(0f, 1f), new Vector2(1f, 1f),
+            new Vector2(0.5f, 1f), new Vector2(0f, 0f), new Vector2(0f, thickness));
+        AddFrameEdge(root.transform, "Bottom", color, new Vector2(0f, 0f), new Vector2(1f, 0f),
+            new Vector2(0.5f, 0f), new Vector2(0f, 0f), new Vector2(0f, thickness));
+        AddFrameEdge(root.transform, "Left", color, new Vector2(0f, 0f), new Vector2(0f, 1f),
+            new Vector2(0f, 0.5f), new Vector2(0f, 0f), new Vector2(thickness, 0f));
+        AddFrameEdge(root.transform, "Right", color, new Vector2(1f, 0f), new Vector2(1f, 1f),
+            new Vector2(1f, 0.5f), new Vector2(0f, 0f), new Vector2(thickness, 0f));
+    }
+
+    void AddFrameEdge(Transform parent, string name, Color color, Vector2 anchorMin,
+        Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta)
+    {
+        var edge = new GameObject(name, typeof(RectTransform), typeof(Image));
+        edge.transform.SetParent(parent, false);
+        var image = edge.GetComponent<Image>();
+        image.color = color;
+        image.raycastTarget = false;
+        var rt = edge.GetComponent<RectTransform>();
+        rt.anchorMin = anchorMin;
+        rt.anchorMax = anchorMax;
+        rt.pivot = pivot;
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = sizeDelta;
+    }
 
     GameObject CreatePanel(Transform parent, string name, Vector2 size)
     {
@@ -899,6 +1023,7 @@ public class MainMenuUI : MonoBehaviour
 
         var btn = go.GetComponent<Button>();
         btn.transition = Selectable.Transition.ColorTint;
+        btn.navigation = new Navigation { mode = Navigation.Mode.None };
         var cb = btn.colors;
         cb.normalColor = Color.white;
         cb.highlightedColor = new Color(hover.r / Mathf.Max(0.01f, normal.r),
@@ -947,12 +1072,12 @@ public class MainMenuUI : MonoBehaviour
 
     void BindEvents()
     {
-        hostBtn.onClick.AddListener(StartHost);
+        continueBtn.onClick.AddListener(StartHost);
+        newOfficeBtn.onClick.AddListener(StartHost);
         joinBtn.onClick.AddListener(() => SetState(MenuState.JoinInput));
         settingsBtn.onClick.AddListener(() => settingsPanel.SetActive(!settingsPanel.activeSelf));
+        quitBtn.onClick.AddListener(QuitGame);
         directBtn.onClick.AddListener(ToggleDirectConnect);
-        charPrevBtn.onClick.AddListener(() => CycleCharacter(-1));
-        charNextBtn.onClick.AddListener(() => CycleCharacter(1));
         joinSubmitBtn.onClick.AddListener(StartJoin);
         joinCancelBtn.onClick.AddListener(() =>
         {
@@ -961,6 +1086,7 @@ public class MainMenuUI : MonoBehaviour
             SetState(MenuState.Main);
         });
         settingsCloseBtn.onClick.AddListener(() => settingsPanel.SetActive(false));
+        directCloseBtn.onClick.AddListener(() => directConnectPanel.SetActive(false));
         hostCodeHideBtn.onClick.AddListener(() => hostCodePanel.SetActive(false));
 
         if (joinCodeInput != null)
@@ -1002,6 +1128,8 @@ public class MainMenuUI : MonoBehaviour
         joinPanel.SetActive(state == MenuState.JoinInput);
         connectingPanel.SetActive(state == MenuState.Connecting);
         hostCodePanel.SetActive(state == MenuState.HostWaiting && !string.IsNullOrEmpty(hostJoinCode));
+        if (state != MenuState.Main && directConnectPanel != null)
+            directConnectPanel.SetActive(false);
 
         if (state == MenuState.Connecting)
             connectingText.text = MvpLocale.T("connecting") + "...";
@@ -1010,6 +1138,10 @@ public class MainMenuUI : MonoBehaviour
         {
             joinCodeInput.text = joinCode ?? "";
             EventSystem.current?.SetSelectedGameObject(joinCodeInput.gameObject);
+        }
+        else if (state == MenuState.Main)
+        {
+            EventSystem.current?.SetSelectedGameObject(null);
         }
     }
 
@@ -1087,6 +1219,10 @@ public class MainMenuUI : MonoBehaviour
         // Once connected, hide every menu panel except a small corner status badge.
         if (listening)
         {
+            // The full-screen menu art lives on the canvas root (not inside mainPanel),
+            // so hiding the panels alone leaves it covering the 3D office. Hide it too.
+            if (backgroundImage != null && backgroundImage.gameObject.activeSelf)
+                backgroundImage.gameObject.SetActive(false);
             if (screenVeil.activeSelf) screenVeil.SetActive(false);
             if (mainPanel.activeSelf) mainPanel.SetActive(false);
             if (joinPanel.activeSelf) joinPanel.SetActive(false);
@@ -1109,56 +1245,57 @@ public class MainMenuUI : MonoBehaviour
         }
         else
         {
+            if (backgroundImage != null && !backgroundImage.gameObject.activeSelf)
+                backgroundImage.gameObject.SetActive(true);
             if (!screenVeil.activeSelf) screenVeil.SetActive(true);
-            if (versionText != null && !versionText.gameObject.activeSelf) versionText.gameObject.SetActive(true);
+            if (versionText != null && !usingBakedMenuArt && !versionText.gameObject.activeSelf)
+                versionText.gameObject.SetActive(true);
             connectedStatusPanel.SetActive(false);
             if (state == MenuState.Main && !mainPanel.activeSelf) mainPanel.SetActive(true);
         }
     }
 
-    // ─── Character selection ──────────────────────────────────────────────
+    // ─── Quit ─────────────────────────────────────────────────────────────
 
-    void CycleCharacter(int delta)
+    void QuitGame()
     {
-        int n = PlayerCharacterPalette.Count;
-        int next = ((PlayerCharacterPalette.SavedIndex + delta) % n + n) % n;
-        PlayerCharacterPalette.SavedIndex = next;
-        RefreshCharacterDisplay();
-        if (characterPreview != null) characterPreview.ApplyCharacterIndex(next);
-    }
-
-    void RefreshCharacterDisplay()
-    {
-        int idx = PlayerCharacterPalette.SavedIndex;
-        var colors = PlayerCharacterPalette.Get(idx);
-        if (uniformLabelText != null) uniformLabelText.text = colors.label;
-        if (uniformSwatch != null) uniformSwatch.color = colors.uniform;
-        if (vestSwatch != null) vestSwatch.color = colors.vest;
-        if (helmetSwatch != null) helmetSwatch.color = colors.helmet;
-    }
-
-    public void AttachCharacterPreview(MainMenuCharacterPreview preview, RenderTexture texture)
-    {
-        characterPreview = preview;
-        if (characterPreviewImage != null && texture != null)
-            characterPreviewImage.texture = texture;
-        if (preview != null) preview.ApplyCharacterIndex(PlayerCharacterPalette.SavedIndex);
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     // ─── Direct connect ───────────────────────────────────────────────────
 
     void ToggleDirectConnect()
     {
-        directConnectPanel.SetActive(!directConnectPanel.activeSelf);
+        if (directConnectPanel == null) return;
+        bool show = !directConnectPanel.activeSelf;
+        settingsPanel.SetActive(false);
+        directConnectPanel.SetActive(show);
     }
 
     void StartHostDirect()
     {
-        if (NetworkManager.Singleton == null) return;
+        if (NetworkManager.Singleton == null)
+        {
+            SetStatus("Cannot host: NetworkManager is missing from the scene.");
+            return;
+        }
+        if (NetworkManager.Singleton.IsListening)
+        {
+            directConnectPanel.SetActive(false);
+            SetStatus(MvpLocale.T("host_started"));
+            return;
+        }
+
+        SetStatus("Starting local host...");
         if (!NetworkManager.Singleton.TryGetComponent<UnityTransport>(out var transport))
         {
             bool started = NetworkManager.Singleton.StartHost();
             SetStatus(started ? MvpLocale.T("host_started") : MvpLocale.T("host_failed"));
+            if (started && directConnectPanel != null) directConnectPanel.SetActive(false);
             return;
         }
 
@@ -1173,17 +1310,23 @@ public class MainMenuUI : MonoBehaviour
             {
                 connectAddress = "127.0.0.1";
                 if (directAddressInput != null) directAddressInput.SetTextWithoutNotify(connectAddress);
+                if (directConnectPanel != null) directConnectPanel.SetActive(false);
                 SetStatus(MvpLocale.T("direct_host_started", connectAddress, port));
                 return;
             }
-            NetworkManager.Singleton.Shutdown();
+            if (NetworkManager.Singleton.IsListening)
+                NetworkManager.Singleton.Shutdown();
         }
         SetStatus(MvpLocale.T("host_port_busy"));
     }
 
     void StartClientDirect()
     {
-        if (NetworkManager.Singleton == null) return;
+        if (NetworkManager.Singleton == null)
+        {
+            SetStatus("Cannot join: NetworkManager is missing from the scene.");
+            return;
+        }
         if (!ushort.TryParse(connectPort, out ushort port))
         {
             SetStatus(MvpLocale.T("port_error"));
@@ -1201,9 +1344,5 @@ public class MainMenuUI : MonoBehaviour
     void RebuildAllLabels()
     {
         if (subtitleText != null) subtitleText.text = MvpLocale.T("subtitle");
-        var hostLbl = hostBtn != null ? hostBtn.GetComponentInChildren<TMP_Text>() : null;
-        if (hostLbl != null) hostLbl.text = MvpLocale.T("create_office");
-        var joinLbl = joinBtn != null ? joinBtn.GetComponentInChildren<TMP_Text>() : null;
-        if (joinLbl != null) joinLbl.text = MvpLocale.T("join_office");
     }
 }
