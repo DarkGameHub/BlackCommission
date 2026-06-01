@@ -107,9 +107,7 @@ public class SchoolMonsterAI : NetworkBehaviour
         Transform nearest = Time.time >= detectionEnabledAt ? FindNearestPlayer(detectionRadius) : null;
         if (nearest != null)
         {
-            target = nearest;
-            state.Value = MonsterState.Chasing;
-            AudioManager.Instance?.PlayMonsterChaseAlert(transform.position);
+            BeginChase(nearest, true);
             return;
         }
 
@@ -161,12 +159,29 @@ public class SchoolMonsterAI : NetworkBehaviour
         target = FindNearestPlayer(detectionRadius);
         if (target != null)
         {
-            state.Value = MonsterState.Chasing;
+            BeginChase(target, false);
             return;
         }
 
         state.Value = MonsterState.Patrolling;
         GoToNextPatrolPoint();
+    }
+
+    void BeginChase(Transform newTarget, bool playAlert)
+    {
+        target = newTarget;
+        state.Value = MonsterState.Chasing;
+        MonsterBestiaryProgress.MarkHomeworkDebtCollectorEncountered();
+        if (IsSpawned)
+            MarkHomeworkDebtCollectorEncounteredClientRpc();
+        if (playAlert)
+            AudioManager.Instance?.PlayMonsterChaseAlert(transform.position);
+    }
+
+    [ClientRpc]
+    void MarkHomeworkDebtCollectorEncounteredClientRpc()
+    {
+        MonsterBestiaryProgress.MarkHomeworkDebtCollectorEncountered();
     }
 
     void UpdateStunned()

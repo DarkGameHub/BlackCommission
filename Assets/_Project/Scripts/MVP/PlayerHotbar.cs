@@ -211,6 +211,41 @@ public class PlayerHotbar : NetworkBehaviour
         return added;
     }
 
+    public bool TryReceiveItemFromStorage(MvpHotbarItemId itemId, int quantity)
+    {
+        EnsureSlots();
+        if (!IsOwner) return false;
+        if (itemId == MvpHotbarItemId.None || quantity <= 0) return false;
+        if (!CanReceiveItem(itemId, out _)) return false;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !IsServer)
+            ReceiveItemFromStorageServerRpc(itemId, quantity);
+
+        return TryReceiveLocalItem(itemId, quantity);
+    }
+
+    public bool TryRemoveOneFromSlotForStorage(int index, MvpHotbarItemId expectedItemId)
+    {
+        EnsureSlots();
+        if (!IsOwner) return false;
+        if (!IsValidSlot(index)) return false;
+        HotbarSlot slot = slots[index];
+        if (slot.IsEmpty || slot.itemId != expectedItemId) return false;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !IsServer)
+            RemoveOneFromSlotForStorageServerRpc(index, expectedItemId);
+
+        RemoveOneFromSlot(index);
+        if (IsSpawned && IsServer)
+            SyncHotbarClientRpc(
+                GetItemId(0), slots[0].quantity,
+                GetItemId(1), slots[1].quantity,
+                GetItemId(2), slots[2].quantity,
+                GetItemId(3), slots[3].quantity,
+                GetItemId(4), slots[4].quantity);
+        return true;
+    }
+
     public bool GrantItemServer(MvpHotbarItemId itemId, int quantity)
     {
         if (!IsServer) return false;
@@ -297,6 +332,29 @@ public class PlayerHotbar : NetworkBehaviour
             slot.quantity = Mathf.Max(0, slot.quantity - 1);
             SlotConsumedClientRpc(index, slot.quantity);
         }
+    }
+
+    [ServerRpc]
+    void ReceiveItemFromStorageServerRpc(MvpHotbarItemId itemId, int quantity)
+    {
+        GrantItemServer(itemId, quantity);
+    }
+
+    [ServerRpc]
+    void RemoveOneFromSlotForStorageServerRpc(int index, MvpHotbarItemId expectedItemId)
+    {
+        EnsureSlots();
+        if (!IsValidSlot(index)) return;
+        HotbarSlot slot = slots[index];
+        if (slot.IsEmpty || slot.itemId != expectedItemId) return;
+
+        RemoveOneFromSlot(index);
+        SyncHotbarClientRpc(
+            GetItemId(0), slots[0].quantity,
+            GetItemId(1), slots[1].quantity,
+            GetItemId(2), slots[2].quantity,
+            GetItemId(3), slots[3].quantity,
+            GetItemId(4), slots[4].quantity);
     }
 
     [ServerRpc]
@@ -558,7 +616,7 @@ public class PlayerHotbar : NetworkBehaviour
     void SetSlotFromNetwork(int index, int itemId, int quantity)
     {
         if (!IsValidSlot(index)) return;
-        slots[index].itemId = (MvpHotbarItemId)Mathf.Clamp(itemId, 0, (int)MvpHotbarItemId.Flashlight);
+        slots[index].itemId = (MvpHotbarItemId)Mathf.Clamp(itemId, 0, (int)MvpHotbarItemId.Battery);
         slots[index].quantity = Mathf.Max(0, quantity);
         if (slots[index].quantity <= 0)
             slots[index].itemId = MvpHotbarItemId.None;

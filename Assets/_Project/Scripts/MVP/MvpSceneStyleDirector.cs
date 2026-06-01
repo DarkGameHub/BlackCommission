@@ -11,8 +11,8 @@ public static class MvpSceneStyleDirector
     // the reference-art target). true → fall back to the baked Blender HQ FBX look.
     const bool PreferBlenderOfficeFbx = false;
     static readonly Vector3 HqComputerScreenCenter = new(-1.55f, 1.085f, 1.704f);
-    static readonly Vector3 HqComputerReachCenter = new(-1.55f, 1.05f, 0.95f);
-    static readonly Vector3 HqComputerReachSize = new(2.20f, 1.75f, 2.15f);
+    static readonly Vector3 HqComputerReachCenter = new(-1.55f, 1.02f, 1.42f);
+    static readonly Vector3 HqComputerReachSize = new(1.35f, 1.35f, 1.15f);
 
     static readonly Color CivicTeal = Rgb(0x2C, 0x4A, 0x3E);       // reference: 深市政绿 wall
     static readonly Color CivicTealDark = Rgb(0x17, 0x24, 0x22);
@@ -266,9 +266,10 @@ public static class MvpSceneStyleDirector
             new Vector3(-4.45f, 0f, 1.70f), new Vector3(0f, 90f, 0f),
             new Vector3(0.395f, 0.66f, -0.23f), new Vector3(-90f, 0f, 0f), new Vector3(65.80643f, 65.80643f, 65.80643f));
         // #9 补给柜(开)
-        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeSupplyCabinet", "ShellSupplyCabinet_Generated",
+        if (TryPlacePropBaked(root, "GeneratedArt/AS_OfficeSupplyCabinet", "ShellSupplyCabinet_Generated",
             new Vector3(-4.45f, 0f, 0.20f), new Vector3(0f, 90f, 0f),
-            new Vector3(0.215f, 0.652f, -0.159f), new Vector3(-90f, 0f, 0f), new Vector3(81.3f, 81.3f, 78.3f));
+            new Vector3(0.215f, 0.652f, -0.159f), new Vector3(-90f, 0f, 0f), new Vector3(81.3f, 81.3f, 78.3f)))
+            CreateOfficeCabinetInteraction(root);
         // #4 债务公告板
         TryPlacePropBaked(root, "GeneratedArt/AS_OfficeDebtBoard", "ShellDebtBoard_Generated",
             new Vector3(-0.45f, 1.55f, 3.05f), new Vector3(0f, 180f, 0f),
@@ -313,6 +314,7 @@ public static class MvpSceneStyleDirector
         TryPlacePropBaked(root, "GeneratedArt/AS_OfficeDesk", "ShellDesk_Generated",
             new Vector3(-1.20f, 0f, 2.20f), new Vector3(0f, 180f, 0f),
             new Vector3(-0.357f, 0.402f, -0.503f), new Vector3(-90f, 0f, 0f), new Vector3(58.47131f, 58.47131f, 58.47131f));
+        CreateOfficeBestiaryNotebook(root);
         // 灭火器组
         TryPlacePropBaked(root, "GeneratedArt/AS_OfficeFireExtinguisher", "ShellFireExtinguisher_Generated",
             new Vector3(-4.50f, 0f, -2.90f), new Vector3(0f, 90f, 0f),
@@ -321,6 +323,29 @@ public static class MvpSceneStyleDirector
         TryPlacePropBaked(root, "GeneratedArt/AS_OfficeGasMaskSentinel", "ShellGasMaskSentinel_Generated",
             new Vector3(-0.60f, 0f, -2.90f), new Vector3(0f, 180f, 0f),
             new Vector3(4.113f, 0.923f, -5.063f), new Vector3(-90f, -90f, 0f), new Vector3(89.5156f, 89.5156f, 89.5156f));
+    }
+
+    static void CreateOfficeCabinetInteraction(Transform root)
+    {
+        GameObject trigger = CreateInteractionTrigger("ShellSupplyCabinetStorageTrigger", root,
+            new Vector3(-4.18f, 1.02f, 0.20f), new Vector3(1.45f, 1.95f, 1.25f));
+        trigger.AddComponent<OfficeCabinetStorage>();
+    }
+
+    static void CreateOfficeBestiaryNotebook(Transform root)
+    {
+        Material cover = MakeOfficeMaterial("Office_BestiaryNotebookCover", Rgb(0x47, 0x50, 0x40), DeadRubberSoft, OfficePattern.Scratched);
+        Material paper = MakeOfficeMaterial("Office_BestiaryNotebookPages", AgedPaperDark, DeadRubberSoft, OfficePattern.Grime);
+
+        GameObject notebook = CreateBox("ShellMonsterBestiaryNotebook", root,
+            new Vector3(-1.05f, 0.86f, 1.95f), new Vector3(0.46f, 0.035f, 0.34f), cover);
+        notebook.transform.rotation = Quaternion.Euler(0f, -12f, 0f);
+        CreateBoxLocal("ShellMonsterBestiaryNotebookPages", notebook.transform,
+            new Vector3(0.03f, 0.034f, 0f), new Vector3(0.36f, 0.012f, 0.27f), Quaternion.identity, paper);
+
+        GameObject trigger = CreateInteractionTrigger("ShellMonsterBestiaryNotebookTrigger", root,
+            new Vector3(-1.05f, 0.98f, 1.95f), new Vector3(1.05f, 0.72f, 0.95f));
+        trigger.AddComponent<OfficeMonsterBestiary>();
     }
 
     static bool TryPlaceProp(Transform root, string resourcePath, string name, Vector3 position, Quaternion rotation)
@@ -1099,6 +1124,7 @@ public static class MvpSceneStyleDirector
         CreateSchoolRouteComplexity(root.transform, coldPaint, warningRed, paper, dark);
         CreateSchoolEssentialMarkers(root.transform, coldPaint, warningRed, paper, dark, exitGreen);
         CreateBonusEvidenceItem(root.transform, paper, warningRed);
+        CreateMonsterTraceItem(root.transform, dark, paper);
         CreateWrongHomeworkDecoys(root.transform, paper, warningRed);
         CreateHidingLocker(root.transform, new Vector3(-4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, 90f, 0f), coldPaint, warningRed);
         CreateHidingLocker(root.transform, new Vector3(4.75f, 0.95f, 4.7f), Quaternion.Euler(0f, -90f, 0f), coldPaint, warningRed);
@@ -1595,6 +1621,28 @@ public static class MvpSceneStyleDirector
         ledger.AddComponent<SchoolBonusEvidenceItem>();
         CreateBoxLocal("OverdueLedgerStamp", ledger.transform, new Vector3(0.16f, 0.07f, -0.05f),
             new Vector3(0.24f, 0.025f, 0.16f), Quaternion.identity, warningRed);
+    }
+
+    static void CreateMonsterTraceItem(Transform root, Material dark, Material paper)
+    {
+        if (GameObject.Find("HomeworkDebtCollectorTrace") != null) return;
+
+        GameObject trace = CreateBox("HomeworkDebtCollectorTrace", root, new Vector3(-0.35f, 0.56f, -4.18f),
+            new Vector3(0.38f, 0.025f, 0.24f), paper);
+        trace.transform.rotation = Quaternion.Euler(0f, 21f, 0f);
+        var collider = trace.AddComponent<BoxCollider>();
+        collider.isTrigger = true;
+        collider.size = new Vector3(4f, 18f, 4f);
+        collider.center = new Vector3(0f, 8f, 0f);
+        trace.AddComponent<SchoolMonsterTraceItem>();
+
+        for (int i = 0; i < 4; i++)
+        {
+            GameObject hair = CreateBoxLocal($"HomeworkDebtCollectorHair_{i + 1}", trace.transform,
+                new Vector3(-0.12f + i * 0.08f, 0.035f, -0.04f + (i % 2) * 0.08f),
+                new Vector3(0.11f, 0.012f, 0.018f), Quaternion.Euler(0f, 18f + i * 27f, 0f), dark);
+            hair.transform.localPosition += Vector3.up * 0.01f;
+        }
     }
 
     static void CreateWrongHomeworkDecoys(Transform root, Material paper, Material warningRed)

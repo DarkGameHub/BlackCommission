@@ -7,9 +7,12 @@ public class MvpHud : MonoBehaviour
     const float OfficeComputerShopDistance = 3.4f;
     static OfficeComputer activeComputer;
     static SchoolExitPoint activeMissionVan;
+    static OfficeCabinetStorage activeCabinet;
+    static OfficeMonsterBestiary activeBestiary;
     static bool settingsOpen;
     public static bool IsComputerOpen => activeComputer != null;
-    public static bool IsBlockingPanelOpen => activeComputer != null || activeMissionVan != null || settingsOpen;
+    public static bool IsBlockingPanelOpen =>
+        activeComputer != null || activeMissionVan != null || activeCabinet != null || activeBestiary != null || settingsOpen;
 
     [SerializeField] int panelWidth = 390;
     [SerializeField] bool showNetworkHint = false;
@@ -42,6 +45,10 @@ public class MvpHud : MonoBehaviour
     float damageFlashUntil;
     float lastKnownHp = 100f;
     Vector2 officeScrollPosition;
+    Vector2 cabinetScrollPosition;
+    Vector2 bestiaryScrollPosition;
+    string cabinetMessage;
+    float cabinetMessageUntil;
     Vector2 settingsScrollPosition;
     static SchoolExitPoint partialReturnConfirmVan;
     static float partialReturnConfirmUntil;
@@ -79,6 +86,8 @@ public class MvpHud : MonoBehaviour
     {
         activeComputer = null;
         activeMissionVan = null;
+        activeCabinet = null;
+        activeBestiary = null;
         settingsOpen = false;
         showNetworkHint = false;
         AudioListener.volume = MasterVolume;
@@ -103,6 +112,20 @@ public class MvpHud : MonoBehaviour
         {
             if (keyboard.escapeKey.wasPressedThisFrame)
                 CloseMissionVan();
+            return;
+        }
+
+        if (activeCabinet != null)
+        {
+            if (keyboard.escapeKey.wasPressedThisFrame)
+                CloseCabinet();
+            return;
+        }
+
+        if (activeBestiary != null)
+        {
+            if (keyboard.escapeKey.wasPressedThisFrame)
+                CloseBestiary();
             return;
         }
 
@@ -194,6 +217,10 @@ public class MvpHud : MonoBehaviour
         else
         {
             DrawOfficePanel();
+            if (activeCabinet != null)
+                DrawCabinetPanel();
+            if (activeBestiary != null)
+                DrawBestiaryPanel();
         }
 
         DrawDamageFlash();
@@ -569,6 +596,132 @@ public class MvpHud : MonoBehaviour
         GUI.enabled = true;
     }
 
+    void DrawCabinetPanel()
+    {
+        OfficeCabinetStorage cabinet = activeCabinet;
+        if (cabinet == null) return;
+
+        float width = Mathf.Clamp(Screen.width - 36f, 380f, 700f);
+        float height = Mathf.Clamp(Screen.height - 96f, 420f, 620f);
+        Rect rect = new Rect((Screen.width - width) * 0.5f, 48, width, height);
+        PlayerHotbar hotbar = FindLocalHotbar();
+
+        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("补给柜", titleStyle);
+        if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
+        {
+            CloseCabinet();
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+            return;
+        }
+        GUILayout.EndHorizontal();
+
+        cabinetScrollPosition = GUILayout.BeginScrollView(cabinetScrollPosition, false, true);
+        GUILayout.Space(6);
+        GUILayout.Label("柜内 8 格", accentStyle);
+        for (int i = 0; i < OfficeCabinetStorage.SlotCount; i++)
+        {
+            HotbarSlot slot = cabinet.GetSlot(i);
+            bool empty = slot == null || slot.IsEmpty;
+            GUILayout.BeginHorizontal(empty ? slotStyle : selectedSlotStyle);
+            GUILayout.Label($"{i + 1}. {(empty ? "空" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(empty ? "" : $"x{slot.quantity}", mutedStyle, GUILayout.Width(48));
+            GUI.enabled = !empty && hotbar != null;
+            if (GUILayout.Button("取出", GUILayout.Width(72), GUILayout.Height(28)))
+            {
+                cabinet.TryTakeToHotbar(hotbar, i, out cabinetMessage);
+                cabinetMessageUntil = Time.time + 2.5f;
+            }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+        }
+
+        GUILayout.Space(12);
+        GUILayout.Label("热栏", accentStyle);
+        if (hotbar == null)
+        {
+            GUILayout.Label("没有找到本地玩家热栏。", warningStyle);
+        }
+        else
+        {
+            for (int i = 0; i < PlayerHotbar.SlotCount; i++)
+            {
+                HotbarSlot slot = hotbar.GetSlot(i);
+                bool empty = slot == null || slot.IsEmpty;
+                bool selected = hotbar.SelectedSlot.Value == i;
+                GUILayout.BeginHorizontal(selected ? selectedSlotStyle : slotStyle);
+                GUILayout.Label($"{i + 1}. {(empty ? "空" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
+                GUILayout.FlexibleSpace();
+                GUILayout.Label(empty ? "" : $"x{slot.quantity}", mutedStyle, GUILayout.Width(48));
+                GUI.enabled = !empty;
+                if (GUILayout.Button("存入", GUILayout.Width(72), GUILayout.Height(28)))
+                {
+                    cabinet.TryStoreFromHotbar(hotbar, i, out cabinetMessage);
+                    cabinetMessageUntil = Time.time + 2.5f;
+                }
+                GUI.enabled = true;
+                GUILayout.EndHorizontal();
+            }
+        }
+
+        if (!string.IsNullOrEmpty(cabinetMessage) && Time.time < cabinetMessageUntil)
+            GUILayout.Label(cabinetMessage, cabinetMessage.Contains("不能") || cabinetMessage.Contains("无法") || cabinetMessage.Contains("没有") ? warningStyle : accentStyle);
+
+        GUILayout.EndScrollView();
+        GUILayout.EndArea();
+    }
+
+    void DrawBestiaryPanel()
+    {
+        if (activeBestiary == null) return;
+
+        float width = Mathf.Clamp(Screen.width - 36f, 380f, 680f);
+        float height = Mathf.Clamp(Screen.height - 96f, 380f, 580f);
+        Rect rect = new Rect((Screen.width - width) * 0.5f, 54, width, height);
+
+        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("怪物图鉴", titleStyle);
+        if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
+        {
+            CloseBestiary();
+            GUILayout.EndHorizontal();
+            GUILayout.EndArea();
+            return;
+        }
+        GUILayout.EndHorizontal();
+
+        bestiaryScrollPosition = GUILayout.BeginScrollView(bestiaryScrollPosition, false, true);
+        GUILayout.Space(8);
+        bool unlocked = MonsterBestiaryProgress.IsHomeworkDebtCollectorUnlocked;
+        GUILayout.BeginVertical(unlocked ? selectedSlotStyle : slotStyle);
+        GUILayout.Label(unlocked ? "作业债务催收员" : "未解锁档案", accentStyle);
+        if (unlocked)
+        {
+            GUILayout.Label("介绍", accentStyle);
+            GUILayout.Label("一种在逾期表格、家长签字和旧教室灯管之间徘徊的异常。它会被错误翻找、噪声和落单玩家吸引，追击时像是在索要一笔永远算不清的账。", labelStyle);
+            GUILayout.Space(8);
+            GUILayout.Label("弱点", accentStyle);
+            GUILayout.Label("强光会让它短暂失去行动节奏；错误作业本和登记簿附近的响动可以把它引开。保持距离、利用储物柜和路线分岔，别在空走廊里硬跑。", labelStyle);
+            GUILayout.Space(8);
+            GUILayout.Label("解锁记录: 已遭遇异常，已采集毛发/踪迹。", mutedStyle);
+        }
+        else
+        {
+            string encounter = MonsterBestiaryProgress.HasEncounteredHomeworkDebtCollector ? "已遭遇" : "未遭遇";
+            string trace = MonsterBestiaryProgress.HasHomeworkDebtCollectorTrace ? "已采集" : "未采集";
+            GUILayout.Label($"解锁条件: 遭遇怪物 + 采集毛发/踪迹。当前: {encounter} / {trace}。", mutedStyle);
+            GUILayout.Label("档案纸页上只有水渍和空白格，等你带回足够可靠的证据。", labelStyle);
+        }
+        GUILayout.EndVertical();
+
+        GUILayout.EndScrollView();
+        GUILayout.EndArea();
+    }
+
     void DrawMissionPanel()
     {
         LostItemMissionManager mission = LostItemMissionManager.Instance;
@@ -932,6 +1085,8 @@ public class MvpHud : MonoBehaviour
     public static void OpenComputer(OfficeComputer computer)
     {
         activeMissionVan = null;
+        activeCabinet = null;
+        activeBestiary = null;
         settingsOpen = false;
         activeComputer = computer;
         Cursor.lockState = CursorLockMode.None;
@@ -943,6 +1098,8 @@ public class MvpHud : MonoBehaviour
     public static void OpenMissionVan(SchoolExitPoint van)
     {
         activeComputer = null;
+        activeCabinet = null;
+        activeBestiary = null;
         settingsOpen = false;
         activeMissionVan = van;
         Cursor.lockState = CursorLockMode.None;
@@ -950,10 +1107,34 @@ public class MvpHud : MonoBehaviour
         SetLocalPlayerHidden(true);
     }
 
+    public static void OpenCabinet(OfficeCabinetStorage cabinet)
+    {
+        activeComputer = null;
+        activeMissionVan = null;
+        activeBestiary = null;
+        settingsOpen = false;
+        activeCabinet = cabinet;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public static void OpenBestiary(OfficeMonsterBestiary bestiary)
+    {
+        activeComputer = null;
+        activeMissionVan = null;
+        activeCabinet = null;
+        settingsOpen = false;
+        activeBestiary = bestiary;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
     static void OpenSettings()
     {
         activeComputer = null;
         activeMissionVan = null;
+        activeCabinet = null;
+        activeBestiary = null;
         settingsOpen = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -971,6 +1152,18 @@ public class MvpHud : MonoBehaviour
         activeMissionVan = null;
         partialReturnConfirmVan = null;
         SetLocalPlayerHidden(false);
+        RestoreGameplayCursor();
+    }
+
+    static void CloseCabinet()
+    {
+        activeCabinet = null;
+        RestoreGameplayCursor();
+    }
+
+    static void CloseBestiary()
+    {
+        activeBestiary = null;
         RestoreGameplayCursor();
     }
 

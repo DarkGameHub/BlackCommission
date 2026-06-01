@@ -29,6 +29,7 @@ public class HQController : MonoBehaviour
     void OnGUI()
     {
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return;
+        if (FindAnyObjectByType<MvpHud>() != null) return;
         InitStyles();
 
         float x = 20, y = 40, w = 300;
