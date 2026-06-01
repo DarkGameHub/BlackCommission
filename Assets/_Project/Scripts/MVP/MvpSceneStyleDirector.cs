@@ -388,7 +388,7 @@ public static class MvpSceneStyleDirector
         if (van.transform.childCount > 0)
         {
             Transform model = van.transform.GetChild(0);
-            model.localPosition = new Vector3(-0.09f, 0.9f, -0.33f);
+            model.localPosition = new Vector3(-0.09f, 0.795f, -0.628f);
             model.localEulerAngles = new Vector3(-90f, 0f, 90f);
             model.localScale = Vector3.one * 212.62f;
         }
