@@ -1,263 +1,351 @@
 # Black Commission Style Lock v1
 
-Status: locked direction for MVP and ASV4 asset work
-Working title: **Municipal Debt Noir**
-Primary references are methods, not assets. Do not copy reference-game logos,
-creatures, suits, terminals, sound identities, maps, or loop wording.
+Status: locked direction for MVP and generated asset work
+Locked style name: **Semi-Realistic Industrial Horror**
+Working description: a semi-realistic industrial ghost-story look, between
+photorealistic and stylized.
 
-Research sources:
-
-- Lethal Company Steam page: https://store.steampowered.com/app/1966720/Lethal_Company/
-- Content Warning Steam page: https://store.steampowered.com/app/2881650/Content_Warning/
-- Phasmophobia Steam page: https://store.steampowered.com/app/739630/Phasmophobia/
-- The Stanley Parable Steam page: https://store.steampowered.com/app/221910/The_Stanley_Parable/
-- INSIDE Steam page: https://store.steampowered.com/app/304430/INSIDE/
+This file replaces the earlier "Municipal Debt Noir" direction. Future assets,
+scene passes, materials, lighting, and prompts should follow this lock unless a
+newer style lock explicitly supersedes it.
 
 ## One-Sentence Style
 
-Black Commission is a cheap outsourced commission office where failed civic spaces,
-debt paperwork, sodium-lit dispatch gear, and stamp-red bureaucracy have become
-a survival-horror ritual.
+Black Commission is a grounded semi-realistic industrial horror game about a
+failing commission office sending workers into worn public facilities, where
+ordinary maintenance spaces, debt pressure, and malfunctioning equipment become
+uncanny.
 
-Players should remember:
+Use this phrase for future asset generation:
 
-- the civic-teal AS dispatch seal crossed by a stamp-red debt slash;
-- the sad office computer that starts everything;
-- the gear shelf full of improvised tools;
-- the muted dispatch-green floor route to the dirty civic fleet van;
-- the stamp-red bureaucratic monster that makes paperwork feel alive.
+```text
+Semi-realistic industrial horror environment, desaturated colors, military green and concrete gray palette, worn wooden furniture, aged metal surfaces, 20-40% weathering, high roughness materials, CRT green accent lighting, grounded realistic proportions, Pacific Drive and Control-inspired maintenance facility aesthetic.
+```
 
-## Research Summary
+## Style Position
 
-### Lethal Company
+The visual target sits between:
 
-Official Steam positioning: co-op horror, contracted workers, abandoned moons,
-scrap, Company quota, ship terminal, purchasable tools, risk/reward travel.
+- photorealistic
+- stylized
 
-What to learn:
+It is not:
 
-- A simple corporate pressure loop is enough to make low-poly spaces memorable.
-- The base/vehicle is a ritual machine: buy tools, choose route, leave, return.
-- Darkness works because the mission objective, ship, tools, and danger colors
-  remain readable.
-- Comedy comes from treating absurd danger like ordinary bad employment.
+- cartoon
+- low poly
+- raw photogrammetry or scan-realism
+- cyberpunk
+- glossy sci-fi
 
-What Black Commission must not copy:
+The look should feel practical, heavy, used, and slightly uncanny. Every prop
+should look like it belongs in a neglected office, workshop, school maintenance
+room, clinic back corridor, mall service route, apartment utility space, or
+warehouse.
 
-- no scrap quota loop;
-- no moons/facility identity;
-- no employee suit silhouettes;
-- no exact ship terminal language;
-- no monster or item equivalents.
+## Reference Use
 
-### Content Warning
+References are for methods, not assets. Do not copy logos, creatures, UI,
+vehicles, maps, sound identities, or exact loop wording from reference games.
 
-Official Steam positioning: co-op horror comedy, buy gear, use a diving bell,
-go down to a dangerous place, capture value, return to upload/watch results.
+Useful reference qualities:
 
-What to learn:
+- Pacific Drive: grounded garage/workshop mood, improvised equipment, worn
+  utilitarian surfaces.
+- Control: institutional spaces, brutal concrete, unsettling offices and
+  maintenance zones.
+- Phasmophobia: readable co-op horror tools in ordinary spaces.
+- The Stanley Parable: mundane office language turning strange.
+- INSIDE: restrained silhouettes, discipline, and negative space.
 
-- A strong transport object can anchor the whole loop.
-- The safe-room-to-mission-to-safe-room rhythm is legible even with simple art.
-- Team comedy is stronger when the objective is absurdly specific.
-
-What Black Commission must not copy:
-
-- no filming/social-media goal;
-- no diving bell identity;
-- no face-customizer or creator economy framing.
-
-### Phasmophobia
-
-Official Steam positioning: 4-player co-op psychological horror where the team
-uses ghost-hunting equipment to gather evidence.
-
-What to learn:
-
-- Equipment should be visible before the run and read as practical tools.
-- Familiar places become scarier when ordinary layouts stay navigable.
-- Players accept dark spaces when tools and exits remain understandable.
-
-What Black Commission must not copy:
-
-- no ghost-hunting profession;
-- no evidence-board taxonomy;
-- no haunted-house equipment identity.
-
-### The Stanley Parable
-
-Official Steam positioning: a first-person office-worker exploration game about
-choice, satire, and a judgmental system.
-
-What to learn:
-
-- Mundane office language can carry humor and unease without high asset cost.
-- Repetition, signage, and banal corporate fixtures can be funny and uncanny.
-
-What Black Commission must not copy:
-
-- no narrator structure;
-- no clean office maze;
-- no meta-choice identity.
-
-### INSIDE
-
-Official Steam positioning: dark, narrative-driven, moody, ambient, unsettling.
-
-What to learn:
-
-- Mood can come from disciplined silhouettes, restricted color, and negative
-  space.
-- Less visual noise can feel more premium than dense random clutter.
-
-What Black Commission must not copy:
-
-- no side-scroller composition;
-- no pure monochrome prestige gloom;
-- no silent art-house tone. Black Commission needs comedy and office specificity.
-
-## Locked Identity
-
-### Name Of The Style
-
-Use **Municipal Debt Noir** when discussing the art direction.
-
-It means:
-
-- **Municipal**: every location should feel like a public-service or
-  service-adjacent institution that failed cheaply.
-- **Debt**: money pressure is visible as stamp-red marks, invoices, final warnings,
-  hostile takeover notices, stamps, gauges, and monster features.
-- **Noir**: the palette is dirty teal, dead rubber, aged paper, sodium amber,
-  and restrained warning color, not clean green/red arcade contrast.
-- **Dispatch**: the office is not a menu. It is a physical work ritual:
-  computer -> gear shelf -> dispatch route -> van -> mission -> return van ->
-  settlement.
-- **Horror**: darkness, pursuit, and anomalies are real, but always grounded in
-  bureaucracy and underfunded work.
-
-### Three Non-Negotiable Motifs
-
-1. **Civic AS dispatch seal with stamp-red debt slash**
-   Must appear on the HQ hero wall, dispatch van, worker badge, important
-   office documents, and later mission return points.
-
-2. **Dispatch green vs stamp red**
-   Dispatch green means company system, approved action, route, exit, or
-   interaction. Stamp red means debt, hostile takeover, overdue pressure,
-   monster focus, or serious danger. Both colors are accents, not the main
-   scene color.
-
-3. **The dispatch ritual**
-   Every hub pass must visually communicate: accept job at computer, buy gear,
-   follow the muted route paint, board the van.
-
-If an asset does not support one of these motifs, it needs a strong gameplay
-reason to exist.
-
-## Shape Language
-
-### HQ And Company Objects
-
-- Squat, practical, second-hand, patched.
-- Wider than elegant; slightly uneven; visibly repaired.
-- Surfaces should feel bought used, donated, or repossessed.
-- Use boxy mass first, then one or two readable identifiers.
-
-Examples:
-
-- CRT computer: heavy base, green screen, receipt/printer trail, cable strip.
-- Desk: low cheap office desk, not heroic counter height.
-- Sofa: broken and grounded, missing cushion, tired fabric.
-- Gear shelf: open metal rack, not a solid cabinet block.
-- Van: dirty old fleet vehicle, roof rack, warning beacon, full side panels.
-
-### Public Civic Spaces
-
-- Modular, repetitive, rectangular.
-- Doors, lockers, tiles, fluorescent strips, cheap signage.
-- Spaces should be readable quickly enough to flee through them.
-
-### Threats
-
-- Tall, thin, vertical, paperwork-adjacent.
-- One strong red feature visible from distance.
-- Long arms or coat tails are allowed; generic demons are not.
-
-The first monster remains the **Homework Debt Collector**:
-
-- red coat/body;
-- receipt/paper head or collar;
-- ledger/clipboard element;
-- long arms;
-- red eye bar;
-- late/overdue marks.
+Black Commission must keep its own identity: a broke outsourcing office,
+absurd public-service jobs, practical gear, and civic/workplace horror.
 
 ## Color Lock
 
-Approximate palette balance per scene:
+Color discipline is the most important rule. The project should use a narrow,
+desaturated palette.
 
-- 55-65% civic teal / dead rubber / tired concrete;
-- 15-20% aged paper / cardboard / old wood;
-- 8-12% sodium amber and dirty bone practical lighting;
-- 3-6% muted dispatch green;
-- 3-5% stamp red debt/danger;
-- 0-5% map-specific accent.
+Approximate scene balance:
 
-Semantic tokens:
+- 60% concrete gray
+- 20% military green
+- 15% old wood brown
+- 5% rust
 
-| Token | Hex | Use |
+### Main Palette
+
+| Role | Hex | Use |
 |---|---:|---|
-| Civic Teal | `#2F4F4B` | walls, van body, company panels, old civic paint |
-| Deep Civic Teal | `#172422` | grime, fog, shadowed wall sections |
-| Dead Rubber | `#111413` | shelves, lockers, computer casing, tires, black metal |
-| Aged Paper | `#D6C89B` | notices, forms, labels, homework |
-| Dispatch Green | `#7BCF8A` | computer screen, route marks, approved systems, extraction |
-| Stamp Red | `#C23A2B` | overdue stamps, debt slash, hostile takeover, monster warning |
-| Monster Eye Red | `#F2140A` | active threat focus only |
-| Sodium Amber | `#D99A31` | garage fixtures, old work lights, van beacon |
-| Dirty Bone | `#C9C2AA` | old plastic, fixture panels, worn helmet, sofa edge wear |
-| Cheap Cardboard | `#73502A` | boxes, improvised gear, storage |
-| Second-Hand Wood | `#4A3119` | desks, counters, school furniture |
-| Tired Fabric | `#2C322B` | sofa, chair, cheap uniform cloth |
+| Concrete Gray 1 | `#5E5E5E` | walls, floors, pillars, large concrete forms |
+| Concrete Gray 2 | `#707070` | worn panels, dusty paint, secondary concrete |
+| Concrete Gray 3 | `#4A4A4A` | grime, shadowed concrete, dark rubber |
+| Military Green 1 | `#55624A` | cabinets, van/body panels, metal furniture |
+| Military Green 2 | `#68745C` | faded painted metal, old doors, equipment cases |
+| Military Green 3 | `#475040` | dark green trim, dirty shelves, heavy frames |
+| Old Wood Brown 1 | `#6B5440` | desks, shelves, school furniture |
+| Old Wood Brown 2 | `#7C624A` | worn chair parts, boards, counters |
+| Old Wood Brown 3 | `#8A7158` | exposed edges, scuffed wood highlights |
+| Rust 1 | `#7B4B2A` | small rust patches and stains |
+| Rust 2 | `#8C5937` | aged metal wear, old pipes |
+| Rust 3 | `#A36842` | tiny exposed oxidation accents only |
 
-Do not let a scene become one-note blue, black, brown, gray, or neon green/red.
-Green/red semantics must stay visible, but the scene should read first as dirty
-municipal noir.
+### Only Accent Color
+
+Use exactly one gameplay accent color:
+
+| Role | Hex | Use |
+|---|---:|---|
+| CRT Green | `#6CFF5F` | CRT screens, UI, radar, detectors, signal lights |
+
+Do not scatter blue, purple, red, or saturated yellow through the scene. Do not
+use red as the default danger color in this style lock. If warning information
+is needed, express it through CRT green UI state, movement, sound, layout,
+shape, or material damage before adding another hue.
+
+Warm tungsten light is allowed as light color only, not as a broad yellow
+material accent.
 
 ## Lighting Lock
 
-Lighting rule: **readable darkness, not blind darkness**.
+Only three light families are allowed:
+
+- cold white industrial light, 5000K
+- warm tungsten light, 3000K
+- CRT green emission, `#6CFF5F`
+
+### Use
+
+- 5000K cold white for maintenance areas, corridors, garage/workshop zones,
+  utility rooms, and service routes.
+- 3000K warm tungsten for sofa areas, desks, tired office corners, and small
+  human spaces.
+- CRT green only for computer screens, UI panels, radar, monster detectors,
+  interaction feedback, and low-intensity electronic spill.
+
+### Avoid
+
+- pure white light
+- random colored point lights
+- blue, purple, red, or yellow decorative lighting
+- neon strips
+- cyberpunk glow
+- big pools of green light that turn the scene arcade-like
+- darkness so heavy that routes, exits, objectives, and interactables disappear
+
+Lighting rule: readable industrial darkness, not blind darkness.
+
+## Material Lock
+
+Materials must feel used, dusty, and high roughness.
+
+Required roughness range:
+
+```text
+0.6 to 0.85
+```
+
+Required weathering:
+
+```text
+20% to 40%
+```
 
 Use:
 
-- practical fixtures with visible geometry;
-- spotlights for garage/work lights and vehicle cones;
-- small point lights only for screen glow, exit glow, beacons, and monster eyes;
-- fog lightly, never as a replacement for layout.
+- chipped paint
+- scratches
+- dust
+- tape marks
+- sticker residue
+- edge wear
+- rubbed handles
+- dull metal
+- stained concrete
+- faded military green paint
+- old varnished or exposed wood
 
 Avoid:
 
-- random floating point lights;
-- over-bright colored pools that make props look fake;
-- hiding the route, exit, objective, or interactable in darkness;
-- pure black garages.
+- clean showroom assets
+- shiny metal
+- mirror reflections
+- chrome
+- glossy sci-fi plastic
+- cyberpunk emissive materials
+- wet-looking surfaces unless the map explicitly needs water or leaks
 
-HQ lighting:
+## Shape Language
 
-- warm weak overhead;
-- small dispatch-green spill at computer only;
-- controlled amber work light in garage;
-- stable muted green route/exit marks;
-- stamp-red board readable but not brighter than computer.
-- no large green floor glow under the van.
+The world should stay rectangular, practical, and repairable.
 
-Mission lighting:
+Keep using:
 
-- colder civic fluorescents, still within the teal/paper/dirty-bone palette;
-- darker side rooms;
-- stamp-red threat accents;
-- muted green return/van/extraction point.
+- cabinets
+- desks
+- notice boards
+- CRT computers
+- printers
+- tool walls
+- drawers
+- shelves
+- service doors
+- lockers
+- square ceiling lights
+- exposed pipes and brackets
+
+Most objects should read as boxes, plates, frames, slabs, and bolted-together
+parts. This is a strength of the current art direction.
+
+Do not introduce:
+
+- futuristic spacecraft shapes
+- streamlined furniture
+- rounded consumer-tech products
+- elegant sci-fi curves
+- toy-like silhouettes
+- soft cartoon proportions
+
+## Texture Lock
+
+Use one consistent texture target:
+
+```text
+2048 x 2048
+```
+
+Texture style:
+
+- coarse grain
+- visible wear
+- light stains
+- chipped or faded paint
+- subtle dirt variation
+- practical, readable detail
+
+Avoid:
+
+- 8K scan-level detail
+- ultra-sharp photogrammetry
+- procedural noise so strong that object function becomes unclear
+- clean flat colors with no age
+
+## Required Motifs
+
+These motifs replace the previous teal/red dispatch system:
+
+1. **The failing office**
+   A cheap, worn office is the ritual start point: computer, desk, documents,
+   gear storage, sofa corner, and exit route.
+
+2. **Improvised industrial gear**
+   Equipment should look bought used, repaired, borrowed from maintenance
+   closets, or assembled from workshop parts.
+
+3. **CRT green systems**
+   The computer, UI, radar, and detectors are the only bright accent family.
+   Players should remember the green glow from old electronics, not neon.
+
+4. **Public facilities gone wrong**
+   Schools, malls, apartments, clinics, and warehouses must feel like real
+   public or service spaces that became neglected, strange, and dangerous.
+
+## Asset Family Rules
+
+### HQ
+
+Required readable zones:
+
+- CRT computer desk
+- worn document/status wall
+- gear shelf or tool rack
+- sofa or tired office corner
+- garage or workshop threshold
+- mission departure route
+
+Forbidden:
+
+- clean startup office
+- premium lounge furniture
+- fantasy shop stall
+- unexplained decorative clutter
+- floating furniture or props
+- saturated colored accent objects
+
+### Office And Workshop Props
+
+Props should be second-hand, rectangular, and worn.
+
+Good examples:
+
+- military-green filing cabinet
+- old wooden desk
+- dusty CRT computer
+- beige or gray printer
+- metal tool wall
+- old safety board
+- taped extension cord
+- dirty fluorescent fixture
+- worn sofa in muted fabric
+
+### Vehicle
+
+If the mission vehicle is visible, it should read as a dirty, practical service
+vehicle rather than a heroic sci-fi transport.
+
+Required:
+
+- military green or concrete-gray body
+- dull metal trim
+- dirty glass
+- roof rack or practical storage
+- 20-40% weathering
+- only small CRT green system lights if needed
+
+Forbidden:
+
+- futuristic troop carrier
+- clean ambulance/police read
+- glossy black silhouette
+- saturated warning colors as primary identity
+
+### Worker
+
+Worker silhouette:
+
+- cheap uniform
+- practical helmet or cap
+- tired vest or jacket
+- small company badge
+- backpack or carried tool
+- grounded, underfunded, not heroic
+
+### Monsters
+
+Monster design still asks:
+
+```text
+What ordinary workplace or public-service pressure became physical here?
+```
+
+The first school monster can still be a homework/debt collector, but it should
+now fit the industrial horror palette: gray, military green, dirty fabric,
+old paper, rusted metal details, and CRT green detection/eye/UI accents if
+needed.
+
+Do not use a saturated red body as the default monster solution.
+
+## Map Rules
+
+Each map needs one public-facility identity:
+
+- School: corridors, classrooms, lockers, homework storage, maintenance rooms.
+- Mall: shutters, service corridors, delivery areas, flooded back routes.
+- Apartment: stairs, elevator, utility rooms, floor-by-floor searching.
+- Clinic: curtains, gurneys, billing windows, staff-only back rooms.
+- Warehouse: long aisles, roll-up doors, inventory cages, carried objectives.
+
+Do not build generic horror spaces. Every map must show which institution
+failed.
 
 ## Modeling And Grounding Rules
 
@@ -274,18 +362,18 @@ centerY = floorY + height * 0.5
 
 Checklist:
 
-- sofa base bottom touches floor;
-- chair feet touch floor;
-- filing cabinets touch floor;
-- desk legs touch floor and reach desk underside;
-- monitor base touches desk;
-- shelves have visible uprights/planks, not one solid floating block;
-- van has complete side panels unless intentionally open.
+- sofa base bottom touches floor
+- chair feet touch floor
+- filing cabinets touch floor
+- desk legs touch floor and reach desk underside
+- monitor base touches desk
+- shelves have visible uprights/planks, not one solid floating block
+- vehicle body has complete side panels unless intentionally open
 
 ### Blender Script
 
-The ASV4 Blender helper applies cube scale directly before export, so the scale
-values are full dimensions in object space. Use the same grounding logic:
+The Blender helper applies cube scale directly before export, so scale values
+are full dimensions in object space. Use the same grounding logic:
 
 ```text
 centerZ = floorZ + height * 0.5
@@ -293,107 +381,19 @@ centerZ = floorZ + height * 0.5
 
 Every asset needs a 1.8m human-readability pass:
 
-- desk top around 0.58-0.70m for the current stylized worker/player relation;
-- chair/sofa seat around 0.32-0.45m;
-- shelves grounded, not levitating;
-- van body closed from all visible sides;
-- monster height clearly taller than worker.
-
-## Asset Family Rules
-
-### HQ
-
-Required readable zones:
-
-- computer desk;
-- debt/status wall;
-- gear shelf;
-- muted dispatch route paint;
-- garage threshold;
-- dispatch van.
-
-Hero composition:
-
-- The computer and debt wall should be visible in the same screenshot.
-- The AS dispatch seal with stamp-red debt slash must be visible from the main
-  room.
-- The muted green route should lead the eye to the garage, not decorate
-  randomly.
-
-Forbidden:
-
-- clean startup office;
-- premium lounge furniture;
-- fantasy shop stall;
-- unexplained trash;
-- furniture scaled above the worker/player;
-- props floating above the floor.
-
-### Dispatch Van
-
-The van is the game's first memorable object after the computer.
-
-Required:
-
-- dirty civic-teal or old green-gray fleet body;
-- full side panels;
-- roof rack;
-- amber beacon;
-- dispatch-green AS mark;
-- stamp-red debt slash;
-- dirty glass;
-- small interaction zone;
-- practical headlight or work-light cone.
-
-Forbidden:
-
-- hollow side;
-- clean ambulance/police read;
-- futuristic troop carrier;
-- black silhouette with no readable logo.
-
-### Worker
-
-Worker silhouette:
-
-- cheap uniform;
-- simple helmet or cap;
-- tired safety vest;
-- small company badge;
-- practical backpack/tool;
-- not sleek, not tactical, not heroic.
-
-### Monster
-
-Monster design always asks:
-
-```text
-What bureaucracy became physical here?
-```
-
-For school, the answer is homework debt. Future monsters should follow the same
-logic: apartment fine collector, clinic claim adjuster, mall security invoice,
-warehouse inventory auditor.
-
-### Maps
-
-Each map needs one civic gimmick:
-
-- School: corridor loops, classrooms, lockers, homework debt room.
-- Mall: shutters/flooded service route.
-- Apartment: stairs/elevator/floor-by-floor searching.
-- Clinic: curtains, gurneys, billing windows.
-- Warehouse: long aisles, roll-up doors, carried objectives.
-
-Do not build generic horror spaces. Every map must show which institution failed.
+- desk top around 0.58-0.70m for the current stylized worker/player relation
+- chair/sofa seat around 0.32-0.45m
+- shelves grounded, not levitating
+- vehicle body closed from all visible sides
+- monster height clearly taller than worker
 
 ## Production Lock
 
 Current Play Mode source of truth:
 
-- playable HQ visuals: `MvpSceneStyleDirector`;
-- generated Blender assets: `docs/art/blender_outsourced_civic_commercial_v4.py`;
-- ASV4 prefabs/resources: `GeneratedArtImporter`.
+- playable HQ visuals: `MvpSceneStyleDirector`
+- generated Blender assets: `docs/art/blender_outsourced_civic_commercial_v4.py`
+- generated prefabs/resources: `GeneratedArtImporter`
 
 Until the HQ pipeline changes, fixing the playable office means editing
 `MvpSceneStyleDirector`. Fixing Blender alone will not change the current HQ
@@ -401,42 +401,45 @@ scene.
 
 If Blender HQ becomes authoritative later:
 
-1. call the generated HQ prefab from the HQ flow;
-2. keep the real `OfficeComputer` interaction component;
-3. disable overlapping runtime decorative office props;
-4. keep runtime colliders/boundaries explicit;
-5. keep the AS mark, route, gear shelf, and van ritual.
+1. call the generated HQ prefab from the HQ flow
+2. keep the real `OfficeComputer` interaction component
+3. disable overlapping runtime decorative office props
+4. keep runtime colliders/boundaries explicit
+5. keep the computer, gear shelf, office route, and mission departure ritual
 
 ## Acceptance Tests
 
 Run these before calling an art pass complete:
 
-1. **Two-second read**: from spawn, can the player identify the computer, debt
-   wall, and route to van?
-2. **Screenshot test**: one HQ screenshot should show civic teal, aged paper,
-   sodium light, a small dispatch-green system accent, stamp-red debt pressure,
-   cheap grounded furniture, and dispatch identity.
-3. **Grounding test**: no sofa, shelf, cabinet, chair, monitor, or van panel
+1. **Style position test**: the asset reads as semi-realistic industrial horror,
+   not cartoon, low-poly, or scan-real.
+2. **Palette test**: the scene is mostly concrete gray, military green, old
+   wood, and rust, with CRT green as the only bright accent.
+3. **Lighting test**: only 5000K cold white, 3000K warm tungsten, and CRT green
+   are used.
+4. **Material test**: roughness feels in the 0.6-0.85 range, with 20-40%
+   weathering.
+5. **Shape test**: props stay rectangular, practical, grounded, and repairable.
+6. **Texture test**: 2K-style coarse wear is consistent; no 8K scan mismatch.
+7. **Grounding test**: no sofa, shelf, cabinet, chair, monitor, or vehicle panel
    floats.
-4. **Collision test**: player cannot fall out of the HQ/garage route.
-5. **Lighting test**: route and van are readable without destroying darkness.
-6. **Copy-risk test**: remove any asset that reads as Lethal Company suit,
-   scrap quota, moon facility, exact terminal, or monster equivalent.
-7. **Specificity test**: every prop either guides play, sells debt-company
-   comedy, warns danger, or supports a real interaction.
+8. **Specificity test**: every prop either guides play, sells the failing office,
+   supports co-op gear, or makes a public facility feel uncanny.
+9. **Copy-risk test**: remove any asset that reads as a copied reference-game
+   suit, monster, vehicle, terminal, map, or logo.
 
 If a feature fails two or more tests, it is not style-locked.
 
 ## Final Direction Statement
 
-Black Commission should feel like a tiny company that should not exist, operating
-from a debt-stained office, sending underpaid workers into failed public spaces
-where paperwork has teeth.
+Black Commission should feel like a four-person team built a grounded co-op
+horror game out of concrete corridors, military-green cabinets, worn wood,
+rusted maintenance hardware, and old CRT systems.
 
 The game is memorable when players can describe it as:
 
 ```text
-That co-op horror game where your broke commission office sends you out in the
-stamp-slashed civic van to fix absurd public problems before the paperwork eats
-you.
+That co-op horror game where your broke commission office sends you into failed
+public facilities with used industrial gear, and the only clean glow is the CRT
+green screen telling you something is wrong.
 ```

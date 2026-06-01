@@ -46,6 +46,123 @@ public static class OfficePropImporter
             TargetHeight = 2.0f,                 // van height; length scales proportionally
             Euler = new Vector3(-90f, 0f, 0f),   // same lying-down fix as the other Meshy props
         },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeSofa.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeSofa",
+            PrefabName = "AS_OfficeSofa",
+            TargetHeight = 0.85f,                // second-hand sofa: ~0.85m tall at the backrest
+            Euler = new Vector3(-90f, 0f, 0f),   // Meshy lying-down fix; fine-tune facing in scene
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeToolRack.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeToolRack",
+            PrefabName = "AS_OfficeToolRack",
+            TargetHeight = 1.3f,                 // pegboard tool rack: ~1.3m board height
+            Euler = new Vector3(-90f, 0f, 0f),   // Meshy lying-down fix; fine-tune facing in scene
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeFilingCabinet.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeFilingCabinet",
+            PrefabName = "AS_OfficeFilingCabinet",
+            TargetHeight = 1.25f,                // two-door filing cabinet (#6)
+            Euler = new Vector3(-90f, 0f, 0f),   // Meshy lying-down fix; fine-tune facing in scene
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeSupplyCabinet.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeSupplyCabinet",
+            PrefabName = "AS_OfficeSupplyCabinet",
+            TargetHeight = 1.5f,                 // open field-supply cabinet (#9)
+            Euler = new Vector3(-90f, 0f, 0f),   // Meshy lying-down fix; fine-tune facing in scene
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeDebtBoard.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeDebtBoard",
+            PrefabName = "AS_OfficeDebtBoard",
+            TargetHeight = 0.9f,                 // debt bulletin board (#4), wall-mounted
+            Euler = new Vector3(-90f, 0f, 0f),   // Meshy lying-down fix; fine-tune facing in scene
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeToolSet.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeToolSet",
+            PrefabName = "AS_OfficeToolSet",
+            TargetHeight = 0.6f,
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeSafetyBoard.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeSafetyBoard",
+            PrefabName = "AS_OfficeSafetyBoard",
+            TargetHeight = 1.2f,                 // industrial safety bulletin board, wall-mounted
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeDesk.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeDesk",
+            PrefabName = "AS_OfficeDesk",
+            TargetHeight = 0.75f,                // dusty office desk
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeFireExtinguisher.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeFireExtinguisher",
+            PrefabName = "AS_OfficeFireExtinguisher",
+            TargetHeight = 0.55f,                // three vintage fire extinguishers as a group
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_OfficeGasMaskSentinel.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_OfficeGasMaskSentinel",
+            PrefabName = "AS_OfficeGasMaskSentinel",
+            TargetHeight = 1.7f,                 // gas-masked sentinel figure
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_GarageWorkshopCorner.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_GarageWorkshopCorner",
+            PrefabName = "AS_GarageWorkshopCorner",
+            TargetHeight = 1.4f,
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_LampFluorescent.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_LampFluorescent",
+            PrefabName = "AS_LampFluorescent",
+            TargetHeight = 0.15f,                // ceiling fluorescent strip — thin, wide
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
+        new Prop
+        {
+            Fbx = "Assets/_Project/Art/Generated/Office_v1/AS_LampDesk.fbx",
+            TextureFolder = "Assets/_Project/Art/Generated/Office_v1/Textures",
+            Name = "AS_LampDesk",
+            PrefabName = "AS_LampDesk",
+            TargetHeight = 0.45f,                // vintage industrial desk lamp
+            Euler = new Vector3(-90f, 0f, 0f),
+        },
     };
 
     static bool isBuilding;
