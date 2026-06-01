@@ -170,15 +170,23 @@ public static class MvpSceneStyleDirector
         if (PreferBlenderOfficeFbx && CreateGeneratedOfficeVisualIfAvailable(root.transform))
         {
             CreateBlenderOfficeGameplayOverlays(root.transform);
+            PruneHqLightsToFluorescentPair();
             Debug.Log("[MvpSceneStyleDirector] Using Blender-generated HQ model.");
             return;
         }
 
         Debug.Log("[MvpSceneStyleDirector] Building code office shell (reference-art target, colour/collider controlled).");
 
-        Material wall = MakeOfficeMaterial("Office_DirtyGreyWall", DirtyOfficeWall, CivicTealShadow, OfficePattern.Grime);
-        Material floor = MakeOfficeMaterial("Office_WornCivicFloor", WornConcrete, CivicTealShadow, OfficePattern.Tile);
-        Material ceiling = MakeOfficeMaterial("Office_CheapCeilingTile", Rgb(0x7C, 0x78, 0x66), DeadRubberSoft, OfficePattern.Tile);
+        // Downloaded concrete material if WallMaterialTool has built it into Resources;
+        // otherwise fall back to the procedural patterns. Walls + floor + ceiling all
+        // share the same Concrete044C material.
+        Material concrete = LoadConcreteWallMaterial();
+        Material wall = concrete
+            ?? MakeOfficeMaterial("Office_DirtyGreyWall", DirtyOfficeWall, CivicTealShadow, OfficePattern.Grime);
+        Material floor = concrete
+            ?? MakeOfficeMaterial("Office_WornCivicFloor", WornConcrete, CivicTealShadow, OfficePattern.Tile);
+        Material ceiling = concrete
+            ?? MakeOfficeMaterial("Office_CheapCeilingTile", Rgb(0x7C, 0x78, 0x66), DeadRubberSoft, OfficePattern.Tile);
         Material darkMetal = MakeOfficeMaterial("Office_DeadRubberMetal", DeadRubber, DeadRubberSoft, OfficePattern.Scratched);
         Material hazardStripe = MakeOfficeMaterial("Office_SodiumHazardStripe", SodiumAmber, DeadRubber, OfficePattern.Warning);
         Material bayDoor = MakeOfficeMaterial("Office_DentedBayDoor", CivicTealShadow, DeadRubber, OfficePattern.Scratched);
@@ -192,6 +200,7 @@ public static class MvpSceneStyleDirector
         // van interaction trigger + blocking colliders, incandescent + CRT lights,
         // computer guides, and player spawn fix.
         CreateBlenderOfficeGameplayOverlays(root.transform);
+        PruneHqLightsToFluorescentPair();
     }
 
     // Sealed room shell that matches CreateOfficeBoundaryColliders 1:1. Furniture is left
@@ -210,11 +219,11 @@ public static class MvpSceneStyleDirector
         CreateBox("ShellWestWall", root, new Vector3(-5.10f, 1.35f, 0f), new Vector3(0.28f, 2.7f, 6.55f), wall);
         CreateBox("ShellEastWall", root, new Vector3(5.30f, 1.35f, 0f), new Vector3(0.28f, 2.7f, 6.55f), wall);
         CreateBox("ShellSouthWallOfficeLeft", root, new Vector3(-4.10f, 1.35f, -3.25f), new Vector3(1.85f, 2.7f, 0.28f), wall);
-        CreateBox("ShellSouthWallOfficeRight", root, new Vector3(-1.15f, 1.35f, -3.25f), new Vector3(1.20f, 2.7f, 0.28f), wall);
+        CreateBox("ShellSouthWallOfficeRight", root, new Vector3(-0.611f, 1.35f, -3.25f), new Vector3(1.72f, 2.7f, 0.28f), wall);
         CreateBox("ShellSouthWallGarageLeft", root, new Vector3(0.85f, 1.35f, -3.25f), new Vector3(1.20f, 2.7f, 0.28f), wall);
         CreateBox("ShellSouthWallGarageRight", root, new Vector3(4.65f, 1.35f, -3.25f), new Vector3(1.20f, 2.7f, 0.28f), wall);
-        CreateBox("ShellDividerWall", root, new Vector3(0.05f, 1.35f, 0.90f), new Vector3(0.28f, 2.7f, 4.70f), wall);
-        CreateBox("ShellDividerStub", root, new Vector3(0.05f, 1.35f, -2.75f), new Vector3(0.28f, 2.7f, 0.90f), wall);
+        CreateBox("ShellDividerWall", root, new Vector3(0.097f, 1.35f, 1.173f), new Vector3(0.28f, 2.7f, 4.43f), wall);
+        CreateBox("ShellDividerStub", root, new Vector3(0.05f, 1.361f, -2.878f), new Vector3(0.28f, 2.7f, 0.55f), wall);
 
         // Garage roll-door opening (X:[1.45,4.05], south wall): header + rolled-up door + threshold stripe.
         CreateBox("ShellGarageDoorHeader", root, new Vector3(2.75f, 2.45f, -3.25f), new Vector3(2.60f, 0.55f, 0.28f), wall);
@@ -224,6 +233,141 @@ public static class MvpSceneStyleDirector
         if (!TryPlaceGeneratedVan(root))
             BuildPlaceholderVan(root, vanBody, vanGlass, darkMetal);
         BuildComputerStation(root, darkMetal);
+        // Wall text removed — TextMesh needs font asset wiring, use TMP in scene instead.
+        PlaceOfficeFurniture(root);
+    }
+
+    // Wall text per HQ_Office_Reference.png floor plan.
+    // All text uses Unity's built-in TextMesh (same as the old COMPUTER label).
+    // Positions assume the code-built shell: west wall X=-5.1, north wall Z=3.25,
+    // east wall X=5.3, ceiling Y=2.72. Text floats 0.05–0.08 m off each wall face.
+    // Meshy furniture placed per the HQ floor-plan reference (HQ_Office_Reference.png).
+    // Garage is kept clear for now (per request) except the wall-mounted tool rack;
+    // all storage/cabinets live in the office.
+    //   #7 二手沙发    → office, against the WEST wall, southern half
+    //   #6 文件柜      → office, WEST wall, north
+    //   #9 补给柜(开) → office, WEST wall, mid (moved out of the garage)
+    //   #4 债务公告板  → office, NORTH wall, right of the COMPUTER sign (wall-mounted)
+    //   工具集        → office floor, south (garage kept clear)
+    //   #8 工具架      → garage NORTH wall (wall-mounted; left as-is, user approved it)
+    // First-pass transforms; fine-tune in the Scene view and report the values back to bake.
+    static void PlaceOfficeFurniture(Transform root)
+    {
+        // Sofa / filing cabinet / debt board / tool set: user-dialed _Model child
+        // transforms baked in (positions/rotations/scales tuned in the Scene). To adjust,
+        // re-tune the _Model child in the Scene and re-report its Transform.
+
+        // #7 二手沙发 — office SW
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeSofa", "ShellSofa_Generated",
+            new Vector3(-3.90f, 0f, -2.80f), new Vector3(0f, 90f, 0f),
+            new Vector3(-3.674f, 0.388f, 3.221f), new Vector3(-90f, -180f, 0f), new Vector3(79.2f, 64.3f, 84.5f));
+        // #6 文件柜
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeFilingCabinet", "ShellFilingCabinet_Generated",
+            new Vector3(-4.45f, 0f, 1.70f), new Vector3(0f, 90f, 0f),
+            new Vector3(0.395f, 0.66f, -0.23f), new Vector3(-90f, 0f, 0f), new Vector3(65.80643f, 65.80643f, 65.80643f));
+        // #9 补给柜(开)
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeSupplyCabinet", "ShellSupplyCabinet_Generated",
+            new Vector3(-4.45f, 0f, 0.20f), new Vector3(0f, 90f, 0f),
+            new Vector3(0.215f, 0.652f, -0.159f), new Vector3(-90f, 0f, 0f), new Vector3(81.3f, 81.3f, 78.3f));
+        // #4 债务公告板
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeDebtBoard", "ShellDebtBoard_Generated",
+            new Vector3(-0.45f, 1.55f, 3.05f), new Vector3(0f, 180f, 0f),
+            new Vector3(0.442f, -0.176f, -0.001f), new Vector3(-90f, 0f, 0f), new Vector3(81.64722f, 81.64722f, 81.64722f));
+        // 工具集
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeToolSet", "ShellToolSet_Generated",
+            new Vector3(-2.60f, 0f, -2.85f), new Vector3(0f, 0f, 0f),
+            new Vector3(-1.514f, 0.277f, 1.001f), new Vector3(-90f, 0f, 82.44f), new Vector3(104f, 104f, 104f));
+        // #8 工具架 — garage north wall
+        TryPlaceProp(root, "GeneratedArt/AS_OfficeToolRack", "ShellToolRack_Generated",
+            new Vector3(2.70f, 0.85f, 2.95f), Quaternion.Euler(0f, 180f, 0f));
+        TryPlacePropBaked(root, "GeneratedArt/AS_GarageWorkshopCorner", "ShellGarageWorkshopCorner_Generated",
+            new Vector3(4.70f, 0f, 2.50f), new Vector3(0f, -90f, 0f),
+            new Vector3(-4.628f, 0.717f, 0.004f), new Vector3(-90f, 0f, 0f), new Vector3(101.8262f, 101.8262f, 101.8262f));
+        // ── 长灯 × 2：电脑桌上方 + 工具架上方 ──
+        TryPlacePropBaked(root, "GeneratedArt/AS_LampFluorescent", "ShellLampFluorescent_Computer",
+            new Vector3(-1.55f, 2.60f, 1.80f), new Vector3(0f, 0f, 0f),
+            new Vector3(-0.988f, -0.619f, 1.195f), new Vector3(-90f, 180f, 0f), new Vector3(65.48044f, 65.48044f, 65.48044f));
+        CreatePointLight("HQ_LampFluorescent_Computer_Light", root,
+            new Vector3(2.70f, 2.45f, 3.063f), IncandescentWhite, 1.8f, 5.5f);
+        TryPlacePropBaked(root, "GeneratedArt/AS_LampFluorescent", "ShellLampFluorescent_ToolRack",
+            new Vector3(2.70f, 2.60f, 2.60f), new Vector3(0f, 0f, 0f),
+            new Vector3(-0.000632885f, -0.166f, 0.422f), new Vector3(-90f, 180f, 0f), new Vector3(65.48044f, 65.48044f, 65.48044f));
+        CreatePointLight("HQ_LampFluorescent_ToolRack_Light", root,
+            new Vector3(-2.526f, 2.00f, 2.724f), IncandescentWhite, 1.8f, 5.5f);
+        // ── 台灯 × 2 ──
+        TryPlacePropBaked(root, "GeneratedArt/AS_LampDesk", "ShellLampDesk_A",
+            new Vector3(-1.55f, 0.80f, 1.60f), new Vector3(0f, 180f, 0f),
+            new Vector3(2.01f, 1.727f, 1.295f), new Vector3(-90f, 0f, 0f), new Vector3(23.69977f, 23.69977f, 23.69977f));
+        CreatePointLight("HQ_LampDesk_A_Light", root,
+            new Vector3(-1.55f, 1.85f, 1.60f), IncandescentWarm, 1.2f, 3.0f);
+        TryPlacePropBaked(root, "GeneratedArt/AS_LampDesk", "ShellLampDesk_B",
+            new Vector3(-3.80f, 0.75f, 2.00f), new Vector3(0f, 90f, 0f),
+            new Vector3(-4.317f, 1.672f, 4.71f), new Vector3(-90f, 0f, 0f), new Vector3(23.69977f, 23.69977f, 23.69977f));
+        CreatePointLight("HQ_LampDesk_B_Light", root,
+            new Vector3(-3.80f, 1.75f, 2.00f), IncandescentWarm, 1.2f, 3.0f);
+        // 安全公告板
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeSafetyBoard", "ShellSafetyBoard_Generated",
+            new Vector3(-2.80f, 1.50f, 3.05f), new Vector3(0f, 180f, 0f),
+            new Vector3(2.05f, -0.169f, 5.053f), new Vector3(-90f, -90f, 0f), new Vector3(98.74973f, 98.74973f, 98.74973f));
+        // 办公桌
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeDesk", "ShellDesk_Generated",
+            new Vector3(-1.20f, 0f, 2.20f), new Vector3(0f, 180f, 0f),
+            new Vector3(-0.357f, 0.402f, -0.503f), new Vector3(-90f, 0f, 0f), new Vector3(58.47131f, 58.47131f, 58.47131f));
+        // 灭火器组
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeFireExtinguisher", "ShellFireExtinguisher_Generated",
+            new Vector3(-4.50f, 0f, -2.90f), new Vector3(0f, 90f, 0f),
+            new Vector3(-2.511f, 0.412f, 4.335f), new Vector3(-90f, -180f, 0f), new Vector3(40.83926f, 40.83926f, 40.83926f));
+        // 防毒面具哨兵
+        TryPlacePropBaked(root, "GeneratedArt/AS_OfficeGasMaskSentinel", "ShellGasMaskSentinel_Generated",
+            new Vector3(-0.60f, 0f, -2.90f), new Vector3(0f, 180f, 0f),
+            new Vector3(4.113f, 0.923f, -5.063f), new Vector3(-90f, -90f, 0f), new Vector3(89.5156f, 89.5156f, 89.5156f));
+    }
+
+    static bool TryPlaceProp(Transform root, string resourcePath, string name, Vector3 position, Quaternion rotation)
+    {
+        GameObject prefab = Resources.Load<GameObject>(resourcePath);
+        if (prefab == null) return false;
+
+        GameObject go = Object.Instantiate(prefab, root);
+        go.name = name;
+        go.transform.localPosition = position;
+        go.transform.localRotation = rotation;
+        go.transform.localScale = Vector3.one;
+
+        // Decorative only — these shouldn't block movement (boundary colliders already
+        // wall the room off). Disable any colliders the prop imported with.
+        foreach (Collider c in go.GetComponentsInChildren<Collider>())
+            c.enabled = false;
+        return true;
+    }
+
+    // Same as TryPlaceProp but also bakes the inner model child's transform — for props
+    // the user fine-tuned in the Scene (the office rebuilds from code each load, so manual
+    // Scene edits don't persist; the dialed-in child Transform values do). Mirrors the
+    // TryPlaceGeneratedComputer/Van pattern.
+    static bool TryPlacePropBaked(Transform root, string resourcePath, string name,
+        Vector3 wrapperPos, Vector3 wrapperEuler, Vector3 childLocalPos, Vector3 childEuler, Vector3 childScale)
+    {
+        GameObject prefab = Resources.Load<GameObject>(resourcePath);
+        if (prefab == null) return false;
+
+        GameObject go = Object.Instantiate(prefab, root);
+        go.name = name;
+        go.transform.localPosition = wrapperPos;
+        go.transform.localRotation = Quaternion.Euler(wrapperEuler);
+        go.transform.localScale = Vector3.one;
+
+        if (go.transform.childCount > 0)
+        {
+            Transform model = go.transform.GetChild(0);
+            model.localPosition = childLocalPos;
+            model.localEulerAngles = childEuler;
+            model.localScale = childScale;
+        }
+
+        foreach (Collider c in go.GetComponentsInChildren<Collider>())
+            c.enabled = false;
+        return true;
     }
 
     static bool TryPlaceGeneratedVan(Transform root)
@@ -246,7 +390,7 @@ public static class MvpSceneStyleDirector
             Transform model = van.transform.GetChild(0);
             model.localPosition = new Vector3(-0.09f, 0.9f, -0.33f);
             model.localEulerAngles = new Vector3(-90f, 0f, 90f);
-            model.localScale = Vector3.one * 239.4f;
+            model.localScale = Vector3.one * 212.62f;
         }
 
         foreach (Collider c in van.GetComponentsInChildren<Collider>())
@@ -290,8 +434,8 @@ public static class MvpSceneStyleDirector
         if (desk.transform.childCount > 0)
         {
             Transform model = desk.transform.GetChild(0);
-            model.localPosition = new Vector3(-0.988f, 0.525f, 0.4f);
-            model.localEulerAngles = new Vector3(-90f, 180f, 0f);
+            model.localPosition = new Vector3(-0.988f, 0.525f, 0.723f);
+            model.localEulerAngles = new Vector3(-90f, 0f, -180f);
             model.localScale = Vector3.one * 85.7108f;
         }
 
@@ -1693,6 +1837,21 @@ public static class MvpSceneStyleDirector
         return light;
     }
 
+    static void PruneHqLightsToFluorescentPair()
+    {
+        foreach (var light in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        {
+            if (light == null) continue;
+            if (light.gameObject.scene.name != "HQ") continue;
+
+            string name = light.gameObject.name;
+            if (name == "HQ_LampFluorescent_Computer_Light" || name == "HQ_LampFluorescent_ToolRack_Light")
+                continue;
+
+            DestroySceneObject(light.gameObject);
+        }
+    }
+
     static Light CreateSpotLight(string name, Transform parent, Vector3 position, Vector3 target, Color color, float intensity, float range, float spotAngle)
     {
         var go = new GameObject(name);
@@ -2431,7 +2590,9 @@ public static class MvpSceneStyleDirector
         // Threshold strip at the iron gate so the player can stand near the gate.
         CreateWalkableCollider("BlenderHQ_OpenGarageThreshold", root,
             new Vector3(2.75f, -0.04f, -3.35f), new Vector3(2.80f, 0.22f, 0.70f));
-        CreateBlenderComputerGuides(root);
+        // Removed per request: the green "COMPUTER" sign box + label and the yellow
+        // floor guide line/arrows. (CreateBlenderComputerGuides left below, unused.)
+        // CreateBlenderComputerGuides(root);
 
         // ─── Van boarding trigger ──────────────────────────────────────────
         // Van mesh is rotated vertical in Blender, centered in the right garage bay.
@@ -2450,46 +2611,10 @@ public static class MvpSceneStyleDirector
         CreateBlockingCollider("BlenderHQ_ASV4VanRearCollider", root,
             new Vector3(2.75f, 0.66f, 1.60f), new Vector3(1.28f, 0.82f, 0.36f));
 
-        // ─── Office interior incandescent panels ──────────────────────────
-        // Office Blender bounds: X [-3.075, 0.175], Z [-0.775, 1.875]. Ceiling Y=2.72.
-        // Three points spaced along the office Z axis, centered on X=-1.45.
-        CreatePointLight("BlenderHQ_OfficeIncandescent_Front", root, new Vector3(-1.45f, 2.55f, -0.30f),
-            IncandescentWhite, 2.3f, 6.0f);
-        CreatePointLight("BlenderHQ_OfficeIncandescent_Mid", root, new Vector3(-1.45f, 2.55f, 0.60f),
-            IncandescentWhite, 2.3f, 6.0f);
-        CreatePointLight("BlenderHQ_OfficeIncandescent_Back", root, new Vector3(-1.45f, 2.55f, 1.50f),
-            IncandescentWhite, 2.2f, 6.0f);
-        // Extra fill near the office side walls so corners read clearly, not just the center line.
-        CreatePointLight("BlenderHQ_OfficeIncandescent_LeftFill", root, new Vector3(-2.70f, 2.45f, 0.55f),
-            IncandescentWhite, 1.5f, 4.5f);
-        CreatePointLight("BlenderHQ_OfficeIncandescent_RightFill", root, new Vector3(-0.20f, 2.45f, 0.55f),
-            IncandescentWhite, 1.4f, 4.5f);
+        // ─── Single placeholder light — all others removed until lamp models are ready ──
+        CreatePointLight("HQ_PlaceholderLight", root, new Vector3(0f, 2.50f, 0f),
+            IncandescentWhite, 3.5f, 18f);
 
-        // CRT screen spill — a small green accent right at the screen, not a room flood.
-        CreatePointLight("BlenderHQ_CrtScreenSpill", root, new Vector3(-1.55f, 1.10f, 1.40f),
-            DispatchGreen, 0.5f, 1.6f);
-
-        // ─── Garage work lights ───────────────────────────────────────────
-        // Garage Blender bounds: X [1.375, 3.725], Z [-2.775, -0.925]. Ceiling Y=2.86.
-        // Overhead spot illuminates the parked van.
-        CreateSpotLight("BlenderHQ_GarageOverheadSpot", root, new Vector3(2.58f, 2.80f, -2.18f),
-            new Vector3(2.58f, 0.20f, -2.18f), IncandescentWhite, 5.5f, 7.0f, 78f);
-        // Side fill so the office-facing side of the van isn't black.
-        CreatePointLight("BlenderHQ_GarageInteriorFill", root, new Vector3(2.20f, 1.55f, -1.20f),
-            IncandescentWhite, 2.2f, 4.5f);
-        // Second overhead so the whole garage bay is evenly lit, not just over the van.
-        CreatePointLight("BlenderHQ_GarageCeilingFill", root, new Vector3(2.58f, 2.55f, -1.30f),
-            IncandescentWhite, 2.0f, 5.0f);
-        // Backlight near the iron gate — kept warm-amber as the bit of retained atmosphere.
-        CreatePointLight("BlenderHQ_GarageGateBackLight", root, new Vector3(2.55f, 1.50f, -2.70f),
-            IncandescentWarm, 1.3f, 3.2f);
-
-        // ─── Dispatch guide accent on the connector zone ─────────────────
-        // Place between office south edge and garage north edge so it lights the path.
-        CreatePointLight("BlenderHQ_DispatchGreenGuideLight", root, new Vector3(1.05f, 0.60f, -0.85f),
-            DispatchGreen, 0.40f, 2.2f);
-
-        // ─── Brighten the scene's directional light if it's still dim ─────
         BoostSceneDirectionalLight();
 
         // South wall + door frame previously generated here have been removed —
@@ -2723,6 +2848,15 @@ public static class MvpSceneStyleDirector
             Object.Destroy(obj);
         else
             Object.DestroyImmediate(obj);
+    }
+
+    // Loads the downloaded concrete wall material from Resources, if WallMaterialTool
+    // has built it. Key mirrors WallMaterialTool.ResourceKey (that's an editor-only
+    // class, so it can't be referenced from here). Returns null when absent → caller
+    // falls back to the procedural wall texture.
+    static Material LoadConcreteWallMaterial()
+    {
+        return Resources.Load<Material>("Office/MVP_office_wall_concrete");
     }
 
     static Material MakeOfficeMaterial(string name, Color baseColor, Color accentColor, OfficePattern pattern)
