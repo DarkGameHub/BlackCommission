@@ -1,28 +1,31 @@
-# Black Commission
+# 黑色外包（Black Commission）
 
-Black Commission is a 1-4 player co-op commission-running game about a broke office that survives by taking increasingly strange outsourced jobs.
+黑色外包是一款 1-4 人合作外包接单游戏——一家快要倒闭的事务所靠接各种越来越离谱的外包任务维持运营。
 
-Current MVP direction:
+当前 MVP 核心流程：
 
-1. Start a solo host or create/join a host room.
-2. Spawn in a rundown office.
-3. Use the office computer to accept a job.
-4. Enter the school mission, find the missing homework notebook, avoid the school anomaly, and return to the exit.
-5. Return to the office, claim money/reputation/experience, then spend money on equipment, recovery items, office upgrades, or future agency acquisitions.
+1. 单机开房或创建/加入联机房间。
+2. 出生在破旧的事务所办公室。
+3. 用办公室电脑接受任务。
+4. 进入学校关卡，找回丢失的作业本，躲开学校异常体，撤离到出口。
+5. 返回事务所，结算金钱/声望/经验，花钱购买装备、恢复道具、事务所升级或未来的机构收购。
 
-See [docs/mvp-core-loop.md](docs/mvp-core-loop.md) for the full MVP design, story background, agent team setup, and first-phase implementation plan.
+完整 MVP 设计、故事背景、小队配置及第一阶段实现计划见 [docs/mvp-core-loop.md](docs/mvp-core-loop.md)。
 
-Current art direction is locked in [docs/art/black-commission-style-lock-v1.md](docs/art/black-commission-style-lock-v1.md).
+当前美术方向已锁定，见 [docs/art/black-commission-style-lock-v1.md](docs/art/black-commission-style-lock-v1.md)。
 
-Unity setup:
+## Unity 工程启动
 
-1. Run `Tools > Black Commission > Setup All (Run This First!)` if the base project has not been generated on this checkout.
-2. Run `Tools > Black Commission > MVP > Setup School MVP`.
-3. Run `Tools > Black Commission > MVP > Validate School MVP`.
-4. Open `HQ`, press Play, click `Start Host`, then use the office computer to enter the school mission.
+1. 若是首次 checkout，先运行 `Tools > Black Commission > Setup All (Run This First!)`。
+2. 运行 `Tools > Black Commission > MVP > Setup School MVP`。
+3. 运行 `Tools > Black Commission > MVP > Validate School MVP`。
+4. 打开 `HQ` 场景，按 Play，点击 `Start Host`，然后用办公室电脑进入学校任务。
 
-Generated art workflow:
+## 生成美术工作流
 
-1. On Windows with Blender installed, run `blender --background --factory-startup --python D:/BlackCommission/docs/art/blender_outsourced_civic_commercial_v4.py`.
-2. In Unity, run `Tools > Black Commission > Art > Import Generated Blender Kit`.
-3. The imported prefabs are generated under `Assets/_Project/Prefabs/Art`.
+1. 在 Windows 且已安装 Blender 的环境下运行：
+   ```
+   blender --background --factory-startup --python D:/BlackCommission/docs/art/blender_outsourced_civic_commercial_v4.py
+   ```
+2. 在 Unity 中运行 `Tools > Black Commission > Art > Import Generated Blender Kit`。
+3. 导入的 Prefab 会生成到 `Assets/_Project/Prefabs/Art`。
