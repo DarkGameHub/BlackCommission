@@ -291,8 +291,8 @@ public class LostItemMissionManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     void DepartVanServerRpc(ServerRpcParams rpcParams = default)
     {
-        if (NetworkManager.Singleton != null && rpcParams.Receive.SenderClientId != NetworkManager.ServerClientId)
-            return;
+        // On the return trip ANY seated player may force the van to leave; teammates who
+        // didn't board are stranded (see GrantBoardedRewardsAndReturn).
         TryDepartVan();
     }
 
@@ -337,10 +337,6 @@ public class LostItemMissionManager : NetworkBehaviour
         if (resultKind != MvpMissionResultKind.Failed)
             money -= GetWrongHomeworkMoneyPenalty();
 
-        int failMoney = GetFailureMoney(task);
-        int failReputation = GetFailureReputation(task);
-        int failExperience = GetFailureExperience(task);
-
         bool successFlag = resultKind == MvpMissionResultKind.Success;
         string officeScene = MvpMissionRuntime.HasActiveTask ? MvpMissionRuntime.ReturnOfficeScene : fallbackOfficeScene;
         string taskTitle = task != null ? task.title : "委托";
@@ -348,31 +344,17 @@ public class LostItemMissionManager : NetworkBehaviour
 
         if (IsServer)
         {
+            // Anyone who didn't board is stranded: they die at the site and lose their held
+            // gear. Settlement is NOT forced to "Failed" — everyone shares the mission outcome
+            // (success/partial); the penalty for missing the van is the lost gear, not the pay.
+            StrandUnboardedPlayers();
+
             RestorePlayersForOffice();
             DepartureTransitClientRpc(taskTitle, locationName, transitSeconds);
 
-            foreach (var clientId in NetworkManager.Singleton.ConnectedClientsIds)
-            {
-                bool boarded = boardedClientIds.Contains(clientId);
-                var targetParams = new ClientRpcParams
-                {
-                    Send = new ClientRpcSendParams { TargetClientIds = new[] { clientId } }
-                };
-
-                if (boarded)
-                {
-                    SetPendingRewardClientRpc(money, reputation, experience, successFlag,
-                        MissionTimer.Value, (int)resultKind,
-                        overtimeGameHours, overtimeMoneyPenalty, overtimeReputationPenalty,
-                        targetParams);
-                }
-                else
-                {
-                    SetPendingRewardClientRpc(failMoney, failReputation, failExperience, false,
-                        MissionTimer.Value, (int)MvpMissionResultKind.Failed,
-                        0f, 0, 0, targetParams);
-                }
-            }
+            SetPendingRewardClientRpc(money, reputation, experience, successFlag,
+                MissionTimer.Value, (int)resultKind,
+                overtimeGameHours, overtimeMoneyPenalty, overtimeReputationPenalty);
 
             StartCoroutine(LoadOfficeAfterRewardDispatch(officeScene, transitSeconds));
         }
@@ -587,6 +569,27 @@ public class LostItemMissionManager : NetworkBehaviour
         return false;
     }
 
+    // Players who didn't board the return van are left behind: their held gear is dropped
+    // (cleared) at the mission site and a death beat plays. They still respawn at the office
+    // (RestorePlayersForOffice heals everyone) and settle by the shared mission outcome.
+    void StrandUnboardedPlayers()
+    {
+        if (!IsServer || NetworkManager.Singleton == null) return;
+
+        foreach (var pair in NetworkManager.Singleton.ConnectedClients)
+        {
+            if (boardedClientIds.Contains(pair.Key)) continue;
+
+            NetworkObject playerObject = pair.Value.PlayerObject;
+            if (playerObject == null) continue;
+
+            if (playerObject.TryGetComponent<PlayerHotbar>(out var hotbar))
+                hotbar.ClearAllServer();
+
+            AudioManager.Instance?.PlayMonsterGrowl(playerObject.transform.position);
+        }
+    }
+
     void RestorePlayersForOffice()
     {
         PlayerHealth[] players = FindObjectsByType<PlayerHealth>(FindObjectsSortMode.None);
@@ -601,6 +604,9 @@ public class LostItemMissionManager : NetworkBehaviour
     {
         yield return new WaitForSecondsRealtime(delaySeconds);
         MvpMissionRuntime.Clear();
+
+        // Riders un-seat before the scene swaps so they regain movement at the HQ spawn.
+        PlayerController.ClearAllSeatsServer();
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
             NetworkManager.Singleton.SceneManager.LoadScene(officeScene, LoadSceneMode.Single);

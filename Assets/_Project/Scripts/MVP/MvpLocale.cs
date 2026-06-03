@@ -30,6 +30,7 @@ public static class MvpLocale
         ["connecting"] = new[] { "连接中", "Connecting" },
         ["please_wait"] = new[] { "请稍候", "Please wait" },
         ["enter_code_prompt"] = new[] { "请输入房间代码。", "Please enter a room code." },
+        ["code_six_chars"] = new[] { "房间代码为 6 位字符。", "Room code is 6 characters." },
         ["relay_unavailable"] = new[] { "连接服务不可用，请使用直连模式。", "Relay unavailable, use direct connect." },
         ["host_started"] = new[] { "主机已启动。", "Host started." },
         ["host_failed"] = new[] { "创建主机失败。", "Failed to create host." },
@@ -39,6 +40,19 @@ public static class MvpLocale
         ["joining"] = new[] { "正在加入 {0}:{1}...", "Joining {0}:{1}..." },
         ["join_failed"] = new[] { "加入失败。", "Failed to join." },
 
+        // ─── Player identity / lobby roster ───
+        ["player_name"] = new[] { "调查员代号", "Agent Name" },
+        ["roster_title"] = new[] { "在场队员 {0}/4", "Squad {0}/4" },
+        ["you_tag"] = new[] { "(你)", "(you)" },
+        ["room_label"] = new[] { "房间码 {0}", "Room {0}" },
+
+        // ─── Connection events ───
+        ["host_disconnected"] = new[] { "主机已断开连接，即将返回...", "Host disconnected. Returning..." },
+        ["player_joined"] = new[] { "一名队员已加入", "A teammate joined" },
+        ["player_left"] = new[] { "一名队员已离开", "A teammate left" },
+        ["you_were_kicked"] = new[] { "你已被房主移出房间。", "You were removed by the host." },
+        ["local_mode_only"] = new[] { "联网服务不可用，已切换本地模式（公网无法加入，仅可局域网直连）。", "Online service unavailable: switched to local mode (LAN direct only, no internet join)." },
+
         // ─── VanTransitOverlay ───
         ["commission"] = new[] { "委托", "Commission" },
         ["mission_location"] = new[] { "任务地点", "Mission Site" },
@@ -47,6 +61,9 @@ public static class MvpLocale
         ["waiting_team"] = new[] { "等待队友... {0}/{1}", "Waiting... {0}/{1}" },
         ["driver_waiting"] = new[] { "司机在前面等着", "Driver waiting up front" },
         ["press_e_drive"] = new[] { "按 [E] 开走", "Press [E] to drive" },
+        ["press_space_depart"] = new[] { "[空格] 发车", "[Space] Depart" },
+        ["wait_all_aboard"] = new[] { "等待所有人上车才能发车", "Everyone must be aboard to depart" },
+        ["sit_in_van"] = new[] { "按 [E] 上车就座", "Press [E] to board and sit" },
         ["dispatch_outbound"] = new[] { "派车去现场", "Dispatching to site" },
         ["return_office"] = new[] { "返程回事务所", "Returning to office" },
         ["office"] = new[] { "事务所", "Office" },
@@ -64,9 +81,14 @@ public static class MvpLocale
         ["v_sensitivity"] = new[] { "鼠标垂直速度: {0}", "Vertical Sensitivity: {0}" },
         ["invert_y"] = new[] { "反转垂直视角", "Invert Y-Axis" },
         ["fov"] = new[] { "视野范围: {0}", "Field of View: {0}" },
+        ["display"] = new[] { "画面", "Display" },
+        ["brightness"] = new[] { "亮度: {0}", "Brightness: {0}" },
+        ["fullscreen"] = new[] { "全屏", "Fullscreen" },
+        ["quality"] = new[] { "画质: {0}", "Quality: {0}" },
         ["voice"] = new[] { "语音", "Voice" },
         ["voice_default_on"] = new[] { "默认开启语音", "Voice Enabled by Default" },
         ["mute_self"] = new[] { "静音自己", "Mute Self" },
+        ["push_to_talk"] = new[] { "按键说话 (按住 V)", "Push-to-Talk (hold V)" },
         ["mic_device"] = new[] { "麦克风: {0}", "Microphone: {0}" },
         ["mic_gain"] = new[] { "麦克风增益: {0}", "Mic Gain: {0}" },
         ["voice_volume"] = new[] { "语音音量: {0}", "Voice Volume: {0}" },

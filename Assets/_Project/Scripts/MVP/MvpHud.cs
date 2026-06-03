@@ -9,10 +9,9 @@ public class MvpHud : MonoBehaviour
     static SchoolExitPoint activeMissionVan;
     static OfficeCabinetStorage activeCabinet;
     static OfficeMonsterBestiary activeBestiary;
-    static bool settingsOpen;
     public static bool IsComputerOpen => activeComputer != null;
     public static bool IsBlockingPanelOpen =>
-        activeComputer != null || activeMissionVan != null || activeCabinet != null || activeBestiary != null || settingsOpen;
+        activeComputer != null || activeMissionVan != null || activeCabinet != null || activeBestiary != null || SettingsOverlay.IsOpen;
 
     [SerializeField] int panelWidth = 390;
     [SerializeField] bool showNetworkHint = false;
@@ -49,7 +48,6 @@ public class MvpHud : MonoBehaviour
     Vector2 bestiaryScrollPosition;
     string cabinetMessage;
     float cabinetMessageUntil;
-    Vector2 settingsScrollPosition;
     static SchoolExitPoint partialReturnConfirmVan;
     static float partialReturnConfirmUntil;
 
@@ -88,10 +86,10 @@ public class MvpHud : MonoBehaviour
         activeMissionVan = null;
         activeCabinet = null;
         activeBestiary = null;
-        settingsOpen = false;
         showNetworkHint = false;
         AudioListener.volume = MasterVolume;
         ProximityVoiceChat.EnsureInstance();
+        SettingsOverlay.EnsureInstance();
         if (LostItemMissionManager.Instance != null)
             RestoreGameplayCursor();
     }
@@ -101,10 +99,10 @@ public class MvpHud : MonoBehaviour
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
-        if (settingsOpen)
+        if (SettingsOverlay.IsOpen)
         {
             if (keyboard.escapeKey.wasPressedThisFrame)
-                CloseSettings();
+                SettingsOverlay.Close();
             return;
         }
 
@@ -144,7 +142,7 @@ public class MvpHud : MonoBehaviour
 
         if (keyboard.escapeKey.wasPressedThisFrame)
         {
-            OpenSettings();
+            SettingsOverlay.Open();
             return;
         }
 
@@ -228,8 +226,6 @@ public class MvpHud : MonoBehaviour
         DrawGestureHint();
         if (showNetworkHint)
             DrawFooterHint();
-        if (settingsOpen)
-            DrawSettingsPanel();
     }
 
     void DrawGestureHint()
@@ -280,89 +276,6 @@ public class MvpHud : MonoBehaviour
         GUI.color = dotColor;
         GUI.DrawTexture(new Rect(cx - size * 0.5f, cy - size * 0.5f, size, size), dot, ScaleMode.StretchToFill);
         GUI.color = Color.white;
-    }
-
-    void DrawSettingsPanel()
-    {
-        float width = Mathf.Clamp(Screen.width - 36f, 360f, 620f);
-        float height = Mathf.Clamp(Screen.height - 80f, 420f, 660f);
-        Rect rect = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
-        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
-        GUILayout.BeginHorizontal();
-        GUILayout.Label(MvpLocale.T("pause"), titleStyle);
-        if (GUILayout.Button(MvpLocale.T("resume"), GUILayout.Width(72), GUILayout.Height(30)))
-        {
-            CloseSettings();
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
-            return;
-        }
-        GUILayout.EndHorizontal();
-
-        settingsScrollPosition = GUILayout.BeginScrollView(settingsScrollPosition, false, true);
-        GUILayout.Space(8);
-        GUILayout.Label(MvpLocale.T("game"), accentStyle);
-        string[] languageLabels = { "简体中文", "English" };
-        GUILayout.Label(MvpLocale.T("language", languageLabels[LanguageIndex]), labelStyle);
-        int selectedLanguage = GUILayout.SelectionGrid(LanguageIndex, languageLabels, 2);
-        if (selectedLanguage != LanguageIndex)
-            LanguageIndex = selectedLanguage;
-        GUILayout.Label(MvpLocale.T("master_volume", $"{MasterVolume:0.00}"), labelStyle);
-        MasterVolume = GUILayout.HorizontalSlider(MasterVolume, 0f, 1f);
-        showNetworkHint = GUILayout.Toggle(showNetworkHint, MvpLocale.T("show_network"));
-
-        GUILayout.Space(10);
-        GUILayout.Label(MvpLocale.T("camera"), accentStyle);
-        GUILayout.Label(MvpLocale.T("h_sensitivity", $"{PlayerCameraController.HorizontalSensitivity:0.00}"), labelStyle);
-        PlayerCameraController.HorizontalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.HorizontalSensitivity, 0.25f, 8f);
-        GUILayout.Label(MvpLocale.T("v_sensitivity", $"{PlayerCameraController.VerticalSensitivity:0.00}"), labelStyle);
-        PlayerCameraController.VerticalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.VerticalSensitivity, 0.25f, 8f);
-        PlayerCameraController.InvertY = GUILayout.Toggle(PlayerCameraController.InvertY, MvpLocale.T("invert_y"));
-        GUILayout.Label(MvpLocale.T("fov", $"{PlayerCameraController.FieldOfView:0}"), labelStyle);
-        PlayerCameraController.FieldOfView = GUILayout.HorizontalSlider(PlayerCameraController.FieldOfView, 55f, 95f);
-
-        GUILayout.Space(10);
-        GUILayout.Label(MvpLocale.T("voice"), accentStyle);
-        ProximityVoiceChat.VoiceEnabled = GUILayout.Toggle(ProximityVoiceChat.VoiceEnabled, MvpLocale.T("voice_default_on"));
-        ProximityVoiceChat.Muted = GUILayout.Toggle(ProximityVoiceChat.Muted, MvpLocale.T("mute_self"));
-        DrawMicrophoneSelector();
-        GUILayout.Label(MvpLocale.T("mic_gain", $"{ProximityVoiceChat.MicGain:0.0}"), labelStyle);
-        ProximityVoiceChat.MicGain = GUILayout.HorizontalSlider(ProximityVoiceChat.MicGain, 0f, 2f);
-        GUILayout.Label(MvpLocale.T("voice_volume", $"{ProximityVoiceChat.OutputVolume:0.0}"), labelStyle);
-        ProximityVoiceChat.OutputVolume = GUILayout.HorizontalSlider(ProximityVoiceChat.OutputVolume, 0f, 2f);
-        GUILayout.Label(MvpLocale.T("voice_distance", $"{ProximityVoiceChat.MaxDistance:0}"), labelStyle);
-        ProximityVoiceChat.MaxDistance = GUILayout.HorizontalSlider(ProximityVoiceChat.MaxDistance, 4f, 40f);
-
-        GUILayout.Space(14);
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button(MvpLocale.T("reset_defaults"), GUILayout.Height(32)))
-            ResetSettingsDefaults();
-        if (GUILayout.Button(MvpLocale.T("quit_game"), GUILayout.Height(32)))
-            QuitGame();
-        GUILayout.EndHorizontal();
-        GUILayout.EndScrollView();
-        GUILayout.EndArea();
-    }
-
-    void DrawMicrophoneSelector()
-    {
-        string[] devices = Microphone.devices;
-        bool hasDevices = devices != null && devices.Length > 0;
-        GUILayout.Label(MvpLocale.T("mic_device", ProximityVoiceChat.SelectedMicrophoneDeviceName), labelStyle);
-        GUILayout.BeginHorizontal();
-        GUI.enabled = hasDevices;
-        if (GUILayout.Button(MvpLocale.T("prev"), GUILayout.Height(28)))
-        {
-            int count = devices.Length;
-            ProximityVoiceChat.MicrophoneDeviceIndex = (ProximityVoiceChat.MicrophoneDeviceIndex + count - 1) % count;
-        }
-        if (GUILayout.Button(MvpLocale.T("next"), GUILayout.Height(28)))
-        {
-            int count = devices.Length;
-            ProximityVoiceChat.MicrophoneDeviceIndex = (ProximityVoiceChat.MicrophoneDeviceIndex + 1) % count;
-        }
-        GUI.enabled = true;
-        GUILayout.EndHorizontal();
     }
 
     void DrawOfficePanel()
@@ -1087,7 +1000,7 @@ public class MvpHud : MonoBehaviour
         activeMissionVan = null;
         activeCabinet = null;
         activeBestiary = null;
-        settingsOpen = false;
+        SettingsOverlay.ForceClose();
         activeComputer = computer;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -1100,7 +1013,7 @@ public class MvpHud : MonoBehaviour
         activeComputer = null;
         activeCabinet = null;
         activeBestiary = null;
-        settingsOpen = false;
+        SettingsOverlay.ForceClose();
         activeMissionVan = van;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -1112,7 +1025,7 @@ public class MvpHud : MonoBehaviour
         activeComputer = null;
         activeMissionVan = null;
         activeBestiary = null;
-        settingsOpen = false;
+        SettingsOverlay.ForceClose();
         activeCabinet = cabinet;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -1123,19 +1036,8 @@ public class MvpHud : MonoBehaviour
         activeComputer = null;
         activeMissionVan = null;
         activeCabinet = null;
-        settingsOpen = false;
+        SettingsOverlay.ForceClose();
         activeBestiary = bestiary;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-    }
-
-    static void OpenSettings()
-    {
-        activeComputer = null;
-        activeMissionVan = null;
-        activeCabinet = null;
-        activeBestiary = null;
-        settingsOpen = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -1176,38 +1078,6 @@ public class MvpHud : MonoBehaviour
                 c.HiddenFromMonsters.Value = hidden;
                 break;
             }
-    }
-
-    static void CloseSettings()
-    {
-        settingsOpen = false;
-        RestoreGameplayCursor();
-    }
-
-    static void ResetSettingsDefaults()
-    {
-        LanguageIndex = 0;
-        MasterVolume = 1f;
-        PlayerCameraController.HorizontalSensitivity = 2f;
-        PlayerCameraController.VerticalSensitivity = 2f;
-        PlayerCameraController.InvertY = false;
-        PlayerCameraController.FieldOfView = 68f;
-        ProximityVoiceChat.VoiceEnabled = true;
-        ProximityVoiceChat.Muted = false;
-        ProximityVoiceChat.MicGain = 1f;
-        ProximityVoiceChat.OutputVolume = 1f;
-        ProximityVoiceChat.MaxDistance = 18f;
-        ProximityVoiceChat.MicrophoneDeviceIndex = 0;
-    }
-
-    static void QuitGame()
-    {
-        PlayerPrefs.Save();
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
     }
 
     static void RestoreGameplayCursor()

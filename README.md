@@ -14,12 +14,27 @@
 
 当前美术方向已锁定，见 [docs/art/black-commission-style-lock-v1.md](docs/art/black-commission-style-lock-v1.md)。
 
+## 环境要求
+
+- **Unity 版本：`6000.4.7f1`（Unity 6）。** 必须用这个版本打开——Unity 工程对版本敏感，版本不一致会强制升级或报错。建议用 [Unity Hub](https://unity.com/download) 安装对应版本。
+- **依赖自动还原：** 本项目是 Unity C# 工程，没有也不需要 `requirements.txt`（那是 Python 的）。所有包依赖都锁定在 `Packages/manifest.json` 里（Netcode for GameObjects 2.11.2、URP 17.4、Input System、Relay/Authentication 等），用 Unity 打开工程时会自动下载还原，无需手动安装。
+- **不要提交生成目录：** `Library/`、`Temp/`、`Logs/` 由 Unity 本地生成（已在 `.gitignore` 忽略），clone 后首次打开会自动重建，可能需要几分钟。
+
 ## Unity 工程启动
 
 1. 若是首次 checkout，先运行 `Tools > Black Commission > Setup All (Run This First!)`。
 2. 运行 `Tools > Black Commission > MVP > Setup School MVP`。
 3. 运行 `Tools > Black Commission > MVP > Validate School MVP`。
-4. 打开 `HQ` 场景，按 Play，点击 `Start Host`，然后用办公室电脑进入学校任务。
+4. 打开 `HQ` 场景，按 Play，点击 `创建事务所 / Start Host`，然后用办公室电脑进入学校任务。
+
+## 联机说明
+
+游戏支持两种联机方式：
+
+- **在线（Relay）：** 主菜单点「创建事务所」走 Unity Relay 在线服务，生成 6 位房间码分享给队友。需要先在 Editor 里把工程关联到一个 Unity Cloud 项目（`Edit > Project Settings > Services`）并允许匿名登录；否则会自动回退到本地模式，公网无法加入。
+- **局域网直连（LAN）：** 主菜单的「LAN 直连」入口，按 IP + 端口直接开房/加入，适合本机和同网测试，不依赖在线服务。
+
+**本地多人测试**：用「一个 Editor 实例 + 一个打包好的 Build」，或安装 ParrelSync/多 Editor 实例同时运行。最多 4 人（房主 + 3 名客户端）。
 
 ## 生成美术工作流
 

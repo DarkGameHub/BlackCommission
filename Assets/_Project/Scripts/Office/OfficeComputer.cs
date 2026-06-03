@@ -156,6 +156,32 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         SetDroppedItemCount(itemId, Mathf.Max(0, GetDroppedItemCount(itemId) - 1));
     }
 
+    /// <summary>
+    /// Departure gate for the HQ van (Space while seated). Outbound to a mission site
+    /// requires the whole living crew to be seated — only the host actually launches.
+    /// Stranding teammates is only allowed on the return trip, not on the way out.
+    /// </summary>
+    public void RequestDepart(PlayerController requester)
+    {
+        if (missionLaunching) return;
+        if (!HasSelectedDemoTask) return;
+
+        // Solo / no network: keep the old direct local launch.
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+        {
+            if (allowNonNetworkSoloStart && CanStartDemoTask())
+                StartMissionLocalWithTransit();
+            return;
+        }
+
+        // Only the host launches; clients pressing Space are no-ops (the HUD shows the count).
+        if (!NetworkManager.Singleton.IsHost) return;
+        if (!CanStartDemoTask()) return;
+        if (!PlayerController.AreAllLivingSeated()) return; // everyone must be aboard
+
+        StartMissionServerSideWithTransit();
+    }
+
     public void LaunchSelectedMissionFromVehicle(PlayerController player)
     {
         if (missionLaunching) return;
@@ -242,6 +268,9 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     IEnumerator LoadMissionAfterTransit(string sceneName, float delaySeconds)
     {
         yield return new WaitForSecondsRealtime(delaySeconds);
+
+        // Riders un-seat before the scene swaps so they regain movement at the mission spawn.
+        PlayerController.ClearAllSeatsServer();
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
             NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);

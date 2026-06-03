@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,17 +9,43 @@ public class DisconnectHandler : MonoBehaviour
     bool showingUI;
     string disconnectMessage = "";
     GUIStyle messageStyle;
+    GUIStyle toastStyle;
+
+    // Transient "teammate joined / left" toasts, shown on every peer.
+    readonly List<(string text, float until)> toasts = new();
 
     void OnEnable()
     {
-        if (NetworkManager.Singleton != null)
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnect;
+        if (NetworkManager.Singleton == null) return;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnect;
+        NetworkManager.Singleton.OnConnectionEvent += OnConnectionEvent;
     }
 
     void OnDisable()
     {
-        if (NetworkManager.Singleton != null)
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnect;
+        if (NetworkManager.Singleton == null) return;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnect;
+        NetworkManager.Singleton.OnConnectionEvent -= OnConnectionEvent;
+    }
+
+    void OnConnectionEvent(NetworkManager manager, ConnectionEventData data)
+    {
+        // Fires on every peer: announce other players coming and going.
+        switch (data.EventType)
+        {
+            case ConnectionEvent.PeerConnected:
+                AddToast(MvpLocale.T("player_joined"));
+                break;
+            case ConnectionEvent.PeerDisconnected:
+                AddToast(MvpLocale.T("player_left"));
+                break;
+        }
+    }
+
+    void AddToast(string text)
+    {
+        toasts.Add((text, Time.unscaledTime + 4f));
+        if (toasts.Count > 6) toasts.RemoveAt(0);
     }
 
     void OnClientDisconnect(ulong clientId)
@@ -31,10 +58,13 @@ public class DisconnectHandler : MonoBehaviour
             return;
         }
 
+        // On a client, a disconnect of ourselves or the server means the session is over.
         if (clientId == NetworkManager.Singleton.LocalClientId ||
             clientId == NetworkManager.ServerClientId)
         {
-            disconnectMessage = "主机已断开连接，即将返回...";
+            // If the host kicked us it provides a reason; otherwise the host just dropped.
+            string reason = NetworkManager.Singleton.DisconnectReason;
+            disconnectMessage = !string.IsNullOrEmpty(reason) ? reason : MvpLocale.T("host_disconnected");
             showingUI = true;
             returnTimer = 3f;
         }
@@ -55,8 +85,34 @@ public class DisconnectHandler : MonoBehaviour
 
     void OnGUI()
     {
+        EnsureStyles();
+        DrawToasts();
+
         if (!showingUI) return;
 
+        float w = 500, h = 80;
+        GUI.Box(new Rect((Screen.width - w) / 2f, (Screen.height - h) / 2f, w, h),
+            disconnectMessage, messageStyle);
+    }
+
+    void DrawToasts()
+    {
+        if (toasts.Count == 0) return;
+
+        float now = Time.unscaledTime;
+        for (int i = toasts.Count - 1; i >= 0; i--)
+            if (toasts[i].until <= now) toasts.RemoveAt(i);
+
+        float y = 88f;
+        foreach (var (text, _) in toasts)
+        {
+            GUI.Label(new Rect(0, y, Screen.width, 24), text, toastStyle);
+            y += 26f;
+        }
+    }
+
+    void EnsureStyles()
+    {
         if (messageStyle == null)
         {
             messageStyle = new GUIStyle(GUI.skin.box)
@@ -68,8 +124,14 @@ public class DisconnectHandler : MonoBehaviour
             };
         }
 
-        float w = 500, h = 80;
-        GUI.Box(new Rect((Screen.width - w) / 2f, (Screen.height - h) / 2f, w, h),
-            disconnectMessage, messageStyle);
+        if (toastStyle == null)
+        {
+            toastStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 15,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.86f, 0.83f, 0.70f) }
+            };
+        }
     }
 }

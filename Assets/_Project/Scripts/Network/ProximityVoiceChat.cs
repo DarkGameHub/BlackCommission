@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class ProximityVoiceChat : MonoBehaviour
 {
@@ -48,6 +49,28 @@ public class ProximityVoiceChat : MonoBehaviour
         set => PlayerPrefs.SetInt("AS.Voice.MicrophoneDeviceIndex", Mathf.Max(0, value));
     }
 
+    public static bool PushToTalk
+    {
+        get => PlayerPrefs.GetInt("AS.Voice.PushToTalk", 0) != 0;
+        set => PlayerPrefs.SetInt("AS.Voice.PushToTalk", value ? 1 : 0);
+    }
+
+    // Locally muted speakers (per-listener; not networked). Cleared at process start.
+    static readonly HashSet<ulong> mutedClients = new();
+    public static bool IsClientMuted(ulong clientId) => mutedClients.Contains(clientId);
+    public static void SetClientMuted(ulong clientId, bool muted)
+    {
+        if (muted) mutedClients.Add(clientId);
+        else mutedClients.Remove(clientId);
+    }
+    public static void ToggleClientMuted(ulong clientId) => SetClientMuted(clientId, !IsClientMuted(clientId));
+
+    static bool PushToTalkHeld()
+    {
+        var kb = Keyboard.current;
+        return kb != null && kb.vKey.isPressed;
+    }
+
     public static string SelectedMicrophoneDeviceName
     {
         get
@@ -87,6 +110,12 @@ public class ProximityVoiceChat : MonoBehaviour
     {
         RegisterMessageHandlers();
         if (!VoiceEnabled || Muted)
+        {
+            StopMicrophone();
+            return;
+        }
+        // Push-to-talk: only transmit while the talk key is held.
+        if (PushToTalk && !PushToTalkHeld())
         {
             StopMicrophone();
             return;
@@ -306,6 +335,7 @@ public class ProximityVoiceChat : MonoBehaviour
     {
         if (!VoiceEnabled || payload == null || payload.Length == 0) return;
         if (NetworkManager.Singleton != null && senderClientId == NetworkManager.Singleton.LocalClientId) return;
+        if (IsClientMuted(senderClientId)) return;
 
         AudioSource source = GetRemoteSource(senderClientId);
         source.transform.position = position;

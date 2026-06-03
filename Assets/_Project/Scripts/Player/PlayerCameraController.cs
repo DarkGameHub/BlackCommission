@@ -120,7 +120,9 @@ public class PlayerCameraController : NetworkBehaviour
         if (spectateTarget != null)
             ExitSpectator();
 
-        if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
+        // Look stays active while seated in the van (you can turn your head); only a
+        // blocking UI panel (settings / locker) fully stops the camera.
+        if (MvpHud.IsBlockingPanelOpen) return;
         if (Cursor.lockState != CursorLockMode.Locked)
         {
             Cursor.lockState = CursorLockMode.Locked;

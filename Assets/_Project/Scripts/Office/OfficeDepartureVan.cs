@@ -3,12 +3,7 @@ using Unity.Netcode;
 
 public class OfficeDepartureVan : MonoBehaviour, IInteractable
 {
-    const float BoardingHorizontalPadding = 0.2f;
-    const float BoardingBelowPadding = 0.45f;
-    const float BoardingHeadroomPadding = 1.25f;
-
     OfficeComputer cachedComputer;
-    BoxCollider cachedBoardingTrigger;
 
     public string InteractHint
     {
@@ -20,29 +15,29 @@ public class OfficeDepartureVan : MonoBehaviour, IInteractable
             if (VanTransitOverlay.IsActive) return "司机已经发车";
             if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return "先创建主机再出车";
             if (!computer.HasSelectedDemoTask) return "先去绿光 COMPUTER 终端锁定委托";
-            GetBoardingCounts(out int boarded, out int total);
-            if (!NetworkManager.Singleton.IsHost) return $"上车等候 {boarded}/{total}";
-            if (total > 0 && boarded < total)
-                return $"[SPACE]发车  {boarded}/{total} 上车中  长按强制";
+            PlayerController.GetSeatedCounts(out int seated, out int total);
+            if (!NetworkManager.Singleton.IsHost) return $"[E]上车  {seated}/{total} 已就座";
+            if (total > 0 && seated < total)
+                return $"等待全员上车  {seated}/{total}";
             return "[SPACE] 发车";
         }
     }
 
     public void OnInteractStart(PlayerController player)
     {
-        // E at HQ van = join boarding area (physical presence check already handles this)
-        // Departure is triggered by Space key via VanTransitOverlay boarding phase
+        // E at the HQ van seats the interacting player inside the cabin. Anyone can board;
+        // departure (Space) is gated server-side so the van won't leave until all aboard.
         OfficeComputer computer = GetComputer();
         if (computer == null) return;
         if (!computer.HasSelectedDemoTask) return;
-        if (!NetworkManager.Singleton.IsHost) return;
+        if (VanTransitOverlay.IsActive && player != null && player.IsSeated) return;
 
-        // Show boarding overlay — Space will depart
-        GetBoardingCounts(out int boarded, out int total);
+        if (player != null)
+            player.RequestSeat();
+
         string title = computer.DemoTaskTitle;
         string location = computer.DemoTaskLocation;
         VanTransitOverlay.ShowBoarding(title, location, true);
-        VanTransitOverlay.NotifyPlayerBoarded(boarded);
     }
 
     public void OnInteractEnd(PlayerController player) { }
@@ -52,71 +47,5 @@ public class OfficeDepartureVan : MonoBehaviour, IInteractable
         if (cachedComputer != null) return cachedComputer;
         cachedComputer = Object.FindAnyObjectByType<OfficeComputer>();
         return cachedComputer;
-    }
-
-    bool IsEveryoneBoarded()
-    {
-        GetBoardingCounts(out int boarded, out int total);
-        return total > 0 && boarded >= total;
-    }
-
-    void GetBoardingCounts(out int boarded, out int total)
-    {
-        boarded = 0;
-        total = 0;
-
-        Bounds bounds = GetBoardingBounds();
-        NetworkManager network = NetworkManager.Singleton;
-        if (network == null || !network.IsListening)
-        {
-            PlayerController player = Object.FindAnyObjectByType<PlayerController>();
-            total = player != null ? 1 : 0;
-            boarded = player != null && IsPointInsideBoardingArea(player.transform.position, bounds) ? 1 : 0;
-            return;
-        }
-
-        foreach (var pair in network.ConnectedClients)
-        {
-            NetworkObject playerObject = pair.Value.PlayerObject;
-            if (playerObject == null) continue;
-
-            if (playerObject.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
-                continue;
-
-            total++;
-            if (IsPointInsideBoardingArea(playerObject.transform.position, bounds))
-                boarded++;
-        }
-    }
-
-    bool IsPointInsideBoardingArea(Vector3 worldPosition, Bounds fallbackBounds)
-    {
-        if (cachedBoardingTrigger != null)
-        {
-            Vector3 localPoint = cachedBoardingTrigger.transform.InverseTransformPoint(worldPosition) - cachedBoardingTrigger.center;
-            Vector3 halfSize = cachedBoardingTrigger.size * 0.5f;
-            return Mathf.Abs(localPoint.x) <= halfSize.x + BoardingHorizontalPadding &&
-                   Mathf.Abs(localPoint.z) <= halfSize.z + BoardingHorizontalPadding &&
-                   localPoint.y >= -halfSize.y - BoardingBelowPadding &&
-                   localPoint.y <= halfSize.y + BoardingHeadroomPadding;
-        }
-
-        return worldPosition.x >= fallbackBounds.min.x - BoardingHorizontalPadding &&
-               worldPosition.x <= fallbackBounds.max.x + BoardingHorizontalPadding &&
-               worldPosition.z >= fallbackBounds.min.z - BoardingHorizontalPadding &&
-               worldPosition.z <= fallbackBounds.max.z + BoardingHorizontalPadding &&
-               worldPosition.y >= fallbackBounds.min.y - BoardingBelowPadding &&
-               worldPosition.y <= fallbackBounds.max.y + BoardingHeadroomPadding;
-    }
-
-    Bounds GetBoardingBounds()
-    {
-        if (cachedBoardingTrigger == null)
-            TryGetComponent(out cachedBoardingTrigger);
-
-        if (cachedBoardingTrigger != null)
-            return cachedBoardingTrigger.bounds;
-
-        return new Bounds(transform.position, new Vector3(2.8f, 1.9f, 3.5f));
     }
 }

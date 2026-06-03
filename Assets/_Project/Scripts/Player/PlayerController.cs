@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -53,10 +54,21 @@ public class PlayerController : NetworkBehaviour
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> CharacterIndex = new(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    // Player display name, set once by the owner at spawn and read by every peer
+    // for nameplates and the lobby roster.
+    public NetworkVariable<FixedString64Bytes> DisplayName = new(default,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public NetworkVariable<int> GestureId = new(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public NetworkVariable<float> NetworkMoveSpeed = new(0f,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    // Van seat: -1 = not seated. Server assigns; the owner teleports itself into the
+    // shared cabin (ClientNetworkTransform is owner-authoritative). While seated the
+    // player can look / switch hotbar / gesture, but cannot move.
+    public NetworkVariable<int> SeatIndex = new(-1,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public bool IsSeated => SeatIndex.Value >= 0;
 
     float gestureEndTime;
 
@@ -73,6 +85,8 @@ public class PlayerController : NetworkBehaviour
         if (!IsOwner) return;
 
         CharacterIndex.Value = PlayerCharacterPalette.SavedIndex;
+        DisplayName.Value = PlayerProfile.Name;
+        SeatIndex.OnValueChanged += OnSeatChanged;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -92,8 +106,144 @@ public class PlayerController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         if (!IsOwner) return;
+        SeatIndex.OnValueChanged -= OnSeatChanged;
         CleanupInputActions();
         Cursor.lockState = CursorLockMode.None;
+    }
+
+    // ─── Van seating (owner-authoritative teleport) ───
+
+    void OnSeatChanged(int previous, int current)
+    {
+        if (!IsOwner) return;
+
+        if (current >= 0)
+            EnterSeat(current);
+        else
+            ExitSeat();
+    }
+
+    void EnterSeat(int seatIndex)
+    {
+        VanTransitOverlay.EnsureCabin();
+
+        Vector3 pos = VanCabin.SeatWorldPosition(seatIndex);
+        Quaternion rot = Quaternion.Euler(0f, VanCabin.SeatYaw(seatIndex), 0f);
+
+        if (cc != null) cc.enabled = false;          // CharacterController would fight the teleport
+        transform.SetPositionAndRotation(pos, rot);
+        velocity = Vector3.zero;
+        isSprinting = false;
+        isCrouching = false;
+    }
+
+    void ExitSeat()
+    {
+        // Position is re-established by the scene spawn / RestoreControlAt; just re-enable.
+        if (cc != null) cc.enabled = true;
+        velocity = Vector3.zero;
+        VanTransitOverlay.HideCabin();
+    }
+
+    /// <summary>Owner asks the server for a cabin seat (E at a van).</summary>
+    public void RequestSeat()
+    {
+        if (IsServer) AssignSeatForClient(OwnerClientId);
+        else RequestSeatServerRpc();
+    }
+
+    [ServerRpc]
+    void RequestSeatServerRpc(ServerRpcParams p = default)
+    {
+        AssignSeatForClient(p.Receive.SenderClientId);
+    }
+
+    // Server-side: find the lowest free cabin seat and assign it to this client's player.
+    static void AssignSeatForClient(ulong clientId)
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client)) return;
+        var po = client.PlayerObject;
+        if (po == null || !po.TryGetComponent(out PlayerController target)) return;
+        if (target.SeatIndex.Value >= 0) return; // already seated
+
+        var all = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        for (int seat = 0; seat < VanCabin.Count; seat++)
+        {
+            bool taken = false;
+            foreach (var pc in all)
+                if (pc.SeatIndex.Value == seat) { taken = true; break; }
+            if (!taken)
+            {
+                target.SeatIndex.Value = seat;
+                return;
+            }
+        }
+    }
+
+    /// <summary>Server resets every player's seat (called around departure / scene load).</summary>
+    public static void ClearAllSeatsServer()
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
+        var all = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        foreach (var pc in all)
+            if (pc.SeatIndex.Value != -1) pc.SeatIndex.Value = -1;
+    }
+
+    // ─── Seating queries (shared by the HQ departure gate and the boarding HUD) ───
+
+    /// <summary>
+    /// True when every connected, living player is seated in the cabin. Downed players are
+    /// excluded so a downed teammate can't block departure. Solo / no-network always true.
+    /// </summary>
+    public static bool AreAllLivingSeated()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening) return true;
+
+        int living = 0;
+        int seated = 0;
+        foreach (var pair in network.ConnectedClients)
+        {
+            NetworkObject playerObject = pair.Value.PlayerObject;
+            if (playerObject == null) continue;
+            if (playerObject.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
+                continue;
+
+            living++;
+            if (playerObject.TryGetComponent<PlayerController>(out var pc) && pc.IsSeated)
+                seated++;
+        }
+
+        return living > 0 && seated >= living;
+    }
+
+    /// <summary>Counts seated vs. living players for the boarding HUD (downed excluded).</summary>
+    public static void GetSeatedCounts(out int seated, out int living)
+    {
+        seated = 0;
+        living = 0;
+
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening)
+        {
+            PlayerController solo = FindAnyObjectByType<PlayerController>();
+            living = solo != null ? 1 : 0;
+            seated = solo != null && solo.IsSeated ? 1 : 0;
+            return;
+        }
+
+        foreach (var pair in network.ConnectedClients)
+        {
+            NetworkObject playerObject = pair.Value.PlayerObject;
+            if (playerObject == null) continue;
+            if (playerObject.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
+                continue;
+
+            living++;
+            if (playerObject.TryGetComponent<PlayerController>(out var pc) && pc.IsSeated)
+                seated++;
+        }
     }
 
     public override void OnDestroy()
@@ -125,7 +275,16 @@ public class PlayerController : NetworkBehaviour
             velocity = Vector3.zero;
             return;
         }
-        if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive)
+        if (MvpHud.IsBlockingPanelOpen)
+        {
+            isSprinting = false;
+            velocity = Vector3.zero;
+            return;
+        }
+        // Seated in the van: movement is locked. Hotbar switching + camera look stay
+        // available (handled in their own controllers). Gestures are intentionally not
+        // enabled here yet.
+        if (IsSeated)
         {
             isSprinting = false;
             velocity = Vector3.zero;

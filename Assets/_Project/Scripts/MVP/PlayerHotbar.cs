@@ -31,6 +31,7 @@ public class PlayerHotbar : NetworkBehaviour
     [SerializeField] HotbarSlot[] slots = new HotbarSlot[SlotCount];
 
     PlayerInputActions inputActions;
+    PlayerController seatedController;
 
     public NetworkVariable<int> SelectedSlot = new(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
@@ -77,7 +78,11 @@ public class PlayerHotbar : NetworkBehaviour
     void Update()
     {
         if (!IsOwner) return;
-        if (MvpHud.IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
+        if (MvpHud.IsBlockingPanelOpen) return;
+
+        // Seated in the van: you can switch slots and pull items out, but not drop them.
+        if (seatedController == null) TryGetComponent(out seatedController);
+        bool seated = seatedController != null && seatedController.IsSeated;
 
         bool usePressed = inputActions != null && inputActions.Player.UseItem.WasPressedThisFrame();
         if (Keyboard.current != null)
@@ -93,7 +98,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (usePressed)
             UseSelectedSlot();
 
-        if (inputActions != null && inputActions.Player.Drop.WasPressedThisFrame())
+        if (!seated && inputActions != null && inputActions.Player.Drop.WasPressedThisFrame())
             TryDropSelectedSlot();
     }
 
@@ -261,6 +266,32 @@ public class PlayerHotbar : NetworkBehaviour
             GetItemId(3), slots[3].quantity,
             GetItemId(4), slots[4].quantity);
         return true;
+    }
+
+    /// <summary>
+    /// Server wipes every slot and syncs the empty hotbar to the owner. Used when a player
+    /// is stranded at a mission site on return — their held gear is lost with them.
+    /// </summary>
+    public void ClearAllServer()
+    {
+        if (!IsServer) return;
+        EnsureSlots();
+
+        bool hadAny = false;
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (!slots[i].IsEmpty) hadAny = true;
+            slots[i].itemId = MvpHotbarItemId.None;
+            slots[i].quantity = 0;
+        }
+        if (!hadAny) return;
+
+        SyncHotbarClientRpc(
+            GetItemId(0), slots[0].quantity,
+            GetItemId(1), slots[1].quantity,
+            GetItemId(2), slots[2].quantity,
+            GetItemId(3), slots[3].quantity,
+            GetItemId(4), slots[4].quantity);
     }
 
     public bool CanReceiveItem(MvpHotbarItemId itemId, out string reason)

@@ -42,12 +42,14 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
         var manager = LostItemMissionManager.Instance;
         if (manager == null) return;
 
-        manager.RequestBoardVan();
+        manager.RequestBoardVan();      // reward/return accounting
+        if (player != null)
+            player.RequestSeat();        // actually sit the player in the cabin
 
         bool isHost = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsHost;
         string title = MvpMissionRuntime.ActiveTask?.title ?? MvpLocale.T("commission");
         string loc = MvpMissionRuntime.ActiveTask?.locationName ?? MvpLocale.T("mission_location");
-        // E = board only; Space in the boarding overlay = depart
+        // E = board & sit; Space while seated = depart
         VanTransitOverlay.ShowBoarding(title, loc, isHost);
     }
 

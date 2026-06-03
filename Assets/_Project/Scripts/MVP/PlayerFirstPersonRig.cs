@@ -1,3 +1,4 @@
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -14,6 +15,10 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     GameObject flashlightModel;
     GameObject watchModel;
     GameObject thirdPersonWatchModel;
+
+    GameObject nameplateRoot;
+    TextMeshPro nameplateText;
+    string lastNameplateValue;
 
     Transform fpLeftHand;
     Transform fpRightHand;
@@ -45,7 +50,10 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         HideCapsuleBodyMesh();
 
         if (!IsOwner)
+        {
             BuildThirdPersonVisual();
+            BuildNameplate();
+        }
         else
             BuildRig();
     }
@@ -57,6 +65,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
             Destroy(rigRoot);
         if (thirdPersonRoot != null)
             Destroy(thirdPersonRoot);
+        if (nameplateRoot != null)
+            Destroy(nameplateRoot);
     }
 
     public override void OnDestroy()
@@ -79,6 +89,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
                 ApplyThirdPersonGesture(gestureId);
             else
                 ApplyThirdPersonAnimation(moveSpeed);
+
+            UpdateNameplate();
             return;
         }
 
@@ -121,6 +133,51 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         float bobY = Mathf.Sin(t * freq) * ampY;
         float bobX = Mathf.Sin(t * freq * 0.5f) * ampX;
         rigRoot.transform.localPosition = rigLocalPosition + new Vector3(bobX, bobY, 0f);
+    }
+
+    // World-space floating name tag shown above other players' heads.
+    void BuildNameplate()
+    {
+        nameplateRoot = new GameObject("Nameplate");
+        nameplateRoot.transform.SetParent(transform, false);
+        nameplateRoot.transform.localPosition = new Vector3(0f, 2.15f, 0f);
+
+        nameplateText = nameplateRoot.AddComponent<TextMeshPro>();
+        nameplateText.alignment = TextAlignmentOptions.Center;
+        nameplateText.fontSize = 2.6f;
+        nameplateText.fontStyle = FontStyles.Bold;
+        nameplateText.enableWordWrapping = false;
+        nameplateText.color = new Color(0.86f, 0.83f, 0.70f);
+        nameplateText.outlineWidth = 0.22f;
+        nameplateText.outlineColor = new Color32(8, 10, 9, 255);
+        var font = MvpTmpFontProvider.GetFontAsset();
+        if (font != null) nameplateText.font = font;
+        nameplateText.rectTransform.sizeDelta = new Vector2(4f, 1f);
+        nameplateText.text = "";
+    }
+
+    void UpdateNameplate()
+    {
+        if (nameplateRoot == null || nameplateText == null) return;
+
+        if (controller != null)
+        {
+            string current = controller.DisplayName.Value.ToString();
+            if (current != lastNameplateValue)
+            {
+                lastNameplateValue = current;
+                nameplateText.text = current;
+                // Tint the tag with this player's vest colour for quick identification.
+                var colors = PlayerCharacterPalette.Get(controller.CharacterIndex.Value);
+                nameplateText.color = Color.Lerp(colors.vest, Color.white, 0.45f);
+            }
+        }
+
+        // Billboard: copying the camera rotation keeps world-space TMP readable
+        // (and not back-facing) regardless of viewing angle.
+        Camera cam = Camera.main;
+        if (cam != null)
+            nameplateRoot.transform.rotation = cam.transform.rotation;
     }
 
     void BuildRig()

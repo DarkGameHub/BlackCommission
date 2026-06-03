@@ -63,11 +63,21 @@ public class MainMenuUI : MonoBehaviour
     TMP_Text hostCodeText;
     TMP_Text connectingText;
     TMP_Text versionText;
-    TMP_Text connectedStatusText;
 
     TMP_InputField joinCodeInput;
     TMP_InputField directAddressInput;
     TMP_InputField directPortInput;
+    TMP_InputField nameInput;
+
+    // Lobby roster (shown once connected): one row per player in the office.
+    TMP_Text rosterHeaderText;
+    readonly Image[] rosterSwatches = new Image[4];
+    readonly TMP_Text[] rosterNames = new TMP_Text[4];
+    readonly Button[] rosterMuteButtons = new Button[4];
+    readonly TMP_Text[] rosterMuteLabels = new TMP_Text[4];
+    readonly Button[] rosterKickButtons = new Button[4];
+    readonly ulong[] rosterClientIds = new ulong[4];
+    float nextRosterRefresh;
 
     Image backgroundImage;
     bool usingBakedMenuArt;
@@ -86,6 +96,7 @@ public class MainMenuUI : MonoBehaviour
 
     void Awake()
     {
+        SettingsOverlay.EnsureInstance();
         BuildEventSystemIfMissing();
         BuildHierarchy();
         BindEvents();
@@ -237,6 +248,9 @@ public class MainMenuUI : MonoBehaviour
         subRt.sizeDelta = new Vector2(760f, 28f);
         }
 
+        // ─── Agent name field (top-left, works in baked + procedural modes) ─
+        BuildNameField(panel.transform);
+
         // ─── Central commission terminal menu ──────────────────────────
         BuildTerminalMenu(panel.transform);
 
@@ -251,6 +265,43 @@ public class MainMenuUI : MonoBehaviour
         statusRt.sizeDelta = new Vector2(720f, 32f);
 
         return panel;
+    }
+
+    // Top-left "Agent Name" label + input. Persisted to PlayerProfile and synced at spawn.
+    void BuildNameField(Transform parent)
+    {
+        var label = AddText(parent, "NameLabel", MvpLocale.T("player_name"), 16,
+            DispatchGreen, TextAlignmentOptions.Left);
+        var lRt = label.rectTransform;
+        lRt.anchorMin = new Vector2(0f, 1f);
+        lRt.anchorMax = new Vector2(0f, 1f);
+        lRt.pivot = new Vector2(0f, 1f);
+        lRt.anchoredPosition = new Vector2(50f, -150f);
+        lRt.sizeDelta = new Vector2(320f, 22f);
+
+        var go = new GameObject("NameInput",
+            typeof(RectTransform), typeof(Image), typeof(TMP_InputField));
+        go.transform.SetParent(parent, false);
+        go.GetComponent<Image>().color = FieldBg;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(50f, -176f);
+        rt.sizeDelta = new Vector2(300f, 44f);
+
+        nameInput = go.GetComponent<TMP_InputField>();
+        var text = AddText(go.transform, "Text", PlayerProfile.Name, 20,
+            AgedPaper, TextAlignmentOptions.Left);
+        var textRt = text.rectTransform;
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = new Vector2(10f, 4f);
+        textRt.offsetMax = new Vector2(-10f, -4f);
+        nameInput.textComponent = text;
+        nameInput.characterLimit = PlayerProfile.MaxLength;
+        nameInput.text = PlayerProfile.Name;
+        nameInput.onValueChanged.AddListener(v => PlayerProfile.Name = v);
     }
 
     void BuildTerminalMenu(Transform parent)
@@ -867,26 +918,149 @@ public class MainMenuUI : MonoBehaviour
 
     GameObject BuildConnectedStatusPanel(Transform parent)
     {
+        const float headerH = 24f;
+        const float rowH = 30f;
+        float panelH = 16f + headerH + 6f + rowH * 4 + 12f;
+
         var panel = new GameObject("ConnectedStatus", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(parent, false);
-        panel.GetComponent<Image>().color = new Color(0.055f, 0.078f, 0.070f, 0.85f);
+        panel.GetComponent<Image>().color = new Color(0.055f, 0.078f, 0.070f, 0.88f);
         var rt = panel.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0f, 1f);
         rt.anchorMax = new Vector2(0f, 1f);
         rt.pivot = new Vector2(0f, 1f);
         rt.anchoredPosition = new Vector2(20f, -20f);
-        rt.sizeDelta = new Vector2(320f, 40f);
+        rt.sizeDelta = new Vector2(340f, panelH);
 
-        connectedStatusText = AddText(panel.transform, "Text", "", 14,
-            DispatchGreen, TextAlignmentOptions.Left);
-        var tRt = connectedStatusText.rectTransform;
-        tRt.anchorMin = Vector2.zero;
-        tRt.anchorMax = Vector2.one;
-        tRt.offsetMin = new Vector2(12f, 6f);
-        tRt.offsetMax = new Vector2(-12f, -6f);
+        // Header: room code (host) or squad count.
+        rosterHeaderText = AddText(panel.transform, "Header", "", 15,
+            SodiumAmber, TextAlignmentOptions.Left);
+        rosterHeaderText.fontStyle = FontStyles.Bold;
+        var hRt = rosterHeaderText.rectTransform;
+        hRt.anchorMin = new Vector2(0f, 1f);
+        hRt.anchorMax = new Vector2(1f, 1f);
+        hRt.pivot = new Vector2(0.5f, 1f);
+        hRt.anchoredPosition = new Vector2(0f, -8f);
+        hRt.sizeDelta = new Vector2(-24f, headerH);
+
+        // Four roster rows: colour swatch + name.
+        float rowTop = -(8f + headerH + 6f);
+        for (int i = 0; i < 4; i++)
+        {
+            float y = rowTop - i * rowH;
+
+            var swatch = new GameObject($"Swatch{i}", typeof(RectTransform), typeof(Image));
+            swatch.transform.SetParent(panel.transform, false);
+            var sImg = swatch.GetComponent<Image>();
+            sImg.color = Color.clear;
+            var sRt = swatch.GetComponent<RectTransform>();
+            sRt.anchorMin = new Vector2(0f, 1f);
+            sRt.anchorMax = new Vector2(0f, 1f);
+            sRt.pivot = new Vector2(0f, 1f);
+            sRt.anchoredPosition = new Vector2(14f, y - 5f);
+            sRt.sizeDelta = new Vector2(16f, 16f);
+            rosterSwatches[i] = sImg;
+
+            var nameText = AddText(panel.transform, $"Name{i}", "", 14,
+                AgedPaper, TextAlignmentOptions.Left);
+            var nRt = nameText.rectTransform;
+            nRt.anchorMin = new Vector2(0f, 1f);
+            nRt.anchorMax = new Vector2(1f, 1f);
+            nRt.pivot = new Vector2(0f, 1f);
+            nRt.anchoredPosition = new Vector2(40f, y);
+            nRt.sizeDelta = new Vector2(-150f, rowH - 6f);
+            rosterNames[i] = nameText;
+
+            int idx = i;
+
+            // Per-listener mute toggle (hidden on your own row).
+            var muteBtn = CreateButton(panel.transform, $"Mute{i}", "M", 13,
+                BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
+            var mRt = muteBtn.GetComponent<RectTransform>();
+            mRt.anchorMin = new Vector2(1f, 1f);
+            mRt.anchorMax = new Vector2(1f, 1f);
+            mRt.pivot = new Vector2(1f, 1f);
+            mRt.anchoredPosition = new Vector2(-54f, y - 3f);
+            mRt.sizeDelta = new Vector2(42f, 22f);
+            muteBtn.onClick.AddListener(() =>
+            {
+                ProximityVoiceChat.ToggleClientMuted(rosterClientIds[idx]);
+                nextRosterRefresh = 0f;
+            });
+            rosterMuteButtons[i] = muteBtn;
+            rosterMuteLabels[i] = muteBtn.GetComponentInChildren<TMP_Text>();
+
+            // Host-only kick button.
+            var kickBtn = CreateButton(panel.transform, $"Kick{i}", "✕", 13,
+                new Color(0.30f, 0.10f, 0.08f, 0.85f),
+                new Color(0.45f, 0.14f, 0.11f, 0.92f),
+                new Color(0.22f, 0.07f, 0.05f, 0.95f));
+            var kRt = kickBtn.GetComponent<RectTransform>();
+            kRt.anchorMin = new Vector2(1f, 1f);
+            kRt.anchorMax = new Vector2(1f, 1f);
+            kRt.pivot = new Vector2(1f, 1f);
+            kRt.anchoredPosition = new Vector2(-10f, y - 3f);
+            kRt.sizeDelta = new Vector2(40f, 22f);
+            kickBtn.onClick.AddListener(() =>
+            {
+                if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+                    NetworkManager.Singleton.DisconnectClient(rosterClientIds[idx], MvpLocale.T("you_were_kicked"));
+            });
+            rosterKickButtons[i] = kickBtn;
+        }
 
         panel.SetActive(false);
         return panel;
+    }
+
+    // Fills the roster from the PlayerController objects present on this peer (works on
+    // host and clients alike since name + character index are network-synced).
+    void RefreshRoster()
+    {
+        if (Time.unscaledTime < nextRosterRefresh) return;
+        nextRosterRefresh = Time.unscaledTime + 0.4f;
+
+        var players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        System.Array.Sort(players, (a, b) => a.OwnerClientId.CompareTo(b.OwnerClientId));
+
+        bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
+        if (isHost && !string.IsNullOrEmpty(hostJoinCode))
+            rosterHeaderText.text = MvpLocale.T("room_label", hostJoinCode);
+        else
+            rosterHeaderText.text = MvpLocale.T("roster_title", players.Length);
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (i < players.Length)
+            {
+                var p = players[i];
+                var colors = PlayerCharacterPalette.Get(p.CharacterIndex.Value);
+                string name = p.DisplayName.Value.ToString();
+                if (string.IsNullOrEmpty(name)) name = $"Agent {p.OwnerClientId}";
+                if (p.IsOwner) name += " " + MvpLocale.T("you_tag");
+
+                rosterSwatches[i].color = colors.vest;
+                rosterNames[i].text = name;
+                rosterClientIds[i] = p.OwnerClientId;
+
+                // Mute is for other players only; colour shows current state.
+                bool showMute = !p.IsOwner;
+                rosterMuteButtons[i].gameObject.SetActive(showMute);
+                if (showMute && rosterMuteLabels[i] != null)
+                    rosterMuteLabels[i].color = ProximityVoiceChat.IsClientMuted(p.OwnerClientId)
+                        ? StampRed : DispatchGreen;
+
+                // Kick is host-only and never targets yourself.
+                rosterKickButtons[i].gameObject.SetActive(isHost && !p.IsOwner);
+            }
+            else
+            {
+                rosterSwatches[i].color = Color.clear;
+                rosterNames[i].text = "";
+                rosterMuteButtons[i].gameObject.SetActive(false);
+                rosterKickButtons[i].gameObject.SetActive(false);
+            }
+        }
     }
 
     TMP_InputField CreateInputField(Transform parent, string name, string startValue,
@@ -1075,7 +1249,7 @@ public class MainMenuUI : MonoBehaviour
         continueBtn.onClick.AddListener(StartHost);
         newOfficeBtn.onClick.AddListener(StartHost);
         joinBtn.onClick.AddListener(() => SetState(MenuState.JoinInput));
-        settingsBtn.onClick.AddListener(() => settingsPanel.SetActive(!settingsPanel.activeSelf));
+        settingsBtn.onClick.AddListener(() => SettingsOverlay.Toggle());
         quitBtn.onClick.AddListener(QuitGame);
         directBtn.onClick.AddListener(ToggleDirectConnect);
         joinSubmitBtn.onClick.AddListener(StartJoin);
@@ -1154,7 +1328,11 @@ public class MainMenuUI : MonoBehaviour
         }
         else
         {
+            // No online service: fall back to a local host, but make it explicit that
+            // teammates can only join over LAN (not the internet).
             StartHostDirect();
+            if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+                SetStatus(MvpLocale.T("local_mode_only"));
         }
     }
 
@@ -1163,6 +1341,12 @@ public class MainMenuUI : MonoBehaviour
         if (string.IsNullOrWhiteSpace(joinCode))
         {
             SetStatus(MvpLocale.T("enter_code_prompt"));
+            return;
+        }
+        // Relay join codes are always 6 alphanumeric characters.
+        if (joinCode.Trim().Length != 6)
+        {
+            SetStatus(MvpLocale.T("code_six_chars"));
             return;
         }
         if (ConnectionManager.Instance != null)
@@ -1233,9 +1417,7 @@ public class MainMenuUI : MonoBehaviour
             if (versionText != null && versionText.gameObject.activeSelf) versionText.gameObject.SetActive(false);
 
             connectedStatusPanel.SetActive(true);
-            int clients = NetworkManager.Singleton.ConnectedClientsIds.Count;
-            string role = NetworkManager.Singleton.IsHost ? MvpLocale.T("host") : MvpLocale.T("client");
-            connectedStatusText.text = MvpLocale.T("connected_status", role, clients);
+            RefreshRoster();
 
             if (state == MenuState.HostWaiting && !string.IsNullOrEmpty(hostJoinCode))
             {
