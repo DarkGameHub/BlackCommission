@@ -4,18 +4,9 @@ using UnityEngine;
 
 /// <summary>
 /// Builds URP/Lit concrete material assets from the downloaded AmbientCG map sets
-/// (Color / NormalGL / AO) into a Resources folder, so the runtime office builder
-/// (MvpSceneStyleDirector) can load them for the office surfaces.
-///
-/// Why Resources: the office is rebuilt from code on every scene load, so editing the
-/// scene does nothing — surface materials have to be produced/loaded at runtime. A
-/// material placed under Resources/ is loadable via Resources.Load and pulls its
-/// referenced textures into the build as dependencies (the textures themselves don't
-/// need to be under Resources).
-///
-///   Concrete044C → walls + floor + ceiling   (key "Office/MVP_office_wall_concrete")
-///
-/// Pairs with MvpSceneStyleDirector.LoadConcreteWallMaterial(); they share the key.
+/// (Color / NormalGL / AO) into a Resources folder so office surfaces can load them via
+/// Resources.Load (key "Office/MVP_office_wall_concrete"). Materials under Resources/ pull
+/// their referenced textures into the build as dependencies.
 /// </summary>
 public static class WallMaterialTool
 {

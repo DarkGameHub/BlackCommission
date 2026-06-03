@@ -5,7 +5,8 @@ using UnityEngine;
 public class OfficeCabinetStorage : MonoBehaviour, IInteractable
 {
     public const int SlotCount = 8;
-    const string SaveKey = "AS.OfficeCabinetStorage.v1";
+    const string SaveFileName = "cabinet.json";
+    const string LegacyPrefsKey = "AS.OfficeCabinetStorage.v1"; // imported once, then removed
 
     static CabinetSaveData data;
 
@@ -173,16 +174,17 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
     {
         if (data != null && data.slots != null && data.slots.Length == SlotCount) return;
 
-        string json = PlayerPrefs.GetString(SaveKey, "");
-        if (!string.IsNullOrEmpty(json))
+        data = SaveIO.ReadJson<CabinetSaveData>(SaveFileName);
+
+        // One-time import of the old PlayerPrefs cabinet so existing players keep stored gear.
+        if (data == null)
         {
-            try
+            string legacy = PlayerPrefs.GetString(LegacyPrefsKey, "");
+            if (!string.IsNullOrEmpty(legacy))
             {
-                data = JsonUtility.FromJson<CabinetSaveData>(json);
-            }
-            catch
-            {
-                data = null;
+                try { data = JsonUtility.FromJson<CabinetSaveData>(legacy); } catch { data = null; }
+                PlayerPrefs.DeleteKey(LegacyPrefsKey);
+                PlayerPrefs.Save();
             }
         }
 
@@ -202,8 +204,7 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
     static void Save()
     {
         EnsureLoaded();
-        PlayerPrefs.SetString(SaveKey, JsonUtility.ToJson(data));
-        PlayerPrefs.Save();
+        SaveIO.WriteJson(SaveFileName, data);
     }
 
     static bool IsValidSlot(int index) => index >= 0 && index < SlotCount;

@@ -272,8 +272,7 @@ public static class GeneratedArtImporter
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            MvpSceneStyleDirector.RefreshHqVisualInOpenEditorScene();
-            Debug.Log("[GeneratedArtImporter] Rebuilt ASV4 generated art prefabs and refreshed open HQ scene.");
+            Debug.Log("[GeneratedArtImporter] Rebuilt ASV4 generated art prefabs.");
 
             if (showDialogs)
             {

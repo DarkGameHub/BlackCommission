@@ -114,6 +114,8 @@ public class DisconnectHandler : MonoBehaviour
         {
             showingUI = false;
             NetworkManager.Singleton?.Shutdown();
+            // We may have been a guest mirroring the host's company; restore our own save.
+            CompanyData.ReloadFromDisk();
             SceneManager.LoadScene("HQ");
         }
     }
