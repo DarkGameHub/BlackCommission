@@ -209,85 +209,28 @@ public static class MvpProjectSetup
 
     static void CreateSchoolGeometry(Transform parent)
     {
+        // SHELL ONLY — the placeholder rooms/walls/shelves were removed so you can import
+        // your own level models. What stays is the minimum a playable shell needs: a walkable
+        // floor (for NavMesh + testing) and the functional entrance door. Everything mission-
+        // related (spawn, notebook, exit, monster, patrol points, evidence) is built in
+        // CreateMissionObjects(); import your geometry and align it to those anchors.
         CreateBox("Floor_MainHall", new Vector3(0f, -0.05f, 0f), new Vector3(24f, 0.1f, 18f),
             new Color(0.22f, 0.24f, 0.25f), parent);
-        CreateBox("Ceiling_Shadow", new Vector3(0f, 3.25f, 0f), new Vector3(24f, 0.12f, 18f),
-            new Color(0.08f, 0.09f, 0.1f), parent, false);
-
-        CreateBox("Wall_North", new Vector3(0f, 1.55f, 9f), new Vector3(24f, 3.1f, 0.3f),
-            new Color(0.34f, 0.37f, 0.36f), parent);
-        CreateBox("Wall_South_LeftOfEntrance", new Vector3(-7.1f, 1.55f, -9f), new Vector3(9.8f, 3.1f, 0.3f),
-            new Color(0.31f, 0.34f, 0.33f), parent);
-        CreateBox("Wall_South_RightOfEntrance", new Vector3(7.1f, 1.55f, -9f), new Vector3(9.8f, 3.1f, 0.3f),
-            new Color(0.31f, 0.34f, 0.33f), parent);
-        CreateBox("Wall_South_EntranceHeader", new Vector3(0f, 2.75f, -9f), new Vector3(3.7f, 0.75f, 0.3f),
-            new Color(0.31f, 0.34f, 0.33f), parent);
-        CreateBox("Wall_West", new Vector3(-12f, 1.55f, 0f), new Vector3(0.3f, 3.1f, 18f),
-            new Color(0.31f, 0.34f, 0.33f), parent);
-        CreateBox("Wall_East", new Vector3(12f, 1.55f, 0f), new Vector3(0.3f, 3.1f, 18f),
-            new Color(0.31f, 0.34f, 0.33f), parent);
-
-        CreateBox("Left_Classroom_Wall", new Vector3(-5.7f, 1.55f, 1.6f), new Vector3(0.25f, 3.1f, 9f),
-            new Color(0.39f, 0.42f, 0.4f), parent);
-        CreateBox("Right_Classroom_Wall", new Vector3(5.7f, 1.55f, 1.6f), new Vector3(0.25f, 3.1f, 9f),
-            new Color(0.39f, 0.42f, 0.4f), parent);
-        CreateBox("Back_Classroom_Wall", new Vector3(0f, 1.55f, 5.9f), new Vector3(11.6f, 3.1f, 0.25f),
-            new Color(0.39f, 0.42f, 0.4f), parent);
-
         CreateBox("Exterior_Forecourt", new Vector3(0f, -0.05f, -12.1f), new Vector3(10.5f, 0.1f, 7.0f),
             new Color(0.12f, 0.13f, 0.13f), parent);
-        CreateBox("Entrance_Mat", new Vector3(0f, 0.01f, -10.05f), new Vector3(5f, 0.04f, 1.6f),
-            new Color(0.08f, 0.32f, 0.22f), parent, false);
+
         var entranceDoor = CreateBox("SchoolEntranceDoor", new Vector3(0f, 1.18f, -9.1f),
             new Vector3(1.7f, 2.25f, 0.12f), new Color(0.08f, 0.09f, 0.08f), parent, false);
         GameObject entranceHandle = CreateBox("SchoolEntranceDoorHandle", new Vector3(0.62f, 1.12f, -9.19f),
             new Vector3(0.12f, 0.12f, 0.055f), new Color(0.1f, 0.75f, 0.38f), parent, false);
         entranceHandle.transform.SetParent(entranceDoor.transform, true);
         entranceDoor.AddComponent<SchoolEntranceDoor>();
-        CreateBox("SchoolEntranceSign", new Vector3(0f, 2.13f, -9.32f),
-            new Vector3(2.35f, 0.34f, 0.035f), new Color(0.8f, 0.08f, 0.04f), parent, false);
-        CreateBox("Classroom_Door_Frame_Left", new Vector3(-2.4f, 1.6f, 1.6f), new Vector3(0.25f, 3.2f, 0.25f),
-            new Color(0.15f, 0.18f, 0.17f), parent);
-        CreateBox("Classroom_Door_Frame_Right", new Vector3(2.4f, 1.6f, 1.6f), new Vector3(0.25f, 3.2f, 0.25f),
-            new Color(0.15f, 0.18f, 0.17f), parent);
-
-        CreateBox("AdminRecords_LeftWall", new Vector3(-8.45f, 1.05f, 1.15f), new Vector3(0.25f, 2.1f, 4.4f),
-            new Color(0.28f, 0.34f, 0.33f), parent);
-        CreateBox("AdminRecords_BackWall", new Vector3(-7.0f, 1.05f, 3.2f), new Vector3(2.75f, 2.1f, 0.25f),
-            new Color(0.28f, 0.34f, 0.33f), parent);
-        CreateBox("AdminRecords_Counter", new Vector3(-7.25f, 0.55f, -0.45f), new Vector3(2.3f, 1.1f, 0.38f),
-            new Color(0.09f, 0.11f, 0.1f), parent);
-        CreateBox("OverdueShelf_A", new Vector3(7.2f, 0.82f, -3.3f), new Vector3(3.1f, 1.64f, 0.34f),
-            new Color(0.1f, 0.12f, 0.11f), parent);
-        CreateBox("OverdueShelf_B", new Vector3(9.15f, 0.82f, -1.25f), new Vector3(0.34f, 1.64f, 3.0f),
-            new Color(0.1f, 0.12f, 0.11f), parent);
     }
 
     static void CreateSchoolProps(Transform parent)
     {
-        for (int row = 0; row < 3; row++)
-        {
-            for (int col = 0; col < 4; col++)
-            {
-                float x = -3.6f + col * 2.4f;
-                float z = 2.7f + row * 1.15f;
-                CreateDesk(new Vector3(x, 0.42f, z), parent);
-            }
-        }
-
-        CreateBox("Blackboard", new Vector3(0f, 1.55f, 5.72f), new Vector3(4.8f, 1.5f, 0.08f),
-            new Color(0.02f, 0.2f, 0.12f), parent, false);
-        for (int i = 0; i < 6; i++)
-        {
-            CreateBox($"Locker_{i + 1}", new Vector3(-10.8f, 0.95f, -4.7f + i * 1.25f),
-                new Vector3(0.45f, 1.9f, 0.95f), new Color(0.12f, 0.25f, 0.38f), parent);
-        }
-
-        CreateBox("Flicker_Lamp_01", new Vector3(-3.8f, 3.05f, -2.5f), new Vector3(0.2f, 0.08f, 1.6f),
-            new Color(0.8f, 0.84f, 0.72f), parent, false);
-        CreateBox("Flicker_Lamp_02", new Vector3(4.2f, 3.05f, 3.2f), new Vector3(0.2f, 0.08f, 1.6f),
-            new Color(0.8f, 0.84f, 0.72f), parent, false);
-
+        // SHELL ONLY — desk/locker/blackboard placeholders removed. Just basic lighting so the
+        // empty shell stays navigable; replace with your own fixtures when you import art.
         var lampGlow = new GameObject("ColdSchoolLights");
         lampGlow.transform.SetParent(parent);
         lampGlow.transform.position = new Vector3(0f, 2.7f, 0f);
@@ -418,14 +361,6 @@ public static class MvpProjectSetup
         return points;
     }
 
-    static void CreateDesk(Vector3 position, Transform parent)
-    {
-        CreateBox("DeskTop", position, new Vector3(1.15f, 0.12f, 0.7f),
-            new Color(0.42f, 0.28f, 0.16f), parent, false);
-        CreateBox("DeskChair", position + new Vector3(0f, -0.1f, -0.75f), new Vector3(0.6f, 0.55f, 0.18f),
-            new Color(0.16f, 0.19f, 0.21f), parent, false);
-    }
-
     static GameObject CreateBox(string name, Vector3 position, Vector3 scale, Color color, Transform parent, bool navStatic = true)
     {
         var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -436,20 +371,6 @@ public static class MvpProjectSetup
         ApplyMaterial(go, name.ToLowerInvariant(), color);
         if (navStatic)
             GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.ContributeGI);
-        return go;
-    }
-
-    static GameObject CreateText(string text, Vector3 position, Quaternion rotation, float characterSize, Color color)
-    {
-        var go = new GameObject($"Text_{text}");
-        go.transform.SetPositionAndRotation(position, rotation);
-        var mesh = go.AddComponent<TextMesh>();
-        mesh.text = text;
-        mesh.anchor = TextAnchor.MiddleCenter;
-        mesh.alignment = TextAlignment.Center;
-        mesh.characterSize = characterSize;
-        mesh.fontSize = 48;
-        mesh.color = color;
         return go;
     }
 
