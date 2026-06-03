@@ -95,10 +95,17 @@ public class VanTransitOverlay : MonoBehaviour
     {
         if (interiorRoot == null)
         {
-            interiorRoot = CreateProceduralInterior();
-            interiorRoot.transform.position = VanCabin.Origin;
-            interiorRoot.transform.rotation = Quaternion.identity;
-            interiorRoot.transform.localScale = Vector3.one * VanCabin.Scale;
+            // Procedural interior by default: its benches and the VanCabin seat offsets are
+            // authored in the same space, so seating is exact by construction (no tuning).
+            // A modeled interior is opt-in (VanCabin.UseModeledInterior) and auto-fit.
+            interiorRoot = VanCabin.UseModeledInterior ? TryCreateModeledInterior() : null;
+            if (interiorRoot == null)
+            {
+                interiorRoot = CreateProceduralInterior();
+                interiorRoot.transform.position = VanCabin.Origin;
+                interiorRoot.transform.rotation = Quaternion.identity;
+                interiorRoot.transform.localScale = Vector3.one * VanCabin.Scale;
+            }
             DontDestroyOnLoad(interiorRoot);
 
             foreach (Collider c in interiorRoot.GetComponentsInChildren<Collider>())
@@ -107,6 +114,56 @@ public class VanTransitOverlay : MonoBehaviour
             AddTransitInteriorLights();
         }
         cabinShown = true;
+    }
+
+    // Loads the modeled interior and AUTO-FITS it from measured bounds — scale and offset are
+    // computed, never hand-tuned. Returns null if the asset isn't present. See the
+    // unity-model-fit skill for the methodology.
+    GameObject TryCreateModeledInterior()
+    {
+        GameObject prefab = Resources.Load<GameObject>(VanCabin.InteriorResourcePath);
+        if (prefab == null) return null;
+
+        GameObject root = Instantiate(prefab);
+        root.name = "MVP_VanTransitInterior_Modeled";
+        FitToCabin(root);
+        return root;
+    }
+
+    // Measure → compute → place. Uniformly scales the model so its bounding box fits the cabin
+    // bay, then translates so the footprint is centred and the model's floor sits at seat height.
+    static void FitToCabin(GameObject root)
+    {
+        root.transform.SetPositionAndRotation(Vector3.zero, Quaternion.Euler(VanCabin.ModelEuler));
+        root.transform.localScale = Vector3.one;
+
+        if (!TryGetWorldBounds(root, out Bounds b))
+        {
+            root.transform.position = VanCabin.InteriorCenter;
+            return;
+        }
+
+        Vector3 target = VanCabin.InteriorSize;
+        float scale = Mathf.Min(
+            target.x / Mathf.Max(b.size.x, 1e-4f),
+            target.y / Mathf.Max(b.size.y, 1e-4f),
+            target.z / Mathf.Max(b.size.z, 1e-4f));
+        root.transform.localScale = Vector3.one * scale;
+
+        TryGetWorldBounds(root, out b); // re-measure after scaling
+        Vector3 c = VanCabin.InteriorCenter;
+        root.transform.position += new Vector3(c.x - b.center.x, VanCabin.FloorWorldY - b.min.y, c.z - b.center.z);
+        Debug.Log($"[VanCabin] Auto-fit modeled interior: scale={scale:F3} fittedSize={b.size}");
+    }
+
+    static bool TryGetWorldBounds(GameObject root, out Bounds bounds)
+    {
+        bounds = default;
+        var renderers = root.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return false;
+        bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
+        return true;
     }
 
     void BeginDrive()
@@ -290,6 +347,15 @@ public class VanTransitOverlay : MonoBehaviour
             new Vector3(0.55f, 0.372f, -0.22f), new Vector3(0.35f, 0.005f, 0.28f), grimeMat);
         CreateInteriorBox("FloorGrimeB", root.transform,
             new Vector3(0.85f, 0.372f, 0.32f), new Vector3(0.22f, 0.005f, 0.18f), grimeMat);
+
+        // Grab rail + poles down the aisle — sells the "standing transit van" read.
+        Material railMat = MakeFlatMaterial(new Color(0.788f, 0.761f, 0.667f)); // dirty bone
+        CreateInteriorBox("GrabRail", root.transform,
+            new Vector3(0.45f, 1.33f, 0f), new Vector3(1.85f, 0.03f, 0.03f), railMat);
+        CreateInteriorBox("GrabPoleFront", root.transform,
+            new Vector3(-0.30f, 0.9f, 0f), new Vector3(0.035f, 0.95f, 0.035f), railMat);
+        CreateInteriorBox("GrabPoleRear", root.transform,
+            new Vector3(1.20f, 0.9f, 0f), new Vector3(0.035f, 0.95f, 0.035f), railMat);
 
         return root;
     }

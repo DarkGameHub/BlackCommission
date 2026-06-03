@@ -16,6 +16,23 @@ public static class VanCabin
     // The procedural cabin mesh is authored small; scale it up so full-size players fit.
     public const float Scale = 2.2f;
 
+    // ── Optional imported interior model ──
+    // The interior is PROCEDURAL by default (benches authored in the same space as the seat
+    // offsets below, so seating is exact by construction — nothing to hand-tune). Only flip
+    // UseModeledInterior to true once a real interior mesh exists at InteriorResourcePath;
+    // VanTransitOverlay then AUTO-FITS it from its measured bounds (no guessed transform) so
+    // it lands centred on the bay with its floor at the seat height. ModelEuler is the only
+    // manual hint — set it if the mesh imports facing the wrong way (bounds can't infer facing).
+    public static bool UseModeledInterior = false;
+    public const string InteriorResourcePath = "GeneratedArt/ASV4_VanTransitInterior";
+    public static readonly Vector3 ModelEuler = Vector3.zero;
+
+    // Target the auto-fitter scales the model into (world units), matched to the procedural
+    // cabin so a modeled interior occupies the same volume the seats are placed in.
+    public static readonly Vector3 InteriorSize = new(2f * Scale, 1.08f * Scale, 1.36f * Scale);
+    public static Vector3 InteriorCenter => Origin + new Vector3(0.45f * Scale, 0f, 0f);
+    public static float FloorWorldY => Origin.y + 0.36f * Scale;
+
     // Seat offsets in the cabin's UNSCALED local space (matches the procedural benches:
     // floor top ~y0.37, benches at z = ±0.52, passenger bay along +x of the cage).
     // Two benches facing each other across the aisle (z): 0 faces 1, 2 faces 3.
