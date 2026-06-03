@@ -6,9 +6,9 @@ using UnityEngine;
 public static class GeneratedArtImporter
 {
     const string PrefabFolder = "Assets/_Project/Prefabs/Art";
-    const string ResourcesGeneratedArtFolder = "Assets/Resources/GeneratedArt";
+    const string ResourcesGeneratedArtFolder = "Assets/_Project/Resources/GeneratedArt";
     const string PlayableVanPrefabPath = "Assets/_Project/Prefabs/Art/ASV4_PlayableDepartureVan.prefab";
-    const string PlayableVanResourcesPath = "Assets/Resources/GeneratedArt/ASV4_PlayableDepartureVan.prefab";
+    const string PlayableVanResourcesPath = "Assets/_Project/Resources/GeneratedArt/ASV4_PlayableDepartureVan.prefab";
     const string VanModelPath = "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Second_Hand_Dispatch_Van.fbx";
     const string AutoSetupDoneKey = "BlackCommission.GeneratedArt.ASV4AutoSetupDone.v2";
 

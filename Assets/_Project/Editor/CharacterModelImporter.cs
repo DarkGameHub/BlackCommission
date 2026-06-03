@@ -29,7 +29,7 @@ public static class CharacterModelImporter
     const string EmissionTex = TextureFolder + "/AS_Character_emission.png";
 
     const string PrefabFolder = "Assets/_Project/Prefabs/Art";
-    const string ResourcesFolder = "Assets/Resources/GeneratedArt";
+    const string ResourcesFolder = "Assets/_Project/Resources/GeneratedArt";
 
     // Player root pivot is at the feet; a ~2m CharacterController wants a body a touch
     // under 2m so the head clears.

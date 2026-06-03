@@ -24,7 +24,7 @@ public static class OfficePropImporter
     }
 
     const string PrefabFolder = "Assets/_Project/Prefabs/Art";
-    const string ResourcesFolder = "Assets/Resources/GeneratedArt";
+    const string ResourcesFolder = "Assets/_Project/Resources/GeneratedArt";
 
     static readonly Prop[] Props =
     {

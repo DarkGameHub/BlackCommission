@@ -24,7 +24,7 @@ public static class WallMaterialTool
     {
         new ConcreteMat
         {
-            TextureFolder = "Assets/_Project/Materials/事务所/Concrete044C_2K-JPG",
+            TextureFolder = "Assets/_Project/Materials/Office/Concrete044C_2K-JPG",
             Prefix = "Concrete044C_2K-JPG",
             MaterialPath = MatRoot + "/MVP_office_wall_concrete.mat",
             Tiling = new Vector2(1.67f, 2f),
