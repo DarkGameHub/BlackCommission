@@ -182,24 +182,6 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         StartMissionServerSideWithTransit();
     }
 
-    public void LaunchSelectedMissionFromVehicle(PlayerController player)
-    {
-        if (missionLaunching) return;
-        if (!HasSelectedDemoTask) return;
-
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
-        {
-            if (allowNonNetworkSoloStart && CanStartDemoTask())
-                StartMissionLocalWithTransit();
-            return;
-        }
-
-        if (!CanStartDemoTask()) return;
-
-        if (NetworkManager.Singleton.IsHost)
-            StartMissionServerSideWithTransit();
-    }
-
     void QueueDemoTask()
     {
         if (demoTask == null) return;

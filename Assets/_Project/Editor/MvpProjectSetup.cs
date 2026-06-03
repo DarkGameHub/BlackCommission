@@ -492,7 +492,7 @@ public static class MvpProjectSetup
 
     static void UpdateBuildSettings()
     {
-        var orderedPaths = new List<string> { HqScenePath, SchoolScenePath, "Assets/_Project/Scenes/Mall_B2.unity" };
+        var orderedPaths = new List<string> { HqScenePath, SchoolScenePath };
         var scenes = new List<EditorBuildSettingsScene>();
 
         foreach (string path in orderedPaths)

@@ -7,7 +7,6 @@ public class PlayerHealth : NetworkBehaviour, IInteractable
 {
     [Header("Health")]
     [SerializeField] float maxHP = 100f;
-    [SerializeField] float electrocutionDamageRate = 15f;
 
     [Header("Revive")]
     [SerializeField] float reviveDuration = 4f;
@@ -66,11 +65,7 @@ public class PlayerHealth : NetworkBehaviour, IInteractable
     void Update()
     {
         if (!IsServer) return;
-        if (!IsDowned.Value)
-        {
-            UpdateElectrocution();
-            return;
-        }
+        if (!IsDowned.Value) return;
 
         if (reviverActive)
         {
@@ -78,16 +73,6 @@ public class PlayerHealth : NetworkBehaviour, IInteractable
             if (reviveProgress >= reviveDuration)
                 CompleteRevive();
         }
-    }
-
-    void UpdateElectrocution()
-    {
-        if (WaterLevelManager.Instance == null) return;
-        if (GameManager.Instance != null && GameManager.Instance.PumpRepaired.Value) return;
-
-        float waterHeight = WaterLevelManager.Instance.CurrentWaterHeight.Value;
-        if (waterHeight > transform.position.y)
-            TakeDamage(electrocutionDamageRate * Time.deltaTime);
     }
 
     public void TakeDamage(float damage)

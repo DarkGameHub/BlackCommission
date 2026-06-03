@@ -62,6 +62,8 @@ public static class MvpLocale
         ["driver_waiting"] = new[] { "司机在前面等着", "Driver waiting up front" },
         ["press_e_drive"] = new[] { "按 [E] 开走", "Press [E] to drive" },
         ["press_space_depart"] = new[] { "[空格] 发车", "[Space] Depart" },
+        ["press_x_leave"] = new[] { "[X] 下车", "[X] Leave seat" },
+        ["departing_in"] = new[] { "发车倒计时 {0}…（未上车者将被留下）", "Departing in {0}… (stragglers left behind)" },
         ["wait_all_aboard"] = new[] { "等待所有人上车才能发车", "Everyone must be aboard to depart" },
         ["sit_in_van"] = new[] { "按 [E] 上车就座", "Press [E] to board and sit" },
         ["dispatch_outbound"] = new[] { "派车去现场", "Dispatching to site" },

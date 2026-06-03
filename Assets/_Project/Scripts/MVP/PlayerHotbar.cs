@@ -207,12 +207,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (!CanReceiveItem(itemId, out _)) return false;
         bool added = TryAddItem(itemId, quantity);
         if (added && IsSpawned && IsServer)
-            SyncHotbarClientRpc(
-                GetItemId(0), slots[0].quantity,
-                GetItemId(1), slots[1].quantity,
-                GetItemId(2), slots[2].quantity,
-                GetItemId(3), slots[3].quantity,
-                GetItemId(4), slots[4].quantity);
+            SyncHotbar();
         return added;
     }
 
@@ -242,12 +237,7 @@ public class PlayerHotbar : NetworkBehaviour
 
         RemoveOneFromSlot(index);
         if (IsSpawned && IsServer)
-            SyncHotbarClientRpc(
-                GetItemId(0), slots[0].quantity,
-                GetItemId(1), slots[1].quantity,
-                GetItemId(2), slots[2].quantity,
-                GetItemId(3), slots[3].quantity,
-                GetItemId(4), slots[4].quantity);
+            SyncHotbar();
         return true;
     }
 
@@ -259,12 +249,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (!CanReceiveItem(itemId, out _)) return false;
         if (!TryAddItem(itemId, quantity)) return false;
 
-        SyncHotbarClientRpc(
-            GetItemId(0), slots[0].quantity,
-            GetItemId(1), slots[1].quantity,
-            GetItemId(2), slots[2].quantity,
-            GetItemId(3), slots[3].quantity,
-            GetItemId(4), slots[4].quantity);
+        SyncHotbar();
         return true;
     }
 
@@ -286,12 +271,7 @@ public class PlayerHotbar : NetworkBehaviour
         }
         if (!hadAny) return;
 
-        SyncHotbarClientRpc(
-            GetItemId(0), slots[0].quantity,
-            GetItemId(1), slots[1].quantity,
-            GetItemId(2), slots[2].quantity,
-            GetItemId(3), slots[3].quantity,
-            GetItemId(4), slots[4].quantity);
+        SyncHotbar();
     }
 
     public bool CanReceiveItem(MvpHotbarItemId itemId, out string reason)
@@ -380,12 +360,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (slot.IsEmpty || slot.itemId != expectedItemId) return;
 
         RemoveOneFromSlot(index);
-        SyncHotbarClientRpc(
-            GetItemId(0), slots[0].quantity,
-            GetItemId(1), slots[1].quantity,
-            GetItemId(2), slots[2].quantity,
-            GetItemId(3), slots[3].quantity,
-            GetItemId(4), slots[4].quantity);
+        SyncHotbar();
     }
 
     [ServerRpc]
@@ -404,12 +379,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (!computer.TryStoreDroppedItemServer(itemId, 1)) return;
 
         RemoveOneFromSlot(index);
-        SyncHotbarClientRpc(
-            GetItemId(0), slots[0].quantity,
-            GetItemId(1), slots[1].quantity,
-            GetItemId(2), slots[2].quantity,
-            GetItemId(3), slots[3].quantity,
-            GetItemId(4), slots[4].quantity);
+        SyncHotbar();
         SpawnDropVisualClientRpc(dropPos, (int)itemId);
     }
 
@@ -525,6 +495,18 @@ public class PlayerHotbar : NetworkBehaviour
         SetSlotFromNetwork(3, item3, qty3);
         SetSlotFromNetwork(4, item4, qty4);
         CompanyData.Current.Funds = funds;
+    }
+
+    // Server-side: push the full 5-slot hotbar state to the owner. Shared by every server
+    // path that mutates slots (grant, drop, consume, storage take/return, clear).
+    void SyncHotbar()
+    {
+        SyncHotbarClientRpc(
+            GetItemId(0), slots[0].quantity,
+            GetItemId(1), slots[1].quantity,
+            GetItemId(2), slots[2].quantity,
+            GetItemId(3), slots[3].quantity,
+            GetItemId(4), slots[4].quantity);
     }
 
     [ClientRpc]

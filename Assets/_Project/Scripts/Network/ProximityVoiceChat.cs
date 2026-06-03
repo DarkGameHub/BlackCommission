@@ -87,6 +87,7 @@ public class ProximityVoiceChat : MonoBehaviour
     int lastMicPosition;
     float nextMicStartTime;
     CustomMessagingManager registeredMessagingManager;
+    NetworkManager subscribedNetwork;
     readonly float[] sampleBuffer = new float[SamplesPerPacket];
     readonly byte[] encodedBuffer = new byte[SamplesPerPacket];
     readonly Dictionary<ulong, AudioSource> remoteSources = new();
@@ -109,6 +110,7 @@ public class ProximityVoiceChat : MonoBehaviour
     void Update()
     {
         RegisterMessageHandlers();
+        EnsureClientCallbacks();
         if (!VoiceEnabled || Muted)
         {
             StopMicrophone();
@@ -141,6 +143,44 @@ public class ProximityVoiceChat : MonoBehaviour
             registeredMessagingManager.UnregisterNamedMessageHandler(DownlinkMessage);
             registeredMessagingManager = null;
         }
+        if (subscribedNetwork != null)
+        {
+            subscribedNetwork.OnClientDisconnectCallback -= OnRemoteClientDisconnect;
+            subscribedNetwork = null;
+        }
+        ClearRemoteSources();
+    }
+
+    // Keep per-speaker AudioSources from leaking across disconnects/sessions: drop a speaker
+    // when its client leaves, and wipe everything when the session ends (host shutdown).
+    void EnsureClientCallbacks()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (subscribedNetwork != network)
+        {
+            if (subscribedNetwork != null)
+                subscribedNetwork.OnClientDisconnectCallback -= OnRemoteClientDisconnect;
+            if (network != null)
+                network.OnClientDisconnectCallback += OnRemoteClientDisconnect;
+            subscribedNetwork = network;
+        }
+
+        if ((network == null || !network.IsListening) && remoteSources.Count > 0)
+            ClearRemoteSources();
+    }
+
+    void OnRemoteClientDisconnect(ulong clientId)
+    {
+        if (!remoteSources.TryGetValue(clientId, out AudioSource source)) return;
+        if (source != null) Destroy(source.gameObject);
+        remoteSources.Remove(clientId);
+    }
+
+    void ClearRemoteSources()
+    {
+        foreach (var kv in remoteSources)
+            if (kv.Value != null) Destroy(kv.Value.gameObject);
+        remoteSources.Clear();
     }
 
     void RegisterMessageHandlers()

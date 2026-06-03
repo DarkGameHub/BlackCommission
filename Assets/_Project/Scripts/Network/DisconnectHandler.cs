@@ -5,27 +5,60 @@ using UnityEngine.SceneManagement;
 
 public class DisconnectHandler : MonoBehaviour
 {
+    // Persist across scene loads so a host-drop DURING a mission still routes clients back
+    // to HQ. Scenes may each carry a copy; the first one wins and later duplicates remove
+    // themselves. Subscription is lazy because NetworkManager may not exist yet at Awake.
+    static DisconnectHandler instance;
+
     float returnTimer = -1f;
     bool showingUI;
     string disconnectMessage = "";
     GUIStyle messageStyle;
     GUIStyle toastStyle;
 
+    NetworkManager subscribedNetwork;
+
     // Transient "teammate joined / left" toasts, shown on every peer.
     readonly List<(string text, float until)> toasts = new();
 
-    void OnEnable()
+    void Awake()
     {
-        if (NetworkManager.Singleton == null) return;
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnect;
-        NetworkManager.Singleton.OnConnectionEvent += OnConnectionEvent;
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
-    void OnDisable()
+    void OnDestroy()
     {
-        if (NetworkManager.Singleton == null) return;
-        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnect;
-        NetworkManager.Singleton.OnConnectionEvent -= OnConnectionEvent;
+        Unsubscribe();
+        if (instance == this) instance = null;
+    }
+
+    // Subscribe once NetworkManager is available; re-subscribe if the instance is replaced
+    // (host shutdown + new session within the same process).
+    void EnsureSubscribed()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (subscribedNetwork == network) return;
+
+        Unsubscribe();
+        if (network == null) return;
+
+        network.OnClientDisconnectCallback += OnClientDisconnect;
+        network.OnConnectionEvent += OnConnectionEvent;
+        subscribedNetwork = network;
+    }
+
+    void Unsubscribe()
+    {
+        if (subscribedNetwork == null) return;
+        subscribedNetwork.OnClientDisconnectCallback -= OnClientDisconnect;
+        subscribedNetwork.OnConnectionEvent -= OnConnectionEvent;
+        subscribedNetwork = null;
     }
 
     void OnConnectionEvent(NetworkManager manager, ConnectionEventData data)
@@ -72,6 +105,8 @@ public class DisconnectHandler : MonoBehaviour
 
     void Update()
     {
+        EnsureSubscribed();
+
         if (returnTimer < 0) return;
 
         returnTimer -= Time.deltaTime;

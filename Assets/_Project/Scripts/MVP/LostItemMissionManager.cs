@@ -34,6 +34,9 @@ public class LostItemMissionManager : NetworkBehaviour
 
     [Header("Boarding / Departure")]
     [SerializeField] float departureTransitSeconds = 6f;
+    // First Space press when not everyone is aboard arms this grace window instead of leaving
+    // immediately, so stragglers can still board; a second press departs at once.
+    [SerializeField] float departGraceSeconds = 5f;
 
     [Header("Scene Flow")]
     [SerializeField] string fallbackOfficeScene = "HQ";
@@ -63,6 +66,27 @@ public class LostItemMissionManager : NetworkBehaviour
 
     public NetworkVariable<float> MissionTimer = new(0f,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    // Server time (seconds) at which an armed return departure fires; <=0 means not armed.
+    public NetworkVariable<double> DepartDeadline = new(-1d,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    /// <summary>Seconds left on the armed return-departure grace window, or -1 if not armed.</summary>
+    public static float DepartCountdownSeconds
+    {
+        get
+        {
+            var m = Instance;
+            if (m == null || m.DepartDeadline.Value <= 0d) return -1f;
+            return (float)(m.DepartDeadline.Value - NowNetworkTime());
+        }
+    }
+
+    static double NowNetworkTime()
+    {
+        NetworkManager net = NetworkManager.Singleton;
+        return net != null && net.IsListening ? net.ServerTime.Time : Time.timeAsDouble;
+    }
 
     OfficeTaskDefinition ActiveTask => MvpMissionRuntime.ActiveTask;
     public float ElapsedGameHours => MvpMissionClock.GetElapsedGameHours(ActiveTask, MissionTimer.Value);
@@ -115,6 +139,12 @@ public class LostItemMissionManager : NetworkBehaviour
 
         MissionTimer.Value += Time.deltaTime;
         CheckAllPlayersDowned();
+
+        // Resolve an armed return-departure: leave early once everyone boards, or when the
+        // grace window elapses (stranding whoever still isn't aboard).
+        if (DepartDeadline.Value > 0d &&
+            (AllLivingBoarded() || NowNetworkTime() >= DepartDeadline.Value))
+            DoDepart();
     }
 
     public void TryCollectItem(ulong clientId, NetworkObjectReference itemRef)
@@ -303,6 +333,25 @@ public class LostItemMissionManager : NetworkBehaviour
             CurrentPhase.Value == MissionPhase.ReturnedEarly ||
             CurrentPhase.Value == MissionPhase.Failed) return;
 
+        // Everyone aboard → leave now. Otherwise the first press arms a grace window so
+        // stragglers can still board; a second press during the window forces departure.
+        if (AllLivingBoarded() || DepartDeadline.Value > 0d)
+        {
+            DoDepart();
+            return;
+        }
+
+        DepartDeadline.Value = NowNetworkTime() + Mathf.Max(0f, departGraceSeconds);
+    }
+
+    void DoDepart()
+    {
+        DepartDeadline.Value = -1d;
+        if (RewardsGranted.Value ||
+            CurrentPhase.Value == MissionPhase.Completed ||
+            CurrentPhase.Value == MissionPhase.ReturnedEarly ||
+            CurrentPhase.Value == MissionPhase.Failed) return;
+
         MvpMissionResultKind resultKind;
         if (LostItemCollected.Value)
         {
@@ -316,6 +365,25 @@ public class LostItemMissionManager : NetworkBehaviour
         }
 
         GrantBoardedRewardsAndReturn(resultKind);
+    }
+
+    // True when every connected, living (not downed) player has boarded. Solo / no-network true.
+    bool AllLivingBoarded()
+    {
+        NetworkManager net = NetworkManager.Singleton;
+        if (net == null || !net.IsListening) return true;
+
+        int living = 0;
+        foreach (var pair in net.ConnectedClients)
+        {
+            NetworkObject po = pair.Value.PlayerObject;
+            if (po == null) continue;
+            if (po.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value) continue;
+
+            living++;
+            if (!boardedClientIds.Contains(pair.Key)) return false;
+        }
+        return living > 0;
     }
 
     void GrantBoardedRewardsAndReturn(MvpMissionResultKind resultKind)

@@ -14,9 +14,6 @@ public class FlashlightController : NetworkBehaviour
     [SerializeField] float strongDrainCost = 15f;
     [SerializeField] float strongLightDuration = 0.5f;
     [SerializeField] float strongLightCooldown = 10f;
-    [SerializeField] float stunRange = 8f;
-    [SerializeField] float stunAngle = 30f;
-    [SerializeField] float robotStunDuration = 3f;
 
     public NetworkVariable<bool> IsOn = new(false,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -132,7 +129,6 @@ public class FlashlightController : NetworkBehaviour
         cooldownTimer = strongLightCooldown;
 
         StrongLightBurstClientRpc();
-        DetectRobotsInCone();
     }
 
     void ServerUpdate()
@@ -155,27 +151,6 @@ public class FlashlightController : NetworkBehaviour
             strongTimer -= Time.deltaTime;
             if (strongTimer <= 0)
                 strongActive = false;
-        }
-    }
-
-    void DetectRobotsInCone()
-    {
-        var camTransform = GetComponentInChildren<Camera>()?.transform;
-        if (camTransform == null) return;
-
-        var colliders = Physics.OverlapSphere(camTransform.position, stunRange);
-        foreach (var col in colliders)
-        {
-            var robot = col.GetComponentInParent<CleaningRobot>();
-            if (robot == null) continue;
-
-            Vector3 dirToRobot = (robot.transform.position - camTransform.position).normalized;
-            float angle = Vector3.Angle(camTransform.forward, dirToRobot);
-            if (angle < stunAngle)
-            {
-                robot.ApplyFlashlightStun(robotStunDuration);
-                AudioManager.Instance?.PlayRobotStunned(robot.transform.position);
-            }
         }
     }
 

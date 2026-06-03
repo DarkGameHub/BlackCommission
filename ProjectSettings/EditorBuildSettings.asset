@@ -11,7 +11,4 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/School_LostItem_01.unity
     guid: 71b99cf2018205d49a99e2cd057351b2
-  - enabled: 1
-    path: Assets/_Project/Scenes/Mall_B2.unity
-    guid: cc8e55b8da19c9548926ff66a7084de1
   m_configObjects: {}

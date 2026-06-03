@@ -454,52 +454,6 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         if (flashlightModel != null) flashlightModel.SetActive(itemId == MvpHotbarItemId.Flashlight);
     }
 
-    bool TryCreateGeneratedGloves(Transform parent)
-    {
-        GameObject prefab = Resources.Load<GameObject>("GeneratedArt/ASV4_FirstPerson_Gloves");
-        if (prefab == null) return false;
-
-        GameObject gloves = Instantiate(prefab, parent);
-        gloves.name = "ASV4_Gloves";
-        gloves.transform.localPosition = new Vector3(0f, -0.20f, 0.08f);
-        gloves.transform.localRotation = Quaternion.Euler(58f, 0f, 0f);
-        gloves.transform.localScale = Vector3.one * 0.78f;
-
-        foreach (Collider c in gloves.GetComponentsInChildren<Collider>())
-            Destroy(c);
-
-        return true;
-    }
-
-    void ApplyFirstPersonColors(GameObject root)
-    {
-        int charIndex = controller != null ? controller.CharacterIndex.Value : 0;
-        var colors = PlayerCharacterPalette.Get(charIndex);
-
-        foreach (Renderer r in root.GetComponentsInChildren<Renderer>())
-        {
-            string n = r.gameObject.name.ToLowerInvariant();
-            if (n.Contains("forearm") || n.Contains("cuff") || n.Contains("sleeve") || n.Contains("uniform"))
-                r.material.color = colors.uniform;
-        }
-    }
-
-    void CacheFirstPersonHandTransforms(Transform parent)
-    {
-        fpLeftHand = parent.Find("LeftHand");
-        fpRightHand = parent.Find("RightHand");
-        if (fpLeftHand != null)
-        {
-            fpLeftHandDefaultPos = fpLeftHand.localPosition;
-            fpLeftHandDefaultRot = fpLeftHand.localEulerAngles;
-        }
-        if (fpRightHand != null)
-        {
-            fpRightHandDefaultPos = fpRightHand.localPosition;
-            fpRightHandDefaultRot = fpRightHand.localEulerAngles;
-        }
-    }
-
     void CacheThirdPersonArmTransforms()
     {
         if (thirdPersonRoot == null) return;

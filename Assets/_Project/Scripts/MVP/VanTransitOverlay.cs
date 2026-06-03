@@ -143,8 +143,13 @@ public class VanTransitOverlay : MonoBehaviour
         if (local == null || !local.IsSeated) return;
 
         var keyboard = Keyboard.current;
-        if (keyboard != null && keyboard.spaceKey.wasPressedThisFrame)
+        if (keyboard == null) return;
+
+        if (keyboard.spaceKey.wasPressedThisFrame)
             RequestDepart(local);
+        // Leaving the seat is only allowed before the van actually drives off.
+        else if (phase != Phase.Transit && keyboard.xKey.wasPressedThisFrame)
+            local.RequestLeaveSeat();
     }
 
     void RequestDepart(PlayerController local)
@@ -199,7 +204,14 @@ public class VanTransitOverlay : MonoBehaviour
             string status = boardedCount >= total
                 ? MvpLocale.T("all_aboard", boardedCount, total)
                 : MvpLocale.T("waiting_team", boardedCount, total);
-            GUI.Label(new Rect(rect.x, rect.y + 30f, w, 22f), status + "    " + MvpLocale.T("press_space_depart"), smallStyle);
+            GUI.Label(new Rect(rect.x, rect.y + 30f, w, 22f),
+                status + "    " + MvpLocale.T("press_space_depart") + "    " + MvpLocale.T("press_x_leave"),
+                smallStyle);
+
+            // Return-trip grace countdown: a teammate armed departure; stragglers can still board.
+            int countdown = Mathf.CeilToInt(LostItemMissionManager.DepartCountdownSeconds);
+            if (countdown > 0)
+                GUI.Label(new Rect(rect.x, rect.y + 52f, w, 22f), MvpLocale.T("departing_in", countdown), smallStyle);
         }
     }
 

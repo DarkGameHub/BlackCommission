@@ -139,7 +139,13 @@ public class PlayerController : NetworkBehaviour
 
     void ExitSeat()
     {
-        // Position is re-established by the scene spawn / RestoreControlAt; just re-enable.
+        // Drop back onto solid ground in the current scene. For scene transitions the
+        // destination's spawn manager repositions again right after load; for a voluntary
+        // "leave seat" at HQ this is what gets the player out of the floating cabin instead
+        // of free-falling from the cabin origin (y≈80).
+        Vector3 safe = GetSceneSafePosition();
+        if (cc != null) cc.enabled = false;
+        transform.position = safe;
         if (cc != null) cc.enabled = true;
         velocity = Vector3.zero;
         VanTransitOverlay.HideCabin();
@@ -152,10 +158,32 @@ public class PlayerController : NetworkBehaviour
         else RequestSeatServerRpc();
     }
 
+    /// <summary>Owner asks to leave its cabin seat (X while seated, before departure).</summary>
+    public void RequestLeaveSeat()
+    {
+        if (IsServer) ClearSeatForClient(OwnerClientId);
+        else RequestLeaveSeatServerRpc();
+    }
+
     [ServerRpc]
     void RequestSeatServerRpc(ServerRpcParams p = default)
     {
         AssignSeatForClient(p.Receive.SenderClientId);
+    }
+
+    [ServerRpc]
+    void RequestLeaveSeatServerRpc(ServerRpcParams p = default)
+    {
+        ClearSeatForClient(p.Receive.SenderClientId);
+    }
+
+    static void ClearSeatForClient(ulong clientId)
+    {
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client)) return;
+        var po = client.PlayerObject;
+        if (po != null && po.TryGetComponent(out PlayerController target) && target.SeatIndex.Value != -1)
+            target.SeatIndex.Value = -1;
     }
 
     // Server-side: find the lowest free cabin seat and assign it to this client's player.
@@ -215,7 +243,9 @@ public class PlayerController : NetworkBehaviour
                 seated++;
         }
 
-        return living > 0 && seated >= living;
+        // Never require more seated than the cabin can physically hold, so an over-capacity
+        // lobby (more living players than seats) can't permanently block departure.
+        return living > 0 && seated >= Mathf.Min(living, VanCabin.Count);
     }
 
     /// <summary>Counts seated vs. living players for the boarding HUD (downed excluded).</summary>
@@ -299,9 +329,6 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        if (WaterLevelManager.Instance != null)
-            SpeedMultiplier = WaterLevelManager.Instance.GetSpeedModifierForHeight(transform.position.y);
-
         HandleMovement();
         UpdateCrouchCamera(false);
         HandleStamina();
@@ -339,7 +366,6 @@ public class PlayerController : NetworkBehaviour
         if (Mathf.Abs(NetworkMoveSpeed.Value - targetNetSpeed) > 0.05f)
             NetworkMoveSpeed.Value = targetNetSpeed;
 
-        // Water slowdown is applied from outside (WaterLevelManager)
         currentSpeed *= SpeedMultiplier;
 
         bool groundedBeforeMove = HasGroundContact();
