@@ -23,9 +23,8 @@
 ## Unity 工程启动
 
 1. 若是首次 checkout，先运行 `Tools > Black Commission > Setup All (Run This First!)`。
-2. 运行 `Tools > Black Commission > MVP > Setup School MVP`。
-3. 运行 `Tools > Black Commission > MVP > Validate School MVP`。
-4. 打开 `HQ` 场景，按 Play，点击 `创建事务所 / Start Host`，然后用办公室电脑进入学校任务。
+2. 运行 `Tools > Black Commission > MVP > Setup Lake MVP`（生成湖底潜水关并接好 HQ 电脑派遣）。
+3. 打开 `HQ` 场景，按 Play，点击 `创建事务所 / Start Host`，然后用办公室电脑接取湖底潜水任务。
 
 ## 联机说明
 

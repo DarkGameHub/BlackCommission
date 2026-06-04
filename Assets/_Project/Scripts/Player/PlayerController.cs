@@ -34,6 +34,11 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] float crouchCameraDrop = 0.55f;
     [SerializeField] float cameraCrouchLerpSpeed = 12f;
 
+    [Header("Swimming")]
+    [SerializeField] float swimSpeed = 3.2f;        // free-swim speed underwater (< walkSpeed)
+    [SerializeField] float swimAcceleration = 7f;   // how fast velocity eases toward target (water drag)
+    [SerializeField] float swimBuoyancy = 0.4f;     // gentle upward drift toward the surface when idle
+
     CharacterController cc;
     PlayerHealth health;
     PlayerInputActions inputActions;
@@ -44,6 +49,11 @@ public class PlayerController : NetworkBehaviour
     bool hasCameraStandPosition;
     bool isCrouching;
     bool isSprinting;
+
+    // Swim state — owner-local, fed by WaterVolume via SetWaterState().
+    bool inWaterTrigger;
+    float waterSurfaceY = float.NegativeInfinity;
+    bool isSubmerged;
 
     public float Stamina { get; private set; }
     public bool IsExhausted { get; private set; }
@@ -68,7 +78,16 @@ public class PlayerController : NetworkBehaviour
     public NetworkVariable<int> SeatIndex = new(-1,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    // Synced so peers can react (future swim animation / nameplate state). Owner writes,
+    // everyone reads. Movement itself is driven by the owner-local isSubmerged flag below.
+    public NetworkVariable<bool> IsSubmerged = new(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
     public bool IsSeated => SeatIndex.Value >= 0;
+
+    /// <summary>Owner-local: true while the camera/head is below the water surface.</summary>
+    public bool IsSubmergedLocal => isSubmerged;
+    public bool IsInWater => inWaterTrigger;
 
     float gestureEndTime;
 
@@ -329,9 +348,99 @@ public class PlayerController : NetworkBehaviour
             return;
         }
 
-        HandleMovement();
+        HandleMovementOrSwim();
         UpdateCrouchCamera(false);
         HandleStamina();
+    }
+
+    void HandleMovementOrSwim()
+    {
+        UpdateSubmersionState();
+        if (isSubmerged)
+            HandleSwim();
+        else
+            HandleMovement();
+    }
+
+    // Decide whether the head is underwater. A small hysteresis margin around the surface
+    // stops swim/walk from flickering while the player bobs at the waterline.
+    void UpdateSubmersionState()
+    {
+        bool submergedNow;
+        if (!inWaterTrigger)
+        {
+            submergedNow = false;
+        }
+        else
+        {
+            float headY = cameraRoot != null
+                ? cameraRoot.position.y
+                : transform.position.y + (cc != null ? cc.height : standHeight);
+            const float margin = 0.12f;
+            if (isSubmerged)
+                submergedNow = headY < waterSurfaceY + margin;
+            else
+                submergedNow = headY < waterSurfaceY - margin;
+        }
+
+        if (submergedNow == isSubmerged) return;
+
+        isSubmerged = submergedNow;
+        if (isSubmerged)
+        {
+            if (isCrouching) SetCrouch(false);   // can't crouch while swimming
+        }
+        else
+        {
+            // Surfacing: drop leftover swim drift so walk mode (which only manages velocity.y)
+            // doesn't keep sliding the player horizontally.
+            velocity.x = 0f;
+            velocity.z = 0f;
+        }
+        if (IsOwner && IsSubmerged.Value != isSubmerged)
+            IsSubmerged.Value = isSubmerged;
+    }
+
+    // Free 3D swimming: WASD moves along the camera's look direction (pitch included),
+    // Space ascends and Ctrl descends. No gravity; velocity eases toward target for water drag.
+    void HandleSwim()
+    {
+        if (inputActions == null) return;
+
+        Vector2 moveInput = inputActions.Player.Move.ReadValue<Vector2>();
+        bool ascend = inputActions.Player.Jump.IsPressed();
+        bool descend = inputActions.Player.Crouch.IsPressed();
+
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard != null)
+        {
+            ascend |= keyboard.spaceKey.isPressed;
+            descend |= keyboard.leftCtrlKey.isPressed || keyboard.rightCtrlKey.isPressed;
+        }
+
+        Transform aim = cameraRoot != null ? cameraRoot : transform;
+        Vector3 dir = aim.forward * moveInput.y + aim.right * moveInput.x;
+        dir += Vector3.up * ((ascend ? 1f : 0f) - (descend ? 1f : 0f));
+
+        bool hasInput = dir.sqrMagnitude > 0.0001f;
+        Vector3 targetVelocity = hasInput
+            ? dir.normalized * swimSpeed * SpeedMultiplier
+            : Vector3.up * swimBuoyancy;       // idle: drift gently toward the surface
+
+        float t = 1f - Mathf.Exp(-swimAcceleration * Time.deltaTime);
+        velocity = Vector3.Lerp(velocity, targetVelocity, t);
+        cc.Move(velocity * Time.deltaTime);
+
+        float targetNetSpeed = hasInput ? 0.5f : 0f;
+        if (Mathf.Abs(NetworkMoveSpeed.Value - targetNetSpeed) > 0.05f)
+            NetworkMoveSpeed.Value = targetNetSpeed;
+    }
+
+    /// <summary>Called by WaterVolume on the local owner as it enters/leaves the water trigger.</summary>
+    public void SetWaterState(bool inWater, float surfaceY)
+    {
+        inWaterTrigger = inWater;
+        if (inWater) waterSurfaceY = surfaceY;
     }
 
     void HandleMovement()
@@ -566,6 +675,14 @@ public class PlayerController : NetworkBehaviour
         SpeedMultiplier = 1f;
         IsExhausted = false;
         Stamina = maxStamina;
+
+        inWaterTrigger = false;
+        waterSurfaceY = float.NegativeInfinity;
+        if (isSubmerged)
+        {
+            isSubmerged = false;
+            if (IsOwner) IsSubmerged.Value = false;
+        }
 
         if (cc != null)
         {

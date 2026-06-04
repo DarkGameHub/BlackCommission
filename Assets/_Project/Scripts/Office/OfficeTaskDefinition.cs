@@ -11,8 +11,8 @@ public class OfficeTaskDefinition : ScriptableObject
     [Header("Brief")]
     [TextArea] public string client = "Worried Parent";
     [TextArea] public string description = "Recover the homework notebook from the school and get out.";
-    public string locationName = "School";
-    public string sceneName = "School_LostItem_01";
+    public string locationName = "山间湖泊";
+    public string sceneName = "Lake_DiveKey_01";
     public int recommendedPlayersMin = 1;
     public int recommendedPlayersMax = 4;
 
