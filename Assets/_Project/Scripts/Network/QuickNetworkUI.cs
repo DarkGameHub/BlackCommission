@@ -26,8 +26,8 @@ public class QuickNetworkUI : MonoBehaviour
             charVestTex[i] = MakeTex(c.vest);
             charHelmetTex[i] = MakeTex(c.helmet);
         }
-        charSlotBgTex = MakeTex(new Color(0.055f, 0.078f, 0.070f, 0.8f));
-        charSlotSelectedTex = MakeTex(new Color(0.482f, 0.812f, 0.541f, 0.6f));
+        charSlotBgTex = MakeTex(BlackCommissionUiTheme.ConcretePanel);
+        charSlotSelectedTex = MakeTex(new Color(0.260f, 0.560f, 0.250f, 0.72f));
     }
 
     GUIStyle titleStyle;
@@ -70,24 +70,24 @@ public class QuickNetworkUI : MonoBehaviour
         if (stylesReady) return;
         stylesReady = true;
 
-        screenTex = MakeTex(new Color(0.012f, 0.016f, 0.014f, 0.72f));
-        panelTex = MakeTex(new Color(0.055f, 0.078f, 0.070f, 0.98f));
-        panelBorderTex = MakeTex(new Color(0.184f, 0.310f, 0.294f, 0.6f));
-        fieldTex = MakeTex(new Color(0.020f, 0.028f, 0.024f, 1f));
-        debtSlashTex = MakeTex(new Color(0.761f, 0.227f, 0.169f, 1f));
+        screenTex = MakeTex(new Color(0.000f, 0.000f, 0.000f, 0.70f));
+        panelTex = MakeTex(BlackCommissionUiTheme.ConcreteBlack);
+        panelBorderTex = MakeTex(BlackCommissionUiTheme.MilitaryGreenDim);
+        fieldTex = MakeTex(new Color(0.025f, 0.030f, 0.027f, 1f));
+        debtSlashTex = MakeTex(BlackCommissionUiTheme.Rust);
 
-        hostBtnNormal = MakeTex(new Color(0.133f, 0.349f, 0.227f, 1f));
-        hostBtnHover = MakeTex(new Color(0.180f, 0.480f, 0.310f, 1f));
-        hostBtnActive = MakeTex(new Color(0.080f, 0.220f, 0.150f, 1f));
-        joinBtnNormal = MakeTex(new Color(0.067f, 0.098f, 0.082f, 1f));
-        joinBtnHover = MakeTex(new Color(0.100f, 0.145f, 0.120f, 1f));
-        joinBtnActive = MakeTex(new Color(0.040f, 0.060f, 0.050f, 1f));
+        hostBtnNormal = MakeTex(BlackCommissionUiTheme.MilitaryGreenDark);
+        hostBtnHover = MakeTex(BlackCommissionUiTheme.MilitaryGreen);
+        hostBtnActive = MakeTex(new Color(0.060f, 0.080f, 0.055f, 1f));
+        joinBtnNormal = MakeTex(BlackCommissionUiTheme.ConcreteRaised);
+        joinBtnHover = MakeTex(new Color(0.130f, 0.145f, 0.122f, 1f));
+        joinBtnActive = MakeTex(BlackCommissionUiTheme.ConcretePanel);
 
         titleStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 28, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.482f, 0.812f, 0.541f) },
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen },
             padding = new RectOffset(0, 0, 0, 0)
         };
 
@@ -95,7 +95,7 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 14,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.839f, 0.784f, 0.608f) },
+            normal = { textColor = BlackCommissionUiTheme.OldPaper },
             padding = new RectOffset(0, 0, 2, 8)
         };
 
@@ -103,9 +103,9 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 18, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { background = hostBtnNormal, textColor = Color.white },
-            hover = { background = hostBtnHover, textColor = Color.white },
-            active = { background = hostBtnActive, textColor = new Color(0.8f, 0.8f, 0.8f) },
+            normal = { background = hostBtnNormal, textColor = BlackCommissionUiTheme.CrtGreen },
+            hover = { background = hostBtnHover, textColor = BlackCommissionUiTheme.CrtGreen },
+            active = { background = hostBtnActive, textColor = BlackCommissionUiTheme.OldPaper },
             border = new RectOffset(4, 4, 4, 4),
             padding = new RectOffset(12, 12, 10, 10)
         };
@@ -114,9 +114,9 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 16, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { background = joinBtnNormal, textColor = new Color(0.72f, 0.82f, 0.74f) },
-            hover = { background = joinBtnHover, textColor = Color.white },
-            active = { background = joinBtnActive, textColor = new Color(0.6f, 0.6f, 0.6f) },
+            normal = { background = joinBtnNormal, textColor = BlackCommissionUiTheme.Text },
+            hover = { background = joinBtnHover, textColor = BlackCommissionUiTheme.CrtGreen },
+            active = { background = joinBtnActive, textColor = BlackCommissionUiTheme.OldPaper },
             border = new RectOffset(4, 4, 4, 4),
             padding = new RectOffset(12, 12, 8, 8)
         };
@@ -126,7 +126,7 @@ public class QuickNetworkUI : MonoBehaviour
             fontSize = 12,
             alignment = TextAnchor.MiddleCenter,
             wordWrap = true,
-            normal = { textColor = new Color(0.35f, 0.50f, 0.42f) },
+            normal = { textColor = BlackCommissionUiTheme.MutedText },
             padding = new RectOffset(8, 8, 4, 4)
         };
 
@@ -134,7 +134,7 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 14, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleLeft,
-            normal = { textColor = new Color(0.482f, 0.812f, 0.541f) },
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen },
             padding = new RectOffset(10, 10, 6, 6)
         };
 
@@ -142,15 +142,15 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 36, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.851f, 0.604f, 0.192f) }
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen }
         };
 
         codeInputStyle = new GUIStyle(GUI.skin.textField)
         {
             fontSize = 22, fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { background = fieldTex, textColor = new Color(0.851f, 0.604f, 0.192f) },
-            focused = { background = fieldTex, textColor = Color.white },
+            normal = { background = fieldTex, textColor = BlackCommissionUiTheme.CrtGreen },
+            focused = { background = fieldTex, textColor = BlackCommissionUiTheme.OldPaper },
             padding = new RectOffset(12, 12, 8, 8)
         };
 
@@ -158,7 +158,7 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 11,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.25f, 0.32f, 0.28f) }
+            normal = { textColor = BlackCommissionUiTheme.MutedText }
         };
 
         MvpFontProvider.ApplyToStyle(titleStyle);
@@ -268,7 +268,7 @@ public class QuickNetworkUI : MonoBehaviour
             alignment = TextAnchor.MiddleCenter,
             fontSize = 10,
             fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color(0.96f, 0.42f, 0.34f) },
+            normal = { textColor = BlackCommissionUiTheme.RustWarning },
             padding = new RectOffset(0, 0, 0, 0)
         };
 
@@ -311,7 +311,7 @@ public class QuickNetworkUI : MonoBehaviour
 
         if (!string.IsNullOrEmpty(statusMessage) && Time.unscaledTime < statusMessageUntil)
         {
-            GUIStyle msgStyle = new GUIStyle(hintStyle) { normal = { textColor = new Color(0.761f, 0.227f, 0.169f) } };
+            GUIStyle msgStyle = new GUIStyle(hintStyle) { normal = { textColor = BlackCommissionUiTheme.RustWarning } };
             GUI.Label(new Rect(cx, cy, bw, 32), statusMessage, msgStyle);
             cy += 34;
         }
@@ -375,8 +375,8 @@ public class QuickNetworkUI : MonoBehaviour
         {
             fontSize = 13,
             alignment = TextAnchor.MiddleLeft,
-            normal = { background = fieldTex, textColor = new Color(0.72f, 0.82f, 0.74f) },
-            focused = { background = fieldTex, textColor = Color.white },
+            normal = { background = fieldTex, textColor = BlackCommissionUiTheme.Text },
+            focused = { background = fieldTex, textColor = BlackCommissionUiTheme.OldPaper },
             padding = new RectOffset(6, 6, 4, 4)
         };
 
@@ -430,7 +430,7 @@ public class QuickNetworkUI : MonoBehaviour
 
         if (!string.IsNullOrEmpty(statusMessage) && Time.unscaledTime < statusMessageUntil)
         {
-            GUIStyle msgStyle = new GUIStyle(hintStyle) { normal = { textColor = new Color(0.761f, 0.227f, 0.169f) } };
+            GUIStyle msgStyle = new GUIStyle(hintStyle) { normal = { textColor = BlackCommissionUiTheme.RustWarning } };
             GUI.Label(new Rect(cx, cy + 32, bw, 28), statusMessage, msgStyle);
         }
 

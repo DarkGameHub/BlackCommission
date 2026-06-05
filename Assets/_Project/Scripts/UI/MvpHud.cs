@@ -24,14 +24,31 @@ public class MvpHud : MonoBehaviour
     GUIStyle warningStyle;
     GUIStyle slotStyle;
     GUIStyle selectedSlotStyle;
+    GUIStyle buttonStyle;
+    GUIStyle sectionHeaderStyle;
+    GUIStyle metaStyle;
+    GUIStyle terminalPaperStyle;
+    GUIStyle terminalBoxStyle;
+    GUIStyle terminalTitleStyle;
+    GUIStyle terminalLabelStyle;
+    GUIStyle terminalMutedStyle;
+    GUIStyle terminalSmallStyle;
+    GUIStyle terminalButtonStyle;
+    GUIStyle terminalSelectedButtonStyle;
     Texture2D panelTexture;
     Texture2D slotTexture;
     Texture2D selectedSlotTexture;
+    Texture2D terminalPaperTexture;
+    Texture2D terminalBoxTexture;
+    Texture2D terminalSelectedTexture;
+    Texture2D terminalLineTexture;
     Texture2D emptyIcon;
     Texture2D flashlightIcon;
     Texture2D decoyIcon; // reused for battery
     string shopMessage;
     float shopMessageUntil;
+    string officeMessage;
+    float officeMessageUntil;
     string missionMessage;
     float missionMessageUntil;
     PlayerInteraction cachedLocalInteraction;
@@ -40,6 +57,9 @@ public class MvpHud : MonoBehaviour
     Texture2D crtBezelTex;
     Texture2D hpBarBg;
     Texture2D hpBarFill;
+    Texture2D staminaBarFill;
+    Texture2D staminaBarLowFill;
+    Texture2D staminaBarFrame;
     Texture2D damageFlashTex;
     float damageFlashUntil;
     float lastKnownHp = 100f;
@@ -201,9 +221,19 @@ public class MvpHud : MonoBehaviour
         shopMessageUntil = Time.time + 2.5f;
     }
 
+    void SetOfficeMessage(string message)
+    {
+        officeMessage = message;
+        officeMessageUntil = Time.time + 3f;
+    }
+
     void OnGUI()
     {
+        if (MainMenuUI.IsMenuVisible)
+            return;
+
         EnsureStyles();
+        BlackCommissionUiTheme.ApplyButtonSkin(buttonStyle);
 
         if (LostItemMissionManager.Instance != null)
         {
@@ -224,6 +254,7 @@ public class MvpHud : MonoBehaviour
         DrawDamageFlash();
         DrawCrosshair();
         DrawGestureHint();
+        DrawStaminaBar();
         if (showNetworkHint)
             DrawFooterHint();
     }
@@ -269,13 +300,42 @@ public class MvpHud : MonoBehaviour
         }
 
         bool hasTarget = cachedLocalInteraction != null && cachedLocalInteraction.CurrentTarget != null;
-        Color dotColor = hasTarget ? new Color(0.56f, 0.92f, 0.72f, 0.92f) : new Color(0.9f, 0.9f, 0.9f, 0.55f);
+        Color dotColor = hasTarget ? new Color(0.424f, 1.000f, 0.373f, 0.92f) : new Color(0.72f, 0.74f, 0.68f, 0.55f);
         float size = hasTarget ? 6f : 4f;
 
         Texture2D dot = hpBarBg ?? MakeTexture(Color.white);
         GUI.color = dotColor;
         GUI.DrawTexture(new Rect(cx - size * 0.5f, cy - size * 0.5f, size, size), dot, ScaleMode.StretchToFill);
         GUI.color = Color.white;
+    }
+
+    void DrawTerminalHeader(string title, string subtitle = null)
+    {
+        GUILayout.Label(title, titleStyle);
+        GUILayout.FlexibleSpace();
+        if (!string.IsNullOrEmpty(subtitle))
+            GUILayout.Label(subtitle, mutedStyle, GUILayout.Width(160));
+    }
+
+    void DrawTerminalSection(string title)
+    {
+        GUILayout.Space(8);
+        GUILayout.Label(title, sectionHeaderStyle);
+    }
+
+    void DrawTerminalBlock(System.Action draw)
+    {
+        GUILayout.BeginVertical(slotStyle);
+        draw?.Invoke();
+        GUILayout.EndVertical();
+    }
+
+    void DrawLedgerLine(string label, string value, bool warning = false)
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(label, mutedStyle, GUILayout.Width(150));
+        GUILayout.Label(value, warning ? warningStyle : metaStyle);
+        GUILayout.EndHorizontal();
     }
 
     void DrawOfficePanel()
@@ -311,96 +371,12 @@ public class MvpHud : MonoBehaviour
         }
 
         OfficeComputer computer = activeComputer;
-        float computerWidth = Mathf.Clamp(Screen.width - 36f, 360f, 720f);
-        float computerHeight = Mathf.Min(600, Screen.height - 84);
-        Rect rect = new Rect((Screen.width - computerWidth) * 0.5f, 42, computerWidth, computerHeight);
+        float computerWidth = Mathf.Clamp(Screen.width - 48f, 760f, 1050f);
+        float computerHeight = Mathf.Clamp(Screen.height - 76f, 560f, 720f);
+        Rect rect = new Rect((Screen.width - computerWidth) * 0.5f, 38f, computerWidth, computerHeight);
 
-        Color savedColor = GUI.color;
+        DrawOfficeManagementTerminal(rect, computer, company, nearShop);
 
-        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
-        GUILayout.BeginHorizontal();
-        GUILayout.Label(MvpLocale.T("terminal_title"), titleStyle);
-        if (GUILayout.Button(MvpLocale.T("close_computer"), GUILayout.Width(96), GUILayout.Height(30)))
-        {
-            CloseComputer();
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
-            return;
-        }
-        GUILayout.EndHorizontal();
-
-        officeScrollPosition = GUILayout.BeginScrollView(officeScrollPosition, false, true);
-        GUILayout.Space(8);
-        GUILayout.Label(MvpLocale.T("funds_debt", company.Funds, company.Debt), company.Funds < 0 ? warningStyle : labelStyle);
-        GUILayout.Label(MvpLocale.T("rep_level_xp", company.Reputation, company.OfficeLevel, company.Experience, company.ExperienceForNextLevel), labelStyle);
-        // Locked job categories hidden until content is available
-        GUILayout.Label(MvpLocale.T("takeover_pressure", company.HostileTakeoverPressure), company.IsHostileTakeoverRisk ? warningStyle : labelStyle);
-        GUILayout.Label(MvpLocale.T("lost_item_progress", company.CompletedLostItemJobs), labelStyle);
-        GUILayout.Space(12);
-
-        if (company.WasRecentlyHostileAcquired)
-        {
-            GUILayout.Label(MvpLocale.T("hostile_acquired"), warningStyle);
-            GUILayout.Label(MvpLocale.T("hostile_acquired_hint"), mutedStyle);
-        }
-        else if (company.WasRecentlyIssuedTakeoverUltimatum)
-        {
-            GUILayout.Label(MvpLocale.T("ultimatum_issued"), warningStyle);
-            GUILayout.Label(MvpLocale.T("ultimatum_hint"), mutedStyle);
-        }
-        else if (company.HasHostileTakeoverUltimatum)
-        {
-            GUILayout.Label(MvpLocale.T("ultimatum_active"), warningStyle);
-            GUILayout.Label(MvpLocale.T("ultimatum_resolve"), mutedStyle);
-        }
-        else if (MvpPendingReward.HasPending)
-        {
-            string result = MvpPendingReward.ResultLabel;
-            int displayedExperience = MvpPendingReward.ResultKind == MvpMissionResultKind.Failed ? 0 : MvpPendingReward.Experience;
-            GUILayout.Label($"待领取奖励: {result}  金钱 {MvpPendingReward.Money} / 声望 {MvpPendingReward.Reputation} / 经验 {displayedExperience}", accentStyle);
-            if (MvpPendingReward.HasOvertimePenalty)
-                GUILayout.Label(
-                    $"含超时扣罚: {MvpMissionClock.FormatGameHours(MvpPendingReward.OvertimeGameHours)}  -{MvpPendingReward.OvertimeMoneyPenalty}G / 声望 -{MvpPendingReward.OvertimeReputationPenalty}",
-                    warningStyle);
-            bool hostCanClaim = IsLocalHostOrSolo();
-            GUI.enabled = hostCanClaim;
-            if (computer != null && GUILayout.Button(hostCanClaim ? MvpLocale.T("claim_reward") : MvpLocale.T("wait_host_claim"), GUILayout.Height(34)))
-                computer.ExecuteComputerAction(FindLocalPlayer());
-            GUI.enabled = true;
-            if (!hostCanClaim)
-                GUILayout.Label(MvpLocale.T("host_only_claim"), mutedStyle);
-        }
-        else if (company.CanShowTutorialAcquisition)
-        {
-            GUILayout.Label($"新手扩张: 可吞并 0 级事务所，费用 {company.TutorialAcquisitionCost}G。", company.CanAffordTutorialAcquisition ? accentStyle : warningStyle);
-            if (company.CanAffordTutorialAcquisition && computer != null)
-            {
-                if (GUILayout.Button("确认收购", GUILayout.Height(34)))
-                    computer.ExecuteComputerAction(FindLocalPlayer());
-            }
-            else
-            {
-                GUILayout.Label("需要足够资金，并且被吞并压力低于 70。", mutedStyle);
-            }
-        }
-        else if (company.HasAcquiredTutorialOffice)
-        {
-            GUILayout.Label("扩张完成: 已吞并一家 0 级事务所，第二类委托入口已解锁为后续内容。", accentStyle);
-            GUILayout.Label("继续接找回失物任务可以积累资金和声望。", mutedStyle);
-            GUILayout.Space(8);
-            DrawCurrentCommissionOrDemo(computer);
-        }
-        else
-        {
-            DrawCurrentCommissionOrDemo(computer);
-        }
-
-        GUILayout.Space(12);
-        DrawOfficeShop(computerOpen || nearShop);
-        GUILayout.EndScrollView();
-        GUILayout.EndArea();
-
-        GUI.color = savedColor;
         EnsureCrtTextures();
         DrawCrtOverlay(rect);
     }
@@ -409,12 +385,275 @@ public class MvpHud : MonoBehaviour
     {
         if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
         {
-            GUILayout.Label($"已接受委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
-            GUILayout.Label("采购完道具后，去外面的公司车出发。", mutedStyle);
+            DrawTerminalSection("已锁定委托 / ACTIVE FILE");
+            DrawTerminalBlock(() =>
+            {
+                GUILayout.Label($"已接受委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
+                GUILayout.Label("采购完道具后，去外面的公司车出发。", mutedStyle);
+            });
             return;
         }
 
         DrawDemoTaskCard(computer);
+    }
+
+    void DrawOfficeManagementTerminal(Rect rect, OfficeComputer computer, CompanyState company, bool nearShop)
+    {
+        Color oldColor = GUI.color;
+        GUI.BeginGroup(rect, GUIContent.none, terminalPaperStyle);
+
+        float pad = 24f;
+        Rect content = new Rect(pad, 20f, rect.width - pad * 2f, rect.height - 40f);
+        GUI.Label(new Rect(content.x, content.y, 520f, 24f),
+            "BLACK COMMISSION OFFICE MANAGEMENT SYSTEM v1.3", terminalTitleStyle);
+        GUI.Label(new Rect(content.x, content.y + 22f, 340f, 22f),
+            "事务所办公管理系统。", terminalMutedStyle);
+        GUI.Label(new Rect(content.xMax - 250f, content.y, 250f, 22f),
+            "1998-11-07   22:13", terminalLabelStyle);
+        GUI.Label(new Rect(content.xMax - 250f, content.y + 22f, 250f, 22f),
+            "USER: BC_STAFF", terminalLabelStyle);
+
+        Rect left = new Rect(content.x, content.y + 58f, 210f, content.height - 72f);
+        Rect main = new Rect(left.xMax + 14f, left.y, content.width - left.width - 14f, content.height - 72f);
+        DrawOfficeTerminalMenu(left);
+        DrawOfficeTerminalFiles(main, computer, company, nearShop);
+
+        GUI.EndGroup();
+        GUI.color = oldColor;
+    }
+
+    void DrawOfficeTerminalMenu(Rect rect)
+    {
+        GUI.Box(rect, GUIContent.none, terminalBoxStyle);
+        GUI.Label(new Rect(rect.x + 14f, rect.y + 14f, rect.width - 28f, 22f),
+            "主菜单 / MAIN MENU", terminalLabelStyle);
+
+        string[] items =
+        {
+            "1. 委托管理\nCOMMISSION FILES",
+            "2. 公司账本\nLEDGER",
+            "3. 采购目录\nSUPPLY CATALOG",
+            "4. 档案记录\nARCHIVES",
+            "5. 员工管理\nSTAFF RECORD",
+            "6. 系统设置\nSYSTEM"
+        };
+
+        for (int i = 0; i < items.Length; i++)
+        {
+            Rect row = new Rect(rect.x + 12f, rect.y + 52f + i * 58f, rect.width - 24f, 46f);
+            GUI.Box(row, GUIContent.none, i == 0 ? terminalSelectedButtonStyle : terminalBoxStyle);
+            GUI.Label(new Rect(row.x + 18f, row.y + 8f, 28f, 28f), MenuGlyph(i), terminalLabelStyle);
+            GUI.Label(new Rect(row.x + 54f, row.y + 6f, row.width - 70f, row.height - 8f),
+                items[i], terminalSmallStyle);
+            if (i == 0)
+                GUI.Label(new Rect(row.xMax - 18f, row.y + 12f, 12f, 20f), "▶", terminalLabelStyle);
+        }
+
+        GUI.Label(new Rect(rect.x + 16f, rect.yMax - 54f, rect.width - 32f, 20f),
+            "使用方向键选择，按回车确认。", terminalSmallStyle);
+        GUI.Label(new Rect(rect.x + 16f, rect.yMax - 30f, rect.width - 32f, 20f),
+            "↑↓  选择     Enter  确认", terminalSmallStyle);
+    }
+
+    static string MenuGlyph(int index)
+    {
+        return index switch
+        {
+            0 => "▣",
+            1 => "▤",
+            2 => "▾",
+            3 => "▰",
+            4 => "▧",
+            _ => "⚙"
+        };
+    }
+
+    void DrawOfficeTerminalFiles(Rect rect, OfficeComputer computer, CompanyState company, bool nearShop)
+    {
+        Rect table = new Rect(rect.x, rect.y, rect.width, Mathf.Min(284f, rect.height * 0.58f));
+        Rect detail = new Rect(rect.x, table.yMax + 14f, rect.width * 0.58f - 7f, rect.height - table.height - 14f);
+        Rect action = new Rect(detail.xMax + 14f, detail.y, rect.width - detail.width - 14f, detail.height);
+
+        GUI.Box(table, GUIContent.none, terminalBoxStyle);
+        GUI.Label(new Rect(table.x + 14f, table.y + 12f, 360f, 24f),
+            "委托管理 / COMMISSION FILES", terminalTitleStyle);
+        DrawTerminalLine(new Rect(table.x + 12f, table.y + 42f, table.width - 24f, 1f));
+
+        float y = table.y + 48f;
+        DrawOfficeTableHeader(table.x + 14f, y, table.width - 28f);
+        y += 25f;
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "001", computer != null ? computer.DemoTaskTitle : "失踪的作业本",
+            computer != null ? computer.DemoTaskClient : "家长", GetDemoTaskStatus(computer), "23天后", true);
+        y += 30f;
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "002", "地下室的异响", "宿管", "进行中", "—", false);
+        y += 30f;
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "003", "夜班公交异常", "交通局", "进行中", "—", false);
+        y += 30f;
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "004", "404号房的回声", "学校", "可接受", "17天后", false);
+        y += 30f;
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "005", "废弃工厂的货物", "仓库管理员", "已完成", "—", false);
+        y += 30f;
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "006", "医院地下室的钥匙", "医院", "已锁定", "—", false);
+        GUI.Label(new Rect(table.x + table.width * 0.5f - 70f, table.yMax - 28f, 140f, 20f),
+            "第 1 页 / 共 2 页   ◀  ▶", terminalSmallStyle);
+
+        GUI.Box(detail, GUIContent.none, terminalBoxStyle);
+        GUI.Label(new Rect(detail.x + 14f, detail.y + 10f, detail.width - 28f, 22f),
+            "委托详情 / FILE DETAIL [001]", terminalLabelStyle);
+        DrawTerminalLine(new Rect(detail.x + 12f, detail.y + 36f, detail.width - 24f, 1f));
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 48f, "委托名称", computer != null ? computer.DemoTaskTitle : "失踪的作业本", "LOST HOMEWORK");
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 70f, "委托人", computer != null ? computer.DemoTaskClient : "家长", "PARENT");
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 92f, "地点", computer != null ? computer.DemoTaskLocation : "西区小学", "WESTSIDE ELEMENTARY");
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 114f, "报酬", $"{(computer != null ? computer.DemoTaskMoneyReward : 120)}G", null);
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 136f, "预计时长", "10 - 15 MIN", null);
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 158f, "结局方式", "全部 / 部分 / 失败", "FULL / PARTIAL / FAILED");
+        GUI.Label(new Rect(detail.x + 14f, detail.y + 182f, detail.width - 28f, 38f),
+            "备注: 孩子的作业本在放学后的教室中失踪。\n      家长担心里面记录着重要信息。", terminalSmallStyle);
+
+        GUI.Box(action, GUIContent.none, terminalBoxStyle);
+        GUI.Label(new Rect(action.x + 14f, action.y + 10f, action.width - 28f, 22f),
+            "操作 / ACTION", terminalLabelStyle);
+        DrawTerminalLine(new Rect(action.x + 12f, action.y + 36f, action.width - 24f, 1f));
+
+        DrawTerminalPrimaryAction(new Rect(action.x + 18f, action.y + 54f, action.width - 36f, 34f),
+            computer, company);
+
+        if (GUI.Button(new Rect(action.x + 18f, action.y + 96f, action.width - 36f, 30f),
+            "查看详情 (VIEW DETAIL)", terminalButtonStyle))
+            SetOfficeMessage("详情已显示在左侧文件栏。");
+        if (GUI.Button(new Rect(action.x + 18f, action.y + 132f, action.width - 36f, 30f),
+            "标记完成 (MARK COMPLETE)", terminalButtonStyle))
+            SetOfficeMessage("任务完成标记将在后续版本开放。");
+        if (GUI.Button(new Rect(action.x + 18f, action.y + 168f, action.width - 36f, 30f),
+            "放弃委托 (ABANDON COMMISSION)", terminalButtonStyle))
+            SetOfficeMessage("当前演示委托不可放弃。");
+
+        DrawTerminalStatusStrip(rect, company, nearShop);
+    }
+
+    void DrawTerminalPrimaryAction(Rect rect, OfficeComputer computer, CompanyState company)
+    {
+        string label = "› 接受委托 (ACCEPT COMMISSION)";
+        bool enabled = CanAcceptFromTerminal(computer);
+        System.Action action = () =>
+        {
+            string message = null;
+            bool accepted = computer != null && computer.TryAcceptDemoTask(out message);
+            if (message != null)
+                SetOfficeMessage(message);
+            if (accepted)
+                CloseComputer();
+        };
+
+        if (MvpPendingReward.HasPending)
+        {
+            label = "› 领取结算 (CLAIM SETTLEMENT)";
+            enabled = IsLocalHostOrSolo();
+            action = () =>
+            {
+                computer?.ExecuteComputerAction(FindLocalPlayer());
+                SetOfficeMessage("结算申请已提交。");
+            };
+        }
+        else if (company.CanShowTutorialAcquisition)
+        {
+            label = "› 确认收购 (CONFIRM ACQUISITION)";
+            enabled = company.CanAffordTutorialAcquisition && IsLocalHostOrSolo();
+            action = () =>
+            {
+                computer?.ExecuteComputerAction(FindLocalPlayer());
+                SetOfficeMessage("收购文件已提交。");
+            };
+        }
+        else if (MvpMissionRuntime.HasSelectedTask)
+        {
+            label = "› 委托已锁定 (COMMISSION LOCKED)";
+            enabled = false;
+        }
+
+        GUI.enabled = enabled;
+        if (GUI.Button(rect, label, terminalButtonStyle))
+            action();
+        GUI.enabled = true;
+    }
+
+    void DrawOfficeTableHeader(float x, float y, float width)
+    {
+        GUI.Label(new Rect(x + 8f, y, 54f, 20f), "编号", terminalSmallStyle);
+        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 20f), "委托名称", terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.47f, y, width * 0.20f, 20f), "委托人", terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.68f, y, width * 0.14f, 20f), "状态", terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.83f, y, width * 0.16f, 20f), "截止日期", terminalSmallStyle);
+        DrawTerminalLine(new Rect(x, y + 22f, width, 1f));
+    }
+
+    void DrawOfficeTaskRow(float x, float y, float width, string id, string title, string client, string status, string due, bool selected)
+    {
+        if (selected)
+            GUI.Box(new Rect(x, y - 2f, width, 28f), GUIContent.none, terminalSelectedButtonStyle);
+        DrawTerminalLine(new Rect(x, y + 27f, width, 1f));
+        GUI.Label(new Rect(x + 8f, y + 2f, 54f, 22f), id, terminalSmallStyle);
+        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 24f), title + "\n" + EnglishTaskName(id), terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.47f, y + 2f, width * 0.20f, 22f), client, terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.68f, y + 2f, width * 0.14f, 22f), status, status == "已锁定" ? warningStyle : terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.83f, y + 2f, width * 0.16f, 22f), due, due.Contains("天") ? warningStyle : terminalSmallStyle);
+    }
+
+    static string EnglishTaskName(string id)
+    {
+        return id switch
+        {
+            "001" => "LOST HOMEWORK",
+            "002" => "BASEMENT NOISE",
+            "003" => "NIGHT BUS ANOMALY",
+            "004" => "ECHO FROM ROOM 404",
+            "005" => "CARGO FROM ABANDONED FACTORY",
+            _ => "KEYS IN THE BASEMENT"
+        };
+    }
+
+    void DrawTerminalDetailLine(float x, float y, string label, string value, string english)
+    {
+        string body = string.IsNullOrEmpty(english)
+            ? $"{label}:  {value}"
+            : $"{label}:  {value} ({english})";
+        GUI.Label(new Rect(x, y, 420f, 20f), body, terminalSmallStyle);
+    }
+
+    void DrawTerminalStatusStrip(Rect rect, CompanyState company, bool nearShop)
+    {
+        string message = !string.IsNullOrEmpty(officeMessage) && Time.time < officeMessageUntil
+            ? officeMessage
+            : $"资金 {company.Funds}G   债务 {company.Debt}G   声望 {company.Reputation}   电脑连接 {(nearShop ? "稳定" : "本地")}";
+        GUI.Label(new Rect(rect.x + 28f, rect.yMax - 30f, rect.width - 56f, 22f), message,
+            message.Contains("失败") || message.Contains("不足") || message.Contains("只有") ? warningStyle : terminalSmallStyle);
+    }
+
+    bool CanAcceptFromTerminal(OfficeComputer computer)
+    {
+        if (computer == null || MvpMissionRuntime.HasSelectedTask || MvpPendingReward.HasPending)
+            return false;
+        NetworkManager network = NetworkManager.Singleton;
+        return network != null && network.IsListening && network.IsHost;
+    }
+
+    string GetDemoTaskStatus(OfficeComputer computer)
+    {
+        if (MvpMissionRuntime.HasSelectedTask)
+            return "已锁定";
+        if (MvpPendingReward.HasPending)
+            return "待结算";
+        if (computer == null)
+            return "离线";
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening)
+            return "待联机";
+        return network.IsHost ? "可接受" : "等房主";
+    }
+
+    void DrawTerminalLine(Rect rect)
+    {
+        GUI.DrawTexture(rect, terminalLineTexture);
     }
 
     void DrawDemoTaskCard(OfficeComputer computer)
@@ -425,52 +664,59 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        GUILayout.Label(MvpLocale.T("available_commissions"), accentStyle);
-        GUILayout.BeginVertical(slotStyle);
+        DrawTerminalSection("可用委托 / COMMISSION FILE");
+        GUILayout.BeginVertical(selectedSlotStyle);
         GUILayout.Label(computer.DemoTaskTitle, titleStyle);
-        GUILayout.Label($"委托人: {computer.DemoTaskClient}    地点: {computer.DemoTaskLocation}", labelStyle);
+        DrawLedgerLine("委托人 / 地点", $"{computer.DemoTaskClient} / {computer.DemoTaskLocation}");
         GUILayout.Label(computer.DemoTaskDescription, mutedStyle);
-        GUILayout.Label($"报酬: {computer.DemoTaskMoneyReward} G    声望 +{computer.DemoTaskReputationReward}    经验 +{computer.DemoTaskExperienceReward}", labelStyle);
-        GUILayout.Label($"作业窗口: {MvpMissionClock.GetScheduleSummary(computer.DemoTask)}", labelStyle);
+        DrawLedgerLine("报酬 / 声望 / 经验", $"{computer.DemoTaskMoneyReward}G / +{computer.DemoTaskReputationReward} / +{computer.DemoTaskExperienceReward}");
+        DrawLedgerLine("作业窗口", MvpMissionClock.GetScheduleSummary(computer.DemoTask));
         GUILayout.Label(MvpMissionClock.GetOvertimeRuleSummary(computer.DemoTask), mutedStyle);
         GUILayout.Space(8);
 
         bool hostReady = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && NetworkManager.Singleton.IsHost;
         if (hostReady)
         {
-            if (GUILayout.Button(MvpLocale.T("accept_task"), GUILayout.Height(36)))
+            if (GUILayout.Button(MvpLocale.T("accept_task"), buttonStyle, GUILayout.Height(36)))
             {
-                computer.ExecuteComputerAction(FindLocalPlayer());
-                if (MvpMissionRuntime.HasSelectedTask)
+                bool accepted = computer.TryAcceptDemoTask(out string message);
+                SetOfficeMessage(message);
+                if (accepted)
                     CloseComputer();
             }
         }
         else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
             GUI.enabled = false;
-            GUILayout.Button(MvpLocale.T("wait_host_accept"), GUILayout.Height(36));
+            GUILayout.Button(MvpLocale.T("wait_host_accept"), buttonStyle, GUILayout.Height(36));
             GUI.enabled = true;
             GUILayout.Label(MvpLocale.T("wait_host_hint"), mutedStyle);
         }
         else
         {
             GUI.enabled = false;
-            GUILayout.Button(MvpLocale.T("start_host_first"), GUILayout.Height(36));
+            GUILayout.Button(MvpLocale.T("start_host_first"), buttonStyle, GUILayout.Height(36));
             GUI.enabled = true;
             GUILayout.Label(MvpLocale.T("start_host_hint"), mutedStyle);
         }
+
+        if (!string.IsNullOrEmpty(officeMessage) && Time.time < officeMessageUntil)
+            GUILayout.Label(officeMessage, officeMessage.StartsWith("已") ? accentStyle : warningStyle);
 
         GUILayout.EndVertical();
     }
 
     void DrawOfficeShop(bool nearShop)
     {
-        GUILayout.Label(MvpLocale.T("shop_title"), accentStyle);
+        DrawTerminalSection("旧货采购 / USED GEAR");
         PlayerHotbar activeHotbar = FindLocalHotbar();
+        GUILayout.BeginVertical(slotStyle);
+        GUILayout.Label(MvpLocale.T("shop_title"), accentStyle);
         GUILayout.Label(GetHotbarStorageSummary(activeHotbar), mutedStyle);
         if (MvpPendingReward.HasPending)
         {
             GUILayout.Label(MvpLocale.T("claim_first"), mutedStyle);
+            GUILayout.EndVertical();
             return;
         }
 
@@ -489,6 +735,7 @@ public class MvpHud : MonoBehaviour
             GUILayout.Label(shopMessage, shopMessage.Contains("不足") ? warningStyle : accentStyle);
         if (!canBuy)
             GUILayout.Label(MvpLocale.T("shop_stand_near"), mutedStyle);
+        GUILayout.EndVertical();
     }
 
     void DrawShopButton(PlayerHotbar hotbar, MvpHotbarItemId itemId, string label, bool canBuy)
@@ -521,7 +768,7 @@ public class MvpHud : MonoBehaviour
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        GUILayout.Label("补给柜", titleStyle);
+        DrawTerminalHeader("补给柜", "STORAGE");
         if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseCabinet();
@@ -532,8 +779,7 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndHorizontal();
 
         cabinetScrollPosition = GUILayout.BeginScrollView(cabinetScrollPosition, false, true);
-        GUILayout.Space(6);
-        GUILayout.Label("柜内 8 格", accentStyle);
+        DrawTerminalSection("柜内库存 / CABINET");
         for (int i = 0; i < OfficeCabinetStorage.SlotCount; i++)
         {
             HotbarSlot slot = cabinet.GetSlot(i);
@@ -552,8 +798,7 @@ public class MvpHud : MonoBehaviour
             GUILayout.EndHorizontal();
         }
 
-        GUILayout.Space(12);
-        GUILayout.Label("热栏", accentStyle);
+        DrawTerminalSection("个人热栏 / HOTBAR");
         if (hotbar == null)
         {
             GUILayout.Label("没有找到本地玩家热栏。", warningStyle);
@@ -597,7 +842,7 @@ public class MvpHud : MonoBehaviour
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        GUILayout.Label("怪物图鉴", titleStyle);
+        DrawTerminalHeader("怪物图鉴", "EVIDENCE FILE");
         if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseBestiary();
@@ -608,8 +853,8 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndHorizontal();
 
         bestiaryScrollPosition = GUILayout.BeginScrollView(bestiaryScrollPosition, false, true);
-        GUILayout.Space(8);
         bool unlocked = MonsterBestiaryProgress.IsHomeworkDebtCollectorUnlocked;
+        DrawTerminalSection(unlocked ? "已归档异常 / VERIFIED" : "未解锁档案 / LOCKED");
         GUILayout.BeginVertical(unlocked ? selectedSlotStyle : slotStyle);
         GUILayout.Label(unlocked ? "作业债务催收员" : "未解锁档案", accentStyle);
         if (unlocked)
@@ -642,7 +887,9 @@ public class MvpHud : MonoBehaviour
         DrawFieldClockLine(mission);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
         GUILayout.Label(GetCarrierText(mission), mission.LostItemCollected.Value ? accentStyle : mutedStyle);
-        GUILayout.Label(GetBonusEvidenceText(mission), mission.BonusEvidenceCollected.Value ? accentStyle : mutedStyle);
+        string bonusText = GetBonusEvidenceText(mission);
+        if (!string.IsNullOrEmpty(bonusText))
+            GUILayout.Label(bonusText, accentStyle);
 
         string monsterText = GetMonsterStatus();
         if (!string.IsNullOrEmpty(monsterText))
@@ -695,7 +942,7 @@ public class MvpHud : MonoBehaviour
         Rect rect = new Rect((Screen.width - width) * 0.5f, 56, width, height);
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        GUILayout.Label(MvpLocale.T("mission_van"), titleStyle);
+        DrawTerminalHeader(MvpLocale.T("mission_van"), "RETURN GATE");
         if (GUILayout.Button(MvpLocale.T("close_door"), GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseMissionVan();
@@ -705,7 +952,7 @@ public class MvpHud : MonoBehaviour
         }
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(8);
+        DrawTerminalSection("返程决策 / RETURN");
         GUILayout.Label(van.GetReturnSummary(), accentStyle);
         DrawVehicleClockBlock(LostItemMissionManager.Instance);
         GUILayout.Label(MvpLocale.T("van_decide_hint"), mutedStyle);
@@ -717,8 +964,7 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        GUILayout.Space(10);
-        GUILayout.Label(MvpLocale.T("van_locker"), accentStyle);
+        DrawTerminalSection(MvpLocale.T("van_locker") + " / LOCKER");
         PlayerHotbar localHotbar = FindLocalHotbar();
         for (int i = 0; i < SchoolExitPoint.LockerSlotCount; i++)
         {
@@ -889,6 +1135,64 @@ public class MvpHud : MonoBehaviour
         GUI.DrawTexture(new Rect(x, y, fillW, barH), hpBarFill);
     }
 
+    void DrawStaminaBar()
+    {
+        if (IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
+
+        PlayerController localPlayer = FindLocalPlayer();
+        if (localPlayer == null) return;
+
+        float stamina = localPlayer.Stamina;
+        float maxStamina = localPlayer.MaxStamina;
+        if (maxStamina <= 0f) return;
+
+        float normalized = Mathf.Clamp01(stamina / maxStamina);
+        bool inMission = LostItemMissionManager.Instance != null;
+        if (!inMission && normalized >= 0.999f && !localPlayer.IsSprinting && !localPlayer.IsExhausted)
+            return;
+
+        float width;
+        float x;
+        float y;
+        if (inMission)
+        {
+            int slotSize = Mathf.Clamp((Screen.width - 56) / PlayerHotbar.SlotCount, 62, 92);
+            int gap = Mathf.Clamp(slotSize / 11, 5, 8);
+            width = PlayerHotbar.SlotCount * slotSize + (PlayerHotbar.SlotCount - 1) * gap;
+            x = (Screen.width - width) * 0.5f;
+            y = Screen.height - 124f;
+        }
+        else
+        {
+            width = 220f;
+            x = 24f;
+            y = Screen.height - 62f;
+        }
+        float height = 9f;
+
+        bool low = normalized <= 0.24f || localPlayer.IsExhausted;
+        GUIStyle textStyle = low ? warningStyle : mutedStyle;
+        string state = localPlayer.IsExhausted ? "  /  WINDED" : "";
+        GUI.Label(new Rect(x, y - 20f, width * 0.58f, 20f), $"STAMINA{state}", textStyle);
+        GUI.Label(new Rect(x + width * 0.58f, y - 20f, width * 0.42f, 20f),
+            $"{Mathf.CeilToInt(normalized * 100f)}%", textStyle);
+
+        float fillW = width * normalized;
+        Texture2D fillTexture = low ? staminaBarLowFill : staminaBarFill;
+
+        GUI.DrawTexture(new Rect(x - 1f, y - 1f, width + 2f, height + 2f), staminaBarFrame);
+        GUI.DrawTexture(new Rect(x, y, width, height), hpBarBg);
+        GUI.DrawTexture(new Rect(x, y, fillW, height), fillTexture);
+
+        GUI.color = new Color(0f, 0f, 0f, 0.34f);
+        for (int i = 1; i < 4; i++)
+        {
+            float tickX = x + width * (i / 4f);
+            GUI.DrawTexture(new Rect(tickX, y, 1f, height), hpBarBg);
+        }
+        GUI.color = Color.white;
+    }
+
     void DrawFlashlightBar(Rect slotRect)
     {
         FlashlightController fl = null;
@@ -901,8 +1205,8 @@ public class MvpHud : MonoBehaviour
         float barW = slotRect.width - 8f;
         float barY = slotRect.y + slotRect.height - 8f;
         Color barColor = normalized > 0.4f
-            ? new Color(0.85f, 0.60f, 0.19f, 0.9f)  // amber
-            : new Color(0.9f, 0.1f, 0.05f, 0.9f);    // red when low
+            ? new Color(0.424f, 1.000f, 0.373f, 0.9f)
+            : new Color(0.720f, 0.420f, 0.260f, 0.9f);
 
         GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW, 4), hpBarBg);
         GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW * normalized, 4), MakeTexture(barColor));
@@ -923,9 +1227,9 @@ public class MvpHud : MonoBehaviour
         switch (mission.CurrentPhase.Value)
         {
             case LostItemMissionManager.MissionPhase.Searching:
-                return "目标: 核对记录室登记簿，找到真正盖章作业本。" + paperworkRisk;
+                return "目标: 找到委托目标物，并带回委托车。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.ReturnToExit:
-                return "目标: 带着作业本回到校门口的委托车尾，按 E 打开后舱返程。" + paperworkRisk;
+                return "目标: 带着目标物回到委托车，按 E 上车返程。" + paperworkRisk;
             case LostItemMissionManager.MissionPhase.Completed:
                 return "目标: 委托完成，返回事务所领取奖励。";
             case LostItemMissionManager.MissionPhase.ReturnedEarly:
@@ -939,26 +1243,28 @@ public class MvpHud : MonoBehaviour
 
     static string GetCarrierText(LostItemMissionManager mission)
     {
-        if (!mission.LostItemCollected.Value) return "作业本状态: 尚未找回";
+        if (!mission.LostItemCollected.Value) return "目标物: 尚未找回";
         ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
         return mission.CarrierClientId.Value == localId
-            ? "作业本状态: 你拿到了，快回校门。"
-            : $"作业本状态: 队友 {mission.CarrierClientId.Value} 拿到了。";
+            ? "目标物: 你拿到了，快回委托车。"
+            : $"目标物: 队友 {mission.CarrierClientId.Value} 拿到了。";
     }
 
     static string GetBonusEvidenceText(LostItemMissionManager mission)
     {
+        // Bonus evidence is an optional, mission-specific objective (e.g. the homework job's
+        // logbook photo). Only surface a line once it's actually been collected, so missions
+        // without any bonus evidence (like the lake dive) don't show a misleading hint.
         if (mission.BonusEvidenceCollected.Value)
-            return mission.WrongHomeworkAttempts.Value > 0
-                ? "核验状态: 登记簿已拍照，但之前翻错的作业本仍会扣一点结算。"
-                : "核验状态: 登记簿已拍照，真正作业本更容易确认。";
+            return "附加证据: 已获取，结算更有利。";
 
-        return "核验状态: 记录室登记簿尚未拍照，乱翻相似作业本会扣结算。";
+        return "";
     }
 
     static string GetMonsterStatus()
     {
         SchoolMonsterAI[] monsters = FindObjectsByType<SchoolMonsterAI>(FindObjectsSortMode.None);
+        if (monsters.Length == 0) return "";   // missions without monsters (e.g. lake dive) show no danger line
         bool anyStunned = false;
         foreach (var monster in monsters)
         {
@@ -1164,9 +1470,13 @@ public class MvpHud : MonoBehaviour
     {
         if (panelStyle != null) return;
 
-        panelTexture = MakeTexture(new Color(0.03f, 0.035f, 0.04f, 0.82f));
-        slotTexture = MakeTexture(new Color(0.05f, 0.06f, 0.07f, 0.78f));
-        selectedSlotTexture = MakeTexture(new Color(0.16f, 0.22f, 0.20f, 0.9f));
+        panelTexture = MakeTexture(BlackCommissionUiTheme.ConcreteBlack);
+        slotTexture = MakeTexture(BlackCommissionUiTheme.ConcretePanel);
+        selectedSlotTexture = MakeTexture(BlackCommissionUiTheme.MilitaryGreen);
+        terminalPaperTexture = MakeTexture(new Color(0.67f, 0.61f, 0.47f, 0.96f));
+        terminalBoxTexture = MakeTexture(new Color(0.53f, 0.49f, 0.38f, 0.18f));
+        terminalSelectedTexture = MakeTexture(new Color(0.42f, 0.37f, 0.27f, 0.28f));
+        terminalLineTexture = MakeTexture(new Color(0.18f, 0.17f, 0.13f, 0.58f));
         EnsureIcons();
 
         panelStyle = new GUIStyle(GUI.skin.box)
@@ -1187,38 +1497,100 @@ public class MvpHud : MonoBehaviour
         {
             fontSize = 20,
             fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color(0.9f, 0.95f, 0.9f) },
+            normal = { textColor = BlackCommissionUiTheme.OldPaper },
             wordWrap = true
         };
         labelStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 15,
-            normal = { textColor = new Color(0.86f, 0.88f, 0.84f) },
+            normal = { textColor = BlackCommissionUiTheme.Text },
             wordWrap = true
         };
         mutedStyle = new GUIStyle(labelStyle)
         {
             fontSize = 13,
-            normal = { textColor = new Color(0.62f, 0.66f, 0.64f) }
+            normal = { textColor = BlackCommissionUiTheme.MutedText }
         };
         accentStyle = new GUIStyle(labelStyle)
         {
             fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color(0.56f, 0.92f, 0.72f) }
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen }
         };
         warningStyle = new GUIStyle(labelStyle)
         {
             fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color(1f, 0.5f, 0.42f) }
+            normal = { textColor = BlackCommissionUiTheme.RustWarning }
+        };
+        sectionHeaderStyle = new GUIStyle(labelStyle)
+        {
+            fontSize = 13,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen }
+        };
+        metaStyle = new GUIStyle(labelStyle)
+        {
+            fontSize = 14,
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }
+        };
+        buttonStyle = BlackCommissionUiTheme.ButtonStyle(15);
+        terminalPaperStyle = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = terminalPaperTexture },
+            padding = new RectOffset(0, 0, 0, 0)
+        };
+        terminalBoxStyle = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = terminalBoxTexture },
+            border = new RectOffset(1, 1, 1, 1),
+            padding = new RectOffset(0, 0, 0, 0)
+        };
+        terminalTitleStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 15,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = new Color(0.10f, 0.095f, 0.075f, 1f) },
+            wordWrap = false
+        };
+        terminalLabelStyle = new GUIStyle(terminalTitleStyle)
+        {
+            fontSize = 14,
+            fontStyle = FontStyle.Normal
+        };
+        terminalMutedStyle = new GUIStyle(terminalLabelStyle)
+        {
+            fontSize = 13,
+            normal = { textColor = new Color(0.19f, 0.17f, 0.13f, 0.86f) }
+        };
+        terminalSmallStyle = new GUIStyle(terminalLabelStyle)
+        {
+            fontSize = 12,
+            normal = { textColor = new Color(0.12f, 0.11f, 0.085f, 0.96f) },
+            wordWrap = true
+        };
+        terminalButtonStyle = new GUIStyle(GUI.skin.button)
+        {
+            fontSize = 12,
+            alignment = TextAnchor.MiddleLeft,
+            normal = { background = terminalBoxTexture, textColor = new Color(0.10f, 0.095f, 0.075f, 1f) },
+            hover = { background = terminalSelectedTexture, textColor = new Color(0.05f, 0.045f, 0.035f, 1f) },
+            active = { background = terminalLineTexture, textColor = new Color(0.05f, 0.045f, 0.035f, 1f) },
+            padding = new RectOffset(12, 8, 4, 4)
+        };
+        terminalSelectedButtonStyle = new GUIStyle(terminalBoxStyle)
+        {
+            normal = { background = terminalSelectedTexture }
         };
 
         EnsureCrtTextures();
 
-        if (hpBarBg == null)
+        if (hpBarBg == null || hpBarFill == null || staminaBarFill == null || staminaBarLowFill == null || staminaBarFrame == null)
         {
-            hpBarBg = MakeTexture(new Color(0.06f, 0.07f, 0.07f, 0.85f));
-            hpBarFill = MakeTexture(new Color(0.78f, 0.12f, 0.08f, 0.9f));
-            damageFlashTex = MakeTexture(new Color(0.9f, 0.05f, 0.02f, 0.35f));
+            hpBarBg = MakeTexture(new Color(0.055f, 0.060f, 0.055f, 0.90f));
+            hpBarFill = MakeTexture(BlackCommissionUiTheme.RustWarning);
+            staminaBarFill = MakeTexture(new Color(0.90f, 0.78f, 0.22f, 0.96f));
+            staminaBarLowFill = MakeTexture(new Color(0.92f, 0.34f, 0.18f, 0.96f));
+            staminaBarFrame = MakeTexture(new Color(0.58f, 0.53f, 0.39f, 0.78f));
+            damageFlashTex = MakeTexture(new Color(0.55f, 0.30f, 0.20f, 0.32f));
         }
 
         MvpFontProvider.ApplyToStyle(panelStyle);
@@ -1227,16 +1599,27 @@ public class MvpHud : MonoBehaviour
         MvpFontProvider.ApplyToStyle(mutedStyle);
         MvpFontProvider.ApplyToStyle(accentStyle);
         MvpFontProvider.ApplyToStyle(warningStyle);
+        MvpFontProvider.ApplyToStyle(sectionHeaderStyle);
+        MvpFontProvider.ApplyToStyle(metaStyle);
         MvpFontProvider.ApplyToStyle(slotStyle);
         MvpFontProvider.ApplyToStyle(selectedSlotStyle);
+        MvpFontProvider.ApplyToStyle(buttonStyle);
+        MvpFontProvider.ApplyToStyle(terminalPaperStyle);
+        MvpFontProvider.ApplyToStyle(terminalBoxStyle);
+        MvpFontProvider.ApplyToStyle(terminalTitleStyle);
+        MvpFontProvider.ApplyToStyle(terminalLabelStyle);
+        MvpFontProvider.ApplyToStyle(terminalMutedStyle);
+        MvpFontProvider.ApplyToStyle(terminalSmallStyle);
+        MvpFontProvider.ApplyToStyle(terminalButtonStyle);
+        MvpFontProvider.ApplyToStyle(terminalSelectedButtonStyle);
     }
 
     void EnsureIcons()
     {
-        emptyIcon = MakeIcon(new Color(0.07f, 0.08f, 0.08f, 0.9f), new Color(0.24f, 0.28f, 0.26f), Color.clear, 0);
-        // battery: amber cylinder shape
-        decoyIcon = MakeIcon(new Color(0.73f, 0.50f, 0.16f), new Color(0.45f, 0.28f, 0.05f), new Color(0.95f, 0.85f, 0.3f), 2);
-        flashlightIcon = MakeIcon(new Color(0.18f, 0.2f, 0.19f), new Color(1f, 0.86f, 0.25f), new Color(0.03f, 0.035f, 0.04f), 4);
+        emptyIcon = MakeIcon(new Color(0.055f, 0.060f, 0.055f, 0.9f), BlackCommissionUiTheme.MilitaryGreenDim, Color.clear, 0);
+        // Battery: dull office stock with a CRT-green charge mark.
+        decoyIcon = MakeIcon(BlackCommissionUiTheme.OldWood, BlackCommissionUiTheme.MilitaryGreen, BlackCommissionUiTheme.CrtGreen, 2);
+        flashlightIcon = MakeIcon(BlackCommissionUiTheme.ConcreteRaised, BlackCommissionUiTheme.CrtGreenDim, BlackCommissionUiTheme.CrtGreen, 4);
     }
 
     static Texture2D MakeIcon(Color baseColor, Color accentColor, Color markColor, int kind)

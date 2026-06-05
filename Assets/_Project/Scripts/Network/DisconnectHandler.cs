@@ -157,8 +157,13 @@ public class DisconnectHandler : MonoBehaviour
                 fontSize = 24,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.red }
+                normal =
+                {
+                    background = BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.ConcreteBlack),
+                    textColor = BlackCommissionUiTheme.RustWarning
+                }
             };
+            MvpFontProvider.ApplyToStyle(messageStyle);
         }
 
         if (toastStyle == null)
@@ -167,8 +172,9 @@ public class DisconnectHandler : MonoBehaviour
             {
                 fontSize = 15,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.86f, 0.83f, 0.70f) }
+                normal = { textColor = BlackCommissionUiTheme.OldPaper }
             };
+            MvpFontProvider.ApplyToStyle(toastStyle);
         }
     }
 }

@@ -195,9 +195,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         rigRoot.transform.localRotation = Quaternion.identity;
 
         EnsureMaterials();
-        // First-person shows no hands by design — only the held item below. The
-        // body model's hands are posed for standing and can't be reused here, and
-        // we don't want to build/rig a dedicated hand mesh for the MVP.
+        CreateHands(rigRoot.transform);
+
         watchModel = CreateWristwatch(rigRoot.transform);
         watchModel.SetActive(false);
 
@@ -365,18 +364,37 @@ public class PlayerFirstPersonRig : NetworkBehaviour
 
     void CreateHands(Transform parent)
     {
-        CreatePrimitive(PrimitiveType.Cube, "LeftSleeve", parent,
-            new Vector3(-0.22f, -0.06f, 0.18f), new Vector3(0.13f, 0.13f, 0.42f),
-            Quaternion.Euler(18f, -12f, 4f), sleeveMaterial);
-        CreatePrimitive(PrimitiveType.Cube, "RightSleeve", parent,
-            new Vector3(0.22f, -0.08f, 0.18f), new Vector3(0.13f, 0.13f, 0.44f),
-            Quaternion.Euler(18f, 12f, -4f), sleeveMaterial);
-        CreatePrimitive(PrimitiveType.Sphere, "LeftHand", parent,
-            new Vector3(-0.23f, -0.1f, 0.42f), new Vector3(0.13f, 0.09f, 0.1f),
+        fpLeftHand = CreateFirstPersonHand(parent, "Left", new Vector3(-0.23f, -0.1f, 0.42f),
+            Quaternion.Euler(18f, -12f, 4f), -1f);
+        fpRightHand = CreateFirstPersonHand(parent, "Right", new Vector3(0.22f, -0.12f, 0.43f),
+            Quaternion.Euler(18f, 12f, -4f), 1f);
+
+        fpLeftHandDefaultPos = fpLeftHand.localPosition;
+        fpLeftHandDefaultRot = fpLeftHand.localEulerAngles;
+        fpRightHandDefaultPos = fpRightHand.localPosition;
+        fpRightHandDefaultRot = fpRightHand.localEulerAngles;
+    }
+
+    Transform CreateFirstPersonHand(Transform parent, string side, Vector3 localPosition, Quaternion localRotation, float mirror)
+    {
+        var root = new GameObject(side + "FirstPersonHand").transform;
+        root.SetParent(parent, false);
+        root.localPosition = localPosition;
+        root.localRotation = localRotation;
+
+        CreatePrimitive(PrimitiveType.Cube, side + "Sleeve", root,
+            new Vector3(0f, 0.01f, -0.2f), new Vector3(0.13f, 0.13f, 0.42f),
+            Quaternion.identity, sleeveMaterial);
+        CreatePrimitive(PrimitiveType.Sphere, side + "Palm", root,
+            Vector3.zero, new Vector3(0.13f, 0.09f, 0.1f),
             Quaternion.identity, skinMaterial);
-        CreatePrimitive(PrimitiveType.Sphere, "RightHand", parent,
-            new Vector3(0.22f, -0.12f, 0.43f), new Vector3(0.13f, 0.09f, 0.1f),
+        CreatePrimitive(PrimitiveType.Cube, side + "Thumb", root,
+            new Vector3(0.055f * mirror, -0.008f, 0.045f), new Vector3(0.035f, 0.03f, 0.08f),
+            Quaternion.Euler(0f, 28f * mirror, 12f * mirror), skinMaterial);
+        CreatePrimitive(PrimitiveType.Cube, side + "Fingers", root,
+            new Vector3(-0.01f * mirror, -0.01f, 0.085f), new Vector3(0.085f, 0.035f, 0.07f),
             Quaternion.identity, skinMaterial);
+        return root;
     }
 
     GameObject CreateFlashlight(Transform parent)

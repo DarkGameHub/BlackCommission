@@ -32,10 +32,8 @@ public class SettlementUIController : MonoBehaviour
         float px = (Screen.width - pw) / 2f;
         float py = (Screen.height - ph) / 2f;
 
-        // Dark background panel
-        GUI.color = new Color(0f, 0f, 0f, 0.88f);
-        GUI.DrawTexture(new Rect(px, py, pw, ph), Texture2D.whiteTexture);
-        GUI.color = Color.white;
+        Rect panelRect = new Rect(px, py, pw, ph);
+        BlackCommissionUiTheme.DrawPanelFrame(panelRect);
 
         GUILayout.BeginArea(new Rect(px + 20, py + 20, pw - 40, ph - 40));
 
@@ -44,18 +42,18 @@ public class SettlementUIController : MonoBehaviour
             fontSize = 22,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = Color.white }
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }
         };
         var labelStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 15,
-            normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
+            normal = { textColor = BlackCommissionUiTheme.Text }
         };
         var profitStyle = new GUIStyle(labelStyle)
         {
             fontSize = 18,
             fontStyle = FontStyle.Bold,
-            normal = { textColor = _data.Net >= 0 ? new Color(0.2f, 0.95f, 0.3f) : Color.red }
+            normal = { textColor = _data.Net >= 0 ? BlackCommissionUiTheme.CrtGreen : BlackCommissionUiTheme.RustWarning }
         };
 
         string resultTitle = _data.Net >= 0 ? "任务完成" : "任务结束 (亏损)";
@@ -77,7 +75,7 @@ public class SettlementUIController : MonoBehaviour
 
         var fundsStyle = new GUIStyle(labelStyle)
         {
-            normal = { textColor = CompanyData.Current.IsInDebt ? Color.red : new Color(0.9f, 0.9f, 0.9f) }
+            normal = { textColor = CompanyData.Current.IsInDebt ? BlackCommissionUiTheme.RustWarning : BlackCommissionUiTheme.Text }
         };
         GUILayout.Label($"事务所资金: ¥{CompanyData.Current.Funds}", fundsStyle);
 
@@ -86,8 +84,16 @@ public class SettlementUIController : MonoBehaviour
         var btnStyle = new GUIStyle(GUI.skin.button)
         {
             fontSize = 16,
-            fixedHeight = 36
+            fixedHeight = 36,
+            normal = { background = BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreenDark), textColor = BlackCommissionUiTheme.CrtGreen },
+            hover = { background = BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen), textColor = BlackCommissionUiTheme.CrtGreen },
+            active = { background = BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.ConcretePanel), textColor = BlackCommissionUiTheme.OldPaper }
         };
+        MvpFontProvider.ApplyToStyle(titleStyle);
+        MvpFontProvider.ApplyToStyle(labelStyle);
+        MvpFontProvider.ApplyToStyle(profitStyle);
+        MvpFontProvider.ApplyToStyle(fundsStyle);
+        MvpFontProvider.ApplyToStyle(btnStyle);
         bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
         bool isClient = NetworkManager.Singleton != null && NetworkManager.Singleton.IsClient && !isHost;
 
@@ -97,7 +103,7 @@ public class SettlementUIController : MonoBehaviour
             {
                 fontSize = 14,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.gray }
+                normal = { textColor = BlackCommissionUiTheme.MutedText }
             });
         }
         else if (GUILayout.Button("返回事务所", btnStyle))

@@ -45,6 +45,13 @@ public static class MvpLocale
         ["roster_title"] = new[] { "在场队员 {0}/4", "Squad {0}/4" },
         ["you_tag"] = new[] { "(你)", "(you)" },
         ["room_label"] = new[] { "房间码 {0}", "Room {0}" },
+        ["lobby_waiting_title"] = new[] { "队伍待命", "Crew Standby" },
+        ["lobby_waiting_hint"] = new[] { "队员到齐后进入事务所，在办公室电脑接委托，再去面包车集合。", "Enter the office, accept a commission at the computer, then gather at the van." },
+        ["lobby_room_code"] = new[] { "房间码", "Room Code" },
+        ["lobby_lan_only"] = new[] { "局域网直连", "LAN Direct" },
+        ["lobby_enter_office"] = new[] { "进入事务所", "Enter Office" },
+        ["lobby_client_note"] = new[] { "等待房主接单；你可以先进入事务所检查装备。", "Wait for the host to pick a job; you can enter and check gear." },
+        ["lobby_empty_slot"] = new[] { "空位 - 等待队友", "Empty - waiting" },
 
         // ─── Connection events ───
         ["host_disconnected"] = new[] { "主机已断开连接，即将返回...", "Host disconnected. Returning..." },

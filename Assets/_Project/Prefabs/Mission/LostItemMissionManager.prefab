@@ -84,6 +84,7 @@ MonoBehaviour:
   fallbackFailureReputation: -2
   fallbackFailureExperience: 0
   departureTransitSeconds: 6
+  departGraceSeconds: 5
   fallbackOfficeScene: HQ
   CurrentPhase:
     UpdateTraits:
@@ -125,3 +126,8 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
+  DepartDeadline:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: -1

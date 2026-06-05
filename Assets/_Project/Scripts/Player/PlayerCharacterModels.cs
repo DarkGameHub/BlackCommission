@@ -12,12 +12,12 @@ public static class PlayerCharacterModels
     // Resources-relative paths (no extension), loaded via Resources.Load.
     public static readonly string[] ResourceNames =
     {
+        "GeneratedArt/Repairman_Model",
         "GeneratedArt/AS_Character_01",
         "GeneratedArt/AS_Character_02",
         "GeneratedArt/AS_Character_03",
         "GeneratedArt/AS_Character_04",
         "GeneratedArt/AS_Character_05",
-        "GeneratedArt/AS_Character_06",
     };
 
     public static string Get(int index)

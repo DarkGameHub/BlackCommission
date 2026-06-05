@@ -1,0 +1,113 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+public static class BlackCommissionUiTheme
+{
+    static readonly Dictionary<int, Texture2D> TextureCache = new();
+
+    public static readonly Color ConcreteBlack = new(0.020f, 0.024f, 0.022f, 0.94f);
+    public static readonly Color ConcretePanel = new(0.055f, 0.060f, 0.055f, 0.94f);
+    public static readonly Color ConcreteRaised = new(0.095f, 0.102f, 0.092f, 0.96f);
+    public static readonly Color MilitaryGreen = new(0.270f, 0.315f, 0.235f, 0.95f);
+    public static readonly Color MilitaryGreenDim = new(0.160f, 0.190f, 0.145f, 0.92f);
+    public static readonly Color MilitaryGreenDark = new(0.090f, 0.110f, 0.080f, 0.94f);
+    public static readonly Color OldWood = new(0.330f, 0.260f, 0.190f, 0.92f);
+    public static readonly Color OldPaper = new(0.720f, 0.675f, 0.555f, 1f);
+    public static readonly Color PaperDim = new(0.540f, 0.515f, 0.440f, 1f);
+    public static readonly Color Text = new(0.830f, 0.850f, 0.790f, 1f);
+    public static readonly Color MutedText = new(0.560f, 0.600f, 0.545f, 1f);
+    public static readonly Color CrtGreen = new(0.424f, 1.000f, 0.373f, 1f);
+    public static readonly Color CrtGreenDim = new(0.260f, 0.560f, 0.250f, 1f);
+    public static readonly Color Rust = new(0.570f, 0.350f, 0.215f, 1f);
+    public static readonly Color RustWarning = new(0.720f, 0.420f, 0.260f, 1f);
+    public static readonly Color Shadow = new(0f, 0f, 0f, 0.62f);
+
+    public static Texture2D MakeTex(Color color)
+    {
+        Color32 c = color;
+        int key = (c.r << 24) | (c.g << 16) | (c.b << 8) | c.a;
+        if (TextureCache.TryGetValue(key, out Texture2D cached) && cached != null)
+            return cached;
+
+        var texture = new Texture2D(1, 1);
+        texture.SetPixel(0, 0, color);
+        texture.Apply();
+        TextureCache[key] = texture;
+        return texture;
+    }
+
+    public static GUIStyle PanelStyle(int padding = 14)
+    {
+        var style = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = MakeTex(ConcreteBlack) },
+            padding = new RectOffset(padding, padding, padding, padding),
+            border = new RectOffset(2, 2, 2, 2)
+        };
+        MvpFontProvider.ApplyToStyle(style);
+        return style;
+    }
+
+    public static GUIStyle SlotStyle(bool selected = false)
+    {
+        var style = new GUIStyle(GUI.skin.box)
+        {
+            normal = { background = MakeTex(selected ? MilitaryGreen : ConcretePanel) },
+            padding = new RectOffset(8, 8, 8, 8),
+            border = new RectOffset(2, 2, 2, 2)
+        };
+        MvpFontProvider.ApplyToStyle(style);
+        return style;
+    }
+
+    public static GUIStyle LabelStyle(int size, Color color, FontStyle fontStyle = FontStyle.Normal,
+        TextAnchor alignment = TextAnchor.UpperLeft, bool wordWrap = true)
+    {
+        var style = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = size,
+            fontStyle = fontStyle,
+            alignment = alignment,
+            wordWrap = wordWrap,
+            normal = { textColor = color },
+            padding = new RectOffset(0, 0, 1, 1)
+        };
+        MvpFontProvider.ApplyToStyle(style);
+        return style;
+    }
+
+    public static GUIStyle ButtonStyle(int size = 15, bool primary = false)
+    {
+        Color normal = primary ? MilitaryGreen : ConcreteRaised;
+        Color hover = primary ? new Color(0.330f, 0.400f, 0.280f, 0.98f) : new Color(0.135f, 0.145f, 0.128f, 0.98f);
+        Color active = primary ? MilitaryGreenDark : ConcretePanel;
+        var style = new GUIStyle(GUI.skin.button)
+        {
+            fontSize = size,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            wordWrap = false,
+            normal = { background = MakeTex(normal), textColor = primary ? CrtGreen : Text },
+            hover = { background = MakeTex(hover), textColor = CrtGreen },
+            active = { background = MakeTex(active), textColor = OldPaper },
+            focused = { background = MakeTex(normal), textColor = primary ? CrtGreen : Text },
+            padding = new RectOffset(10, 10, 7, 7),
+            border = new RectOffset(2, 2, 2, 2)
+        };
+        MvpFontProvider.ApplyToStyle(style);
+        return style;
+    }
+
+    public static void DrawPanelFrame(Rect rect)
+    {
+        GUI.DrawTexture(new Rect(rect.x - 2f, rect.y - 2f, rect.width + 4f, rect.height + 4f),
+            MakeTex(MilitaryGreenDim));
+        GUI.DrawTexture(rect, MakeTex(ConcreteBlack));
+        GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 2f), MakeTex(CrtGreenDim));
+    }
+
+    public static void ApplyButtonSkin(GUIStyle buttonStyle)
+    {
+        GUI.skin.button = buttonStyle;
+    }
+}

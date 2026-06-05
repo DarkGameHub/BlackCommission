@@ -17,7 +17,7 @@ public static class PlayerCharacterPalette
 
     public static readonly CharacterColors[] Variants =
     {
-        new() { uniform = new Color(0.17f, 0.20f, 0.17f), vest = new Color(0.85f, 0.60f, 0.19f), helmet = new Color(0.79f, 0.76f, 0.67f), label = "Standard" },
+        new() { uniform = new Color(0.17f, 0.20f, 0.17f), vest = new Color(0.85f, 0.60f, 0.19f), helmet = new Color(0.79f, 0.76f, 0.67f), label = "Repairman" },
         new() { uniform = new Color(0.14f, 0.16f, 0.22f), vest = new Color(0.82f, 0.38f, 0.15f), helmet = new Color(0.79f, 0.76f, 0.67f), label = "Night Shift" },
         new() { uniform = new Color(0.22f, 0.16f, 0.11f), vest = new Color(0.88f, 0.82f, 0.25f), helmet = new Color(0.22f, 0.30f, 0.22f), label = "Maintenance" },
         new() { uniform = new Color(0.16f, 0.17f, 0.16f), vest = new Color(0.48f, 0.81f, 0.35f), helmet = new Color(0.72f, 0.72f, 0.70f), label = "Sanitation" },

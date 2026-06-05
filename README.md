@@ -7,12 +7,46 @@
 1. 单机开房或创建/加入联机房间。
 2. 出生在破旧的事务所办公室。
 3. 用办公室电脑接受任务。
-4. 进入学校关卡，找回丢失的作业本，躲开学校异常体，撤离到出口。
+4. 进入指定委托关卡（当前重点：封山雪线 / 白棘雪莲），采回目标物并躲避感染区风险。
 5. 返回事务所，结算金钱/声望/经验，花钱购买装备、恢复道具、事务所升级或未来的机构收购。
 
 完整 MVP 设计、故事背景、小队配置及第一阶段实现计划见 [docs/mvp-core-loop.md](docs/mvp-core-loop.md)。
 
+2098 火星/地球世界观、许可证进度、代表性任务和结局设定见 [docs/world-background-2098.md](docs/world-background-2098.md)。
+
 当前美术方向已锁定，见 [docs/art/black-commission-style-lock-v1.md](docs/art/black-commission-style-lock-v1.md)。
+
+## 核心流程图
+
+```mermaid
+flowchart TD
+    A[2098: 火星殖民完成<br/>富人迁往火星] --> B[地球留下负债者、合同工<br/>和低迁移价值人口]
+    B --> C[MRC-7 返航适应体扩散<br/>地球出现感染区和异常生态]
+    C --> D[火星上层不再亲自返航<br/>但仍想购买真实地球]
+    D --> E[地表采回事务所成立<br/>靠许可证接火星委托]
+
+    E --> F[开局: 临时采回许可证<br/>破办公室、旧 CRT、二手厢式车、债务]
+    F --> G[接指定委托]
+    G --> H[采购装备 / 组队 / 上车出发]
+    H --> I[进入封锁区<br/>搜索目标、躲避感染体、带回样本]
+    I --> J[返回事务所结算<br/>报酬、扣款、声望、证据、债务压力]
+
+    J --> K{进度推进}
+    K --> L[正式采回许可证<br/>更多火星客户和更怪的目标物]
+    K --> M[轨道运送资格证<br/>解锁自由采集]
+    K --> N[特殊样本转运许可<br/>接触贵客瘟真相]
+    K --> O[移民资格审查<br/>是否前往火星]
+
+    M --> P[自由采集<br/>捡废料、补资源、修车、维持事务所]
+    P --> J
+
+    L --> G
+    N --> G
+
+    O --> Q[结局一: 前往火星<br/>成为地球遗产采购顾问]
+    O --> R[结局二: 留在地球<br/>拒接晚宴装饰类委托]
+    N --> S[隐藏结局: 真相寄送<br/>把证据送上火星网络]
+```
 
 ## 环境要求
 
@@ -22,9 +56,9 @@
 
 ## Unity 工程启动
 
-1. 若是首次 checkout，先运行 `Tools > Black Commission > Setup All (Run This First!)`。
-2. 运行 `Tools > Black Commission > MVP > Setup Lake MVP`（生成湖底潜水关并接好 HQ 电脑派遣）。
-3. 打开 `HQ` 场景，按 Play，点击 `创建事务所 / Start Host`，然后用办公室电脑接取湖底潜水任务。
+1. 若是首次 checkout，先运行 `Tools > Black Commission > Art > Setup ASV4 Art For Play`。
+2. 运行 `Tools > Black Commission > MVP > Build Snow Lotus Test Scene`（生成白棘雪莲测试关，并把 HQ 默认委托接到该任务）。
+3. 打开 `HQ` 场景，按 Play，点击 `创建事务所 / Start Host`，然后用办公室电脑接取白棘雪莲委托。
 
 ## 联机说明
 

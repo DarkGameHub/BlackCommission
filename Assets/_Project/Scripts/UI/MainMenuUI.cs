@@ -4,6 +4,8 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -15,26 +17,29 @@ public class MainMenuUI : MonoBehaviour
 {
     enum MenuState { Main, JoinInput, Connecting, HostWaiting }
 
+    public static bool IsGameplayInputBlockedByMenu { get; private set; }
+    public static bool IsMenuVisible { get; private set; }
+
     // ─── Color tokens (mirrors art bible) ─────────────────────────────────
-    static readonly Color CivicTeal = new(0.184f, 0.310f, 0.294f);
-    static readonly Color DeepCivicTeal = new(0.090f, 0.141f, 0.133f);
-    static readonly Color PanelBg = new(0.075f, 0.060f, 0.043f, 0.94f);
-    static readonly Color PanelBorder = new(0.47f, 0.34f, 0.17f, 0.62f);
-    static readonly Color ScreenFog = new(0.012f, 0.016f, 0.014f, 0.78f);
-    static readonly Color DispatchGreen = new(0.482f, 0.812f, 0.541f);
-    static readonly Color DispatchGreenDark = new(0.133f, 0.349f, 0.227f);
-    static readonly Color StampRed = new(0.761f, 0.227f, 0.169f);
-    static readonly Color SodiumAmber = new(0.851f, 0.604f, 0.192f);
-    static readonly Color AgedPaper = new(0.839f, 0.784f, 0.608f);
-    static readonly Color DirtyBone = new(0.788f, 0.761f, 0.667f);
-    static readonly Color FieldBg = new(0.024f, 0.020f, 0.015f, 0.96f);
-    static readonly Color BtnPrimary = new(0.050f, 0.085f, 0.050f, 0.92f);
-    static readonly Color BtnPrimaryHover = new(0.072f, 0.125f, 0.074f, 0.96f);
-    static readonly Color BtnPrimaryPressed = new(0.040f, 0.065f, 0.040f, 1f);
-    static readonly Color BtnSecondary = new(0.075f, 0.060f, 0.043f, 0.74f);
-    static readonly Color BtnSecondaryHover = new(0.120f, 0.095f, 0.060f, 0.84f);
-    static readonly Color BtnSecondaryPressed = new(0.050f, 0.040f, 0.030f, 0.96f);
-    static readonly Color HintText = new(0.66f, 0.61f, 0.48f);
+    static readonly Color CivicTeal = BlackCommissionUiTheme.MilitaryGreen;
+    static readonly Color DeepCivicTeal = BlackCommissionUiTheme.MilitaryGreenDark;
+    static readonly Color PanelBg = BlackCommissionUiTheme.ConcreteBlack;
+    static readonly Color PanelBorder = BlackCommissionUiTheme.MilitaryGreenDim;
+    static readonly Color ScreenFog = BlackCommissionUiTheme.Shadow;
+    static readonly Color DispatchGreen = BlackCommissionUiTheme.CrtGreen;
+    static readonly Color DispatchGreenDark = BlackCommissionUiTheme.CrtGreenDim;
+    static readonly Color StampRed = BlackCommissionUiTheme.RustWarning;
+    static readonly Color SodiumAmber = BlackCommissionUiTheme.OldWood;
+    static readonly Color AgedPaper = BlackCommissionUiTheme.OldPaper;
+    static readonly Color DirtyBone = BlackCommissionUiTheme.Text;
+    static readonly Color FieldBg = new(0.025f, 0.030f, 0.027f, 0.96f);
+    static readonly Color BtnPrimary = BlackCommissionUiTheme.MilitaryGreenDark;
+    static readonly Color BtnPrimaryHover = BlackCommissionUiTheme.MilitaryGreen;
+    static readonly Color BtnPrimaryPressed = new(0.060f, 0.080f, 0.055f, 1f);
+    static readonly Color BtnSecondary = BlackCommissionUiTheme.ConcreteRaised;
+    static readonly Color BtnSecondaryHover = new(0.130f, 0.145f, 0.122f, 0.96f);
+    static readonly Color BtnSecondaryPressed = BlackCommissionUiTheme.ConcretePanel;
+    static readonly Color HintText = BlackCommissionUiTheme.PaperDim;
 
     // ─── State ────────────────────────────────────────────────────────────
     MenuState state = MenuState.Main;
@@ -55,6 +60,8 @@ public class MainMenuUI : MonoBehaviour
     GameObject hostCodePanel;
     GameObject settingsPanel;
     GameObject directConnectPanel;
+    GameObject quitConfirmPanel;
+    GameObject lobbyWaitingPanel;
     GameObject connectedStatusPanel;
 
     TMP_Text titleText;
@@ -63,11 +70,24 @@ public class MainMenuUI : MonoBehaviour
     TMP_Text hostCodeText;
     TMP_Text connectingText;
     TMP_Text versionText;
+    TMP_Text lobbyCodeText;
+    TMP_Text lobbyCountText;
+    TMP_Text lobbyHintText;
+    TMP_Text lobbyTitleText;
+    TMP_Text lobbyRoomCodeLabelText;
 
     TMP_InputField joinCodeInput;
     TMP_InputField directAddressInput;
     TMP_InputField directPortInput;
     TMP_InputField nameInput;
+    TMP_Text characterNameText;
+    readonly Button[] characterButtons = new Button[PlayerCharacterPalette.Count];
+    readonly Image[] characterButtonImages = new Image[PlayerCharacterPalette.Count];
+    readonly TMP_Text[] characterButtonLabels = new TMP_Text[PlayerCharacterPalette.Count];
+    readonly Image[] characterUniformSwatches = new Image[PlayerCharacterPalette.Count];
+    readonly Image[] characterVestSwatches = new Image[PlayerCharacterPalette.Count];
+    readonly Image[] characterHelmetSwatches = new Image[PlayerCharacterPalette.Count];
+    int lastCharacterSelectorIndex = -1;
 
     // Lobby roster (shown once connected): one row per player in the office.
     TMP_Text rosterHeaderText;
@@ -79,20 +99,36 @@ public class MainMenuUI : MonoBehaviour
     readonly ulong[] rosterClientIds = new ulong[4];
     float nextRosterRefresh;
 
+    readonly Image[] lobbySwatches = new Image[4];
+    readonly TMP_Text[] lobbyNames = new TMP_Text[4];
+    readonly TMP_Text[] lobbyRoles = new TMP_Text[4];
+    Button lobbyEnterBtn;
+    TMP_Text lobbyEnterLabel;
+    bool wasListening;
+    bool lobbyWaitingDismissed;
+    float nextLobbyRefresh;
+
     Image backgroundImage;
     bool usingBakedMenuArt;
+    AudioSource menuAudioSource;
+    AudioClip menuHoverClip;
+    AudioClip menuSelectClip;
 
     Button continueBtn;
     Button newOfficeBtn;
     Button joinBtn;
+    Button recordsBtn;
     Button settingsBtn;
     Button quitBtn;
     Button directBtn;
     Button joinSubmitBtn;
     Button joinCancelBtn;
+    Button settingsQuitBtn;
     Button settingsCloseBtn;
     Button directCloseBtn;
     Button hostCodeHideBtn;
+    Button quitConfirmYesBtn;
+    Button quitConfirmNoBtn;
 
     void Awake()
     {
@@ -111,12 +147,18 @@ public class MainMenuUI : MonoBehaviour
     void OnDisable()
     {
         UnsubscribeConnectionEvents();
+        IsGameplayInputBlockedByMenu = false;
+        IsMenuVisible = false;
     }
 
     void Update()
     {
         UpdateConnectedVisibility();
         UpdateStatusVisibility();
+        RefreshCharacterSelector();
+        HandleKeyboardShortcuts();
+        UpdateGameplayInputBlock();
+        UpdateMenuVisibilityFlag();
     }
 
     // ─── Layout build ─────────────────────────────────────────────────────
@@ -154,15 +196,17 @@ public class MainMenuUI : MonoBehaviour
         hostCodePanel = BuildHostCodePanel(transform);
         settingsPanel = BuildSettingsPanel(transform);
         directConnectPanel = BuildDirectConnectPanel(transform);
+        quitConfirmPanel = BuildQuitConfirmPanel(transform);
+        lobbyWaitingPanel = BuildLobbyWaitingPanel(transform);
         connectedStatusPanel = BuildConnectedStatusPanel(transform);
 
-        versionText = AddText(transform, "Version", "v0.1 MVP", 14,
-            new Color(0.25f, 0.32f, 0.28f, 1f), TextAlignmentOptions.Center);
+        versionText = AddText(transform, "Version", "ver 1.0.0", 12,
+            BlackCommissionUiTheme.MutedText, TextAlignmentOptions.Center);
         var versionRt = versionText.rectTransform;
         versionRt.anchorMin = new Vector2(0f, 0f);
         versionRt.anchorMax = new Vector2(1f, 0f);
         versionRt.pivot = new Vector2(0.5f, 0f);
-        versionRt.anchoredPosition = new Vector2(0f, 16f);
+        versionRt.anchoredPosition = new Vector2(-902f, 16f);
         versionRt.sizeDelta = new Vector2(0f, 24f);
         if (usingBakedMenuArt)
             versionText.gameObject.SetActive(false);
@@ -187,6 +231,7 @@ public class MainMenuUI : MonoBehaviour
         var tex = Resources.Load<Texture2D>("UI/MainMenuBg");
         if (tex != null)
         {
+            usingBakedMenuArt = true;
             image.sprite = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f));
             image.color = Color.white;
             image.preserveAspect = false;
@@ -194,7 +239,7 @@ public class MainMenuUI : MonoBehaviour
         }
         else
         {
-            image.color = new Color(0.04f, 0.05f, 0.045f, 1f);
+            image.color = BlackCommissionUiTheme.ConcreteBlack;
         }
         return image;
     }
@@ -209,7 +254,7 @@ public class MainMenuUI : MonoBehaviour
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
         var image = go.GetComponent<Image>();
-        image.color = usingBakedMenuArt ? new Color(0f, 0f, 0f, 0f) : new Color(0f, 0f, 0f, 0.08f);
+        image.color = usingBakedMenuArt ? new Color(0f, 0f, 0f, 0f) : new Color(0f, 0f, 0f, 0.10f);
         image.raycastTarget = false; // tints the screen only — must not block panel buttons
         return go;
     }
@@ -224,6 +269,25 @@ public class MainMenuUI : MonoBehaviour
         prt.anchorMax = Vector2.one;
         prt.offsetMin = Vector2.zero;
         prt.offsetMax = Vector2.zero;
+
+        if (Resources.Load<Texture2D>("UI/MainMenuBg") != null)
+        {
+            BuildReferenceLeftColumn(panel.transform);
+            BuildReferenceCrtMenu(panel.transform);
+            BuildReferenceJobStrip(panel.transform);
+            BuildCharacterSelector(panel.transform, true);
+
+            statusText = AddText(panel.transform, "StatusBar", "", 16,
+                StampRed, TextAlignmentOptions.Left);
+            var referenceStatusRt = statusText.rectTransform;
+            referenceStatusRt.anchorMin = new Vector2(0f, 0f);
+            referenceStatusRt.anchorMax = new Vector2(0f, 0f);
+            referenceStatusRt.pivot = new Vector2(0f, 0f);
+            referenceStatusRt.anchoredPosition = new Vector2(64f, 45f);
+            referenceStatusRt.sizeDelta = new Vector2(760f, 30f);
+
+            return panel;
+        }
 
         // ─── Title block (top-left of the screen) ──────────────────────
         if (!usingBakedMenuArt)
@@ -250,6 +314,7 @@ public class MainMenuUI : MonoBehaviour
 
         // ─── Agent name field (top-left, works in baked + procedural modes) ─
         BuildNameField(panel.transform);
+        BuildCharacterSelector(panel.transform, false);
 
         // ─── Central commission terminal menu ──────────────────────────
         BuildTerminalMenu(panel.transform);
@@ -265,6 +330,439 @@ public class MainMenuUI : MonoBehaviour
         statusRt.sizeDelta = new Vector2(720f, 32f);
 
         return panel;
+    }
+
+    void BuildReferenceLeftColumn(Transform parent)
+    {
+        titleText = AddText(parent, "Logo", "BLACK\nCOMMISSION", 50,
+            AgedPaper, TextAlignmentOptions.Left);
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.characterSpacing = 2f;
+        titleText.lineSpacing = -18f;
+        var titleRt = titleText.rectTransform;
+        titleRt.anchorMin = new Vector2(0f, 1f);
+        titleRt.anchorMax = new Vector2(0f, 1f);
+        titleRt.pivot = new Vector2(0f, 1f);
+        titleRt.anchoredPosition = new Vector2(34f, -48f);
+        titleRt.sizeDelta = new Vector2(330f, 110f);
+
+        var tagBg = AddRect(parent, "MunicipalTagBg", new Vector2(36f, -146f), new Vector2(292f, 28f),
+            new Color(0.31f, 0.34f, 0.25f, 0.82f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        tagBg.transform.SetAsFirstSibling();
+
+        subtitleText = AddText(parent, "MunicipalTag", "MUNICIPAL CONTRACT SERVICES", 13,
+            BlackCommissionUiTheme.OldPaper, TextAlignmentOptions.Center);
+        subtitleText.fontStyle = FontStyles.Bold;
+        subtitleText.characterSpacing = 1.5f;
+        var subRt = subtitleText.rectTransform;
+        subRt.anchorMin = new Vector2(0f, 1f);
+        subRt.anchorMax = new Vector2(0f, 1f);
+        subRt.pivot = new Vector2(0f, 1f);
+        subRt.anchoredPosition = new Vector2(36f, -146f);
+        subRt.sizeDelta = new Vector2(292f, 28f);
+
+        var agent = AddText(parent, "AgentId", "Agent-499\nOFFICE ID: BC-114-A", 13,
+            AgedPaper, TextAlignmentOptions.Left);
+        agent.lineSpacing = 12f;
+        var aRt = agent.rectTransform;
+        aRt.anchorMin = new Vector2(0f, 1f);
+        aRt.anchorMax = new Vector2(0f, 1f);
+        aRt.pivot = new Vector2(0f, 1f);
+        aRt.anchoredPosition = new Vector2(38f, -210f);
+        aRt.sizeDelta = new Vector2(260f, 60f);
+
+        BuildLedgerMetric(parent, 302f, "DEBT", "-12,450G", StampRed, "▣");
+        BuildLedgerMetric(parent, 390f, "REPUTATION", "67", DispatchGreen, "◎");
+        BuildLedgerMetric(parent, 478f, "OFFICE LEVEL", "LV.1", DispatchGreen, "⌂");
+        BuildLedgerMetric(parent, 566f, "ACQUISITION RISK", "72%", StampRed, "◌");
+        BuildLedgerMetric(parent, 654f, "LAST SETTLEMENT", "+120G", DispatchGreen, "+");
+        nameInput = null;
+    }
+
+    void BuildLedgerMetric(Transform parent, float yFromTop, string label, string value, Color valueColor, string icon)
+    {
+        var iconText = AddText(parent, "MetricIcon_" + label, icon, 26, DispatchGreen, TextAlignmentOptions.Center);
+        var iRt = iconText.rectTransform;
+        iRt.anchorMin = new Vector2(0f, 1f);
+        iRt.anchorMax = new Vector2(0f, 1f);
+        iRt.pivot = new Vector2(0f, 1f);
+        iRt.anchoredPosition = new Vector2(38f, -yFromTop);
+        iRt.sizeDelta = new Vector2(38f, 34f);
+
+        var labelText = AddText(parent, "MetricLabel_" + label, label, 12, DispatchGreen, TextAlignmentOptions.Left);
+        labelText.characterSpacing = 1.2f;
+        var lRt = labelText.rectTransform;
+        lRt.anchorMin = new Vector2(0f, 1f);
+        lRt.anchorMax = new Vector2(0f, 1f);
+        lRt.pivot = new Vector2(0f, 1f);
+        lRt.anchoredPosition = new Vector2(88f, -yFromTop + 2f);
+        lRt.sizeDelta = new Vector2(210f, 20f);
+
+        var valueText = AddText(parent, "MetricValue_" + label, value, 24, valueColor, TextAlignmentOptions.Left);
+        valueText.fontStyle = FontStyles.Bold;
+        var vRt = valueText.rectTransform;
+        vRt.anchorMin = new Vector2(0f, 1f);
+        vRt.anchorMax = new Vector2(0f, 1f);
+        vRt.pivot = new Vector2(0f, 1f);
+        vRt.anchoredPosition = new Vector2(88f, -yFromTop - 24f);
+        vRt.sizeDelta = new Vector2(220f, 34f);
+    }
+
+    void BuildReferenceCrtMenu(Transform parent)
+    {
+        Vector2 screenTopLeft = new(408f, -248f);
+        Vector2 screenSize = new(580f, 400f);
+        var screenRoot = CreateScreenUiRoot(parent, screenTopLeft, screenSize);
+
+        var frame = AddRect(screenRoot.transform, "MenuCanvas", Vector2.zero, screenSize,
+            new Color(0.012f, 0.052f, 0.018f, 0.30f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddInsetFrame(frame.transform, "CrtInnerFrame", DispatchGreen, 7f, 2f);
+
+        var header = AddText(frame.transform, "CrtHeader", "BLACK COMMISSION OS v1.0", 17,
+            DispatchGreen, TextAlignmentOptions.Center);
+        header.fontStyle = FontStyles.Bold;
+        header.characterSpacing = 1f;
+        header.rectTransform.anchoredPosition = new Vector2(0f, 181f);
+        header.rectTransform.sizeDelta = new Vector2(540f, 28f);
+
+        AddRect(frame.transform, "StatusDot", new Vector2(280f, 181f), new Vector2(16f, 16f),
+            DispatchGreen, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        continueBtn = CreateReferenceMenuRow(frame.transform, "ContinueBtn", "继续事务所", "CONTINUE OFFICE", "▭", 112f, true);
+        newOfficeBtn = CreateReferenceMenuRow(frame.transform, "NewOfficeBtn", "建立新事务所", "NEW OFFICE", "◖", 52f, false);
+        joinBtn = CreateReferenceMenuRow(frame.transform, "JoinBtn", "加入事务所", "JOIN OFFICE", "●", -8f, false);
+        AddRect(frame.transform, "CrtDivider", new Vector2(0f, -50f), new Vector2(540f, 2f),
+            DispatchGreenDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        recordsBtn = CreateReferenceMenuRow(frame.transform, "RecordsBtn", "公司档案", "RECORDS", "▧", -88f, false);
+        settingsBtn = CreateReferenceMenuRow(frame.transform, "SettingsBtn", "设置", "SETTINGS", "⚙", -151f, false);
+
+        directBtn = CreateMenuHotspot(frame.transform, "DirectConnectHotspot", new Vector2(0f, -282f), new Vector2(540f, 34f));
+        directBtn.gameObject.SetActive(false);
+
+        BuildCrtOverlay(screenRoot.transform, screenSize);
+        screenRoot.GetComponent<CrtScreenSkew>()?.Refresh();
+    }
+
+    GameObject CreateScreenUiRoot(Transform parent, Vector2 topLeft, Vector2 size)
+    {
+        var go = new GameObject("ScreenUIRoot", typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = topLeft + new Vector2(size.x * 0.5f, -size.y * 0.5f);
+        rt.sizeDelta = size;
+        rt.localRotation = Quaternion.Euler(0f, 0f, -0.7f);
+        rt.localScale = Vector3.one;
+
+        var skew = go.AddComponent<CrtScreenSkew>();
+        skew.BottomLeftOffsetX = 28f;
+        skew.BottomRightOffsetX = 34f;
+        skew.BottomLeftOffsetY = -22f;
+        skew.BottomRightOffsetY = -4f;
+        return go;
+    }
+
+    void BuildCrtOverlay(Transform parent, Vector2 screenSize)
+    {
+        var overlay = AddRect(parent, "CrtOverlay", Vector2.zero, screenSize,
+            new Color(0f, 0f, 0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        overlay.GetComponent<Image>().raycastTarget = false;
+        overlay.transform.SetAsLastSibling();
+
+        var overlayTex = Resources.Load<Texture2D>("UI/CrtScreenOverlay");
+        if (overlayTex != null)
+        {
+            var image = overlay.GetComponent<Image>();
+            image.sprite = Sprite.Create(overlayTex,
+                new Rect(0f, 0f, overlayTex.width, overlayTex.height),
+                new Vector2(0.5f, 0.5f));
+            image.color = Color.white;
+            image.type = Image.Type.Simple;
+            image.preserveAspect = false;
+            return;
+        }
+
+        AddRect(overlay.transform, "TopVignette", new Vector2(0f, 0f), new Vector2(screenSize.x, 42f),
+            new Color(0f, 0f, 0f, 0.24f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        AddRect(overlay.transform, "BottomVignette", new Vector2(0f, 0f), new Vector2(screenSize.x, 50f),
+            new Color(0f, 0f, 0f, 0.30f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        AddRect(overlay.transform, "LeftVignette", new Vector2(0f, 0f), new Vector2(38f, screenSize.y),
+            new Color(0f, 0f, 0f, 0.22f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        AddRect(overlay.transform, "RightVignette", new Vector2(0f, 0f), new Vector2(42f, screenSize.y),
+            new Color(0f, 0f, 0f, 0.26f), new Vector2(1f, 0f), new Vector2(1f, 0f));
+
+        for (float y = 18f; y < screenSize.y - 10f; y += 18f)
+        {
+            AddRect(overlay.transform, "Scanline", new Vector2(0f, -y), new Vector2(screenSize.x, 1f),
+                new Color(0f, 0f, 0f, 0.12f), new Vector2(0f, 1f), new Vector2(0f, 1f));
+        }
+    }
+
+    Button CreateReferenceMenuRow(Transform parent, string name, string title, string desc, string icon, float y, bool primary)
+    {
+        Color normal = primary ? new Color(0.31f, 0.95f, 0.25f, 0.92f) : new Color(0f, 0f, 0f, 0f);
+        Color hover = primary ? new Color(0.42f, 1f, 0.34f, 0.96f) : new Color(0.35f, 1f, 0.26f, 0.92f);
+        Color pressed = primary ? new Color(0.18f, 0.72f, 0.16f, 1f) : new Color(0.08f, 0.22f, 0.08f, 0.90f);
+        var btn = CreateButton(parent, name, "", 1, normal, hover, pressed);
+        btn.transition = Selectable.Transition.None;
+        btn.targetGraphic.color = normal;
+        btn.onClick.AddListener(PlayMenuSelect);
+        var rt = btn.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(0f, y);
+        rt.sizeDelta = new Vector2(540f, primary ? 58f : 54f);
+
+        var emptyLabel = btn.GetComponentInChildren<TMP_Text>();
+        if (emptyLabel != null) Destroy(emptyLabel.gameObject);
+
+        Color titleColor = primary ? Color.black : DispatchGreen;
+        Color subColor = primary ? new Color(0.08f, 0.18f, 0.08f, 1f) : BlackCommissionUiTheme.CrtGreenDim;
+
+        var iconText = AddText(btn.transform, "Icon", icon, primary ? 29 : 26, titleColor, TextAlignmentOptions.Center);
+        iconText.fontStyle = FontStyles.Bold;
+        iconText.raycastTarget = false;
+        iconText.rectTransform.anchoredPosition = new Vector2(-232f, 0f);
+        iconText.rectTransform.sizeDelta = new Vector2(44f, 42f);
+
+        var titleText = AddText(btn.transform, "Title", (primary ? "> " : "") + title, primary ? 24 : 23,
+            titleColor, TextAlignmentOptions.Left);
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.raycastTarget = false;
+        titleText.rectTransform.anchoredPosition = new Vector2(35f, primary ? 8f : 7f);
+        titleText.rectTransform.sizeDelta = new Vector2(340f, 28f);
+
+        var descText = AddText(btn.transform, "Desc", desc, 13, subColor, TextAlignmentOptions.Left);
+        descText.characterSpacing = 1f;
+        descText.raycastTarget = false;
+        descText.rectTransform.anchoredPosition = new Vector2(42f, primary ? -17f : -16f);
+        descText.rectTransform.sizeDelta = new Vector2(340f, 20f);
+
+        ConfigureReferenceMenuRowHover(btn, btn.targetGraphic as Image, iconText, titleText, descText,
+            normal, hover, primary);
+        return btn;
+    }
+
+    void ConfigureReferenceMenuRowHover(Button btn, Image image, TMP_Text icon, TMP_Text title,
+        TMP_Text desc, Color normalBg, Color hoverBg, bool primary)
+    {
+        Color normalTitle = primary ? Color.black : DispatchGreen;
+        Color normalDesc = primary ? new Color(0.08f, 0.18f, 0.08f, 1f) : BlackCommissionUiTheme.CrtGreenDim;
+        Color darkText = Color.black;
+        string plainTitle = title.text.TrimStart('>', ' ');
+        Vector2 iconHome = icon.rectTransform.anchoredPosition;
+        Vector2 titleHome = title.rectTransform.anchoredPosition;
+        Vector2 descHome = desc.rectTransform.anchoredPosition;
+
+        void Apply(bool hovered)
+        {
+            image.color = hovered ? hoverBg : normalBg;
+            bool inverted = hovered || primary;
+            icon.color = inverted ? darkText : normalTitle;
+            title.color = inverted ? darkText : normalTitle;
+            desc.color = inverted ? new Color(0.06f, 0.14f, 0.05f, 1f) : normalDesc;
+            icon.rectTransform.anchoredPosition = iconHome + (hovered ? new Vector2(10f, 0f) : Vector2.zero);
+            title.rectTransform.anchoredPosition = titleHome + (hovered ? new Vector2(10f, 0f) : Vector2.zero);
+            desc.rectTransform.anchoredPosition = descHome + (hovered ? new Vector2(10f, 0f) : Vector2.zero);
+            title.text = inverted ? "> " + plainTitle : plainTitle;
+        }
+
+        Apply(false);
+
+        var trigger = btn.gameObject.AddComponent<EventTrigger>();
+        var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+        enter.callback.AddListener(_ =>
+        {
+            PlayMenuHover();
+            Apply(true);
+        });
+        trigger.triggers.Add(enter);
+
+        var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+        exit.callback.AddListener(_ => Apply(false));
+        trigger.triggers.Add(exit);
+    }
+
+    void BuildReferenceJobStrip(Transform parent)
+    {
+        var root = AddRect(parent, "JobStrip", new Vector2(258f, 28f), new Vector2(900f, 118f),
+            new Color(0.16f, 0.13f, 0.085f, 0.88f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        AddRect(root.transform, "PostedTab", new Vector2(16f, 92f), new Vector2(235f, 24f),
+            new Color(0.10f, 0.30f, 0.10f, 0.88f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        var tab = AddText(root.transform, "PostedLabel", "NEW COMMISSION POSTED", 13, DispatchGreen, TextAlignmentOptions.Left);
+        tab.fontStyle = FontStyles.Bold;
+        tab.rectTransform.anchorMin = new Vector2(0f, 0f);
+        tab.rectTransform.anchorMax = new Vector2(0f, 0f);
+        tab.rectTransform.pivot = new Vector2(0f, 0f);
+        tab.rectTransform.anchoredPosition = new Vector2(24f, 94f);
+        tab.rectTransform.sizeDelta = new Vector2(250f, 22f);
+
+        var details = AddText(root.transform, "JobDetails",
+            "家长: 王女士\n需求: 找回儿子的作业本\n报酬: 120G\n备注: 孩子说放学后教室里有东西。", 15,
+            Color.black, TextAlignmentOptions.Left);
+        details.fontStyle = FontStyles.Bold;
+        details.rectTransform.anchorMin = new Vector2(0f, 0f);
+        details.rectTransform.anchorMax = new Vector2(0f, 0f);
+        details.rectTransform.pivot = new Vector2(0f, 0f);
+        details.rectTransform.anchoredPosition = new Vector2(138f, 16f);
+        details.rectTransform.sizeDelta = new Vector2(350f, 86f);
+
+        AddRect(root.transform, "Photo", new Vector2(500f, 16f), new Vector2(245f, 86f),
+            new Color(0.11f, 0.19f, 0.18f, 0.95f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        var photoText = AddText(root.transform, "PhotoText", "SCHOOL HALLWAY PHOTO", 13,
+            new Color(0.58f, 0.76f, 0.70f, 0.70f), TextAlignmentOptions.Center);
+        photoText.rectTransform.anchorMin = new Vector2(0f, 0f);
+        photoText.rectTransform.anchorMax = new Vector2(0f, 0f);
+        photoText.rectTransform.pivot = new Vector2(0f, 0f);
+        photoText.rectTransform.anchoredPosition = new Vector2(500f, 48f);
+        photoText.rectTransform.sizeDelta = new Vector2(245f, 26f);
+
+        var open = AddText(root.transform, "OpenTerminal", "前往委托终端  ›\nOPEN TERMINAL", 20,
+            DispatchGreen, TextAlignmentOptions.Center);
+        open.fontStyle = FontStyles.Bold;
+        open.rectTransform.anchorMin = new Vector2(0f, 0f);
+        open.rectTransform.anchorMax = new Vector2(0f, 0f);
+        open.rectTransform.pivot = new Vector2(0f, 0f);
+        open.rectTransform.anchoredPosition = new Vector2(760f, 28f);
+        open.rectTransform.sizeDelta = new Vector2(210f, 62f);
+    }
+
+    void BuildCharacterSelector(Transform parent, bool referenceLayout)
+    {
+        Vector2 size = new(360f, 172f);
+        var root = new GameObject("CharacterSelector", typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(parent, false);
+        var image = root.GetComponent<Image>();
+        image.color = new Color(0.015f, 0.018f, 0.016f, 0.88f);
+        image.raycastTarget = false;
+
+        var rt = root.GetComponent<RectTransform>();
+        rt.anchorMin = referenceLayout ? new Vector2(0f, 1f) : new Vector2(1f, 1f);
+        rt.anchorMax = rt.anchorMin;
+        rt.pivot = referenceLayout ? new Vector2(0f, 1f) : new Vector2(1f, 1f);
+        rt.anchoredPosition = referenceLayout ? new Vector2(1110f, -248f) : new Vector2(-48f, -152f);
+        rt.sizeDelta = size;
+
+        AddInsetFrame(root.transform, "SelectorFrame", DispatchGreenDark, 6f, 2f);
+
+        var header = AddText(root.transform, "Header", "AGENT LOADOUT", 14,
+            DispatchGreen, TextAlignmentOptions.Left);
+        header.fontStyle = FontStyles.Bold;
+        header.characterSpacing = 2f;
+        header.rectTransform.anchoredPosition = new Vector2(-118f, 58f);
+        header.rectTransform.sizeDelta = new Vector2(220f, 22f);
+
+        characterNameText = AddText(root.transform, "SelectedName", "", 13,
+            AgedPaper, TextAlignmentOptions.Right);
+        characterNameText.characterSpacing = 1f;
+        characterNameText.rectTransform.anchoredPosition = new Vector2(74f, 58f);
+        characterNameText.rectTransform.sizeDelta = new Vector2(180f, 22f);
+
+        for (int i = 0; i < PlayerCharacterPalette.Count; i++)
+        {
+            int index = i;
+            var colors = PlayerCharacterPalette.Get(i);
+            Button button = CreateButton(root.transform, "CharacterSlot_" + (i + 1), (i + 1).ToString("00"), 12,
+                FieldBg, BtnSecondaryHover, BtnSecondaryPressed);
+            button.onClick.AddListener(() => SelectCharacter(index));
+            button.onClick.AddListener(PlayMenuSelect);
+
+            var brt = button.GetComponent<RectTransform>();
+            brt.anchoredPosition = new Vector2(-135f + i * 54f, -24f);
+            brt.sizeDelta = new Vector2(46f, 72f);
+
+            characterButtons[i] = button;
+            characterButtonImages[i] = button.GetComponent<Image>();
+            characterButtonLabels[i] = button.GetComponentInChildren<TMP_Text>();
+
+            AddRect(button.transform, "Uniform", new Vector2(0f, 16f), new Vector2(30f, 14f),
+                colors.uniform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            AddRect(button.transform, "Vest", new Vector2(0f, 0f), new Vector2(30f, 14f),
+                colors.vest, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            AddRect(button.transform, "Helmet", new Vector2(0f, 31f), new Vector2(30f, 8f),
+                colors.helmet, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+            characterUniformSwatches[i] = button.transform.Find("Uniform")?.GetComponent<Image>();
+            characterVestSwatches[i] = button.transform.Find("Vest")?.GetComponent<Image>();
+            characterHelmetSwatches[i] = button.transform.Find("Helmet")?.GetComponent<Image>();
+
+            if (characterButtonLabels[i] != null)
+            {
+                var labelRt = characterButtonLabels[i].rectTransform;
+                labelRt.anchorMin = new Vector2(0f, 0f);
+                labelRt.anchorMax = new Vector2(1f, 0f);
+                labelRt.pivot = new Vector2(0.5f, 0f);
+                labelRt.offsetMin = new Vector2(0f, 2f);
+                labelRt.offsetMax = new Vector2(0f, 20f);
+                characterButtonLabels[i].raycastTarget = false;
+            }
+        }
+
+        var hint = AddText(root.transform, "Hint", "SELECT BEFORE START", 11,
+            BlackCommissionUiTheme.MutedText, TextAlignmentOptions.Center);
+        hint.characterSpacing = 1f;
+        hint.rectTransform.anchoredPosition = new Vector2(0f, -72f);
+        hint.rectTransform.sizeDelta = new Vector2(300f, 18f);
+
+        RefreshCharacterSelector(true);
+    }
+
+    void SelectCharacter(int index)
+    {
+        PlayerCharacterPalette.SavedIndex = index;
+        RefreshCharacterSelector(true);
+    }
+
+    void RefreshCharacterSelector(bool force = false)
+    {
+        if (characterButtons[0] == null) return;
+
+        int selected = PlayerCharacterPalette.SavedIndex;
+        if (!force && selected == lastCharacterSelectorIndex) return;
+        lastCharacterSelectorIndex = selected;
+
+        var selectedColors = PlayerCharacterPalette.Get(selected);
+        if (characterNameText != null)
+            characterNameText.text = selectedColors.label.ToUpperInvariant();
+
+        for (int i = 0; i < PlayerCharacterPalette.Count; i++)
+        {
+            bool active = i == selected;
+            var colors = PlayerCharacterPalette.Get(i);
+            if (characterButtonImages[i] != null)
+                characterButtonImages[i].color = active ? DispatchGreen : FieldBg;
+            if (characterButtonLabels[i] != null)
+            {
+                characterButtonLabels[i].color = active ? Color.black : AgedPaper;
+                characterButtonLabels[i].fontStyle = active ? FontStyles.Bold : FontStyles.Normal;
+            }
+            if (characterUniformSwatches[i] != null)
+                characterUniformSwatches[i].color = active ? Color.Lerp(colors.uniform, Color.white, 0.18f) : colors.uniform;
+            if (characterVestSwatches[i] != null)
+                characterVestSwatches[i].color = active ? Color.Lerp(colors.vest, Color.white, 0.18f) : colors.vest;
+            if (characterHelmetSwatches[i] != null)
+                characterHelmetSwatches[i].color = active ? Color.Lerp(colors.helmet, Color.white, 0.18f) : colors.helmet;
+        }
+    }
+
+    GameObject AddRect(Transform parent, string name, Vector2 anchoredPos, Vector2 size, Color color,
+        Vector2 anchorMin, Vector2 pivot)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var image = go.GetComponent<Image>();
+        image.color = color;
+        image.raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = anchorMin;
+        rt.anchorMax = anchorMin;
+        rt.pivot = pivot;
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = size;
+        return go;
     }
 
     // Top-left "Agent Name" label + input. Persisted to PlayerProfile and synced at spawn.
@@ -329,14 +827,12 @@ public class MainMenuUI : MonoBehaviour
             "Join another office", -430f, false);
         settingsBtn = CreateMenuRow(card.transform, "SettingsBtn", "SETTINGS",
             "Adjust preferences", -535f, false);
-        quitBtn = CreateMenuRow(card.transform, "QuitBtn", "QUIT",
-            "Exit to desktop", -630f, false);
 
         // Small direct-connect (LAN) link at the bottom of the card.
         directBtn = CreateButton(card.transform, "DirectBtn", "LAN DIRECT", 14,
-            new Color(0.02f, 0.016f, 0.010f, 0.18f),
-            new Color(0.28f, 0.22f, 0.12f, 0.28f),
-            new Color(0.12f, 0.09f, 0.05f, 0.42f));
+            new Color(0.025f, 0.030f, 0.027f, 0.32f),
+            new Color(0.160f, 0.190f, 0.145f, 0.54f),
+            new Color(0.090f, 0.110f, 0.080f, 0.70f));
         var dRt = directBtn.GetComponent<RectTransform>();
         dRt.anchorMin = new Vector2(0.5f, 0f);
         dRt.anchorMax = new Vector2(0.5f, 0f);
@@ -346,7 +842,7 @@ public class MainMenuUI : MonoBehaviour
         var directLabel = directBtn.GetComponentInChildren<TMP_Text>();
         if (directLabel != null)
         {
-            directLabel.color = new Color(0.66f, 0.58f, 0.40f, 0.78f);
+            directLabel.color = BlackCommissionUiTheme.PaperDim;
             directLabel.fontStyle = FontStyles.Bold;
             directLabel.characterSpacing = 8f;
         }
@@ -373,7 +869,7 @@ public class MainMenuUI : MonoBehaviour
         }
         else
         {
-            image.color = new Color(0.075f, 0.060f, 0.043f, 0.92f);
+            image.color = BlackCommissionUiTheme.ConcreteBlack;
             AddInsetFrame(go.transform, "FallbackFrame", PanelBorder, 10f, 2f);
         }
         return go;
@@ -387,7 +883,6 @@ public class MainMenuUI : MonoBehaviour
         newOfficeBtn = CreateMenuHotspot(parent, "NewOfficeHotspot", new Vector2(3f, 134f), new Vector2(512f, 124f));
         joinBtn = CreateMenuHotspot(parent, "JoinHotspot", new Vector2(3f, -4f), new Vector2(512f, 120f));
         settingsBtn = CreateMenuHotspot(parent, "SettingsHotspot", new Vector2(3f, -133f), new Vector2(512f, 92f));
-        quitBtn = CreateMenuHotspot(parent, "QuitHotspot", new Vector2(3f, -232f), new Vector2(512f, 88f));
 
         // Hidden fallback access for LAN testing. The visible mockup intentionally
         // has no direct-connect label, so this stays below the painted quit row.
@@ -415,9 +910,9 @@ public class MainMenuUI : MonoBehaviour
     // A wide menu row: bold title + small description, left-aligned, like the mockup.
     Button CreateMenuRow(Transform parent, string name, string title, string desc, float yFromTop, bool primary)
     {
-        Color bg = new Color(0.015f, 0.012f, 0.008f, 0.06f);
-        Color bgHover = new Color(0.10f, 0.18f, 0.10f, 0.24f);
-        Color bgPressed = new Color(0.06f, 0.12f, 0.06f, 0.38f);
+        Color bg = new Color(0.025f, 0.030f, 0.027f, 0.18f);
+        Color bgHover = new Color(0.120f, 0.170f, 0.105f, 0.32f);
+        Color bgPressed = new Color(0.070f, 0.110f, 0.060f, 0.48f);
 
         var btn = CreateButton(parent, name, "", 1, bg, bgHover, bgPressed);
         var rt = btn.GetComponent<RectTransform>();
@@ -434,7 +929,7 @@ public class MainMenuUI : MonoBehaviour
         var accent = new GameObject("Accent", typeof(RectTransform), typeof(Image));
         accent.transform.SetParent(btn.transform, false);
         var aImg = accent.GetComponent<Image>();
-        aImg.color = new Color(0.55f, 0.86f, 0.58f, 0f);
+        aImg.color = new Color(0.424f, 1.000f, 0.373f, 0f);
         aImg.raycastTarget = false;
         var aRt = accent.GetComponent<RectTransform>();
         aRt.anchorMin = new Vector2(0f, 0f);
@@ -444,7 +939,7 @@ public class MainMenuUI : MonoBehaviour
         aRt.sizeDelta = new Vector2(5f, -14f);
 
         var rowIcon = AddText(btn.transform, "Icon", "-", primary ? 28 : 20,
-            new Color(0.54f, 0.46f, 0.31f, 0.58f), TextAlignmentOptions.Center);
+            BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Center);
         rowIcon.fontStyle = FontStyles.Bold;
         rowIcon.raycastTarget = false;
         var iRt = rowIcon.rectTransform;
@@ -455,7 +950,7 @@ public class MainMenuUI : MonoBehaviour
         iRt.sizeDelta = new Vector2(36f, 40f);
 
         var rowTitle = AddText(btn.transform, "Title", title, primary ? 30 : 27,
-            new Color(0.80f, 0.73f, 0.58f, 0.92f), TextAlignmentOptions.Left);
+            BlackCommissionUiTheme.OldPaper, TextAlignmentOptions.Left);
         rowTitle.fontStyle = FontStyles.Bold;
         rowTitle.raycastTarget = false;
         var tRt = rowTitle.rectTransform;
@@ -467,7 +962,7 @@ public class MainMenuUI : MonoBehaviour
         rowTitle.characterSpacing = primary ? 5f : 3f;
 
         var rowDesc = AddText(btn.transform, "Desc", desc, 14,
-            new Color(0.58f, 0.53f, 0.42f, 0.80f), TextAlignmentOptions.Left);
+            BlackCommissionUiTheme.MutedText, TextAlignmentOptions.Left);
         rowDesc.raycastTarget = false;
         var dRt = rowDesc.rectTransform;
         dRt.anchorMin = new Vector2(0f, 0f);
@@ -484,11 +979,11 @@ public class MainMenuUI : MonoBehaviour
     void ConfigureMenuRowHover(Button btn, TMP_Text icon, TMP_Text title, TMP_Text desc,
         Image accent, bool primary)
     {
-        Color normalTitle = new Color(0.80f, 0.73f, 0.58f, 0.92f);
-        Color normalIcon = new Color(0.54f, 0.46f, 0.31f, 0.58f);
-        Color normalDesc = new Color(0.58f, 0.53f, 0.42f, 0.80f);
-        Color green = new Color(0.55f, 0.86f, 0.58f, 0.96f);
-        Color greenDim = new Color(0.55f, 0.86f, 0.58f, 0.72f);
+        Color normalTitle = BlackCommissionUiTheme.OldPaper;
+        Color normalIcon = BlackCommissionUiTheme.PaperDim;
+        Color normalDesc = BlackCommissionUiTheme.MutedText;
+        Color green = BlackCommissionUiTheme.CrtGreen;
+        Color greenDim = BlackCommissionUiTheme.CrtGreenDim;
 
         void ApplyHover(bool hovered)
         {
@@ -496,8 +991,8 @@ public class MainMenuUI : MonoBehaviour
             icon.color = hovered ? green : normalIcon;
             desc.color = hovered ? greenDim : normalDesc;
             accent.color = hovered
-                ? new Color(0.55f, 0.86f, 0.58f, 1f)
-                : new Color(0.55f, 0.86f, 0.58f, 0f);
+                ? BlackCommissionUiTheme.CrtGreen
+                : new Color(0.424f, 1.000f, 0.373f, 0f);
             icon.text = hovered ? ">" : "-";
         }
 
@@ -538,7 +1033,7 @@ public class MainMenuUI : MonoBehaviour
         stamp.transform.SetParent(parent, false);
         stamp.GetComponent<Image>().color = FieldBg;
 
-        // Two red strip overlays (top + bottom borders) to match the OnGUI stamp look.
+        // Two rust strip overlays (top + bottom borders) to match the stamped ledger look.
         var topBar = new GameObject("TopBar", typeof(RectTransform), typeof(Image));
         topBar.transform.SetParent(stamp.transform, false);
         topBar.GetComponent<Image>().color = StampRed;
@@ -560,7 +1055,7 @@ public class MainMenuUI : MonoBehaviour
         bRt.sizeDelta = new Vector2(0f, 3f);
 
         var label = AddText(stamp.transform, "DebtText", "DEBT", 16,
-            new Color(0.96f, 0.42f, 0.34f), TextAlignmentOptions.Center);
+            BlackCommissionUiTheme.RustWarning, TextAlignmentOptions.Center);
         label.fontStyle = FontStyles.Bold;
         var lRt = label.rectTransform;
         lRt.anchorMin = Vector2.zero;
@@ -699,6 +1194,12 @@ public class MainMenuUI : MonoBehaviour
         BuildLangSection(panel.transform, new Vector2(0f, 70f));
         BuildVolumeSection(panel.transform, new Vector2(0f, 0f));
         BuildSensitivitySection(panel.transform, new Vector2(0f, -90f));
+
+        settingsQuitBtn = CreateButton(panel.transform, "SettingsQuit", "退出游戏", 18,
+            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
+        var quitRt = settingsQuitBtn.GetComponent<RectTransform>();
+        quitRt.anchoredPosition = new Vector2(0f, -150f);
+        quitRt.sizeDelta = new Vector2(220f, 42f);
 
         return panel;
     }
@@ -841,6 +1342,37 @@ public class MainMenuUI : MonoBehaviour
         slider.onValueChanged.AddListener(v => PlayerCameraController.HorizontalSensitivity = v);
     }
 
+    GameObject BuildQuitConfirmPanel(Transform parent)
+    {
+        var panel = CreatePanel(parent, "QuitConfirmPanel", new Vector2(460f, 220f));
+        panel.SetActive(false);
+
+        var title = AddText(panel.transform, "Title", "确认退出？", 28,
+            DispatchGreen, TextAlignmentOptions.Center);
+        title.fontStyle = FontStyles.Bold;
+        title.rectTransform.anchoredPosition = new Vector2(0f, 62f);
+        title.rectTransform.sizeDelta = new Vector2(380f, 40f);
+
+        var body = AddText(panel.transform, "Body", "退出到桌面 / Exit to desktop", 16,
+            AgedPaper, TextAlignmentOptions.Center);
+        body.rectTransform.anchoredPosition = new Vector2(0f, 14f);
+        body.rectTransform.sizeDelta = new Vector2(390f, 28f);
+
+        quitConfirmYesBtn = CreateButton(panel.transform, "ConfirmQuit", "退出", 18,
+            BtnPrimary, BtnPrimaryHover, BtnPrimaryPressed);
+        var yesRt = quitConfirmYesBtn.GetComponent<RectTransform>();
+        yesRt.anchoredPosition = new Vector2(-92f, -64f);
+        yesRt.sizeDelta = new Vector2(150f, 44f);
+
+        quitConfirmNoBtn = CreateButton(panel.transform, "CancelQuit", "取消", 18,
+            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
+        var noRt = quitConfirmNoBtn.GetComponent<RectTransform>();
+        noRt.anchoredPosition = new Vector2(92f, -64f);
+        noRt.sizeDelta = new Vector2(150f, 44f);
+
+        return panel;
+    }
+
     GameObject BuildDirectConnectPanel(Transform parent)
     {
         var panel = CreateMenuPanel(parent);
@@ -854,9 +1386,9 @@ public class MainMenuUI : MonoBehaviour
         rt.sizeDelta = new Vector2(440f, 660f);
 
         directCloseBtn = CreateButton(panel.transform, "Close", "X", 16,
-            new Color(0.02f, 0.016f, 0.010f, 0.20f),
-            new Color(0.24f, 0.18f, 0.10f, 0.28f),
-            new Color(0.15f, 0.10f, 0.05f, 0.40f));
+            new Color(0.025f, 0.030f, 0.027f, 0.32f),
+            new Color(0.120f, 0.145f, 0.100f, 0.54f),
+            new Color(0.070f, 0.090f, 0.060f, 0.70f));
         var closeRt = directCloseBtn.GetComponent<RectTransform>();
         closeRt.anchorMin = new Vector2(1f, 1f);
         closeRt.anchorMax = new Vector2(1f, 1f);
@@ -865,7 +1397,7 @@ public class MainMenuUI : MonoBehaviour
         closeRt.sizeDelta = new Vector2(42f, 34f);
         var closeLabel = directCloseBtn.GetComponentInChildren<TMP_Text>();
         if (closeLabel != null)
-            closeLabel.color = new Color(0.80f, 0.73f, 0.58f, 0.92f);
+            closeLabel.color = BlackCommissionUiTheme.OldPaper;
 
         var header = AddText(panel.transform, "Header", "LAN DIRECT", 28,
             DispatchGreen, TextAlignmentOptions.Center);
@@ -875,7 +1407,7 @@ public class MainMenuUI : MonoBehaviour
         header.rectTransform.sizeDelta = new Vector2(300f, 38f);
 
         AddText(panel.transform, "Hint", "Local host or join by IP", 14,
-            new Color(0.58f, 0.53f, 0.42f, 0.82f), TextAlignmentOptions.Center)
+            BlackCommissionUiTheme.MutedText, TextAlignmentOptions.Center)
             .rectTransform.anchoredPosition = new Vector2(0f, 88f);
 
         directAddressInput = CreateInputField(panel.transform, "AddressInput",
@@ -885,9 +1417,9 @@ public class MainMenuUI : MonoBehaviour
 
         var hostDirectBtn = CreateButton(panel.transform, "DirectHost",
             MvpLocale.T("direct_create"), 16,
-            new Color(0.015f, 0.012f, 0.008f, 0.22f),
-            new Color(0.10f, 0.18f, 0.10f, 0.30f),
-            new Color(0.06f, 0.12f, 0.06f, 0.44f));
+            new Color(0.025f, 0.030f, 0.027f, 0.32f),
+            new Color(0.120f, 0.170f, 0.105f, 0.44f),
+            new Color(0.070f, 0.110f, 0.060f, 0.58f));
         hostDirectBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(-84f, -56f);
         hostDirectBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(150f, 46f);
         var hostLabel = hostDirectBtn.GetComponentInChildren<TMP_Text>();
@@ -900,20 +1432,215 @@ public class MainMenuUI : MonoBehaviour
 
         var joinDirectBtn = CreateButton(panel.transform, "DirectJoin",
             MvpLocale.T("direct_join"), 16,
-            new Color(0.015f, 0.012f, 0.008f, 0.22f),
-            new Color(0.24f, 0.18f, 0.10f, 0.30f),
-            new Color(0.15f, 0.10f, 0.05f, 0.44f));
+            new Color(0.025f, 0.030f, 0.027f, 0.32f),
+            new Color(0.130f, 0.145f, 0.122f, 0.44f),
+            new Color(0.070f, 0.090f, 0.060f, 0.58f));
         joinDirectBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(84f, -56f);
         joinDirectBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(150f, 46f);
         var joinLabel = joinDirectBtn.GetComponentInChildren<TMP_Text>();
         if (joinLabel != null)
         {
-            joinLabel.color = new Color(0.80f, 0.73f, 0.58f, 0.94f);
+            joinLabel.color = BlackCommissionUiTheme.OldPaper;
             joinLabel.fontStyle = FontStyles.Bold;
         }
         joinDirectBtn.onClick.AddListener(StartClientDirect);
 
         return panel;
+    }
+
+    GameObject BuildLobbyWaitingPanel(Transform parent)
+    {
+        // Phosphor palette so the standby screen reads like the BLACK COMMISSION OS
+        // terminal from the main-menu mockup rather than a flat concrete dialog.
+        Color screenFill = new(0.012f, 0.045f, 0.020f, 0.985f);
+        Color rowFill = new(0.035f, 0.090f, 0.045f, 0.92f);
+        Color rowDivider = new(0.10f, 0.32f, 0.12f, 0.55f);
+
+        var root = new GameObject("LobbyWaitingPanel", typeof(RectTransform), typeof(Image));
+        root.transform.SetParent(parent, false);
+        var rootRt = root.GetComponent<RectTransform>();
+        rootRt.anchorMin = Vector2.zero;
+        rootRt.anchorMax = Vector2.one;
+        rootRt.offsetMin = Vector2.zero;
+        rootRt.offsetMax = Vector2.zero;
+        var veil = root.GetComponent<Image>();
+        veil.color = new Color(0f, 0f, 0f, 0.72f);
+        veil.raycastTarget = true;
+
+        // ─── CRT monitor screen ────────────────────────────────────────────
+        Vector2 screenSize = new(940f, 620f);
+        var screen = new GameObject("WaitingTerminal", typeof(RectTransform), typeof(Image));
+        screen.transform.SetParent(root.transform, false);
+        screen.GetComponent<Image>().color = screenFill;
+        var panelRt = screen.GetComponent<RectTransform>();
+        panelRt.anchorMin = new Vector2(0.5f, 0.5f);
+        panelRt.anchorMax = new Vector2(0.5f, 0.5f);
+        panelRt.pivot = new Vector2(0.5f, 0.5f);
+        panelRt.anchoredPosition = Vector2.zero;
+        panelRt.sizeDelta = screenSize;
+        var panel = screen; // content parent; keeps the rest of the method readable
+
+        AddInsetFrame(panel.transform, "CrtInnerFrame", DispatchGreen, 9f, 2f);
+
+        float halfW = screenSize.x * 0.5f; // 470
+        float halfH = screenSize.y * 0.5f; // 310
+
+        // ─── Header bar: OS banner + live status dot ───────────────────────
+        var header = AddText(panel.transform, "CrtHeader", "BLACK COMMISSION OS v1.0", 17,
+            DispatchGreen, TextAlignmentOptions.Center);
+        header.fontStyle = FontStyles.Bold;
+        header.characterSpacing = 1f;
+        header.rectTransform.anchoredPosition = new Vector2(0f, halfH - 30f);
+        header.rectTransform.sizeDelta = new Vector2(880f, 28f);
+
+        AddRect(panel.transform, "StatusDot", new Vector2(halfW - 40f, halfH - 30f), new Vector2(14f, 14f),
+            DispatchGreen, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        AddRect(panel.transform, "HeaderDivider", new Vector2(0f, halfH - 52f), new Vector2(884f, 2f),
+            DispatchGreenDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        // ─── Left column: standby title + room code + hint ─────────────────
+        lobbyTitleText = AddText(panel.transform, "Title", MvpLocale.T("lobby_waiting_title"), 32,
+            DispatchGreen, TextAlignmentOptions.Left);
+        lobbyTitleText.fontStyle = FontStyles.Bold;
+        lobbyTitleText.characterSpacing = 4f;
+        AnchorLeftCenter(lobbyTitleText.rectTransform, 40f, 200f, new Vector2(380f, 46f));
+
+        lobbyRoomCodeLabelText = AddText(panel.transform, "RoomCodeLabel", MvpLocale.T("lobby_room_code"), 14,
+            DispatchGreenDark, TextAlignmentOptions.Left);
+        lobbyRoomCodeLabelText.characterSpacing = 2f;
+        AnchorLeftCenter(lobbyRoomCodeLabelText.rectTransform, 42f, 146f, new Vector2(360f, 22f));
+
+        lobbyCodeText = AddText(panel.transform, "RoomCode", "", 42,
+            SodiumAmber, TextAlignmentOptions.Left);
+        lobbyCodeText.fontStyle = FontStyles.Bold;
+        lobbyCodeText.characterSpacing = 6f;
+        AnchorLeftCenter(lobbyCodeText.rectTransform, 40f, 102f, new Vector2(400f, 54f));
+
+        AddRect(panel.transform, "LeftDivider", new Vector2(-halfW + 240f, 56f), new Vector2(396f, 2f),
+            DispatchGreenDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        lobbyHintText = AddText(panel.transform, "Hint", MvpLocale.T("lobby_waiting_hint"), 16,
+            BlackCommissionUiTheme.CrtGreenDim, TextAlignmentOptions.Left);
+        lobbyHintText.enableWordWrapping = true;
+        lobbyHintText.lineSpacing = 8f;
+        AnchorLeftCenter(lobbyHintText.rectTransform, 42f, 8f, new Vector2(380f, 132f));
+
+        var procedure = AddText(panel.transform, "Procedure",
+            "01  OFFICE COMPUTER\n02  BUY USED GEAR\n03  BOARD DISPATCH VAN", 14,
+            DispatchGreenDark, TextAlignmentOptions.Left);
+        procedure.lineSpacing = 10f;
+        AnchorLeftCenter(procedure.rectTransform, 42f, -150f, new Vector2(380f, 92f));
+
+        // ─── Right column: crew roster header + slots + enter button ───────
+        float colX = 226f; // centre of the right column
+        lobbyCountText = AddText(panel.transform, "Count", "", 18,
+            DispatchGreen, TextAlignmentOptions.Right);
+        lobbyCountText.fontStyle = FontStyles.Bold;
+        lobbyCountText.characterSpacing = 2f;
+        var countRt = lobbyCountText.rectTransform;
+        countRt.anchorMin = new Vector2(1f, 0.5f);
+        countRt.anchorMax = new Vector2(1f, 0.5f);
+        countRt.pivot = new Vector2(1f, 0.5f);
+        countRt.anchoredPosition = new Vector2(-40f, 200f);
+        countRt.sizeDelta = new Vector2(340f, 30f);
+
+        for (int i = 0; i < 4; i++)
+        {
+            float y = 146f - i * 70f;
+            var row = new GameObject($"LobbySlot{i}", typeof(RectTransform), typeof(Image));
+            row.transform.SetParent(panel.transform, false);
+            var rowImage = row.GetComponent<Image>();
+            rowImage.color = rowFill;
+            rowImage.raycastTarget = false;
+            var rowRt = row.GetComponent<RectTransform>();
+            rowRt.anchorMin = new Vector2(0.5f, 0.5f);
+            rowRt.anchorMax = new Vector2(0.5f, 0.5f);
+            rowRt.pivot = new Vector2(0.5f, 0.5f);
+            rowRt.anchoredPosition = new Vector2(colX, y);
+            rowRt.sizeDelta = new Vector2(420f, 60f);
+
+            AddRect(row.transform, "RowDivider", new Vector2(0f, -30f), new Vector2(420f, 1f),
+                rowDivider, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+            // Vest-colour bar on the left edge (set per occupant in RefreshLobbyWaiting).
+            var swatch = new GameObject("Swatch", typeof(RectTransform), typeof(Image));
+            swatch.transform.SetParent(row.transform, false);
+            var swatchImage = swatch.GetComponent<Image>();
+            swatchImage.color = Color.clear;
+            swatchImage.raycastTarget = false;
+            var swatchRt = swatch.GetComponent<RectTransform>();
+            swatchRt.anchorMin = new Vector2(0f, 0.5f);
+            swatchRt.anchorMax = new Vector2(0f, 0.5f);
+            swatchRt.pivot = new Vector2(0f, 0.5f);
+            swatchRt.anchoredPosition = new Vector2(14f, 0f);
+            swatchRt.sizeDelta = new Vector2(8f, 44f);
+            lobbySwatches[i] = swatchImage;
+
+            var slotIndex = AddText(row.transform, "Index", $"0{i + 1}", 15,
+                DispatchGreenDark, TextAlignmentOptions.Center);
+            slotIndex.fontStyle = FontStyles.Bold;
+            slotIndex.raycastTarget = false;
+            slotIndex.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            slotIndex.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            slotIndex.rectTransform.pivot = new Vector2(0f, 0.5f);
+            slotIndex.rectTransform.anchoredPosition = new Vector2(30f, 0f);
+            slotIndex.rectTransform.sizeDelta = new Vector2(34f, 28f);
+
+            var name = AddText(row.transform, "Name", "", 17,
+                DispatchGreen, TextAlignmentOptions.Left);
+            name.fontStyle = FontStyles.Bold;
+            name.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            name.rectTransform.anchorMax = new Vector2(1f, 0.5f);
+            name.rectTransform.pivot = new Vector2(0f, 0.5f);
+            name.rectTransform.anchoredPosition = new Vector2(76f, 10f);
+            name.rectTransform.sizeDelta = new Vector2(-90f, 26f);
+            lobbyNames[i] = name;
+
+            var role = AddText(row.transform, "Role", "", 13,
+                BlackCommissionUiTheme.CrtGreenDim, TextAlignmentOptions.Left);
+            role.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            role.rectTransform.anchorMax = new Vector2(1f, 0.5f);
+            role.rectTransform.pivot = new Vector2(0f, 0.5f);
+            role.rectTransform.anchoredPosition = new Vector2(76f, -13f);
+            role.rectTransform.sizeDelta = new Vector2(-90f, 20f);
+            lobbyRoles[i] = role;
+        }
+
+        // Bright phosphor "enter" row — the primary action, styled like the
+        // highlighted menu row on the mockup (filled green, dark glyphs).
+        lobbyEnterBtn = CreateButton(panel.transform, "EnterOffice",
+            MvpLocale.T("lobby_enter_office") + "   ›", 22,
+            new Color(0.31f, 0.95f, 0.25f, 0.94f),
+            new Color(0.42f, 1f, 0.34f, 0.98f),
+            new Color(0.18f, 0.72f, 0.16f, 1f));
+        var enterRt = lobbyEnterBtn.GetComponent<RectTransform>();
+        enterRt.anchoredPosition = new Vector2(colX, -158f);
+        enterRt.sizeDelta = new Vector2(420f, 58f);
+        lobbyEnterLabel = lobbyEnterBtn.GetComponentInChildren<TMP_Text>();
+        if (lobbyEnterLabel != null)
+        {
+            lobbyEnterLabel.color = Color.black;
+            lobbyEnterLabel.fontStyle = FontStyles.Bold;
+            lobbyEnterLabel.characterSpacing = 3f;
+        }
+
+        // Scanline / vignette pass on top of all content for the CRT feel.
+        BuildCrtOverlay(panel.transform, screenSize);
+
+        root.SetActive(false);
+        return root;
+    }
+
+    // Anchors a rect to the left-centre of its parent so anchoredPosition.x is the
+    // distance from the parent's left edge — handy for the standby screen's columns.
+    static void AnchorLeftCenter(RectTransform rt, float xFromLeft, float y, Vector2 size)
+    {
+        rt.anchorMin = new Vector2(0f, 0.5f);
+        rt.anchorMax = new Vector2(0f, 0.5f);
+        rt.pivot = new Vector2(0f, 0.5f);
+        rt.anchoredPosition = new Vector2(xFromLeft, y);
+        rt.sizeDelta = size;
     }
 
     GameObject BuildConnectedStatusPanel(Transform parent)
@@ -924,7 +1651,7 @@ public class MainMenuUI : MonoBehaviour
 
         var panel = new GameObject("ConnectedStatus", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(parent, false);
-        panel.GetComponent<Image>().color = new Color(0.055f, 0.078f, 0.070f, 0.88f);
+        panel.GetComponent<Image>().color = BlackCommissionUiTheme.ConcreteBlack;
         var rt = panel.GetComponent<RectTransform>();
         rt.anchorMin = new Vector2(0f, 1f);
         rt.anchorMax = new Vector2(0f, 1f);
@@ -992,9 +1719,9 @@ public class MainMenuUI : MonoBehaviour
 
             // Host-only kick button.
             var kickBtn = CreateButton(panel.transform, $"Kick{i}", "✕", 13,
-                new Color(0.30f, 0.10f, 0.08f, 0.85f),
-                new Color(0.45f, 0.14f, 0.11f, 0.92f),
-                new Color(0.22f, 0.07f, 0.05f, 0.95f));
+                new Color(0.360f, 0.220f, 0.145f, 0.85f),
+                new Color(0.520f, 0.320f, 0.200f, 0.92f),
+                new Color(0.240f, 0.150f, 0.100f, 0.95f));
             var kRt = kickBtn.GetComponent<RectTransform>();
             kRt.anchorMin = new Vector2(1f, 1f);
             kRt.anchorMax = new Vector2(1f, 1f);
@@ -1063,6 +1790,61 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
+    void RefreshLobbyWaiting()
+    {
+        if (lobbyWaitingPanel == null || !lobbyWaitingPanel.activeSelf) return;
+        if (Time.unscaledTime < nextLobbyRefresh) return;
+        nextLobbyRefresh = Time.unscaledTime + 0.4f;
+
+        var players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        System.Array.Sort(players, (a, b) => a.OwnerClientId.CompareTo(b.OwnerClientId));
+
+        if (lobbyCountText != null)
+            lobbyCountText.text = MvpLocale.T("roster_title", players.Length);
+
+        if (lobbyCodeText != null)
+        {
+            if (!string.IsNullOrEmpty(hostJoinCode))
+                lobbyCodeText.text = hostJoinCode;
+            else if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+                lobbyCodeText.text = $"{MvpLocale.T("lobby_lan_only")} :{lastHostPort}";
+            else
+                lobbyCodeText.text = MvpLocale.T("lobby_lan_only");
+        }
+
+        if (lobbyHintText != null)
+            lobbyHintText.text = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost
+                ? MvpLocale.T("lobby_waiting_hint")
+                : MvpLocale.T("lobby_client_note");
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (i < players.Length)
+            {
+                PlayerController player = players[i];
+                var colors = PlayerCharacterPalette.Get(player.CharacterIndex.Value);
+                string name = player.DisplayName.Value.ToString();
+                if (string.IsNullOrEmpty(name))
+                    name = $"Agent {player.OwnerClientId}";
+                if (player.IsOwner)
+                    name += " " + MvpLocale.T("you_tag");
+
+                bool host = NetworkManager.Singleton != null &&
+                    player.OwnerClientId == NetworkManager.ServerClientId;
+                lobbySwatches[i].color = colors.vest;
+                lobbyNames[i].text = name;
+                lobbyRoles[i].text = host ? MvpLocale.T("host") : MvpLocale.T("client");
+                lobbyRoles[i].color = host ? DispatchGreen : HintText;
+            }
+            else
+            {
+                lobbySwatches[i].color = BlackCommissionUiTheme.MilitaryGreenDim;
+                lobbyNames[i].text = MvpLocale.T("lobby_empty_slot");
+                lobbyRoles[i].text = "";
+            }
+        }
+    }
+
     TMP_InputField CreateInputField(Transform parent, string name, string startValue,
         Vector2 anchoredPos, Vector2 size)
     {
@@ -1091,7 +1873,7 @@ public class MainMenuUI : MonoBehaviour
 
     // ─── Primitives ───────────────────────────────────────────────────────
 
-    void AddInsetFrame(Transform parent, string name, Color color, float inset, float thickness)
+    GameObject AddInsetFrame(Transform parent, string name, Color color, float inset, float thickness)
     {
         var root = new GameObject(name, typeof(RectTransform));
         root.transform.SetParent(parent, false);
@@ -1109,9 +1891,10 @@ public class MainMenuUI : MonoBehaviour
             new Vector2(0f, 0.5f), new Vector2(0f, 0f), new Vector2(thickness, 0f));
         AddFrameEdge(root.transform, "Right", color, new Vector2(1f, 0f), new Vector2(1f, 1f),
             new Vector2(1f, 0.5f), new Vector2(0f, 0f), new Vector2(thickness, 0f));
+        return root;
     }
 
-    void AddFrameEdge(Transform parent, string name, Color color, Vector2 anchorMin,
+    GameObject AddFrameEdge(Transform parent, string name, Color color, Vector2 anchorMin,
         Vector2 anchorMax, Vector2 pivot, Vector2 anchoredPos, Vector2 sizeDelta)
     {
         var edge = new GameObject(name, typeof(RectTransform), typeof(Image));
@@ -1125,6 +1908,7 @@ public class MainMenuUI : MonoBehaviour
         rt.pivot = pivot;
         rt.anchoredPosition = anchoredPos;
         rt.sizeDelta = sizeDelta;
+        return edge;
     }
 
     GameObject CreatePanel(Transform parent, string name, Vector2 size)
@@ -1210,7 +1994,7 @@ public class MainMenuUI : MonoBehaviour
         cb.disabledColor = new Color(0.4f, 0.4f, 0.4f, 1f);
         btn.colors = cb;
 
-        var labelText = AddText(go.transform, "Label", label, fontSize, Color.white, TextAlignmentOptions.Center);
+        var labelText = AddText(go.transform, "Label", label, fontSize, BlackCommissionUiTheme.Text, TextAlignmentOptions.Center);
         var labelRt = labelText.rectTransform;
         labelRt.anchorMin = Vector2.zero;
         labelRt.anchorMax = Vector2.one;
@@ -1219,6 +2003,37 @@ public class MainMenuUI : MonoBehaviour
         labelText.raycastTarget = false;
 
         return btn;
+    }
+
+    void EnsureMenuAudio()
+    {
+        if (menuAudioSource == null)
+        {
+            menuAudioSource = gameObject.GetComponent<AudioSource>();
+            if (menuAudioSource == null)
+                menuAudioSource = gameObject.AddComponent<AudioSource>();
+            menuAudioSource.playOnAwake = false;
+            menuAudioSource.loop = false;
+            menuAudioSource.spatialBlend = 0f;
+            menuAudioSource.volume = 0.45f;
+        }
+
+        menuHoverClip ??= SynthAudio.Tone("menu_hover_slide", 920f, 0.045f, 0.12f, SynthAudio.WaveShape.Square);
+        menuSelectClip ??= SynthAudio.Tone("menu_select_press", 520f, 0.08f, 0.16f, SynthAudio.WaveShape.Saw);
+    }
+
+    void PlayMenuHover()
+    {
+        EnsureMenuAudio();
+        menuAudioSource.pitch = Random.Range(0.96f, 1.04f);
+        menuAudioSource.PlayOneShot(menuHoverClip, 0.55f);
+    }
+
+    void PlayMenuSelect()
+    {
+        EnsureMenuAudio();
+        menuAudioSource.pitch = 0.92f;
+        menuAudioSource.PlayOneShot(menuSelectClip, 0.70f);
     }
 
     TMP_Text AddText(Transform parent, string name, string body, int fontSize,
@@ -1249,8 +2064,11 @@ public class MainMenuUI : MonoBehaviour
         continueBtn.onClick.AddListener(StartHost);
         newOfficeBtn.onClick.AddListener(StartHost);
         joinBtn.onClick.AddListener(() => SetState(MenuState.JoinInput));
-        settingsBtn.onClick.AddListener(() => SettingsOverlay.Toggle());
-        quitBtn.onClick.AddListener(QuitGame);
+        if (recordsBtn != null)
+            recordsBtn.onClick.AddListener(() => SetStatus("公司档案暂未归档。"));
+        settingsBtn.onClick.AddListener(ShowSettingsPanel);
+        if (quitBtn != null)
+            quitBtn.onClick.AddListener(ShowQuitConfirm);
         directBtn.onClick.AddListener(ToggleDirectConnect);
         joinSubmitBtn.onClick.AddListener(StartJoin);
         joinCancelBtn.onClick.AddListener(() =>
@@ -1259,9 +2077,13 @@ public class MainMenuUI : MonoBehaviour
             if (joinCodeInput != null) joinCodeInput.text = "";
             SetState(MenuState.Main);
         });
-        settingsCloseBtn.onClick.AddListener(() => settingsPanel.SetActive(false));
+        settingsCloseBtn.onClick.AddListener(HideSettingsPanel);
+        settingsQuitBtn.onClick.AddListener(ShowQuitConfirm);
         directCloseBtn.onClick.AddListener(() => directConnectPanel.SetActive(false));
         hostCodeHideBtn.onClick.AddListener(() => hostCodePanel.SetActive(false));
+        lobbyEnterBtn.onClick.AddListener(DismissLobbyWaiting);
+        quitConfirmYesBtn.onClick.AddListener(QuitGame);
+        quitConfirmNoBtn.onClick.AddListener(HideQuitConfirm);
 
         if (joinCodeInput != null)
             joinCodeInput.onValueChanged.AddListener(v =>
@@ -1385,6 +2207,137 @@ public class MainMenuUI : MonoBehaviour
         statusMessageUntil = Time.unscaledTime + 5f;
     }
 
+    void HandleKeyboardShortcuts()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null) return;
+
+        if (keyboard.escapeKey.wasPressedThisFrame)
+        {
+            if (quitConfirmPanel != null && quitConfirmPanel.activeSelf)
+            {
+                HideQuitConfirm();
+                return;
+            }
+
+            if (settingsPanel != null && settingsPanel.activeSelf)
+            {
+                HideSettingsPanel();
+                return;
+            }
+
+            if (directConnectPanel != null && directConnectPanel.activeSelf)
+            {
+                directConnectPanel.SetActive(false);
+                return;
+            }
+
+            if (state == MenuState.JoinInput)
+            {
+                SetState(MenuState.Main);
+                return;
+            }
+        }
+
+        bool enterPressed = keyboard.enterKey.wasPressedThisFrame ||
+            keyboard.numpadEnterKey.wasPressedThisFrame;
+        if (!enterPressed) return;
+
+        if (quitConfirmPanel != null && quitConfirmPanel.activeSelf)
+        {
+            QuitGame();
+            return;
+        }
+
+        if (lobbyWaitingPanel != null && lobbyWaitingPanel.activeSelf)
+        {
+            DismissLobbyWaiting();
+            return;
+        }
+
+        if (state == MenuState.JoinInput && joinPanel != null && joinPanel.activeSelf)
+        {
+            StartJoin();
+            return;
+        }
+
+        bool menuReady = state == MenuState.Main &&
+            mainPanel != null && mainPanel.activeSelf &&
+            settingsPanel != null && !settingsPanel.activeSelf &&
+            directConnectPanel != null && !directConnectPanel.activeSelf &&
+            NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening;
+        if (menuReady)
+            StartHost();
+    }
+
+    void ShowQuitConfirm()
+    {
+        if (quitConfirmPanel == null) return;
+        if (directConnectPanel != null) directConnectPanel.SetActive(false);
+        quitConfirmPanel.SetActive(true);
+        EventSystem.current?.SetSelectedGameObject(quitConfirmNoBtn != null ? quitConfirmNoBtn.gameObject : null);
+    }
+
+    void HideQuitConfirm()
+    {
+        if (quitConfirmPanel == null) return;
+        quitConfirmPanel.SetActive(false);
+        EventSystem.current?.SetSelectedGameObject(null);
+    }
+
+    void ShowSettingsPanel()
+    {
+        if (settingsPanel == null) return;
+        if (directConnectPanel != null) directConnectPanel.SetActive(false);
+        if (quitConfirmPanel != null) quitConfirmPanel.SetActive(false);
+        settingsPanel.SetActive(true);
+        EventSystem.current?.SetSelectedGameObject(settingsCloseBtn != null ? settingsCloseBtn.gameObject : null);
+    }
+
+    void HideSettingsPanel()
+    {
+        if (settingsPanel == null) return;
+        settingsPanel.SetActive(false);
+        if (quitConfirmPanel != null) quitConfirmPanel.SetActive(false);
+        EventSystem.current?.SetSelectedGameObject(null);
+    }
+
+    void DismissLobbyWaiting()
+    {
+        lobbyWaitingDismissed = true;
+        if (lobbyWaitingPanel != null)
+            lobbyWaitingPanel.SetActive(false);
+        if (connectedStatusPanel != null)
+            connectedStatusPanel.SetActive(true);
+        IsGameplayInputBlockedByMenu = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void UpdateGameplayInputBlock()
+    {
+        bool inHq = SceneManager.GetActiveScene().name == "HQ";
+        bool blocked = inHq && lobbyWaitingPanel != null && lobbyWaitingPanel.activeSelf;
+        IsGameplayInputBlockedByMenu = blocked;
+
+        if (blocked)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+    }
+
+    void UpdateMenuVisibilityFlag()
+    {
+        IsMenuVisible =
+            (backgroundImage != null && backgroundImage.gameObject.activeSelf) ||
+            (mainPanel != null && mainPanel.activeSelf) ||
+            (joinPanel != null && joinPanel.activeSelf) ||
+            (connectingPanel != null && connectingPanel.activeSelf) ||
+            (quitConfirmPanel != null && quitConfirmPanel.activeSelf) ||
+            (lobbyWaitingPanel != null && lobbyWaitingPanel.activeSelf);
+    }
+
     void UpdateStatusVisibility()
     {
         if (statusText == null) return;
@@ -1393,14 +2346,26 @@ public class MainMenuUI : MonoBehaviour
         // The dispatch card already shows the create_hint as a permanent caption,
         // so don't echo it here — that was causing the same line to render twice.
         statusText.text = live ? statusMessage : "";
-        statusText.color = live ? new Color(0.96f, 0.42f, 0.34f) : HintText;
+        statusText.color = live ? BlackCommissionUiTheme.RustWarning : HintText;
     }
 
     void UpdateConnectedVisibility()
     {
         bool listening = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+        if (listening && !wasListening)
+        {
+            lobbyWaitingDismissed = false;
+            nextLobbyRefresh = 0f;
+        }
+        else if (!listening && wasListening)
+        {
+            lobbyWaitingDismissed = false;
+            if (lobbyWaitingPanel != null)
+                lobbyWaitingPanel.SetActive(false);
+        }
+        wasListening = listening;
 
-        // Once connected, hide every menu panel except a small corner status badge.
+        // Once connected, show the waiting room first; after dismissal, keep a small corner status badge.
         if (listening)
         {
             // The full-screen menu art lives on the canvas root (not inside mainPanel),
@@ -1413,13 +2378,17 @@ public class MainMenuUI : MonoBehaviour
             if (connectingPanel.activeSelf) connectingPanel.SetActive(false);
             if (settingsPanel.activeSelf) settingsPanel.SetActive(false);
             if (directConnectPanel.activeSelf) directConnectPanel.SetActive(false);
-            if (state != MenuState.HostWaiting && hostCodePanel.activeSelf) hostCodePanel.SetActive(false);
+            if (quitConfirmPanel != null && quitConfirmPanel.activeSelf) quitConfirmPanel.SetActive(false);
+            if (hostCodePanel.activeSelf) hostCodePanel.SetActive(false);
             if (versionText != null && versionText.gameObject.activeSelf) versionText.gameObject.SetActive(false);
 
-            connectedStatusPanel.SetActive(true);
+            bool showWaiting = !lobbyWaitingDismissed;
+            lobbyWaitingPanel.SetActive(showWaiting);
+            connectedStatusPanel.SetActive(!showWaiting);
             RefreshRoster();
+            RefreshLobbyWaiting();
 
-            if (state == MenuState.HostWaiting && !string.IsNullOrEmpty(hostJoinCode))
+            if (!showWaiting && state == MenuState.HostWaiting && !string.IsNullOrEmpty(hostJoinCode))
             {
                 hostCodePanel.SetActive(true);
                 if (hostCodeText != null) hostCodeText.text = hostJoinCode;
@@ -1432,6 +2401,7 @@ public class MainMenuUI : MonoBehaviour
             if (!screenVeil.activeSelf) screenVeil.SetActive(true);
             if (versionText != null && !usingBakedMenuArt && !versionText.gameObject.activeSelf)
                 versionText.gameObject.SetActive(true);
+            lobbyWaitingPanel.SetActive(false);
             connectedStatusPanel.SetActive(false);
             if (state == MenuState.Main && !mainPanel.activeSelf) mainPanel.SetActive(true);
         }
@@ -1526,5 +2496,10 @@ public class MainMenuUI : MonoBehaviour
     void RebuildAllLabels()
     {
         if (subtitleText != null) subtitleText.text = MvpLocale.T("subtitle");
+        if (lobbyTitleText != null) lobbyTitleText.text = MvpLocale.T("lobby_waiting_title");
+        if (lobbyRoomCodeLabelText != null) lobbyRoomCodeLabelText.text = MvpLocale.T("lobby_room_code");
+        if (lobbyHintText != null) lobbyHintText.text = MvpLocale.T("lobby_waiting_hint");
+        if (lobbyEnterLabel != null) lobbyEnterLabel.text = MvpLocale.T("lobby_enter_office") + "   ›";
+        nextLobbyRefresh = 0f;
     }
 }

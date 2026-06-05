@@ -23,7 +23,7 @@ public static class VanCabin
     // VanTransitOverlay then AUTO-FITS it from its measured bounds (no guessed transform) so
     // it lands centred on the bay with its floor at the seat height. ModelEuler is the only
     // manual hint — set it if the mesh imports facing the wrong way (bounds can't infer facing).
-    public static bool UseModeledInterior = false;
+    public static bool UseModeledInterior = true;
     public const string InteriorResourcePath = "GeneratedArt/ASV4_VanTransitInterior";
     public static readonly Vector3 ModelEuler = Vector3.zero;
 

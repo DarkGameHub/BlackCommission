@@ -24,6 +24,11 @@ public class VanTransitOverlay : MonoBehaviour
     string locationName = "";
     int boardedCount;
 
+    // Transit progress: set when the drive begins so the HUD can show a moving "抵达进度" bar
+    // that matches the dispatch duration the OfficeComputer / mission manager is counting down.
+    float transitDuration;
+    float transitStartTime;
+
     GUIStyle headingStyle;
     GUIStyle smallStyle;
 
@@ -57,7 +62,7 @@ public class VanTransitOverlay : MonoBehaviour
         EnsureInstance();
         current.taskTitle = Resolve(title, "commission");
         current.locationName = Resolve(location, "mission_location");
-        current.BeginDrive();
+        current.BeginDrive(durationSeconds);
     }
 
     public static void ShowReturn(string title, string location, float durationSeconds)
@@ -65,12 +70,12 @@ public class VanTransitOverlay : MonoBehaviour
         EnsureInstance();
         current.taskTitle = Resolve(title, "office");
         current.locationName = Resolve(location, "office");
-        current.BeginDrive();
+        current.BeginDrive(durationSeconds);
     }
 
     public static void StartDeparture(float transitSeconds)
     {
-        if (current != null) current.BeginDrive();
+        if (current != null) current.BeginDrive(transitSeconds);
     }
 
     public static void NotifyPlayerBoarded(int totalBoarded)
@@ -166,15 +171,24 @@ public class VanTransitOverlay : MonoBehaviour
         return true;
     }
 
-    void BeginDrive()
+    void BeginDrive(float durationSeconds = 0f)
     {
         ShowCabin();
         if (phase != Phase.Transit)
         {
             phase = Phase.Transit;
+            transitDuration = Mathf.Max(0f, durationSeconds);
+            transitStartTime = Time.unscaledTime;
             AudioManager.Instance?.PlayEngineStart(Vector3.zero);
             AudioManager.Instance?.PlayEngineIdle();
         }
+    }
+
+    // 0→1 over the dispatch duration; clamped so a missing/zero duration just reads "arriving".
+    float TransitProgress01()
+    {
+        if (transitDuration <= 0f) return 0f;
+        return Mathf.Clamp01((Time.unscaledTime - transitStartTime) / transitDuration);
     }
 
     void TeardownCabin()
@@ -188,6 +202,8 @@ public class VanTransitOverlay : MonoBehaviour
         cabinShown = false;
         phase = Phase.None;
         boardedCount = 0;
+        transitDuration = 0f;
+        transitStartTime = 0f;
     }
 
     // ─── Depart input (any seated player may request departure) ───
@@ -245,6 +261,10 @@ public class VanTransitOverlay : MonoBehaviour
 
         float w = 520f;
         var rect = new Rect((Screen.width - w) * 0.5f, 24f, w, 60f);
+        GUI.DrawTexture(new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, rect.height + 18f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
+        GUI.DrawTexture(new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, 2f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreenDim));
 
         string header = string.IsNullOrEmpty(taskTitle)
             ? MvpLocale.T("van_cabin")
@@ -253,7 +273,7 @@ public class VanTransitOverlay : MonoBehaviour
 
         if (phase == Phase.Transit)
         {
-            GUI.Label(new Rect(rect.x, rect.y + 30f, w, 22f), MvpLocale.T("dispatch_outbound"), smallStyle);
+            DrawTransitProgress(rect, w);
         }
         else if (seated)
         {
@@ -272,6 +292,34 @@ public class VanTransitOverlay : MonoBehaviour
         }
     }
 
+    // En-route HUD: a cycling "派遣途中…" line plus a fill bar that tracks the dispatch
+    // countdown (or a pulsing indeterminate sweep if no duration was supplied).
+    void DrawTransitProgress(Rect rect, float w)
+    {
+        float progress = TransitProgress01();
+
+        int dots = 1 + (int)(Time.unscaledTime * 2f) % 3;
+        string line = MvpLocale.T("dispatch_outbound") + new string('.', dots);
+        if (transitDuration > 0f)
+        {
+            int eta = Mathf.Max(0, Mathf.CeilToInt(transitDuration * (1f - progress)));
+            line += $"    {Mathf.RoundToInt(progress * 100f)}%    ~{eta}s";
+        }
+        GUI.Label(new Rect(rect.x, rect.y + 24f, w, 20f), line, smallStyle);
+
+        float barY = rect.y + 46f;
+        var bg = new Rect(rect.x, barY, w, 9f);
+        GUI.DrawTexture(bg, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.ConcreteBlack));
+        GUI.DrawTexture(new Rect(bg.x, bg.y, bg.width, 1f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreenDim));
+
+        float fillW = transitDuration > 0f
+            ? w * progress
+            : w * (0.42f + 0.30f * Mathf.Sin(Time.unscaledTime * 3f));   // indeterminate sweep
+        GUI.DrawTexture(new Rect(bg.x, bg.y, Mathf.Clamp(fillW, 2f, w), 9f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.CrtGreen));
+    }
+
     void EnsureStyles()
     {
         if (headingStyle != null) return;
@@ -282,13 +330,13 @@ public class VanTransitOverlay : MonoBehaviour
             fontSize = 18,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.92f, 0.88f, 0.72f) }
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }
         };
         smallStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 13,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.56f, 0.92f, 0.72f) }
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen }
         };
         MvpFontProvider.ApplyToStyle(headingStyle);
         MvpFontProvider.ApplyToStyle(smallStyle);
@@ -308,11 +356,13 @@ public class VanTransitOverlay : MonoBehaviour
     {
         var root = new GameObject("MVP_VanTransitInterior_Procedural");
 
-        Material wallMat = MakeFlatMaterial(new Color(0.184f, 0.310f, 0.294f));
-        Material metalMat = MakeFlatMaterial(new Color(0.067f, 0.078f, 0.075f));
-        Material benchMat = MakeFlatMaterial(new Color(0.125f, 0.208f, 0.196f));
+        // Textured (procedurally grimed) materials for the big surfaces so the cabin reads as
+        // worn painted metal instead of flat plastic cubes; small props stay flat-shaded.
+        Material wallMat = MakeGrimeMaterial(BlackCommissionUiTheme.MilitaryGreen, 0.22f, 5f);
+        Material metalMat = MakeGrimeMaterial(BlackCommissionUiTheme.ConcretePanel, 0.30f, 7f);
+        Material benchMat = MakeGrimeMaterial(BlackCommissionUiTheme.MilitaryGreenDark, 0.26f, 6f);
         Material blackMat = MakeFlatMaterial(new Color(0.035f, 0.04f, 0.037f));
-        Material amberMat = MakeFlatMaterial(new Color(0.851f, 0.604f, 0.192f));
+        Material tungstenMat = MakeFlatMaterial(BlackCommissionUiTheme.OldPaper);
 
         CreateInteriorBox("Floor", root.transform, new Vector3(0.45f, 0.36f, 0f), new Vector3(2f, 0.02f, 1.36f), metalMat);
         CreateInteriorBox("Ceiling", root.transform, new Vector3(0.45f, 1.44f, 0f), new Vector3(2f, 0.02f, 1.36f), metalMat);
@@ -327,13 +377,13 @@ public class VanTransitOverlay : MonoBehaviour
         CreateInteriorBox("BenchR", root.transform, new Vector3(0.50f, 0.48f, 0.52f), new Vector3(1.5f, 0.04f, 0.18f), benchMat);
         CreateInteriorBox("BenchBackR", root.transform, new Vector3(0.50f, 0.80f, 0.64f), new Vector3(1.5f, 0.30f, 0.04f), benchMat);
 
-        CreateInteriorBox("Light", root.transform, new Vector3(0.45f, 1.39f, 0f), new Vector3(0.72f, 0.012f, 0.025f), amberMat);
+        CreateInteriorBox("Light", root.transform, new Vector3(0.45f, 1.39f, 0f), new Vector3(0.72f, 0.012f, 0.025f), tungstenMat);
 
-        // Municipal Debt Noir detail layer
-        Material paperMat = MakeFlatMaterial(new Color(0.839f, 0.784f, 0.608f));
-        Material debtMat = MakeFlatMaterial(new Color(0.761f, 0.227f, 0.169f));
-        Material greenMat = MakeFlatMaterial(new Color(0.482f, 0.812f, 0.541f));
-        Material grimeMat = MakeFlatMaterial(new Color(0.090f, 0.141f, 0.133f));
+        // Industrial office detail layer.
+        Material paperMat = MakeFlatMaterial(BlackCommissionUiTheme.OldPaper);
+        Material debtMat = MakeFlatMaterial(BlackCommissionUiTheme.Rust);
+        Material greenMat = MakeFlatMaterial(BlackCommissionUiTheme.CrtGreen);
+        Material grimeMat = MakeFlatMaterial(BlackCommissionUiTheme.MilitaryGreenDark);
 
         CreateInteriorBox("SafetyNotice", root.transform,
             new Vector3(0.35f, 0.95f, -0.66f), new Vector3(0.32f, 0.22f, 0.01f), paperMat);
@@ -349,7 +399,7 @@ public class VanTransitOverlay : MonoBehaviour
             new Vector3(0.85f, 0.372f, 0.32f), new Vector3(0.22f, 0.005f, 0.18f), grimeMat);
 
         // Grab rail + poles down the aisle — sells the "standing transit van" read.
-        Material railMat = MakeFlatMaterial(new Color(0.788f, 0.761f, 0.667f)); // dirty bone
+        Material railMat = MakeFlatMaterial(BlackCommissionUiTheme.Text);
         CreateInteriorBox("GrabRail", root.transform,
             new Vector3(0.45f, 1.33f, 0f), new Vector3(1.85f, 0.03f, 0.03f), railMat);
         CreateInteriorBox("GrabPoleFront", root.transform,
@@ -377,6 +427,54 @@ public class VanTransitOverlay : MonoBehaviour
         var mat = new Material(Shader.Find("Universal Render Pipeline/Simple Lit") ?? Shader.Find("Standard"));
         mat.color = color;
         return mat;
+    }
+
+    // Painted-metal look: a Perlin-noise grime/streak texture tinted toward `color`. `grime`
+    // is how dark the dirt gets (0..1) and `tiling` how often it repeats across a surface.
+    static Material MakeGrimeMaterial(Color color, float grime, float tiling)
+    {
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Simple Lit") ?? Shader.Find("Standard"));
+        Texture2D tex = MakeGrimeTexture(color, grime);
+
+        if (mat.HasProperty("_BaseMap"))
+        {
+            mat.SetTexture("_BaseMap", tex);
+            mat.SetTextureScale("_BaseMap", new Vector2(tiling, tiling));
+            mat.SetColor("_BaseColor", Color.white);
+        }
+        else
+        {
+            mat.mainTexture = tex;
+            mat.mainTextureScale = new Vector2(tiling, tiling);
+        }
+        if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.12f);
+        mat.color = Color.white;
+        return mat;
+    }
+
+    static Texture2D MakeGrimeTexture(Color baseColor, float grime)
+    {
+        const int size = 64;
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Repeat };
+        // Two octaves of value noise + faint vertical streaking for a used, dripped-on feel.
+        float seed = Random.value * 100f;
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float u = (float)x / size, v = (float)y / size;
+                float n = Mathf.PerlinNoise(seed + u * 6f, seed + v * 6f) * 0.65f
+                        + Mathf.PerlinNoise(seed + u * 18f, seed + v * 18f) * 0.35f;
+                float streak = Mathf.PerlinNoise(seed + u * 3f, v * 22f) * 0.5f;
+                float dirt = Mathf.Clamp01((n * 0.7f + streak * 0.3f));
+                float shade = Mathf.Lerp(1f - grime, 1f, dirt);
+                Color c = baseColor * shade;
+                c.a = 1f;
+                tex.SetPixel(x, y, c);
+            }
+        }
+        tex.Apply(true);
+        return tex;
     }
 
     void AddTransitInteriorLights()

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d1a7e60ef846d785533fd019ae4600, type: 3}
+  m_Name: SnowLotus_01
+  m_EditorClassIdentifier: Assembly-CSharp::OfficeTaskDefinition
+  taskId: snow_lotus_01
+  title: "\u767D\u68D8\u96EA\u83B2"
+  category: 0
+  client: "\u65E7\u7597\u517B\u7AD9\u4EE3\u7406\u4EBA"
+  description: "\u524D\u5F80\u5C01\u5C71\u96EA\u7EBF\uFF0C\u5728\u5E9F\u5F03\u68C0\u67E5\u7AD9\u540E\u7684\u51B0\u88C2\u8C37\u91C7\u56DE\u4E00\u682A\u767D\u68D8\u96EA\u83B2\u3002\u76EE\u6807\u5E26\u56DE\u59D4\u6258\u8F66\u624D\u7B97\u5B8C\u6210\u3002"
+  locationName: "\u5C01\u5C71\u96EA\u7EBF"
+  sceneName: Snow_Lotus_01
+  recommendedPlayersMin: 1
+  recommendedPlayersMax: 4
+  requiredOfficeLevel: 1
+  minimumReputation: -100
+  missionStartClockHour: 17.5
+  contractWindowGameHours: 10
+  realSecondsPerGameHour: 60
+  overtimeMoneyPenaltyPerGameHour: 30
+  overtimeReputationPenaltyBlockGameHours: 2
+  overtimeReputationPenaltyPerBlock: 1
+  moneyReward: 420
+  reputationReward: 8
+  experienceReward: 120
+  failureConsolationMoney: 20
+  failureReputationPenalty: -2
+  failureExperience: 0

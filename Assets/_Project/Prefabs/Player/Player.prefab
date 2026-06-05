@@ -115,6 +115,7 @@ GameObject:
   - component: {fileID: 4687816511022707713}
   - component: {fileID: 3729408567247584862}
   - component: {fileID: 6386157325178312606}
+  - component: {fileID: 5620728701690079600}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -215,8 +216,8 @@ CharacterController:
   serializedVersion: 3
   m_Height: 2
   m_Radius: 0.4
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
+  m_SlopeLimit: 75
+  m_StepOffset: 0.5
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
@@ -232,7 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3446074981
+  GlobalObjectIdHash: 3889635061
   InScenePlacedSourceGlobalObjectIdHash: 0
   DeferredDespawnTick: 0
   Ownership: 1
@@ -320,6 +321,9 @@ MonoBehaviour:
   cameraRoot: {fileID: 5193395001453616976}
   crouchCameraDrop: 0.55
   cameraCrouchLerpSpeed: 12
+  swimSpeed: 3.2
+  swimAcceleration: 7
+  swimBuoyancy: 0.4
   IsCarrying:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -335,12 +339,94 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
+  DisplayName:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue:
+      utf8LengthInBytes: 0
+      bytes:
+        offset0000:
+          byte0000: 0
+          byte0001: 0
+          byte0002: 0
+          byte0003: 0
+          byte0004: 0
+          byte0005: 0
+          byte0006: 0
+          byte0007: 0
+          byte0008: 0
+          byte0009: 0
+          byte0010: 0
+          byte0011: 0
+          byte0012: 0
+          byte0013: 0
+          byte0014: 0
+          byte0015: 0
+        offset0016:
+          byte0000: 0
+          byte0001: 0
+          byte0002: 0
+          byte0003: 0
+          byte0004: 0
+          byte0005: 0
+          byte0006: 0
+          byte0007: 0
+          byte0008: 0
+          byte0009: 0
+          byte0010: 0
+          byte0011: 0
+          byte0012: 0
+          byte0013: 0
+          byte0014: 0
+          byte0015: 0
+        offset0032:
+          byte0000: 0
+          byte0001: 0
+          byte0002: 0
+          byte0003: 0
+          byte0004: 0
+          byte0005: 0
+          byte0006: 0
+          byte0007: 0
+          byte0008: 0
+          byte0009: 0
+          byte0010: 0
+          byte0011: 0
+          byte0012: 0
+          byte0013: 0
+          byte0014: 0
+          byte0015: 0
+        byte0048: 0
+        byte0049: 0
+        byte0050: 0
+        byte0051: 0
+        byte0052: 0
+        byte0053: 0
+        byte0054: 0
+        byte0055: 0
+        byte0056: 0
+        byte0057: 0
+        byte0058: 0
+        byte0059: 0
+        byte0060: 0
+        byte0061: 0
   GestureId:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
   NetworkMoveSpeed:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  SeatIndex:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: -1
+  IsSubmerged:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
@@ -377,7 +463,6 @@ MonoBehaviour:
   interactRange: 2.5
   aimAssistRadius: 0.12
   nearbyInteractRadius: 1.75
-  officeComputerFallbackRadius: 3.6
 --- !u!114 &8417771090113601477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -392,7 +477,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   ShowTopMostFoldoutHeaderGroup: 1
   maxHP: 100
-  electrocutionDamageRate: 15
   reviveDuration: 4
   reviveHP: 50
   CurrentHP:
@@ -456,9 +540,6 @@ MonoBehaviour:
   strongDrainCost: 15
   strongLightDuration: 0.5
   strongLightCooldown: 10
-  stunRange: 8
-  stunAngle: 30
-  robotStunDuration: 3
   IsOn:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -478,6 +559,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFirstPersonRig
   ShowTopMostFoldoutHeaderGroup: 1
   rigLocalPosition: {x: 0, y: -0.34, z: 0.46}
+--- !u!114 &5620728701690079600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476353687523599177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c7ca12ea614470c8d1430fac88a1599, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerOxygen
+  ShowTopMostFoldoutHeaderGroup: 1
+  maxOxygen: 100
+  drainPerSecond: 12
+  regenPerSecond: 28
+  drownDamagePerSecond: 12
+  Oxygen:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 100
 --- !u!1 &5764614823530907345
 GameObject:
   m_ObjectHideFlags: 0

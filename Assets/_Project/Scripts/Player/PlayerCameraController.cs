@@ -69,6 +69,7 @@ public class PlayerCameraController : NetworkBehaviour
             cam.gameObject.SetActive(true);
             cam.enabled = true;
             localCamera = cam;
+            MakeLocalCameraPrimary();
             ApplyFieldOfView();
         }
         if (listener != null)
@@ -108,6 +109,7 @@ public class PlayerCameraController : NetworkBehaviour
     {
         if (!IsOwner) return;
         if (inputActions == null) return;
+        EnsureLocalCameraActive();
         ApplyFieldOfView();
 
         PlayerHealth health = GetComponentInParent<PlayerHealth>();
@@ -121,7 +123,8 @@ public class PlayerCameraController : NetworkBehaviour
             ExitSpectator();
 
         // Look stays active while seated in the van (you can turn your head); only a
-        // blocking UI panel (settings / locker) fully stops the camera.
+        // blocking UI panel (settings / locker / lobby waiting room) fully stops the camera.
+        if (MainMenuUI.IsGameplayInputBlockedByMenu) return;
         if (MvpHud.IsBlockingPanelOpen) return;
         if (Cursor.lockState != CursorLockMode.Locked)
         {
@@ -220,5 +223,41 @@ public class PlayerCameraController : NetworkBehaviour
             localCamera = GetComponentInChildren<Camera>(true);
         if (localCamera != null)
             localCamera.fieldOfView = FieldOfView;
+    }
+
+    void EnsureLocalCameraActive()
+    {
+        if (localCamera == null)
+            localCamera = GetComponentInChildren<Camera>(true);
+        if (localCamera == null) return;
+
+        if (!localCamera.gameObject.activeSelf)
+            localCamera.gameObject.SetActive(true);
+        if (!localCamera.enabled)
+            localCamera.enabled = true;
+
+        MakeLocalCameraPrimary();
+    }
+
+    void MakeLocalCameraPrimary()
+    {
+        if (localCamera == null) return;
+
+        Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
+        foreach (var cam in cameras)
+        {
+            if (cam == null || cam == localCamera) continue;
+            if (cam.transform.root == transform.root) continue;
+            cam.enabled = false;
+
+            var listener = cam.GetComponent<AudioListener>();
+            if (listener != null) listener.enabled = false;
+
+            if (cam.CompareTag("MainCamera"))
+                cam.tag = "Untagged";
+        }
+
+        localCamera.tag = "MainCamera";
+        localCamera.depth = 10f;
     }
 }

@@ -3,20 +3,26 @@ using UnityEngine;
 
 public class HQSpawnManager : MonoBehaviour
 {
+    const int MaxTeleportAttempts = 16;
+    const float TeleportAttemptInterval = 0.25f;
+
     [SerializeField] Transform spawnPoint;
+    int teleportAttemptsRemaining;
 
     void Start()
     {
         if (NetworkManager.Singleton == null) return;
 
         if (NetworkManager.Singleton.IsListening)
-            Invoke(nameof(TeleportLocalPlayer), 0.2f);
+            BeginTeleportAttempts(0.15f);
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
     }
 
     void OnDestroy()
     {
+        CancelInvoke(nameof(TeleportLocalPlayerAttempt));
+
         if (NetworkManager.Singleton != null)
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
     }
@@ -24,12 +30,25 @@ public class HQSpawnManager : MonoBehaviour
     void OnClientConnected(ulong clientId)
     {
         if (NetworkManager.Singleton == null || clientId != NetworkManager.Singleton.LocalClientId) return;
-        Invoke(nameof(TeleportLocalPlayer), 0.3f);
+        BeginTeleportAttempts(0.3f);
     }
 
-    void TeleportLocalPlayer()
+    void BeginTeleportAttempts(float initialDelay)
     {
-        if (spawnPoint == null) return;
+        teleportAttemptsRemaining = MaxTeleportAttempts;
+        CancelInvoke(nameof(TeleportLocalPlayerAttempt));
+        InvokeRepeating(nameof(TeleportLocalPlayerAttempt), initialDelay, TeleportAttemptInterval);
+    }
+
+    void TeleportLocalPlayerAttempt()
+    {
+        if (TeleportLocalPlayer() || --teleportAttemptsRemaining <= 0)
+            CancelInvoke(nameof(TeleportLocalPlayerAttempt));
+    }
+
+    bool TeleportLocalPlayer()
+    {
+        if (spawnPoint == null) return true;
 
         var players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
         foreach (var player in players)
@@ -42,7 +61,10 @@ public class HQSpawnManager : MonoBehaviour
             player.RestoreControlAt(
                 spawnPoint.position + Vector3.right * (offsetIndex * 1.5f),
                 spawnPoint.rotation);
+            return true;
         }
+
+        return false;
     }
 
     int GetLocalSpawnOffsetIndex()

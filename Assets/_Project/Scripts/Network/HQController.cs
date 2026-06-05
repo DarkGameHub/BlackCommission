@@ -11,19 +11,21 @@ public class HQController : MonoBehaviour
     {
         if (labelStyle != null) return;
         panelBg = new Texture2D(1, 1);
-        panelBg.SetPixel(0, 0, new Color(0, 0, 0, 0.6f));
+        panelBg.SetPixel(0, 0, BlackCommissionUiTheme.ConcreteBlack);
         panelBg.Apply();
 
         labelStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 14,
-            normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
+            normal = { textColor = BlackCommissionUiTheme.Text }
         };
         headerStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 16, fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color(0.95f, 0.85f, 0.4f) }
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen }
         };
+        MvpFontProvider.ApplyToStyle(labelStyle);
+        MvpFontProvider.ApplyToStyle(headerStyle);
     }
 
     void OnGUI()

@@ -175,7 +175,7 @@ public class PlayerInteraction : NetworkBehaviour
         if (hintStyle == null)
         {
             hintBg = new Texture2D(1, 1);
-            hintBg.SetPixel(0, 0, new Color(0, 0, 0, 0.7f));
+            hintBg.SetPixel(0, 0, BlackCommissionUiTheme.ConcreteBlack);
             hintBg.Apply();
 
             hintStyle = new GUIStyle(GUI.skin.label)
@@ -183,7 +183,7 @@ public class PlayerInteraction : NetworkBehaviour
                 fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = new Color(0.56f, 0.92f, 0.72f), background = hintBg },
+                normal = { textColor = BlackCommissionUiTheme.CrtGreen, background = hintBg },
                 padding = new RectOffset(16, 16, 8, 8)
             };
             MvpFontProvider.ApplyToStyle(hintStyle);

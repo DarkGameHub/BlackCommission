@@ -14,7 +14,7 @@ public class SettingsOverlay : MonoBehaviour
 
     Vector2 scroll;
     bool stylesReady;
-    GUIStyle panelStyle, titleStyle, labelStyle, accentStyle;
+    GUIStyle panelStyle, titleStyle, labelStyle, accentStyle, buttonStyle;
     Texture2D panelTex;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -76,7 +76,7 @@ public class SettingsOverlay : MonoBehaviour
         stylesReady = true;
 
         panelTex = new Texture2D(1, 1);
-        panelTex.SetPixel(0, 0, new Color(0.03f, 0.035f, 0.04f, 0.92f));
+        panelTex.SetPixel(0, 0, BlackCommissionUiTheme.ConcreteBlack);
         panelTex.Apply();
 
         panelStyle = new GUIStyle(GUI.skin.box)
@@ -87,27 +87,30 @@ public class SettingsOverlay : MonoBehaviour
         titleStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 20, fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color(0.9f, 0.95f, 0.9f) }, wordWrap = true
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }, wordWrap = true
         };
         labelStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 15, normal = { textColor = new Color(0.86f, 0.88f, 0.84f) }, wordWrap = true
+            fontSize = 15, normal = { textColor = BlackCommissionUiTheme.Text }, wordWrap = true
         };
         accentStyle = new GUIStyle(labelStyle)
         {
-            fontStyle = FontStyle.Bold, normal = { textColor = new Color(0.56f, 0.92f, 0.72f) }
+            fontStyle = FontStyle.Bold, normal = { textColor = BlackCommissionUiTheme.CrtGreen }
         };
+        buttonStyle = BlackCommissionUiTheme.ButtonStyle(15);
 
         MvpFontProvider.ApplyToStyle(panelStyle);
         MvpFontProvider.ApplyToStyle(titleStyle);
         MvpFontProvider.ApplyToStyle(labelStyle);
         MvpFontProvider.ApplyToStyle(accentStyle);
+        MvpFontProvider.ApplyToStyle(buttonStyle);
     }
 
     void OnGUI()
     {
         if (!IsOpen) return;
         EnsureStyles();
+        BlackCommissionUiTheme.ApplyButtonSkin(buttonStyle);
 
         float width = Mathf.Clamp(Screen.width - 36f, 360f, 620f);
         float height = Mathf.Clamp(Screen.height - 80f, 420f, 680f);

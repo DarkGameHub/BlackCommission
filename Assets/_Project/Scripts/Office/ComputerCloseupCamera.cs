@@ -7,7 +7,16 @@ public class ComputerCloseupCamera : MonoBehaviour
     Camera closeupCamera;
     Camera disabledPlayerCamera;
     MonoBehaviour disabledCameraController;
-    Vector3 baseRotation;
+
+    // Entrance dolly: the camera starts at the player's head pose and leans in toward
+    // the screen, so opening the terminal feels like physically getting close to it.
+    const float LeanInDuration = 0.35f;
+    Vector3 startPos;
+    Quaternion startRot;
+    Vector3 targetPos;
+    Quaternion targetRot;
+    float leanInStartTime;
+    bool hasStartPose;
 
     public static bool IsActive => instance != null && instance.closeupCamera != null;
 
@@ -34,16 +43,26 @@ public class ComputerCloseupCamera : MonoBehaviour
     void SetupCloseup(Transform computerTransform)
     {
         TeardownCloseup();
+        CaptureStartPose();   // grab the player's head pose before the camera is disabled
         DisablePlayerCamera();
 
         Vector3 screenCenter = new Vector3(computerTransform.position.x, 1.085f, 1.704f);
-        Vector3 camPos = screenCenter + new Vector3(0f, 0.10f, -0.68f);
+        targetPos = screenCenter + new Vector3(0f, 0.10f, -0.68f);
 
         var camGo = new GameObject("CloseupCam");
         camGo.transform.SetParent(transform);
-        camGo.transform.position = camPos;
+        camGo.transform.position = targetPos;
         camGo.transform.LookAt(screenCenter);
-        baseRotation = camGo.transform.eulerAngles;
+        targetRot = camGo.transform.rotation;
+
+        // Start the camera back at the player's head (if we have it) and lean in toward
+        // the screen; otherwise just sit at the target pose with no animation.
+        if (hasStartPose)
+        {
+            camGo.transform.position = startPos;
+            camGo.transform.rotation = startRot;
+        }
+        leanInStartTime = Time.unscaledTime;
 
         closeupCamera = camGo.AddComponent<Camera>();
         closeupCamera.fieldOfView = 44f;
@@ -59,10 +78,37 @@ public class ComputerCloseupCamera : MonoBehaviour
     void Update()
     {
         if (closeupCamera == null) return;
+
+        // Ease from the captured head pose to the screen, then settle into idle sway.
+        float lean = hasStartPose
+            ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - leanInStartTime) / LeanInDuration))
+            : 1f;
+        Vector3 pos = Vector3.Lerp(startPos, targetPos, lean);
+        Quaternion rot = Quaternion.Slerp(startRot, targetRot, lean);
+
+        // Gentle breathing sway, faded in as the lean completes.
         float t = Time.unscaledTime;
-        float swayX = Mathf.Sin(t * 0.4f) * 0.12f;
-        float swayY = Mathf.Sin(t * 0.6f + 0.7f) * 0.06f;
-        closeupCamera.transform.eulerAngles = baseRotation + new Vector3(swayX, swayY, 0f);
+        float swayX = Mathf.Sin(t * 0.4f) * 0.12f * lean;
+        float swayY = Mathf.Sin(t * 0.6f + 0.7f) * 0.06f * lean;
+
+        closeupCamera.transform.position = pos;
+        closeupCamera.transform.rotation = rot * Quaternion.Euler(swayX, swayY, 0f);
+    }
+
+    void CaptureStartPose()
+    {
+        hasStartPose = false;
+        PlayerCameraController[] controllers = FindObjectsByType<PlayerCameraController>(FindObjectsSortMode.None);
+        foreach (var ctrl in controllers)
+        {
+            if (!ctrl.IsOwner) continue;
+            Camera cam = ctrl.GetComponentInChildren<Camera>();
+            if (cam == null) continue;
+            startPos = cam.transform.position;
+            startRot = cam.transform.rotation;
+            hasStartPose = true;
+            break;
+        }
     }
 
     void TeardownCloseup()

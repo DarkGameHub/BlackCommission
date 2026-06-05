@@ -25,8 +25,8 @@ public class PlayerController : NetworkBehaviour
     [SerializeField] float jumpGraceSeconds = 0.12f;
 
     [Header("Stamina")]
-    [SerializeField] float maxStamina = 100f;
-    [SerializeField] float staminaDrainRate = 20f;   // per second while sprinting
+    [SerializeField] float maxStamina = 120f;
+    [SerializeField] float staminaDrainRate = 15f;   // per second while sprinting
     [SerializeField] float staminaRegenRate = 10f;    // per second while not sprinting
 
     [Header("Camera")]
@@ -50,12 +50,13 @@ public class PlayerController : NetworkBehaviour
     bool isCrouching;
     bool isSprinting;
 
-    // Swim state — owner-local, fed by WaterVolume via SetWaterState().
+    // Swim state — owner-local, fed by mission water triggers via SetWaterState().
     bool inWaterTrigger;
     float waterSurfaceY = float.NegativeInfinity;
     bool isSubmerged;
 
     public float Stamina { get; private set; }
+    public float MaxStamina => maxStamina;
     public bool IsExhausted { get; private set; }
 
     // Synced over network for other players to read (animations, carry state, etc.)
@@ -324,7 +325,7 @@ public class PlayerController : NetworkBehaviour
             velocity = Vector3.zero;
             return;
         }
-        if (MvpHud.IsBlockingPanelOpen)
+        if (MvpHud.IsBlockingPanelOpen || MainMenuUI.IsGameplayInputBlockedByMenu)
         {
             isSprinting = false;
             velocity = Vector3.zero;
@@ -342,7 +343,7 @@ public class PlayerController : NetworkBehaviour
 
         UpdateGestureInput();
 
-        if (transform.position.y < -6f)
+        if (transform.position.y < -100f)
         {
             RecoverFromFall();
             return;
@@ -436,7 +437,7 @@ public class PlayerController : NetworkBehaviour
             NetworkMoveSpeed.Value = targetNetSpeed;
     }
 
-    /// <summary>Called by WaterVolume on the local owner as it enters/leaves the water trigger.</summary>
+    /// <summary>Called by mission water triggers on the local owner as it enters/leaves water.</summary>
     public void SetWaterState(bool inWater, float surfaceY)
     {
         inWaterTrigger = inWater;
@@ -663,6 +664,8 @@ public class PlayerController : NetworkBehaviour
 
     public void RestoreControlAt(Vector3 position, Quaternion rotation)
     {
+        ClearSeatForSceneSpawn();
+
         bool hadController = cc != null;
         if (hadController)
             cc.enabled = false;
@@ -703,6 +706,23 @@ public class PlayerController : NetworkBehaviour
             HiddenFromMonsters.Value = false;
         else if (IsOwner)
             SetHiddenFromMonstersServerRpc(false);
+    }
+
+    void ClearSeatForSceneSpawn()
+    {
+        if (SeatIndex.Value == -1) return;
+
+        if (IsServer)
+            SeatIndex.Value = -1;
+        else if (IsOwner)
+            ClearSeatForSceneSpawnServerRpc();
+    }
+
+    [ServerRpc]
+    void ClearSeatForSceneSpawnServerRpc(ServerRpcParams p = default)
+    {
+        if (p.Receive.SenderClientId != OwnerClientId) return;
+        SeatIndex.Value = -1;
     }
 
     public void SetHiddenFromMonsters(bool hidden, Vector3 hidePosition, Quaternion hideRotation)
