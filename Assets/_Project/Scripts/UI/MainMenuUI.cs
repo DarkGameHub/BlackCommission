@@ -75,7 +75,6 @@ public class MainMenuUI : MonoBehaviour
     TMP_Text lobbyHintText;
     TMP_Text lobbyTitleText;
     TMP_Text lobbyRoomCodeLabelText;
-    RectTransform lobbyWaitingTerminalRt;
 
     TMP_InputField joinCodeInput;
     TMP_InputField directAddressInput;
@@ -160,7 +159,6 @@ public class MainMenuUI : MonoBehaviour
         HandleKeyboardShortcuts();
         UpdateGameplayInputBlock();
         UpdateMenuVisibilityFlag();
-        UpdateResponsiveMenuPanels();
     }
 
     // ─── Layout build ─────────────────────────────────────────────────────
@@ -212,24 +210,6 @@ public class MainMenuUI : MonoBehaviour
         versionRt.sizeDelta = new Vector2(0f, 24f);
         if (usingBakedMenuArt)
             versionText.gameObject.SetActive(false);
-    }
-
-    void UpdateResponsiveMenuPanels()
-    {
-        if (rootCanvas == null) return;
-
-        var canvasRt = rootCanvas.GetComponent<RectTransform>();
-        if (canvasRt == null) return;
-
-        Vector2 canvasSize = canvasRt.rect.size;
-        if (canvasSize.x <= 0f || canvasSize.y <= 0f) return;
-
-        if (lobbyWaitingTerminalRt != null && lobbyWaitingTerminalRt.gameObject.activeInHierarchy)
-        {
-            float lobbyScale = Mathf.Min(canvasSize.x * 0.88f / 940f, canvasSize.y * 0.82f / 620f);
-            lobbyScale = Mathf.Clamp(lobbyScale, 0.58f, 1.18f);
-            lobbyWaitingTerminalRt.localScale = new Vector3(lobbyScale, lobbyScale, 1f);
-        }
     }
 
     // Full-screen background art. Drop the menu mockup (ideally without the centre
@@ -1144,35 +1124,16 @@ public class MainMenuUI : MonoBehaviour
 
     GameObject BuildConnectingPanel(Transform parent)
     {
-        var panel = CreatePanel(parent, "ConnectingPanel", new Vector2(520f, 220f));
+        var panel = CreatePanel(parent, "ConnectingPanel", new Vector2(420f, 200f));
         panel.SetActive(false);
 
-        AddInsetFrame(panel.transform, "RelayFrame", DispatchGreenDark, 7f, 2f);
+        connectingText = AddText(panel.transform, "ConnText", "", 24,
+            AgedPaper, TextAlignmentOptions.Center);
+        connectingText.rectTransform.anchoredPosition = new Vector2(0f, 14f);
 
-        var header = AddText(panel.transform, "Header", "BLACK COMMISSION RELAY", 15,
-            DispatchGreenDark, TextAlignmentOptions.Center);
-        header.fontStyle = FontStyles.Bold;
-        header.characterSpacing = 2f;
-        header.rectTransform.anchoredPosition = new Vector2(0f, 74f);
-        header.rectTransform.sizeDelta = new Vector2(450f, 24f);
-
-        connectingText = AddText(panel.transform, "ConnText", "", 30,
-            DispatchGreen, TextAlignmentOptions.Center);
-        connectingText.fontStyle = FontStyles.Bold;
-        connectingText.characterSpacing = 2f;
-        connectingText.rectTransform.anchoredPosition = new Vector2(0f, 18f);
-        connectingText.rectTransform.sizeDelta = new Vector2(420f, 42f);
-
-        var wait = AddText(panel.transform, "PleaseWait", MvpLocale.T("please_wait"), 14,
-            HintText, TextAlignmentOptions.Center);
-        wait.rectTransform.anchoredPosition = new Vector2(0f, -28f);
-        wait.rectTransform.sizeDelta = new Vector2(420f, 22f);
-
-        AddRect(panel.transform, "ProgressRail", new Vector2(0f, -66f), new Vector2(360f, 8f),
-            new Color(0.050f, 0.085f, 0.045f, 0.90f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        AddRect(panel.transform, "ProgressFill", new Vector2(-72f, -66f), new Vector2(216f, 8f),
-            new Color(0.310f, 0.950f, 0.250f, 0.78f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
+        AddText(panel.transform, "PleaseWait", MvpLocale.T("please_wait"), 14,
+            HintText, TextAlignmentOptions.Center)
+            .rectTransform.anchoredPosition = new Vector2(0f, -38f);
         return panel;
     }
 
@@ -1489,14 +1450,11 @@ public class MainMenuUI : MonoBehaviour
 
     GameObject BuildLobbyWaitingPanel(Transform parent)
     {
-        // Keep the waiting room readable in the dark office. The joke is in the
-        // bureaucratic details, not in making the whole screen look like wet paper.
-        Color screenFill = new(0.018f, 0.024f, 0.021f, 0.970f);
-        Color paperFill = new(0.120f, 0.118f, 0.090f, 0.360f);
-        Color fieldFill = new(0.013f, 0.018f, 0.015f, 0.920f);
-        Color rowFill = new(0.018f, 0.028f, 0.022f, 0.940f);
-        Color rowDivider = new(0.310f, 0.360f, 0.230f, 0.32f);
-        Color textMain = BlackCommissionUiTheme.OldPaper;
+        // Phosphor palette so the standby screen reads like the BLACK COMMISSION OS
+        // terminal from the main-menu mockup rather than a flat concrete dialog.
+        Color screenFill = new(0.012f, 0.045f, 0.020f, 0.985f);
+        Color rowFill = new(0.035f, 0.090f, 0.045f, 0.92f);
+        Color rowDivider = new(0.10f, 0.32f, 0.12f, 0.55f);
 
         var root = new GameObject("LobbyWaitingPanel", typeof(RectTransform), typeof(Image));
         root.transform.SetParent(parent, false);
@@ -1509,7 +1467,7 @@ public class MainMenuUI : MonoBehaviour
         veil.color = new Color(0f, 0f, 0f, 0.72f);
         veil.raycastTarget = true;
 
-        // ─── Dispatch dossier, aspect-fitted so the page never stretches ───
+        // ─── CRT monitor screen ────────────────────────────────────────────
         Vector2 screenSize = new(940f, 620f);
         var screen = new GameObject("WaitingTerminal", typeof(RectTransform), typeof(Image));
         screen.transform.SetParent(root.transform, false);
@@ -1520,46 +1478,36 @@ public class MainMenuUI : MonoBehaviour
         panelRt.pivot = new Vector2(0.5f, 0.5f);
         panelRt.anchoredPosition = Vector2.zero;
         panelRt.sizeDelta = screenSize;
-        lobbyWaitingTerminalRt = panelRt;
         var panel = screen; // content parent; keeps the rest of the method readable
 
-        AddInsetFrame(panel.transform, "DossierFrame", DispatchGreenDark, 9f, 2f);
-        AddInsetFrame(panel.transform, "PaperHairline", BlackCommissionUiTheme.OldPaper, 19f, 1f);
+        AddInsetFrame(panel.transform, "CrtInnerFrame", DispatchGreen, 9f, 2f);
 
         float halfW = screenSize.x * 0.5f; // 470
         float halfH = screenSize.y * 0.5f; // 310
 
         // ─── Header bar: OS banner + live status dot ───────────────────────
-        AddRect(panel.transform, "HeaderBand", new Vector2(0f, halfH - 30f), new Vector2(884f, 52f),
-            new Color(0.030f, 0.046f, 0.034f, 0.92f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        AddRect(panel.transform, "LeftDossier", new Vector2(-230f, -46f), new Vector2(410f, 410f),
-            paperFill, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        AddRect(panel.transform, "LeftReadout", new Vector2(-230f, 92f), new Vector2(372f, 76f),
-            fieldFill, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        var header = AddText(panel.transform, "CrtHeader", "BLACK COMMISSION / SURFACE RECOVERY DISPATCH", 15,
-            BlackCommissionUiTheme.OldPaper, TextAlignmentOptions.Left);
+        var header = AddText(panel.transform, "CrtHeader", "BLACK COMMISSION OS v1.0", 17,
+            DispatchGreen, TextAlignmentOptions.Center);
         header.fontStyle = FontStyles.Bold;
-        header.characterSpacing = 1.2f;
-        header.rectTransform.anchoredPosition = new Vector2(-190f, halfH - 30f);
-        header.rectTransform.sizeDelta = new Vector2(500f, 28f);
+        header.characterSpacing = 1f;
+        header.rectTransform.anchoredPosition = new Vector2(0f, halfH - 30f);
+        header.rectTransform.sizeDelta = new Vector2(880f, 28f);
 
         AddRect(panel.transform, "StatusDot", new Vector2(halfW - 40f, halfH - 30f), new Vector2(14f, 14f),
             DispatchGreen, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
         AddRect(panel.transform, "HeaderDivider", new Vector2(0f, halfH - 52f), new Vector2(884f, 2f),
-            new Color(0.42f, 0.36f, 0.23f, 0.50f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            DispatchGreenDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
         // ─── Left column: standby title + room code + hint ─────────────────
         lobbyTitleText = AddText(panel.transform, "Title", MvpLocale.T("lobby_waiting_title"), 32,
-            textMain, TextAlignmentOptions.Left);
+            DispatchGreen, TextAlignmentOptions.Left);
         lobbyTitleText.fontStyle = FontStyles.Bold;
-        lobbyTitleText.characterSpacing = 2f;
+        lobbyTitleText.characterSpacing = 4f;
         AnchorLeftCenter(lobbyTitleText.rectTransform, 40f, 200f, new Vector2(380f, 46f));
 
         lobbyRoomCodeLabelText = AddText(panel.transform, "RoomCodeLabel", MvpLocale.T("lobby_room_code"), 14,
-            BlackCommissionUiTheme.RustWarning, TextAlignmentOptions.Left);
-        lobbyRoomCodeLabelText.fontStyle = FontStyles.Bold;
+            DispatchGreenDark, TextAlignmentOptions.Left);
         lobbyRoomCodeLabelText.characterSpacing = 2f;
         AnchorLeftCenter(lobbyRoomCodeLabelText.rectTransform, 42f, 146f, new Vector2(360f, 22f));
 
@@ -1573,24 +1521,16 @@ public class MainMenuUI : MonoBehaviour
             DispatchGreenDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
         lobbyHintText = AddText(panel.transform, "Hint", MvpLocale.T("lobby_waiting_hint"), 16,
-            textMain, TextAlignmentOptions.Left);
+            BlackCommissionUiTheme.CrtGreenDim, TextAlignmentOptions.Left);
         lobbyHintText.enableWordWrapping = true;
         lobbyHintText.lineSpacing = 8f;
         AnchorLeftCenter(lobbyHintText.rectTransform, 42f, 8f, new Vector2(380f, 132f));
 
         var procedure = AddText(panel.transform, "Procedure",
-            "01  委托终端盖章\n02  旧货柜采购装备\n03  全员上车派往封锁区", 14,
-            BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Left);
+            "01  OFFICE COMPUTER\n02  BUY USED GEAR\n03  BOARD DISPATCH VAN", 14,
+            DispatchGreenDark, TextAlignmentOptions.Left);
         procedure.lineSpacing = 10f;
         AnchorLeftCenter(procedure.rectTransform, 42f, -150f, new Vector2(380f, 92f));
-
-        var debtStamp = AddText(panel.transform, "DebtStamp", "DEBT\nACTIVE", 24,
-            new Color(0.420f, 0.245f, 0.155f, 0.24f), TextAlignmentOptions.Center);
-        debtStamp.fontStyle = FontStyles.Bold;
-        debtStamp.characterSpacing = 2f;
-        debtStamp.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -8f);
-        debtStamp.rectTransform.anchoredPosition = new Vector2(-100f, 54f);
-        debtStamp.rectTransform.sizeDelta = new Vector2(138f, 78f);
 
         // ─── Right column: crew roster header + slots + enter button ───────
         float colX = 226f; // centre of the right column
@@ -1638,7 +1578,7 @@ public class MainMenuUI : MonoBehaviour
             lobbySwatches[i] = swatchImage;
 
             var slotIndex = AddText(row.transform, "Index", $"0{i + 1}", 15,
-                BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Center);
+                DispatchGreenDark, TextAlignmentOptions.Center);
             slotIndex.fontStyle = FontStyles.Bold;
             slotIndex.raycastTarget = false;
             slotIndex.rectTransform.anchorMin = new Vector2(0f, 0.5f);
@@ -1658,7 +1598,7 @@ public class MainMenuUI : MonoBehaviour
             lobbyNames[i] = name;
 
             var role = AddText(row.transform, "Role", "", 13,
-                BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Left);
+                BlackCommissionUiTheme.CrtGreenDim, TextAlignmentOptions.Left);
             role.rectTransform.anchorMin = new Vector2(0f, 0.5f);
             role.rectTransform.anchorMax = new Vector2(1f, 0.5f);
             role.rectTransform.pivot = new Vector2(0f, 0.5f);
@@ -1667,21 +1607,22 @@ public class MainMenuUI : MonoBehaviour
             lobbyRoles[i] = role;
         }
 
-        // Primary action: a stamped dispatch button, not a neon app CTA.
+        // Bright phosphor "enter" row — the primary action, styled like the
+        // highlighted menu row on the mockup (filled green, dark glyphs).
         lobbyEnterBtn = CreateButton(panel.transform, "EnterOffice",
-            MvpLocale.T("lobby_enter_office") + "   ›", 20,
-            new Color(0.075f, 0.140f, 0.070f, 0.96f),
-            new Color(0.105f, 0.210f, 0.095f, 0.98f),
-            new Color(0.040f, 0.080f, 0.040f, 1f));
+            MvpLocale.T("lobby_enter_office") + "   ›", 22,
+            new Color(0.31f, 0.95f, 0.25f, 0.94f),
+            new Color(0.42f, 1f, 0.34f, 0.98f),
+            new Color(0.18f, 0.72f, 0.16f, 1f));
         var enterRt = lobbyEnterBtn.GetComponent<RectTransform>();
-        enterRt.anchoredPosition = new Vector2(330f, -158f);
-        enterRt.sizeDelta = new Vector2(230f, 54f);
+        enterRt.anchoredPosition = new Vector2(colX, -158f);
+        enterRt.sizeDelta = new Vector2(420f, 58f);
         lobbyEnterLabel = lobbyEnterBtn.GetComponentInChildren<TMP_Text>();
         if (lobbyEnterLabel != null)
         {
-            lobbyEnterLabel.color = BlackCommissionUiTheme.OldPaper;
+            lobbyEnterLabel.color = Color.black;
             lobbyEnterLabel.fontStyle = FontStyles.Bold;
-            lobbyEnterLabel.characterSpacing = 2f;
+            lobbyEnterLabel.characterSpacing = 3f;
         }
 
         // Scanline / vignette pass on top of all content for the CRT feel.
@@ -1931,33 +1872,6 @@ public class MainMenuUI : MonoBehaviour
     }
 
     // ─── Primitives ───────────────────────────────────────────────────────
-
-    static void Stretch(RectTransform rt, Vector2 anchorMin, Vector2 anchorMax)
-    {
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
-        rt.pivot = new Vector2(0.5f, 0.5f);
-        rt.anchoredPosition = Vector2.zero;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-        rt.sizeDelta = Vector2.zero;
-    }
-
-    GameObject AddStretchRect(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax,
-        Vector2 offsetMin, Vector2 offsetMax, Color color)
-    {
-        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(parent, false);
-        var image = go.GetComponent<Image>();
-        image.color = color;
-        image.raycastTarget = false;
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
-        rt.offsetMin = offsetMin;
-        rt.offsetMax = offsetMax;
-        return go;
-    }
 
     GameObject AddInsetFrame(Transform parent, string name, Color color, float inset, float thickness)
     {

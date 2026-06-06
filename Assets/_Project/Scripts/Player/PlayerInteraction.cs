@@ -53,7 +53,7 @@ public class PlayerInteraction : NetworkBehaviour
     {
         if (!IsOwner || inputActions == null) return;
 
-        if (VanTransitOverlay.IsActive || MvpHud.IsBlockingPanelOpen || MainMenuUI.IsGameplayInputBlockedByMenu)
+        if (VanTransitOverlay.IsActive || MvpHud.IsBlockingPanelOpen)
         {
             ClearCurrentInteraction();
             return;
@@ -168,7 +168,6 @@ public class PlayerInteraction : NetworkBehaviour
 
     void OnGUI()
     {
-        if (MainMenuUI.IsGameplayInputBlockedByMenu || MainMenuUI.IsMenuVisible) return;
         if (currentTarget == null) return;
         string hint = currentTarget.InteractHint;
         if (string.IsNullOrEmpty(hint)) return;
