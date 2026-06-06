@@ -24,10 +24,10 @@
 git clone https://github.com/DarkGameHub/BlackCommission.git
 ```
 
-国内用户可以优先从 Gitee 镜像仓库 clone / pull：
+国内用户可以优先从 Gitee 镜像仓库 clone / pull。镜像仓库创建后，将下面地址中的账号或组织名替换为实际 Gitee 地址：
 
 ```bash
-git clone https://gitee.com/DarkGameHub/BlackCommission.git
+git clone https://gitee.com/<你的Gitee账号或组织名>/BlackCommission.git
 ```
 
 Gitee 仓库只作为国内下载和同步镜像使用，主线开发、Issue、Pull Request、Release 以 GitHub 为准。镜像同步方向固定为：
@@ -43,7 +43,7 @@ GitHub -> Gitee
 如果可以访问 GitHub，请从 Gitee clone 后把 GitHub 加回主远程，在 GitHub 提交 Pull Request：
 
 ```bash
-git clone https://gitee.com/DarkGameHub/BlackCommission.git
+git clone https://gitee.com/<你的Gitee账号或组织名>/BlackCommission.git
 cd BlackCommission
 git remote rename origin gitee
 git remote add origin https://github.com/DarkGameHub/BlackCommission.git
