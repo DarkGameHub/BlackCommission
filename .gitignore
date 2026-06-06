@@ -19,6 +19,10 @@ sysinfo.txt
 *.blend1
 *.blend1.meta
 
+# Local generated source assets
+blendermodel/
+GeneratedAssets/
+
 # Builds
 *.apk
 *.aab
