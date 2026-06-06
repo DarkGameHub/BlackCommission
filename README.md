@@ -70,7 +70,25 @@ git clone https://github.com/DarkGameHub/BlackCommission.git
 GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/DarkGameHub/BlackCommission.git
 cd BlackCommission
 git lfs pull
+git lfs checkout
 ```
+
+如果 Unity 打开后发现贴图、FBX 模型或雪山场景资源丢失，通常是 Git LFS 资源没有下载完整。进入项目根目录后运行：
+
+```bash
+git lfs install
+git lfs pull
+git lfs checkout
+```
+
+可以用下面命令检查 LFS 是否正常：
+
+```bash
+git lfs fsck
+git lfs status
+```
+
+如果某个 `.png`、`.fbx`、`.glb` 文件只有几百字节，并且第一行是 `version https://git-lfs.github.com/spec/v1`，说明它还是 LFS 指针文件，需要执行上面的 `git lfs pull` 和 `git lfs checkout`。
 
 ## Unity 工程启动
 
