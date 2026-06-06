@@ -5,6 +5,9 @@ using UnityEngine;
 public class PlayerFirstPersonRig : NetworkBehaviour
 {
     [SerializeField] Vector3 rigLocalPosition = new(0f, -0.34f, 0.46f);
+    [SerializeField] Vector3 fpModelOffset = new(0f, -1.35f, 0.32f);
+    [SerializeField] Vector3 fpModelRotation = new(72f, 0f, 0f);
+    [SerializeField] Vector3 fpModelScale = new(0.55f, 1.1f, 1.1f);
 
     PlayerHotbar hotbar;
     PlayerController controller;
@@ -12,6 +15,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     Transform heldItemRoot;
     GameObject rigRoot;
     GameObject thirdPersonRoot;
+    GameObject fpCharacterVisual;
+    GameObject tpCharacterVisual;
     GameObject flashlightModel;
     GameObject watchModel;
     GameObject thirdPersonWatchModel;
@@ -20,16 +25,8 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     TextMeshPro nameplateText;
     string lastNameplateValue;
 
-    Transform fpLeftHand;
-    Transform fpRightHand;
-    Transform tpLeftArm;
-    Transform tpRightArm;
-    Vector3 fpLeftHandDefaultPos;
-    Vector3 fpLeftHandDefaultRot;
-    Vector3 fpRightHandDefaultPos;
-    Vector3 fpRightHandDefaultRot;
-    Vector3 tpLeftArmDefaultRot;
-    Vector3 tpRightArmDefaultRot;
+    Vector3 tpVisualDefaultPos;
+    Vector3 tpVisualDefaultRot;
     int lastAppliedGesture;
 
     Material skinMaterial;
@@ -49,13 +46,22 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         controller = GetComponent<PlayerController>();
         HideCapsuleBodyMesh();
 
-        if (!IsOwner)
+        // Build third person visual for others. 
+        // Local owner can also build it but usually hides it to avoid clipping.
+        BuildThirdPersonVisual();
+
+        if (IsOwner)
         {
-            BuildThirdPersonVisual();
-            BuildNameplate();
+            BuildRig();
+            // Hide own body from own camera
+            if (tpCharacterVisual != null)
+            {
+                foreach (var r in tpCharacterVisual.GetComponentsInChildren<Renderer>())
+                    r.enabled = false;
+            }
         }
         else
-            BuildRig();
+            BuildNameplate();
     }
 
     public override void OnNetworkDespawn()
@@ -77,18 +83,13 @@ public class PlayerFirstPersonRig : NetworkBehaviour
 
     void LateUpdate()
     {
-        int gestureId = controller != null ? controller.GestureId.Value : 0;
-
         if (!IsOwner)
         {
             if (hotbar != null && thirdPersonWatchModel != null)
                 thirdPersonWatchModel.SetActive(hotbar.HasWristwatch.Value);
 
             float moveSpeed = controller != null ? controller.NetworkMoveSpeed.Value : 0f;
-            if (gestureId != 0)
-                ApplyThirdPersonGesture(gestureId);
-            else
-                ApplyThirdPersonAnimation(moveSpeed);
+            ApplyThirdPersonAnimation(moveSpeed);
 
             UpdateNameplate();
             return;
@@ -101,38 +102,34 @@ public class PlayerFirstPersonRig : NetworkBehaviour
             ? MvpHotbarItemId.None
             : selected.itemId;
 
-        if (gestureId != 0)
-        {
-            SetActiveItem(MvpHotbarItemId.None);
-            ApplyFirstPersonGesture(gestureId);
-        }
-        else
-        {
-            RestoreFirstPersonHands();
-            SetActiveItem(itemId);
-        }
+        SetActiveItem(itemId);
 
         if (watchModel != null)
             watchModel.SetActive(hotbar.HasWristwatchOwned);
 
-        if (gestureId == 0)
-            ApplyFirstPersonHandBob();
+        ApplyFirstPersonBob();
     }
 
-    void ApplyFirstPersonHandBob()
+    void ApplyFirstPersonBob()
     {
         if (rigRoot == null || controller == null) return;
         float speed = controller.NetworkMoveSpeed.Value;
-        if (speed < 0.05f) { rigRoot.transform.localPosition = rigLocalPosition; return; }
-
+        
         float t = Time.time;
-        float freq = speed > 0.7f ? 10f : 6.5f;
-        float ampY = speed > 0.7f ? 0.022f : 0.012f;
-        float ampX = speed > 0.7f ? 0.012f : 0.006f;
+        if (speed < 0.05f)
+        {
+            // Idle breathing bob on items
+            float idleBob = Mathf.Sin(t * 1.5f) * 0.005f;
+            rigRoot.transform.localPosition = new Vector3(0, idleBob, 0);
+            return;
+        }
 
-        float bobY = Mathf.Sin(t * freq) * ampY;
-        float bobX = Mathf.Sin(t * freq * 0.5f) * ampX;
-        rigRoot.transform.localPosition = rigLocalPosition + new Vector3(bobX, bobY, 0f);
+        // Walk / Run bobbing for items
+        float freq = speed > 0.7f ? 12f : 8f;
+        float bobY = Mathf.Sin(t * freq) * (speed > 0.7f ? 0.022f : 0.012f);
+        float bobX = Mathf.Sin(t * freq * 0.5f) * (speed > 0.7f ? 0.012f : 0.006f);
+        
+        rigRoot.transform.localPosition = new Vector3(bobX, Mathf.Abs(bobY), 0f);
     }
 
     // World-space floating name tag shown above other players' heads.
@@ -189,28 +186,27 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         cam.nearClipPlane = Mathf.Min(cam.nearClipPlane, 0.03f);
 
         if (rigRoot != null) Destroy(rigRoot);
-        rigRoot = new GameObject("MVP_FirstPersonHands");
+        rigRoot = new GameObject("MVP_FirstPersonRig");
         rigRoot.transform.SetParent(cameraTransform, false);
-        rigRoot.transform.localPosition = rigLocalPosition;
+        rigRoot.transform.localPosition = Vector3.zero;
         rigRoot.transform.localRotation = Quaternion.identity;
 
         EnsureMaterials();
-        CreateHands(rigRoot.transform);
-
+        
         watchModel = CreateWristwatch(rigRoot.transform);
         watchModel.SetActive(false);
 
         heldItemRoot = new GameObject("HeldItemRoot").transform;
         heldItemRoot.SetParent(rigRoot.transform, false);
-        heldItemRoot.localPosition = new Vector3(0.16f, -0.12f, 0.24f);
-        heldItemRoot.localRotation = Quaternion.Euler(8f, -10f, -6f);
+        heldItemRoot.localPosition = new Vector3(0.24f, -0.22f, 0.35f); // Standard floating item position
+        heldItemRoot.localRotation = Quaternion.Euler(5f, -8f, 0f);
 
         flashlightModel = CreateFlashlight(heldItemRoot);
         SetActiveItem(MvpHotbarItemId.None);
     }
 
     void BuildThirdPersonVisual()
-    {
+{
         if (thirdPersonRoot != null) return;
 
         EnsureMaterials();
@@ -301,11 +297,16 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         RemoveVisualColliders(visual);
         ConfigureVisualRenderers(visual);
         TintCharacterVisual(visual, charIndex);
+
+        tpCharacterVisual = visual;
+        tpVisualDefaultPos = visual.transform.localPosition;
+        tpVisualDefaultRot = visual.transform.localEulerAngles;
+
         return true;
     }
 
     // One shared mesh, six colour-ways: multiply the base texture by the slot tint.
-    static void TintCharacterVisual(GameObject visual, int charIndex)
+static void TintCharacterVisual(GameObject visual, int charIndex)
     {
         Color tint = PlayerCharacterModels.TintFor(charIndex);
         foreach (Renderer r in visual.GetComponentsInChildren<Renderer>())
@@ -362,41 +363,6 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         bodyRenderer = null;
     }
 
-    void CreateHands(Transform parent)
-    {
-        fpLeftHand = CreateFirstPersonHand(parent, "Left", new Vector3(-0.23f, -0.1f, 0.42f),
-            Quaternion.Euler(18f, -12f, 4f), -1f);
-        fpRightHand = CreateFirstPersonHand(parent, "Right", new Vector3(0.22f, -0.12f, 0.43f),
-            Quaternion.Euler(18f, 12f, -4f), 1f);
-
-        fpLeftHandDefaultPos = fpLeftHand.localPosition;
-        fpLeftHandDefaultRot = fpLeftHand.localEulerAngles;
-        fpRightHandDefaultPos = fpRightHand.localPosition;
-        fpRightHandDefaultRot = fpRightHand.localEulerAngles;
-    }
-
-    Transform CreateFirstPersonHand(Transform parent, string side, Vector3 localPosition, Quaternion localRotation, float mirror)
-    {
-        var root = new GameObject(side + "FirstPersonHand").transform;
-        root.SetParent(parent, false);
-        root.localPosition = localPosition;
-        root.localRotation = localRotation;
-
-        CreatePrimitive(PrimitiveType.Cube, side + "Sleeve", root,
-            new Vector3(0f, 0.01f, -0.2f), new Vector3(0.13f, 0.13f, 0.42f),
-            Quaternion.identity, sleeveMaterial);
-        CreatePrimitive(PrimitiveType.Sphere, side + "Palm", root,
-            Vector3.zero, new Vector3(0.13f, 0.09f, 0.1f),
-            Quaternion.identity, skinMaterial);
-        CreatePrimitive(PrimitiveType.Cube, side + "Thumb", root,
-            new Vector3(0.055f * mirror, -0.008f, 0.045f), new Vector3(0.035f, 0.03f, 0.08f),
-            Quaternion.Euler(0f, 28f * mirror, 12f * mirror), skinMaterial);
-        CreatePrimitive(PrimitiveType.Cube, side + "Fingers", root,
-            new Vector3(-0.01f * mirror, -0.01f, 0.085f), new Vector3(0.085f, 0.035f, 0.07f),
-            Quaternion.identity, skinMaterial);
-        return root;
-    }
-
     GameObject CreateFlashlight(Transform parent)
     {
         var root = new GameObject("Held_Flashlight");
@@ -425,7 +391,7 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     {
         var root = new GameObject("Worn_Wristwatch");
         root.transform.SetParent(parent, false);
-        root.transform.localPosition = new Vector3(-0.235f, -0.085f, 0.28f);
+        root.transform.localPosition = new Vector3(-0.24f, -0.15f, 0.28f);
         root.transform.localRotation = Quaternion.Euler(18f, -12f, 4f);
 
         CreatePrimitive(PrimitiveType.Cube, "CheapBand", root.transform, Vector3.zero,
@@ -472,113 +438,30 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         if (flashlightModel != null) flashlightModel.SetActive(itemId == MvpHotbarItemId.Flashlight);
     }
 
-    void CacheThirdPersonArmTransforms()
-    {
-        if (thirdPersonRoot == null) return;
-        tpLeftArm = thirdPersonRoot.transform.Find("LeftArm");
-        tpRightArm = thirdPersonRoot.transform.Find("RightArm");
-        if (tpLeftArm != null) tpLeftArmDefaultRot = tpLeftArm.localEulerAngles;
-        if (tpRightArm != null) tpRightArmDefaultRot = tpRightArm.localEulerAngles;
-    }
-
-    void ApplyFirstPersonGesture(int gestureId)
-    {
-        var pose = PlayerGestures.Get(gestureId);
-        if (fpRightHand != null)
-        {
-            fpRightHand.localPosition = pose.fpRightPos;
-            fpRightHand.localEulerAngles = pose.fpRightRot;
-        }
-        if (fpLeftHand != null)
-        {
-            fpLeftHand.localPosition = pose.fpLeftPos;
-            fpLeftHand.localEulerAngles = pose.fpLeftRot;
-        }
-        lastAppliedGesture = gestureId;
-    }
-
-    void RestoreFirstPersonHands()
-    {
-        if (lastAppliedGesture == 0) return;
-        if (fpRightHand != null)
-        {
-            fpRightHand.localPosition = fpRightHandDefaultPos;
-            fpRightHand.localEulerAngles = fpRightHandDefaultRot;
-        }
-        if (fpLeftHand != null)
-        {
-            fpLeftHand.localPosition = fpLeftHandDefaultPos;
-            fpLeftHand.localEulerAngles = fpLeftHandDefaultRot;
-        }
-        lastAppliedGesture = 0;
-    }
-
     void ApplyThirdPersonAnimation(float moveSpeed)
     {
-        if (tpLeftArm == null || tpRightArm == null)
-            CacheThirdPersonArmTransforms();
-        if (tpLeftArm == null || tpRightArm == null) return;
+        if (tpCharacterVisual == null) return;
 
         float t = Time.time;
 
         if (moveSpeed < 0.05f)
         {
-            // Idle breathing — gentle arm rock
-            float breathe = Mathf.Sin(t * 1.4f) * 2.5f;
-            tpRightArm.localEulerAngles = tpRightArmDefaultRot + new Vector3(breathe, 0f, 0f);
-            tpLeftArm.localEulerAngles = tpLeftArmDefaultRot + new Vector3(-breathe, 0f, 0f);
+            // Idle breathing — gentle rock and vertical pulse
+            float breathe = Mathf.Sin(t * 1.4f);
+            tpCharacterVisual.transform.localPosition = tpVisualDefaultPos + new Vector3(0, breathe * 0.012f, 0);
+            tpCharacterVisual.transform.localRotation = Quaternion.Euler(tpVisualDefaultRot + new Vector3(breathe * 0.8f, 0f, 0f));
         }
         else
         {
-            // Walk / sprint arm swing
-            float freq = moveSpeed > 0.7f ? 7.5f : 5f;
-            float amp = moveSpeed > 0.7f ? 42f : 26f;
-            float forwardLean = moveSpeed > 0.7f ? 12f : 6f;
-            float swing = Mathf.Sin(t * freq) * amp;
+            // Walk / sprint procedural movement
+            float freq = moveSpeed > 0.7f ? 12f : 8f;
+            float bobY = Mathf.Sin(t * freq) * (moveSpeed > 0.7f ? 0.05f : 0.025f);
+            float tiltX = (moveSpeed > 0.7f ? 12f : 6f) + Mathf.Sin(t * freq) * 2f;
+            float rollZ = Mathf.Sin(t * freq * 0.5f) * (moveSpeed > 0.7f ? 4f : 2f);
 
-            tpRightArm.localEulerAngles = tpRightArmDefaultRot + new Vector3(-swing - forwardLean, 0f, 0f);
-            tpLeftArm.localEulerAngles = tpLeftArmDefaultRot + new Vector3(swing - forwardLean, 0f, 0f);
-
-            // Body lean — tilt torso slightly forward
-            Transform torso = thirdPersonRoot != null ? thirdPersonRoot.transform.Find("UniformTorso") : null;
-            if (torso != null)
-                torso.localEulerAngles = new Vector3(-forwardLean * 0.5f, 0f, 0f);
-
-            // Head bob on torso
-            Transform head = thirdPersonRoot != null ? thirdPersonRoot.transform.Find("Head") : null;
-            if (head != null)
-            {
-                float bobY = Mathf.Abs(Mathf.Sin(t * freq * 0.5f)) * (moveSpeed > 0.7f ? 0.04f : 0.02f);
-                head.localPosition = new Vector3(0f, 1.58f + bobY, 0f);
-            }
+            tpCharacterVisual.transform.localPosition = tpVisualDefaultPos + new Vector3(0, Mathf.Abs(bobY), 0);
+            tpCharacterVisual.transform.localRotation = Quaternion.Euler(tiltX, 0, rollZ);
         }
-
-        // Restore torso and head when idle
-        if (moveSpeed < 0.05f)
-        {
-            Transform torso = thirdPersonRoot != null ? thirdPersonRoot.transform.Find("UniformTorso") : null;
-            if (torso != null) torso.localEulerAngles = Vector3.zero;
-            Transform head = thirdPersonRoot != null ? thirdPersonRoot.transform.Find("Head") : null;
-            if (head != null) head.localPosition = new Vector3(0f, 1.58f, 0f);
-        }
-    }
-
-    void ApplyThirdPersonGesture(int gestureId)
-    {
-        if (tpLeftArm == null || tpRightArm == null)
-            CacheThirdPersonArmTransforms();
-        if (tpLeftArm == null || tpRightArm == null) return;
-
-        if (gestureId == 0)
-        {
-            tpLeftArm.localEulerAngles = tpLeftArmDefaultRot;
-            tpRightArm.localEulerAngles = tpRightArmDefaultRot;
-            return;
-        }
-
-        var pose = PlayerGestures.Get(gestureId);
-        tpRightArm.localEulerAngles = pose.tpRightArmRot;
-        tpLeftArm.localEulerAngles = pose.tpLeftArmRot;
     }
 
     void EnsureMaterials()

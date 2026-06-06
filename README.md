@@ -16,6 +16,56 @@
 
 当前美术方向已锁定，见 [docs/art/black-commission-style-lock-v1.md](docs/art/black-commission-style-lock-v1.md)。
 
+## 仓库与国内镜像
+
+本项目以 GitHub 为唯一主仓库：
+
+```bash
+git clone https://github.com/DarkGameHub/BlackCommission.git
+```
+
+国内用户可以优先从 Gitee 镜像仓库 clone / pull：
+
+```bash
+git clone https://gitee.com/DarkGameHub/BlackCommission.git
+```
+
+Gitee 仓库只作为国内下载和同步镜像使用，主线开发、Issue、Pull Request、Release 以 GitHub 为准。镜像同步方向固定为：
+
+```text
+GitHub -> Gitee
+```
+
+不要在 Gitee 镜像仓库直接合并主线改动，也不要开启双向同步，以免 GitHub 和 Gitee 历史分叉。
+
+### 国内贡献流程
+
+如果可以访问 GitHub，请从 Gitee clone 后把 GitHub 加回主远程，在 GitHub 提交 Pull Request：
+
+```bash
+git clone https://gitee.com/DarkGameHub/BlackCommission.git
+cd BlackCommission
+git remote rename origin gitee
+git remote add origin https://github.com/DarkGameHub/BlackCommission.git
+git checkout -b fix-something
+```
+
+改完后：
+
+```bash
+git add .
+git commit -m "Fix something"
+git push origin fix-something
+```
+
+然后到 GitHub 提 Pull Request：
+
+```text
+https://github.com/DarkGameHub/BlackCommission
+```
+
+如果贡献者访问 GitHub 很困难，可以先在 Gitee 提 Pull Request。维护者审核后，将对应提交 cherry-pick 或 patch 到 GitHub，等 GitHub 合并后再同步回 Gitee。
+
 ## 核心流程图
 
 ```mermaid
