@@ -51,8 +51,26 @@ flowchart TD
 ## 环境要求
 
 - **Unity 版本：`6000.4.7f1`（Unity 6）。** 必须用这个版本打开——Unity 工程对版本敏感，版本不一致会强制升级或报错。建议用 [Unity Hub](https://unity.com/download) 安装对应版本。
+- **Git LFS：** 本仓库的大模型、贴图、音视频等资源使用 [Git LFS](https://git-lfs.com/) 管理。首次 clone 前请先安装 Git LFS，并运行 `git lfs install`。
 - **依赖自动还原：** 本项目是 Unity C# 工程，没有也不需要 `requirements.txt`（那是 Python 的）。所有包依赖都锁定在 `Packages/manifest.json` 里（Netcode for GameObjects 2.11.2、URP 17.4、Input System、Relay/Authentication 等），用 Unity 打开工程时会自动下载还原，无需手动安装。
-- **不要提交生成目录：** `Library/`、`Temp/`、`Logs/` 由 Unity 本地生成（已在 `.gitignore` 忽略），clone 后首次打开会自动重建，可能需要几分钟。
+- **不要提交生成目录：** `Library/`、`Temp/`、`Logs/`、`blendermodel/`、`GeneratedAssets/` 由 Unity、Blender 或 AI 工具在本地生成（已在 `.gitignore` 忽略），clone 后首次打开会自动重建，可能需要几分钟。
+
+## Clone 说明
+
+正常拉取完整项目：
+
+```bash
+git lfs install
+git clone https://github.com/DarkGameHub/BlackCommission.git
+```
+
+如果网络较慢，可以先只拉代码和 LFS 指针，稍后再下载大资源：
+
+```bash
+GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/DarkGameHub/BlackCommission.git
+cd BlackCommission
+git lfs pull
+```
 
 ## Unity 工程启动
 
