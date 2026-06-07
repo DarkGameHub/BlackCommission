@@ -3,16 +3,16 @@ using UnityEngine;
 namespace BlackCommission.Level
 {
     /// <summary>
-    /// The four standard room footprints from the floor-plan kit
-    /// (design/levels/abandoned-tower-floorplan.md). A slot only accepts a
-    /// RoomDef whose <see cref="RoomDef.size"/> matches.
+    /// The three standard room footprints from the v3 floor-plan kit
+    /// (design/levels/abandoned-tower-redesign-v3.md). XL/Hall was dropped per PM decision
+    /// (2026-06-07): LC-style density comes from many S/M rooms, not a few hero halls.
+    /// A slot only accepts a RoomDef whose <see cref="RoomDef.size"/> matches.
     /// </summary>
     public enum RoomSizeClass
     {
         Small,   // S  4x4
         Medium,  // M  8x8
-        Large,   // L  12x8
-        Hall     // XL 16x12
+        Large    // L  12x8
     }
 
     /// <summary>
@@ -66,8 +66,7 @@ namespace BlackCommission.Level
             {
                 RoomSizeClass.Small  => new Vector3(4f, 0.5f, 4f),
                 RoomSizeClass.Medium => new Vector3(8f, 0.5f, 8f),
-                RoomSizeClass.Large  => new Vector3(12f, 0.5f, 8f),
-                _                    => new Vector3(16f, 0.5f, 12f)
+                _                    => new Vector3(12f, 0.5f, 8f) // Large
             };
             Gizmos.DrawWireCube(transform.position + Vector3.up * 0.25f, box);
         }

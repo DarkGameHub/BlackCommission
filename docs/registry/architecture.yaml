@@ -30,7 +30,7 @@
 #   Superseded entries:     Grep pattern="status: superseded"
 
 version: 1
-last_updated: ""
+last_updated: "2026-06-07"
 
 # ─── STATE OWNERSHIP ─────────────────────────────────────────────────────────
 # Who is the authoritative owner of each piece of shared game state.
@@ -43,7 +43,18 @@ last_updated: ""
 # interface: how other systems access this state (read-only property, method call,
 #   signal, shared resource, etc.) — this is the contract other ADRs depend on.
 
-state_ownership: []
+state_ownership:
+  - state: all_shared_gameplay_state
+    status: active
+    owner_system: host-server
+    adr: docs/architecture/ADR-0001-host-authoritative-networking.md
+    interface: "Replicated via NetworkVariable (read: Everyone, write: Server). Clients mutate only through validated ServerRpc; host broadcasts effects via ClientRpc."
+    write_access: host-server-only   # mission state, settlement/rewards, player state, office economy
+    referenced_by:
+      - docs/architecture/ADR-0001-host-authoritative-networking.md
+      - docs/architecture/ADR-0002-relay-transport-connection-approval.md
+    added: 2026-06-07
+    revised: ""
 
 # Example:
 #
@@ -71,7 +82,19 @@ state_ownership: []
 #
 # pattern options: signal | direct_call | event_bus | shared_resource | rpc | none
 
-interfaces: []
+interfaces:
+  - contract: networked_state_change
+    status: active
+    pattern: rpc
+    producer: any-client
+    consumers:
+      - host-server          # receives ServerRpc, validates, writes NetworkVariable
+    adr: docs/architecture/ADR-0001-host-authoritative-networking.md
+    signal_signature: "[ServerRpc] RequestXServerRpc(...) -> host validates (IsServer guard) -> NetworkVariable write -> [ClientRpc] effects"
+    referenced_by:
+      - docs/architecture/ADR-0001-host-authoritative-networking.md
+    added: 2026-06-07
+    revised: ""
 
 # Example:
 #
@@ -100,7 +123,14 @@ interfaces: []
 # Register a budget when an ADR explicitly claims a frame time allocation.
 # The registry lets /architecture-review verify the total doesn't exceed the target.
 
-performance_budgets: []
+performance_budgets:
+  - target_fps: 60
+    total_frame_budget_ms: 16.6
+    platform: PC
+    adr: docs/architecture/ADR-0001-host-authoritative-networking.md
+    notes: "Host carries authority/validation work; network ceiling is 4 players (ADR-0002)."
+    added: 2026-06-07
+    revised: ""
 
 # Example:
 #
@@ -131,7 +161,27 @@ performance_budgets: []
 # Register an API decision when the choice is non-obvious and other ADRs might
 # make a different choice for the same purpose without knowing this was decided.
 
-api_decisions: []
+api_decisions:
+  - purpose: multiplayer_transport
+    status: active
+    api: "Unity Relay (DTLS) + UnityTransport, anonymous AuthenticationService, join-code matchmaking"
+    not: "Direct IP/port-forwarding (dev/LAN-test only); Steam transport (deferred to future ADR)"
+    adr: docs/architecture/ADR-0002-relay-transport-connection-approval.md
+    reason: "Internet co-op with NAT traversal and encryption, no custom backend (per @AGENTS.md)."
+    referenced_by:
+      - docs/architecture/ADR-0002-relay-transport-connection-approval.md
+    added: 2026-06-07
+    revised: ""
+  - purpose: connection_approval
+    status: active
+    api: "NetworkManager.ConnectionApprovalCallback — version gate (GameBuild.Version) + 4-player cap"
+    not: "Open/unapproved connections"
+    adr: docs/architecture/ADR-0002-relay-transport-connection-approval.md
+    reason: "Reject build-version mismatches and enforce the permanent 4-player hard cap server-side."
+    referenced_by:
+      - docs/architecture/ADR-0002-relay-transport-connection-approval.md
+    added: 2026-06-07
+    revised: ""
 
 # Example:
 #
@@ -157,7 +207,35 @@ api_decisions: []
 # Register a pattern when an ADR explicitly bans it AND other ADRs might
 # unknowingly use it (i.e., it's a tempting but wrong approach for this project).
 
-forbidden_patterns: []
+forbidden_patterns:
+  - pattern: client_authoritative_state_write
+    status: active
+    description: "A client must never write a NetworkVariable or decide authoritative
+      gameplay outcomes (mission completion, partial return, failure, rewards) locally.
+      Route every change through a ServerRpc that the host validates behind an
+      IsServer/IsHost guard."
+    why: "Client-side authority is trivially cheatable and causes desync. The host is
+      the single source of truth for all shared state (ADR-0001)."
+    adr: docs/architecture/ADR-0001-host-authoritative-networking.md
+    added: 2026-06-07
+  - pattern: player_cap_above_four
+    status: active
+    description: "Sessions must never exceed 4 players (host + 3). This is a permanent
+      design ceiling, not an MVP placeholder. NOTE: the cap is currently duplicated in
+      ConnectionManager.MaxConnections (3) and MvpConnectionLimiter.maxPlayers (4) —
+      keep them consistent; preferably derive both from one shared constant."
+    why: "Confirmed permanent hard limit by PM; the duplication is a tracked tech-debt
+      risk that can silently desync the two values."
+    adr: docs/architecture/ADR-0002-relay-transport-connection-approval.md
+    added: 2026-06-07
+  - pattern: custom_backend
+    status: active
+    description: "No custom backend server. Stay in Unity + Netcode for GameObjects
+      with host-authored state. Steam/Relay are transport/services only."
+    why: "Explicit project rule (@AGENTS.md, technical-preferences). Over-scopes a
+      1–4 player co-op MVP."
+    adr: docs/architecture/ADR-0001-host-authoritative-networking.md
+    added: 2026-06-07
 
 # Example:
 #
