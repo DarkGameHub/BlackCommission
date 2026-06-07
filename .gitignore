@@ -50,3 +50,7 @@ crashlytics-build.properties
 .idea/
 *.sln
 *.csproj
+
+# CCGS framework runtime artifacts (per-machine; not committed)
+production/session-logs/
+.claude/settings.local.json

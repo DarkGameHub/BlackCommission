@@ -1,6 +1,6 @@
 # Active Session State — Black Commission
 
-**Last updated**: 2026-06-06
+**Last updated**: 2026-06-07
 **Stage**: Production (see `production/stage.txt`)
 
 ## Current Focus
@@ -35,7 +35,9 @@ van (south-center F1).
 
 ## Key Decisions
 
-- Framework `.claude/` installed into the project; hooks intentionally skipped (Windows).
+- Framework `.claude/` installed (v1.0.0). Runtime layer now installed on macOS:
+  `hooks/` (12), `settings.json`, `statusline.sh` — all smoke-tested. Hooks are bash;
+  Windows contributors need git-bash on PATH or they silently won't fire.
 - Game code stays in `Assets/_Project/Scripts/` (framework `src/` convention maps here).
 - `@AGENTS.md` remains the authoritative project rules.
 
