@@ -65,12 +65,20 @@ absurd public-service jobs, practical gear, and civic/workplace horror.
 Color discipline is the most important rule. The project should use a narrow,
 desaturated palette.
 
-Approximate scene balance:
+Approximate scene balance for HQ and civic interiors:
 
 - 60% concrete gray
 - 20% military green
 - 15% old wood brown
 - 5% rust
+
+Approximate scene balance for underground warehouse and service corridors:
+
+- 60% concrete gray and dark steel
+- 15% military green or dirty blue-gray wall trim
+- 10% old wood, crates, sacks, and paper clutter
+- 10% faded industrial safety yellow
+- 5% rust, grime, and localized warning marks
 
 ### Main Palette
 
@@ -89,18 +97,24 @@ Approximate scene balance:
 | Rust 2 | `#8C5937` | aged metal wear, old pipes |
 | Rust 3 | `#A36842` | tiny exposed oxidation accents only |
 
-### Only Accent Color
+### Gameplay Accent Color
 
-Use exactly one gameplay accent color:
+Use exactly one bright gameplay/electronic accent color:
 
 | Role | Hex | Use |
 |---|---:|---|
 | CRT Green | `#6CFF5F` | CRT screens, UI, radar, detectors, signal lights |
 
-Do not scatter blue, purple, red, or saturated yellow through the scene. Do not
-use red as the default danger color in this style lock. If warning information
-is needed, express it through CRT green UI state, movement, sound, layout,
-shape, or material damage before adding another hue.
+Faded industrial safety yellow is allowed as a material color, not as a
+gameplay/electronic accent. Use it for worn railings, hazard stripes, cargo
+lift edges, forklift paint, route arrows, and bollards. Keep it dirty,
+desaturated, scratched, and physically painted onto objects.
+
+Do not scatter blue, purple, red, or clean saturated yellow through the scene.
+Do not use red as the default danger color in this style lock. If warning
+information is needed, express it through CRT green UI state, movement, sound,
+layout, shape, safety-yellow physical markings, or material damage before
+adding another hue.
 
 Warm tungsten light is allowed as light color only, not as a broad yellow
 material accent.
@@ -249,6 +263,103 @@ These motifs replace the previous teal/red dispatch system:
    Schools, malls, apartments, clinics, and warehouses must feel like real
    public or service spaces that became neglected, strange, and dangerous.
 
+## Latest Environment Concept: Underground Service Warehouse
+
+This is the current practical mission-environment direction for solo
+development. It should reduce dependence on character-heavy art and replace
+AI-looking hero compositions with reusable, grounded environment kits.
+
+Working concept name:
+
+```text
+Underground debt logistics / cheap industrial commission site
+```
+
+The concept is strongest when it reads as a low-cost underground warehouse,
+service corridor, loading bay, or maintenance tunnel owned by an underfunded
+outsourced contractor. It should not feel like premium sci-fi, military
+special forces, or a generic asset-store warehouse.
+
+### Production Intent
+
+- Build environments first; use workers sparingly.
+- Favor modular kits over one-off cinematic set pieces.
+- Make reusable wall panels, rails, stairs, pipe runs, grates, doors, crates,
+  lamps, warning barriers, and route markers.
+- Let decals and labels carry identity instead of relying on detailed
+  characters.
+- Keep shapes simple enough for one developer to model, texture, light, and
+  iterate.
+
+### Visual Anchors
+
+Use these as the main image language for underground warehouse/corridor maps:
+
+- concrete walls, pillars, slabs, and retaining panels
+- rock-to-concrete tunnel transitions
+- numbered freight doors, roll-up doors, and service doors
+- yellow railings, bollards, stair modules, and hazard trim
+- black/yellow worn hazard stripes on edges and barriers
+- grated metal floors, short stairs, ramps, and loading platforms
+- exposed pipe runs, brackets, cable trays, vents, and junction boxes
+- wooden cargo crates, sandbags, dull barrels, pipe bundles, and forklifts
+- cold overhead lamps plus small warm work lamps
+- green exit/service lights only when needed for readable navigation
+
+### Black Commission Identity Injection
+
+Every underground warehouse map needs at least three Black Commission-specific
+marks so it does not become a generic industrial corridor:
+
+- `COMMISSION LIFT 03`
+- `DEBT ACCESS ONLY`
+- `ACCIDENT SQUAD STORAGE`
+- `PAYMENT OVERDUE ZONE`
+- `CONTRACTOR ROUTE`
+- `PARTIAL SETTLEMENT EXIT`
+- taped commission forms, debt notices, old work orders, route arrows, and
+  stamped paper signs
+
+These signs should look physically printed, painted, stamped, taped, or bolted
+onto the environment. Avoid clean UI panels unless the interaction is actually
+electronic.
+
+### Anti-AI Rules
+
+Avoid the common AI-concept look:
+
+- perfectly balanced composition in every room
+- every corner filled with a different prop
+- over-detailed surfaces that cannot be produced consistently
+- dramatic character silhouettes as the main style carrier
+- beautiful cinematic haze hiding unclear layout
+- glossy wet floors or premium reflections
+- clean, readable labels that look composited after the fact
+
+Prefer practical irregularity:
+
+- one side of a corridor can be empty while the other side is cluttered
+- a rail can be patched, bent, repainted, or missing one warning stripe
+- decals can be half torn, dirty, or misaligned
+- lamps can have uneven pools of light as long as exits and interactables stay
+  readable
+
+### Character-Light Rule
+
+Characters should support the world, not carry it. For this direction, the
+best evidence of people is often indirect:
+
+- hanging ID cards
+- empty chairs
+- lockers, gloves, helmets, and cheap masks
+- half-finished work orders
+- printed commission receipts
+- abandoned tools
+- used mugs, taped notes, and dirty keyboards
+
+If worker art appears, keep it cheap, grounded, anonymous, and secondary to the
+environment.
+
 ## Asset Family Rules
 
 ### HQ
@@ -342,7 +453,9 @@ Each map needs one public-facility identity:
 - Mall: shutters, service corridors, delivery areas, flooded back routes.
 - Apartment: stairs, elevator, utility rooms, floor-by-floor searching.
 - Clinic: curtains, gurneys, billing windows, staff-only back rooms.
-- Warehouse: long aisles, roll-up doors, inventory cages, carried objectives.
+- Warehouse: underground service corridors, loading platforms, freight doors,
+  roll-up doors, inventory cages, railings, grates, pipe runs, and carried
+  objectives.
 
 Do not build generic horror spaces. Every map must show which institution
 failed.
@@ -427,6 +540,14 @@ Run these before calling an art pass complete:
    supports co-op gear, or makes a public facility feel uncanny.
 9. **Copy-risk test**: remove any asset that reads as a copied reference-game
    suit, monster, vehicle, terminal, map, or logo.
+10. **Modularity test**: underground warehouse content can be rebuilt from
+    repeatable wall panels, railings, stairs, pipes, doors, crates, decals, and
+    light fixtures instead of one-off concept-art shapes.
+11. **Character-light test**: the scene remains readable and memorable without
+    a prominent human character in frame.
+12. **Identity test**: a warehouse/corridor scene includes at least three
+    physical Black Commission-specific labels, forms, route marks, or debt
+    traces.
 
 If a feature fails two or more tests, it is not style-locked.
 
