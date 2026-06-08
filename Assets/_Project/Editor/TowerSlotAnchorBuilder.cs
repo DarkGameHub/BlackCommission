@@ -121,7 +121,7 @@ public static class TowerSlotAnchorBuilder
     static RoomSizeClass SizeFromName(string name)
     {
         // name like "F1_S3_PowerRoom" / "F2_M4_SalesOfficeRichLoot" / "F1_L1_CentralConstructionHall"
-        if (name.Contains("CentralConstructionHall")) return RoomSizeClass.Hall;
+        if (name.Contains("CentralConstructionHall")) return RoomSizeClass.Large;
         string[] parts = name.Split('_');
         if (parts.Length >= 2 && parts[1].Length >= 1)
         {

@@ -31,6 +31,33 @@ namespace BlackCommission.Level.Tests
         }
 
         [Test]
+        public void Canonical_HasLockedRoomDensity()
+        {
+            TopoGraph g = TowerTopologyV3.BuildCanonical();
+            var roomsByFloor = new Dictionary<int, int>();
+            foreach (string room in g.RoomNodes)
+            {
+                int floor = g.NodeFloor[room];
+                roomsByFloor.TryGetValue(floor, out int count);
+                roomsByFloor[floor] = count + 1;
+            }
+
+            Assert.AreEqual(15, roomsByFloor[1], "F1 should stay at the LC-density target.");
+            Assert.AreEqual(15, roomsByFloor[2], "F2 should stay at the LC-density target.");
+        }
+
+        [Test]
+        public void Canonical_HasExpandedToggleSet()
+        {
+            TopoGraph g = TowerTopologyV3.BuildCanonical();
+            int toggles = 0;
+            foreach (Edge e in g.Edges)
+                if (e.Toggleable) toggles++;
+
+            Assert.AreEqual(14, toggles, "Densified v3 should keep the expanded seed-switch set.");
+        }
+
+        [Test]
         public void Canonical_EverySeed_ResolvesValidWithoutFallback()
         {
             TopoGraph g = TowerTopologyV3.BuildCanonical();

@@ -1,0 +1,98 @@
+﻿[
+    {
+        "id":  "Concrete048",
+        "title":  "Concrete 048",
+        "url":  "https://ambientcg.com/a/Concrete048",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Concrete/Concrete048"
+    },
+    {
+        "id":  "Concrete034",
+        "title":  "Concrete 034",
+        "url":  "https://ambientcg.com/a/Concrete034",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Concrete/Concrete034"
+    },
+    {
+        "id":  "Plaster001",
+        "title":  "Plaster 001",
+        "url":  "https://ambientcg.com/a/Plaster001",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Plaster/Plaster001"
+    },
+    {
+        "id":  "PaintedPlaster017",
+        "title":  "Painted Plaster 017",
+        "url":  "https://ambientcg.com/a/PaintedPlaster017",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Plaster/PaintedPlaster017"
+    },
+    {
+        "id":  "Tiles133D",
+        "title":  "Tiles 133 D",
+        "url":  "https://ambientcg.com/a/Tiles133D",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Tile/Tiles133D"
+    },
+    {
+        "id":  "Metal063",
+        "title":  "Metal 063",
+        "url":  "https://ambientcg.com/a/Metal063",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Metal/Metal063"
+    },
+    {
+        "id":  "MetalWalkway014",
+        "title":  "Metal Walkway 014",
+        "url":  "https://ambientcg.com/a/MetalWalkway014",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Metal/MetalWalkway014"
+    },
+    {
+        "id":  "CorrugatedSteel007A",
+        "title":  "Corrugated Steel 007 A",
+        "url":  "https://ambientcg.com/a/CorrugatedSteel007A",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Metal/CorrugatedSteel007A"
+    },
+    {
+        "id":  "Planks037A",
+        "title":  "Planks 037 A",
+        "url":  "https://ambientcg.com/a/Planks037A",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Wood/Planks037A"
+    },
+    {
+        "id":  "Asphalt031",
+        "title":  "Asphalt 031",
+        "url":  "https://ambientcg.com/a/Asphalt031",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Exterior/Asphalt031"
+    },
+    {
+        "id":  "Gravel043",
+        "title":  "Gravel 043",
+        "url":  "https://ambientcg.com/a/Gravel043",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Exterior/Gravel043"
+    },
+    {
+        "id":  "Facade001",
+        "title":  "Facade 001",
+        "url":  "https://ambientcg.com/a/Facade001",
+        "license":  "CC0 1.0",
+        "resolution":  "1K-JPG",
+        "path":  "Assets/_Project/Art/Maps/Tower_EarthCoast_01/Textures/Architecture/Glass/Facade001"
+    }
+]

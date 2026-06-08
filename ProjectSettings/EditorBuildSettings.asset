@@ -11,5 +11,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Snow_Lotus_01.unity
     guid: 1d8fcabe45ac63949a5bb7a2b3d75d69
+  - enabled: 1
+    path: Assets/_Project/Scenes/Tower_EarthCoast_01.unity
+    guid: 7d628e2fe3b37b44bbced9f4e22dc0ef
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}

@@ -252,6 +252,12 @@ topology on every peer → bakeable & net-syncable.
 3. **Single fire exit + exterior perimeter** — fire-exit interaction, exterior NavMesh,
    light exterior hazard, monster brief-pursue-then-break.
 4. **Time-scaled monster aggression** curve.
+5. **Deferred: LC/DunGen-style modular shell generator** — after the current fixed-shell
+   tower is playable and tuned, evaluate replacing/augmenting the coordinate table with
+   modular room tiles that have doorway sockets, bounds checks, seed-synced placement,
+   solvability re-roll, and generated corridor/door geometry. This is intentionally **not**
+   part of the current v3 whitebox pass; first polish the fixed-shell map, topology toggles,
+   room-content catalog, NavMesh, lighting, power gate, objective carry, and monster pacing.
 
 ---
 

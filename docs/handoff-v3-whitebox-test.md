@@ -148,4 +148,7 @@ git push
    `Tower_EarthCoast_01` scene once the layout is settled.
 7. Lighting/atmosphere pass (Municipal Debt Noir: sodium amber, dead-rubber black, the warm "wrong"
    show-flat beacon).
+8. Deferred architecture spike: LC/DunGen-style modular shell generation (room tiles with doorway
+   sockets, bounds checks, seed-synced placement, solvability re-roll, generated corridor/door
+   geometry). Do this only after the current fixed-shell tower is playable and tuned.
 ```

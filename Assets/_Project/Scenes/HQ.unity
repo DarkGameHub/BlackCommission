@@ -2234,7 +2234,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OfficeComputer
   ShowTopMostFoldoutHeaderGroup: 1
-  demoTask: {fileID: 11400000, guid: 6fcafe9f57996ff4182c836ad4688668, type: 2}
+  demoTask: {fileID: 0}
   returnOfficeScene: HQ
   allowNonNetworkSoloStart: 0
   dispatchTransitSeconds: 8
