@@ -127,7 +127,7 @@ Legend: S=start E=exit C=combat/chase P=puzzle/gate R=loot !=story beat ?=option
 |----------|------|-------------|---------|
 | F1_M1_LobbySecurityPassage | Story/gate signpost | Sales hall, "断电" readout | Teaches the power gate + tone |
 | F1_S3_PowerRoom | Gate | Restore power, hold-interaction | 2-step objective gate; paces the run |
-| F2_M4_SalesOffice_RichLoot | Wrong detail | Pristine luxury vs concrete shell | Map's memorable detail + loot |
+| F2_M4_SalesOffice_RichLoot | Wrong detail | Pristine materials (clean surfaces, intact furniture) vs concrete shell — wrongness from condition, not color | Map's memorable detail + loot |
 | F2_M5_ScaffoldBridge | Traversal risk | Exposed scaffold crossing | Signature vertical tension |
 | F2_L5_DeepTargetArea | Objective + nest | 沙盘 on a pedestal; monster nest | Climax / pressure trigger |
 
@@ -173,14 +173,39 @@ Intensity
 
 ## Visual Direction
 
-- **Lighting**: pre-power = flashlight-dependent dark (sodium amber emergency strips
-  only); post-power = harsh worklights flicker on, the show-flat glows incongruously warm.
-- **Color palette**: Municipal Debt Noir — dead-rubber black, aged concrete gray,
-  sodium amber; the show-flat injects fake-luxury warm gold = the "wrong" warmth.
-- **Landmarks**: the two stair towers (A bright/exposed, B dim/enclosed); the lit
-  show-flat visible from across the unfinished shaft as a navigation beacon.
+- **Lighting**: pre-power = flashlight-dependent dark (one or two desk lamps still
+  plugged in — warm tungsten residual, signaling recent presence); post-power = cold
+  industrial (4500K–5000K) worklights flicker on across most floors; the show-flat
+  restores its cold overheads cleanly (the only fully functioning lighting zone), with
+  a single warm tungsten desk lamp on the sales desk marking human presence.
+- **Color palette**: Municipal Debt Noir — dead-rubber black, concrete gray, warm
+  tungsten amber (inhabitation signal only); the show-flat reads as wrong through
+  its material condition (clean linoleum, unscratched surfaces, intact furniture)
+  against the raw-concrete base — same warm desk lamp light as the HQ office, which
+  is precisely what makes it disturbing. No fake-luxury gold; the wrongness is in
+  the pristine materials, not a distinct hue.
+- **Landmarks**: the two stair towers (A cold/exposed, B dim/enclosed); the show-flat
+  visible across the unfinished shaft as a navigation beacon — the only zone where
+  cold overheads function cleanly, creating a bright contrast against the failing
+  floors around it.
 - **Sight lines**: from F2_L3 unfinished shaft, players can see down into F1 hub
   (vertical readability) and across to the lit objective room.
+
+## BC Identity Injection
+
+Per art-bible Section 6: the commission's paperwork must appear as a distinct administrative
+layer imposed on the tower's own institutional signage.
+
+| Location | BC Marker | Description |
+|----------|-----------|-------------|
+| F1_S1_StartVanArea (van) | Route arrow + job number | "COMMISSION BC-12 / 外包施工场地 → 目标：沙盘" stenciled on the fence |
+| F1_M1_LobbySecurityPassage | BC-12 form pinned to reception | Commission intake form with job reference and "委托人：火星私人收藏者" |
+| F2 security shutter (post-power) | "欠款通道 / DEBT ACCESS ONLY" | Signage applied to the shutter frame — the commission office's access authorization |
+| F1_S3_PowerRoom entrance | BC-12 equipment tag | Tagged breaker panel: "危险作业 / 外包事故组 BC-12 / 断路器" |
+| F2_L5_DeepTargetArea | Overdue payment notice | Stamp-red "INVOICE OVERDUE" / "欠款未结" notice posted near the objective pedestal |
+
+All BC text uses monospaced typeface, uppercase, stamp-red ink for status marks.
+Institutional host text (sales banners, warning signs) uses the tower's own voice — not BC's.
 
 ## Collectibles and Secrets
 

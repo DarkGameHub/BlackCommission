@@ -16,18 +16,23 @@ public static class TowerEarthCoastMaterialLibraryBuilder
         CreateMaterial("Materials/Architecture/M_T01_Concrete_WallRaw.mat", new Color(0.70f, 0.70f, 0.66f), 0f, 0.22f);
         CreateMaterial("Materials/Architecture/M_T01_Concrete_DarkVoid.mat", new Color(0.20f, 0.22f, 0.22f), 0f, 0.18f);
         CreateMaterial("Materials/Architecture/M_T01_Plaster_OffWhite.mat", new Color(0.78f, 0.76f, 0.69f), 0f, 0.30f);
-        CreateMaterial("Materials/Architecture/M_T01_Tile_LobbyDusty.mat", new Color(0.62f, 0.64f, 0.60f), 0f, 0.42f);
+        CreateMaterial("Materials/Architecture/M_T01_Tile_LobbyDusty.mat", new Color(0.62f, 0.64f, 0.60f), 0f, 0.35f);
         CreateMaterial("Materials/Architecture/M_T01_Metal_Rust.mat", new Color(0.44f, 0.27f, 0.17f), 0.55f, 0.18f);
         CreateMaterial("Materials/Architecture/M_T01_Rebar_Dark.mat", new Color(0.16f, 0.15f, 0.14f), 0.70f, 0.20f);
         CreateMaterial("Materials/Architecture/M_T01_Wood_Formwork.mat", new Color(0.45f, 0.34f, 0.22f), 0f, 0.24f);
         CreateMaterial("Materials/Architecture/M_T01_Asphalt_Muddy.mat", new Color(0.22f, 0.22f, 0.20f), 0f, 0.16f);
         CreateMaterial("Materials/Architecture/M_T01_Glass_Dirty.mat", new Color(0.52f, 0.68f, 0.68f, 0.55f), 0f, 0.72f);
+        CreateMaterial("Materials/Architecture/M_T01_Metal_MilGreen.mat", new Color(0.33f, 0.38f, 0.29f), 0f, 0.25f);
+        CreateMaterial("Materials/Architecture/M_T01_Metal_MilGreenFaded.mat", new Color(0.41f, 0.45f, 0.36f), 0f, 0.22f);
 
-        CreateMaterial("Materials/Props/M_T01_Tarp_Blue.mat", new Color(0.10f, 0.23f, 0.48f), 0f, 0.36f);
+        CreateMaterial("Materials/Props/M_T01_Tarp_Khaki.mat", new Color(0.32f, 0.30f, 0.22f), 0f, 0.25f);
         CreateMaterial("Materials/Props/M_T01_Rubble.mat", new Color(0.38f, 0.34f, 0.29f), 0f, 0.20f);
+        CreateMaterial("Materials/Props/M_T01_Objective_SandPan.mat", new Color(0.83f, 0.63f, 0.13f), 0f, 0.22f);
 
         CreateMaterial("Materials/Decals/M_T01_Decal_LeakDark.mat", new Color(0.08f, 0.08f, 0.07f, 0.70f), 0f, 0.12f);
-        CreateMaterial("Materials/Decals/M_T01_Decal_WarningYellow.mat", new Color(0.92f, 0.70f, 0.14f, 1f), 0f, 0.35f);
+        CreateMaterial("Materials/Decals/M_T01_Decal_WarningYellow.mat", new Color(0.72f, 0.56f, 0.08f, 1f), 0f, 0.35f);
+        CreateMaterial("Materials/Decals/M_T01_Decal_StampRed.mat", new Color(0.76f, 0.23f, 0.17f, 1f), 0f, 0.20f);
+        CreateMaterial("Materials/Paper/M_T01_Paper_BCForm.mat", new Color(0.84f, 0.80f, 0.68f), 0f, 0.18f);
 
         CreateAmbientCgMaterials();
 
@@ -43,6 +48,7 @@ public static class TowerEarthCoastMaterialLibraryBuilder
             "Materials/Architecture",
             "Materials/Props",
             "Materials/Decals",
+            "Materials/Paper",
             "Materials/Downloaded",
             "Textures/_Inbox",
             "Textures/Architecture/Concrete",
@@ -78,7 +84,7 @@ public static class TowerEarthCoastMaterialLibraryBuilder
             new AmbientCgMaterial("Planks037A", "Materials/Downloaded/M_ACG_Planks037A.mat", 0f, 0.24f),
             new AmbientCgMaterial("Asphalt031", "Materials/Downloaded/M_ACG_Asphalt031.mat", 0f, 0.16f),
             new AmbientCgMaterial("Gravel043", "Materials/Downloaded/M_ACG_Gravel043.mat", 0f, 0.18f),
-            new AmbientCgMaterial("Facade001", "Materials/Downloaded/M_ACG_Facade001.mat", 0f, 0.55f)
+            new AmbientCgMaterial("Facade001", "Materials/Downloaded/M_ACG_Facade001.mat", 0f, 0.25f)
         };
 
         AssetDatabase.Refresh();

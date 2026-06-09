@@ -21,7 +21,8 @@ HQ settlement`
 - **World / lore (2098 Mars-Earth)**: `docs/world-background-2098.md`
 - **Long-term roadmap**: `docs/black-commission-long-term-roadmap.md`
 - **Design decisions log**: `docs/design-decisions.md`
-- **Art direction (locked)**: `docs/art/black-commission-style-lock-v1.md`
+- **Art direction (locked)**: `design/art/art-bible.md` — all 9 sections, 2026-06-09
+  - `docs/art/black-commission-style-lock-v1.md` is superseded — see art-bible.md Section 4 Accent System
 - **Player-facing summary**: `README.md`
 
 ## Current Playable MVP Focus

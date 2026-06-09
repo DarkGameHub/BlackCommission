@@ -1,6 +1,6 @@
 # Active Session State — Black Commission
 
-**Last updated**: 2026-06-07
+**Last updated**: 2026-06-09
 **Stage**: Production (see `production/stage.txt`)
 
 ## Current Focus
@@ -41,11 +41,43 @@ van (south-center F1).
 - Game code stays in `Assets/_Project/Scripts/` (framework `src/` convention maps here).
 - `@AGENTS.md` remains the authoritative project rules.
 
+## Session 2026-06-09 — Progression System + Pillar Unification
+
+**Design locked (PM Yan Dai):**
+- Progression backbone = 5 license stages (not office level 1-8, not reputation bar)
+- Economy = money only (no reputation metric exposed to player)
+- Player level is hidden (dev-visible only; drives job pool selection)
+- Mission taxonomy = three tiers: 自由采集 / 指定委托 / 黑色委托 (the moral slope)
+- Hostile takeover threat = narrative events only (letters, visitors), no 0-100 UI bar
+- Endgame trigger = all story missions complete → 移民资格审查 (moral choice, not money threshold)
+- Satire delivery mechanism = settlement screen client usage notes, NOT narrator commentary
+
+**Files updated:**
+- `design/game-pillars.md` — pillars 5+6 replaced, anti-pillars added, progression backbone table added
+- `docs/world-background-2098.md` — Phase 4 officially named 黑色委托, design note added
+
+**Conflict noted (not yet resolved):**
+- `docs/mvp-core-loop.md` still describes the old system (reputation, office levels 1-8, acquisition after 2 jobs, 0-100 pressure). Leave untouched until `/design-system` writes a formal progression GDD to replace it.
+
 ## Open Questions / Next Steps
 
 1. **Test gap (confirmed: basically untested)** — networked mission state machine,
    settlement math, and sync have no automated coverage. Highest technical risk.
 2. Decide next feature push.
+
+## Session 2026-06-09 — Art Bible + Consistency Pass
+
+- **Art bible completed**: `design/art/art-bible.md` — all 9 sections authored and approved.
+  Key decisions: warm tungsten amber = primary accent; CRT green restricted to screens;
+  lo-fi silhouette-driven darkness; LC = production method only.
+- **Canonical art pointer updated**: `design/game-concept.md` now points to art-bible.md.
+  `docs/art/black-commission-style-lock-v1.md` is superseded (partially — add deprecation
+  header when convenient).
+- **7 visual consistency conflicts resolved**: level docs + pillars now use correct lighting
+  vocabulary. Full report: `docs/consistency-report-2026-06-09.md`.
+
+<!-- CONSISTENCY-CHECK: 2026-06-09 | Docs checked: 5 | Conflicts found: 7 | Resolved: 7 | Report: docs/consistency-report-2026-06-09.md -->
+<!-- ARCHITECTURE-REVIEW: 2026-06-09 | Verdict: CONCERNS | Requirements: 23 total — 2 covered, 2 partial, 19 gaps | Top gaps: mission-state-machine, player-input-controller, tower-navmesh-topology | Report: docs/architecture/architecture-review-2026-06-09.md -->
 
 ## Recovery
 

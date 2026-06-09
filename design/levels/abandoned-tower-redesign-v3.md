@@ -144,7 +144,7 @@ The scaffold bridge is the one direct E↔W route across the void.
 | Room | Size | Role | Loot / beat |
 |------|------|------|-------------|
 | Deep Target ☠ | L | **Fixed (objective+nest)** | 沙盘 lit pedestal, heavy 2H carry |
-| Sample Office / Show-flat ★ | M | **Fixed (beacon)** | warm "wrong" light, seen across shaft |
+| Sample Office / Show-flat ★ | M | **Fixed (beacon)** | cold overheads function cleanly (only zone); single warm tungsten desk lamp marks presence; pristine material condition = the wrong detail |
 | Exec Suite | M | Random | 1H(120) |
 | Model Showroom | M | Random | 1H(60) |
 | Sales Office | M | Random | 2H(130) |
@@ -202,7 +202,7 @@ a second level.
 - **Cover / readability props**: crane base, rebar & material stacks, stacked tarps, a
   site-office container, scaffold towers, spoil piles. They break sightlines so the
   outdoor dash has a little cat-and-mouse.
-- **Lighting**: mostly dark; a few failing sodium-amber site floods; van interior/headlights = warm safe pool. Same Municipal Debt Noir palette.
+- **Lighting**: mostly dark; exterior site floods are dead or near-dead (cold-adjacent, barely sufficient to read ground geometry); van interior = cold strip (5000K); van headlights = white/cold forward beam. The van reads as safe through contrast — the only lit interior on a dark forecourt — not through warm color.
 - **Hazard (light only)**: uneven ground / an open foundation trench you can fall into
   near the fire-exit landing. The monster may pursue **a few meters** outside the fire
   exit, then break off. **No exterior nest, no second monster** — exterior is a
@@ -269,7 +269,7 @@ topology on every peer → bakeable & net-syncable.
 3. **One van extraction + one fire exit + 3 internal descents**; critical path always
    solvable; no single campable chokepoint (invariant e).
 4. Topology = finite seed-driven toggle set with §6 invariants.
-5. Objective NW on F2, van S on F1; beacons = show-flat + stair towers.
+5. Objective NW on F2, van S on F1; beacons = show-flat + stair towers. Show-flat beacon = brightest functioning cold-light zone on F2, visible through the shaft void from F1; a single warm tungsten desk lamp on the sales desk marks human presence (art-bible Section 4 accent rule).
 6. **Simple exterior**: fenced lot, forecourt+van, one-sided perimeter run, cover props,
    mostly dark + van beacon, light hazard only — no exterior nest/fight.
 7. Target 15-min 1–4p run; oppression (time-scaled monster, heavy carry) + escape valves.
