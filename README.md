@@ -1,22 +1,22 @@
-# 黑色外包（Black Commission）
+# Black Commission
 
-黑色外包是一款 1-4 人合作外包接单游戏——一家快要倒闭的事务所靠接各种越来越离谱的外包任务维持运营。
+Black Commission is a 1–4 player co-op commission-running game about a nearly bankrupt agency scraping by on increasingly bizarre outsourced jobs.
 
-当前 MVP 核心流程：
+Current MVP core loop:
 
-1. 单机开房或创建/加入联机房间。
-2. 出生在破旧的事务所办公室。
-3. 用办公室电脑接受任务。
-4. 进入指定委托关卡（当前重点：封山雪线 / 白棘雪莲），采回目标物并躲避感染区风险。
-5. 返回事务所，结算金钱/声望/经验，花钱购买装备、恢复道具、事务所升级或未来的机构收购。
+1. Start a solo session or create/join an online room.
+2. Spawn in the run-down agency office.
+3. Accept a job via the office computer.
+4. Enter the mission site (current: **Abandoned Tower — Earth Coast 01**), retrieve the sealed bio-column, restore power if needed, and avoid the site monitor.
+5. Return to the office, settle rewards (money / reputation / XP), then spend on gear, consumables, office upgrades, or future buyout pressure.
 
-完整 MVP 设计、故事背景、小队配置及第一阶段实现计划见 [docs/mvp-core-loop.md](docs/mvp-core-loop.md)。
+Full MVP design, story background, squad configuration, and Phase 1 implementation plan: [docs/mvp-core-loop.md](docs/mvp-core-loop.md).
 
-2098 火星/地球世界观、许可证进度、代表性任务和结局设定见 [docs/world-background-2098.md](docs/world-background-2098.md)。
+2098 Mars/Earth world-building, license progression, representative commissions, and ending conditions: [docs/world-background-2098.md](docs/world-background-2098.md).
 
-当前美术方向已锁定，见 [docs/art/black-commission-style-lock-v1.md](docs/art/black-commission-style-lock-v1.md)。
+Current art direction is locked in the Art Bible: [design/art/art-bible.md](design/art/art-bible.md).
 
-## 核心流程图
+## Core Loop Diagram
 
 ```mermaid
 flowchart TD
@@ -48,23 +48,23 @@ flowchart TD
     N --> S[隐藏结局: 真相寄送<br/>把证据送上火星网络]
 ```
 
-## 环境要求
+## Requirements
 
-- **Unity 版本：`6000.4.7f1`（Unity 6）。** 必须用这个版本打开——Unity 工程对版本敏感，版本不一致会强制升级或报错。建议用 [Unity Hub](https://unity.com/download) 安装对应版本。
-- **Git LFS：** 本仓库的大模型、贴图、音视频等资源使用 [Git LFS](https://git-lfs.com/) 管理。首次 clone 前请先安装 Git LFS，并运行 `git lfs install`。
-- **依赖自动还原：** 本项目是 Unity C# 工程，没有也不需要 `requirements.txt`（那是 Python 的）。所有包依赖都锁定在 `Packages/manifest.json` 里（Netcode for GameObjects 2.11.2、URP 17.4、Input System、Relay/Authentication 等），用 Unity 打开工程时会自动下载还原，无需手动安装。
-- **不要提交生成目录：** `Library/`、`Temp/`、`Logs/`、`blendermodel/`、`GeneratedAssets/` 由 Unity、Blender 或 AI 工具在本地生成（已在 `.gitignore` 忽略），clone 后首次打开会自动重建，可能需要几分钟。
+- **Unity version: `6000.4.7f1` (Unity 6).** You must open the project with this exact version — Unity is version-sensitive and a mismatch will force an upgrade or throw errors. Install it via [Unity Hub](https://unity.com/download).
+- **Git LFS:** Large assets (models, textures, audio/video) are managed with [Git LFS](https://git-lfs.com/). Install Git LFS before cloning and run `git lfs install`.
+- **Automatic package restore:** This is a Unity C# project — there is no `requirements.txt` (that's Python). All package dependencies are pinned in `Packages/manifest.json` (Netcode for GameObjects 2.11.2, URP 17.4, Input System, Relay/Authentication, etc.) and are downloaded automatically when you open the project in Unity. No manual installation needed.
+- **Do not commit generated directories:** `Library/`, `Temp/`, `Logs/`, `blendermodel/`, and `GeneratedAssets/` are generated locally by Unity, Blender, or AI tools (already in `.gitignore`). They are rebuilt automatically on first open after a fresh clone — this may take a few minutes.
 
-## Clone 说明
+## Cloning
 
-正常拉取完整项目：
+Full clone with all assets:
 
 ```bash
 git lfs install
 git clone https://github.com/DarkGameHub/BlackCommission.git
 ```
 
-如果网络较慢，可以先只拉代码和 LFS 指针，稍后再下载大资源：
+If your connection is slow, clone the code first and pull LFS assets later:
 
 ```bash
 GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/DarkGameHub/BlackCommission.git
@@ -73,7 +73,7 @@ git lfs pull
 git lfs checkout
 ```
 
-如果 Unity 打开后发现贴图、FBX 模型或雪山场景资源丢失，通常是 Git LFS 资源没有下载完整。进入项目根目录后运行：
+If textures, FBX models, or scene assets are missing after opening Unity, LFS assets likely did not download completely. From the project root:
 
 ```bash
 git lfs install
@@ -81,35 +81,46 @@ git lfs pull
 git lfs checkout
 ```
 
-可以用下面命令检查 LFS 是否正常：
+Verify LFS is working correctly:
 
 ```bash
 git lfs fsck
 git lfs status
 ```
 
-如果某个 `.png`、`.fbx`、`.glb` 文件只有几百字节，并且第一行是 `version https://git-lfs.github.com/spec/v1`，说明它还是 LFS 指针文件，需要执行上面的 `git lfs pull` 和 `git lfs checkout`。
+If a `.png`, `.fbx`, or `.glb` file is only a few hundred bytes and its first line reads `version https://git-lfs.github.com/spec/v1`, it is still an LFS pointer — run `git lfs pull` and `git lfs checkout` to hydrate it.
 
-## Unity 工程启动
+## Opening the Project
 
-1. 若是首次 checkout，先运行 `Tools > Black Commission > Art > Setup ASV4 Art For Play`。
-2. 运行 `Tools > Black Commission > MVP > Build Snow Lotus Test Scene`（生成白棘雪莲测试关，并把 HQ 默认委托接到该任务）。
-3. 打开 `HQ` 场景，按 Play，点击 `创建事务所 / Start Host`，然后用办公室电脑接取白棘雪莲委托。
+**First-time setup (run once after cloning):**
 
-## 联机说明
+1. `Tools > Black Commission > Art > Setup ASV4 Art For Play` — imports and configures art assets.
+2. `Tools > Black Commission > MVP > Tower > Rebuild v8 Whitebox (slab plan)` — procedurally generates the Tower Earth Coast 01 level geometry inside `Tower_EarthCoast_01.unity`.
+3. `Tools > Black Commission > MVP > Tower > Bake Tower NavMesh` — bakes the NavMesh for AI navigation.
 
-游戏支持两种联机方式：
+**Playing:**
 
-- **在线（Relay）：** 主菜单点「创建事务所」走 Unity Relay 在线服务，生成 6 位房间码分享给队友。需要先在 Editor 里把工程关联到一个 Unity Cloud 项目（`Edit > Project Settings > Services`）并允许匿名登录；否则会自动回退到本地模式，公网无法加入。
-- **局域网直连（LAN）：** 主菜单的「LAN 直连」入口，按 IP + 端口直接开房/加入，适合本机和同网测试，不依赖在线服务。
+4. Open `Assets/_Project/Scenes/HQ.unity` and press Play.
+5. Click **Create Agency** (host) or **Join Agency** (client with a room code).
+6. Interact with the office computer and accept the **Earth Coast 01** commission.
+7. Board the van — it departs automatically to `Tower_EarthCoast_01`. Retrieve the sealed bio-column and return.
 
-**本地多人测试**：用「一个 Editor 实例 + 一个打包好的 Build」，或安装 ParrelSync/多 Editor 实例同时运行。最多 4 人（房主 + 3 名客户端）。
+> Play starts from whichever scene is currently open. Use `Tools > Black Commission > MVP > Play Current Scene Once` to run a specific scene without switching your default.
 
-## 生成美术工作流
+## Multiplayer
 
-1. 在 Windows 且已安装 Blender 的环境下运行：
+The game supports two connection modes:
+
+- **Online (Relay):** Click "Create Agency" in the main menu to use Unity Relay. A 6-digit room code is generated — share it with teammates. Requires the project to be linked to a Unity Cloud project in the editor (`Edit > Project Settings > Services`) with anonymous login enabled; otherwise it falls back to local mode and cannot be joined over the internet.
+- **LAN Direct (LAN):** The "LAN Direct" entry in the main menu lets you host or join by IP + port. Ideal for local and same-network testing with no dependency on online services.
+
+**Local multiplayer testing:** Use one Editor instance + one standalone Build, or install ParrelSync / run multiple Editor instances. Supports up to 4 players (host + 3 clients).
+
+## Generated Art Workflow
+
+1. On Windows with Blender installed, run:
    ```
    blender --background --factory-startup --python D:/BlackCommission/docs/art/blender_outsourced_civic_commercial_v4.py
    ```
-2. 在 Unity 中运行 `Tools > Black Commission > Art > Import Generated Blender Kit`。
-3. 导入的 Prefab 会生成到 `Assets/_Project/Prefabs/Art`。
+2. In Unity, run `Tools > Black Commission > Art > Import Generated Blender Kit`.
+3. Imported prefabs are placed in `Assets/_Project/Prefabs/Art`.

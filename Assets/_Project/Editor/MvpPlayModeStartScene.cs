@@ -27,7 +27,7 @@ public static class MvpPlayModeStartScene
         if (EditorSceneManager.playModeStartScene != hq)
         {
             EditorSceneManager.playModeStartScene = hq;
-            Debug.Log("[MVP] Play 会先从事务所 (HQ) 启动。要只跑当前场景一次: Tools > Black Commission > MVP > Play Current Scene Once。");
+            Debug.Log("[MVP] Play will start from the office (HQ) first. To run the current scene once only: Tools > Black Commission > MVP > Play Current Scene Once.");
         }
     }
     */
@@ -38,7 +38,7 @@ public static class MvpPlayModeStartScene
         if (hq != null && EditorSceneManager.playModeStartScene == hq)
         {
             EditorSceneManager.playModeStartScene = null;
-            Debug.Log("[MVP] 已关闭自动从 HQ 启动；Play 会运行当前打开的场景。");
+            Debug.Log("[MVP] Auto-start from HQ disabled; Play will run the currently open scene.");
         }
     }
 
@@ -47,6 +47,6 @@ public static class MvpPlayModeStartScene
     static void PlayCurrentOnce()
     {
         EditorSceneManager.playModeStartScene = null;
-        Debug.Log("[MVP] Play 会运行当前打开的场景。");
+        Debug.Log("[MVP] Play will run the currently open scene.");
     }
 }

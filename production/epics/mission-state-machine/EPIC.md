@@ -23,11 +23,11 @@ commission-running loop. It is responsible for:
 
 4. **Mission type routing** — three mission tiers operate under the same state machine
    but with different risk/reward/moral profiles:
-   - **自由采集** (free collection / junk run) — unlocks at license Stage 3; low risk,
+   - **Free Salvage** (free collection / junk run) — unlocks at license Stage 3; low risk,
      stable income, no satirical client reveal
-   - **指定委托** (commissioned job) — available from Stage 1; Mars client requirements,
+   - **Commissioned Job** (commissioned job) — available from Stage 1; Mars client requirements,
      satirical settlement feedback, moderate-to-high risk
-   - **黑色委托** (black commission) — unlocks at license Stage 4; high reward, dark
+   - **Black Commission** (black commission) — unlocks at license Stage 4; high reward, dark
      moral cost, ambiguous client identity
 
 5. **Settlement** — on mission resolution, the host computes the outcome (full/partial/fail)
@@ -38,8 +38,8 @@ commission-running loop. It is responsible for:
    a visible XP bar).
 
 7. **Story mission pool** — 3-5 specially authored missions are woven into the
-   指定委托 pool. Completing all story missions unlocks the Stage 5 移民资格审查
-   (immigration qualification check), which triggers the endgame moral choice.
+   Commissioned Job pool. Completing all story missions unlocks the Stage 5 Immigration Qualification Review,
+   which triggers the endgame moral choice.
 
 This system depends on ADR-0001 (host-authoritative networking) for its authority
 model. All state transitions, reward computation, and pool selection run on the
@@ -62,9 +62,9 @@ host and replicate to clients via NetworkVariable.
 | TR-mission-001 | 3 random jobs per dispatch cycle; player selects one | ❌ No ADR |
 | TR-mission-002 | Hidden player level drives job pool tier selection | ❌ No ADR |
 | TR-mission-003 | State machine: NotStarted → Active → Complete/PartialReturn/Failed, server-auth | ⚠️ ADR-0001 implied |
-| TR-mission-004 | Mission taxonomy: 自由采集 / 指定委托 / 黑色委托 | ❌ No ADR |
-| TR-mission-005 | 自由采集 unlocks at license Stage 3 | ❌ No ADR |
-| TR-mission-006 | 黑色委托 unlocks at license Stage 4 | ❌ No ADR |
+| TR-mission-004 | Mission taxonomy: Free Salvage / Commissioned Job / Black Commission | ❌ No ADR |
+| TR-mission-005 | Free Salvage unlocks at license Stage 3 | ❌ No ADR |
+| TR-mission-006 | Black Commission unlocks at license Stage 4 | ❌ No ADR |
 | TR-mission-007 | Settlement math (full/partial/fail) computed host-only | ⚠️ ADR-0001 implied |
 | TR-mission-008 | Pending reward handoff — claimed at office computer on return | ❌ No ADR |
 | TR-mission-009 | License stage progression gated by mission completion | ❌ No ADR |
@@ -108,7 +108,7 @@ This epic is complete when:
   on all clients in 4-player smoke test
 - 3-job random pool presents correctly per license stage with no cross-tier leakage
 - License stage advances correctly after qualifying mission completions
-- All three mission types (自由采集 / 指定委托 / 黑色委托) route through the
+- All three mission types (Free Salvage / Commissioned Job / Black Commission) route through the
   same state machine with correct tier gating
 
 ## Next Step

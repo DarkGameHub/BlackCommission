@@ -286,13 +286,13 @@ public class PlayerHotbar : NetworkBehaviour
 
         if (itemId == MvpHotbarItemId.None)
         {
-            reason = "无效道具。";
+            reason = "Invalid item.";
             return false;
         }
 
         if (itemId == MvpHotbarItemId.Flashlight && HasItem(MvpHotbarItemId.Flashlight))
         {
-            reason = "已经有一支手电。";
+            reason = "Already have a flashlight.";
             return false;
         }
 
@@ -304,7 +304,7 @@ public class PlayerHotbar : NetworkBehaviour
                 return true;
         }
 
-        reason = "热栏已满。";
+        reason = "Hotbar is full.";
         return false;
     }
 

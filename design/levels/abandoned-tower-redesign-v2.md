@@ -1,4 +1,4 @@
-# Level Map v2 — 地球海岸壹号 烂尾楼 (LC-density redesign)
+# Level Map v2 — Earth Coast No.1 Abandoned Tower (LC-density redesign)
 
 > ⚠️ **SUPERSEDED by `abandoned-tower-redesign-v3.md`** (2026-06-07). v3 changes:
 > irregular jagged footprint (no rectangle), **1 van + 1 fire exit** (not 3) with
@@ -6,7 +6,7 @@
 > history; build from v3.
 
 > Supersedes the layout in `abandoned-tower-floorplan.md`. Same fiction
-> (`abandoned-tower-earth-coast-01.md`), same objective (沙盘 / power gate / heavy
+> (`abandoned-tower-earth-coast-01.md`), same objective (scale model / power gate / heavy
 > carry). What changes: **density, interconnection, and — the headline — topology is
 > now seed-randomized, not just room contents.** Rationale and principles:
 > `lethal-company-design-study.md`. **Method-reference only; no LC layout copied.**
@@ -33,7 +33,7 @@ careful 15-min run nets enough to matter; balance later with `/balance-check`.
 
 ---
 
-## 1. What makes this version not "小儿科"
+## 1. What makes this version not "child's play"
 
 1. **Seed-randomized topology** — a finite set of `~~~` connectors open/close per run.
    Loops, shortcuts and dead-ends differ every time → players get lost, can't memorize
@@ -58,7 +58,7 @@ Stairs vertically aligned across floors (mandatory). Van forecourt south of z = 
  z32 ┌───────────────┬─────────┬─────────┬─────────┬───────┐
      │  WAREHOUSE (L) │ DORM(M) │CANTEEN  │FOREMAN  │       │
      │   2H(140)      │ !EVID   │  (M)    │ (M)     │ STAIR │
-     │   batteries    │ 隔离公告 │ 1H(40)  │ 1H(90)  │   A   │
+     │   batteries    │ Isolation Notice│ 1H(40)  │ 1H(90)  │   A   │
  z24 ╞═══════╤════════╪════╤════╪════╤════╪════╤════╡ (4×8) │ ▲ Stair-A also
      ║       ~~~      ║    ~~~  ║    ~~~  ║    ║    ║  FAST  │   = fast/exposed
      ║   CENTRAL CONSTRUCTION HALL (L hub)      ║ EXPOSED   │   descent later
@@ -73,8 +73,8 @@ Stairs vertically aligned across floors (mandatory). Van forecourt south of z = 
      │ PWR ⚡ │ (S)  │1H(30)│  LOBBY /    │ PUMP │ GEN     │
      │ RM(S) │ clue!│      │  SALES HALL │ (S)  │ ANNEX(S)│
      │ gate  │~~~   │      │  (L) ★ !    │      │ 1H(25)  │
- z4  ╞══╤════╧──────┴──────┤ "二层断电   ├──────┴─────────┤
-     │  ║ FIRE EXIT 3       │  卷帘锁定"  │                │
+ z4  ╞══╤════╧──────┴──────┤ "Floor 2 Power Off  ├──────┴─────────┤
+     │  ║ FIRE EXIT 3       │  Shutter Locked"│                │
      │  ▲ (maint. ladder    │  ◆ MAIN     │                │
  z0  └──╨── up from forecourt┴──╥─────────┴────────────────┘
                                 ║  VAN (S/E)  — dispatch van
@@ -85,13 +85,13 @@ Stairs vertically aligned across floors (mandatory). Van forecourt south of z = 
 
 | Slot | Room | Size | Role | Loot / beat |
 |------|------|------|------|-------------|
-| LOBBY | Lobby / Sales Hall ★ | L | **Fixed** (touches van) | "二层断电/卷帘锁定" readout (teach gate + tone) |
+| LOBBY | Lobby / Sales Hall ★ | L | **Fixed** (touches van) | "Floor 2 Power Off / Shutter Locked" readout (teach gate + tone) |
 | PWR | Power Room ⚡ | S | **Fixed (gate)** | Restore power → unlock F2; hold-interact |
 | TEMP | Temporary Office | S | Random S/F1 | **clue** to power room |
 | SECUR | Security Office | S | Random S/F1 | 1H(30) keys/radio |
 | WARE | West Material Warehouse | L | Random L/F1 | 2H(140), batteries, consumables |
 | WORK | East Assistant Workshop | M | Random M/F1 | consumables (medkit/spray/decoy) |
-| DORM | Worker Dorm | M | **Fixed-ish** | **EVIDENCE** 隔离公告 (bonus) |
+| DORM | Worker Dorm | M | **Fixed-ish** | **EVIDENCE** Isolation Notice (bonus) |
 | CANTEEN | Canteen / Break Room | M | Random M/F1 | 1H(40) |
 | FOREMAN | Foreman Office | M | Random M/F1 | 1H(90) rich |
 | SAMPLE | Sample Material Store | S | Random S/F1 | 1H(55) |
@@ -112,7 +112,7 @@ and from fast Stair-A.
 ```
  z32 ┌───────────────┬─────────┬─────────┬─────────┬───────┐
      │ DEEP TARGET(L)│ EXEC    │ MODEL   │ SALES   │       │
-     │ ☠ 沙盘 2H(★★★)│ SUITE(M)│SHOWROOM │OFFICE(M)│ STAIR │
+     │ ☠ Scale model 2H(★★★)│ SUITE(M)│SHOWROOM │OFFICE(M)│ STAIR │
      │ lit pedestal  │ 1H(120) │ (M)1H(60│ 2H(130) │   A   │
  z24 ╞═══════╤═══════╪════╤════╪════╤════╪════╤════╡ (4×8) │
      ║       ~~~     ║    ~~~  ║    ~~~  ║    ║    ║        │
@@ -137,7 +137,7 @@ and from fast Stair-A.
 
 | Slot | Room | Size | Role | Loot / beat |
 |------|------|------|------|-------------|
-| TARGET | Deep Target Area ☠ | L | **Fixed (objective+nest)** | 沙盘 on lit pedestal (heavy 2H carry); monster nest |
+| TARGET | Deep Target Area ☠ | L | **Fixed (objective+nest)** | Scale model on lit pedestal (heavy 2H carry); monster nest |
 | SHOWFLAT | Sample Office / Show-flat ★ | M | **Fixed (beacon)** | "wrong" warm light, visible across shaft |
 | EXEC | Exec Suite | M | Random M/F2 | 1H(120) rich |
 | MODEL | Model Showroom | M | Random M/F2 | 1H(60) |
@@ -182,7 +182,7 @@ toggle a **finite set of connectors**, not just room contents.
 ## 5. Oppression + escape (the two things PM asked for)
 
 **Oppression (pressure):**
-- Grabbing 沙盘 aggros the **Infected Site Inspector** (reskin `SchoolMonsterAI`).
+- Grabbing the scale model aggros the **Infected Site Inspector** (reskin `SchoolMonsterAI`).
 - Monster **scales with time-in-building** (`MvpMissionClock`): patrol radius and
   hunt aggression rise the longer the team stays → punishes greed.
 - Heavy 2H carry slows the carrier + locks hotbar → carrier is the vulnerable point.
@@ -212,23 +212,23 @@ Intensity
  4 |        *   *   *  * *    *  *               *
  2 |  * *     *            *                        *
  0 |S------------------------------------------------E
-   [Van][Lobby/teach][Gather+Power gate][Ascend/maze][沙盘+nest][Descent/Exit]
+   [Van][Lobby/teach][Gather+Power gate][Ascend/maze][Scale model+nest][Descent/Exit]
 ```
 
 - Valley: F1 explore (maze, gather, find power) — monster dormant.
 - Rise: power on → ascend → F2 maze, scaffold, monster audible/patrolling wider.
-- Climax: grab 沙盘 → monster active + time-scaled → heavy carry descent.
+- Climax: grab scale model → monster active + time-scaled → heavy carry descent.
 - Decision at van: full / partial / push back in.
 
 ---
 
 ## 7. What carries over unchanged
 
-- Objective = 沙盘 (heavy 2H carry, droppable/relay, server-authoritative carrier id).
+- Objective = scale model (heavy 2H carry, droppable/relay, server-authoritative carrier id).
 - Power gate (server-authoritative building state unlocks F2).
 - Monster = Infected Site Inspector (reskin `SchoolMonsterAI` + `HidingSpot`).
 - Mission state/return/partial/fail, van settlement, office-computer commission.
-- Evidence photo (隔离公告) bonus pattern.
+- Evidence photo (Isolation Notice) bonus pattern.
 
 ## 8. New work flagged for scoping (after approval)
 

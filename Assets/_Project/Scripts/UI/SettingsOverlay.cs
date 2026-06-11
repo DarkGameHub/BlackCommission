@@ -134,7 +134,7 @@ public class SettingsOverlay : MonoBehaviour
         // ─── Game ───
         GUILayout.Space(8);
         GUILayout.Label(MvpLocale.T("game"), accentStyle);
-        string[] languageLabels = { "简体中文", "English" };
+        string[] languageLabels = { "English", "中文 (简体)" };
         GUILayout.Label(MvpLocale.T("language", languageLabels[Mathf.Clamp(MvpHud.LanguageIndexStatic, 0, 1)]), labelStyle);
         int selectedLanguage = GUILayout.SelectionGrid(MvpHud.LanguageIndexStatic, languageLabels, 2);
         if (selectedLanguage != MvpHud.LanguageIndexStatic)

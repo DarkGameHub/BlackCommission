@@ -78,7 +78,7 @@ After deciding open edges, build the open graph and BFS/flood-fill from `Van`. A
 | **I9** | shaft fall-gaps never the *only* link between two otherwise-separated areas | falling must never be mandatory |
 
 Any failure → re-roll (§2 step 3). I7 and I8 are the two the irregular footprint most
-threatens — they are the explicit answer to "注意连通性".
+threatens — they are the explicit answer to "pay attention to connectivity".
 
 > A pure-function version of this validator (graph in → pass/fail + reason) is what the
 > EditMode tests call, so connectivity is provable headlessly without a scene.
@@ -98,7 +98,7 @@ This is DunGen's "main path always valid, branches vary," enforced by constructi
 
 ---
 
-## 5. Corridor design standards (the "走廊设计" rules)
+## 5. Corridor design standards (the corridor design rules)
 
 1. **Backbone = a ring, not a spine.** Each floor's fixed corridors form a **loop**
    through the core so there are always **≥2 routes** between the van side and the stairs
@@ -268,4 +268,3 @@ ADR-0001's validation criteria.
    (needs explicit YAML-edit go-ahead per `@AGENTS.md`).
 2. **NavMesh**: confirm "superset + carve" first (§8), fall back to per-variant if leaky.
 3. Toggle `openChance` default (e.g. 0.5) and re-roll attempt cap N (e.g. 16) — tunable.
-```

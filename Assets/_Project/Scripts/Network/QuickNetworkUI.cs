@@ -352,7 +352,7 @@ public class QuickNetworkUI : MonoBehaviour
             settingsOpen = false;
         cy += 28;
 
-        string[] langLabels = { "简体中文", "English" };
+        string[] langLabels = { "Simplified Chinese", "English" };
         GUI.Label(new Rect(cx, cy, bw, 18), MvpLocale.T("language", langLabels[MvpHud.LanguageIndexStatic]), hintStyle);
         cy += 20;
         int newLang = GUI.SelectionGrid((Rect)(new Rect(cx, cy, bw, 26)), MvpHud.LanguageIndexStatic, langLabels, 2, joinBtnStyle);

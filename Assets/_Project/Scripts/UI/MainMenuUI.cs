@@ -448,13 +448,13 @@ public class MainMenuUI : MonoBehaviour
         AddRect(frame.transform, "StatusDot", new Vector2(280f, 181f), new Vector2(16f, 16f),
             DispatchGreen, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
-        continueBtn = CreateReferenceMenuRow(frame.transform, "ContinueBtn", "继续事务所", "CONTINUE OFFICE", "▭", 112f, true);
-        newOfficeBtn = CreateReferenceMenuRow(frame.transform, "NewOfficeBtn", "建立新事务所", "NEW OFFICE", "◖", 52f, false);
-        joinBtn = CreateReferenceMenuRow(frame.transform, "JoinBtn", "加入事务所", "JOIN OFFICE", "●", -8f, false);
+        continueBtn = CreateReferenceMenuRow(frame.transform, "ContinueBtn", "Continue Office", "CONTINUE OFFICE", "▭", 112f, true);
+        newOfficeBtn = CreateReferenceMenuRow(frame.transform, "NewOfficeBtn", "New Office", "NEW OFFICE", "◖", 52f, false);
+        joinBtn = CreateReferenceMenuRow(frame.transform, "JoinBtn", "Join Office", "JOIN OFFICE", "●", -8f, false);
         AddRect(frame.transform, "CrtDivider", new Vector2(0f, -50f), new Vector2(540f, 2f),
             DispatchGreenDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        recordsBtn = CreateReferenceMenuRow(frame.transform, "RecordsBtn", "公司档案", "RECORDS", "▧", -88f, false);
-        settingsBtn = CreateReferenceMenuRow(frame.transform, "SettingsBtn", "设置", "SETTINGS", "⚙", -151f, false);
+        recordsBtn = CreateReferenceMenuRow(frame.transform, "RecordsBtn", "Company Records", "RECORDS", "▧", -88f, false);
+        settingsBtn = CreateReferenceMenuRow(frame.transform, "SettingsBtn", "Settings", "SETTINGS", "⚙", -151f, false);
 
         directBtn = CreateMenuHotspot(frame.transform, "DirectConnectHotspot", new Vector2(0f, -282f), new Vector2(540f, 34f));
         directBtn.gameObject.SetActive(false);
@@ -522,11 +522,9 @@ public class MainMenuUI : MonoBehaviour
 
     Button CreateReferenceMenuRow(Transform parent, string name, string title, string desc, string icon, float y, bool primary)
     {
-        // These rows render ON the painted CRT screen, so phosphor green is the correct
-        // idiom (art bible: CRT green lives on screens) — just dimmed from the old neon.
-        Color normal = primary ? new Color(0.21f, 0.50f, 0.19f, 0.94f) : new Color(0f, 0f, 0f, 0f);
-        Color hover = primary ? new Color(0.30f, 0.66f, 0.27f, 0.96f) : new Color(0.21f, 0.50f, 0.19f, 0.93f);
-        Color pressed = primary ? new Color(0.11f, 0.27f, 0.10f, 1f) : new Color(0.07f, 0.18f, 0.07f, 0.92f);
+        Color normal = primary ? new Color(0.31f, 0.95f, 0.25f, 0.92f) : new Color(0f, 0f, 0f, 0f);
+        Color hover = primary ? new Color(0.42f, 1f, 0.34f, 0.96f) : new Color(0.35f, 1f, 0.26f, 0.92f);
+        Color pressed = primary ? new Color(0.18f, 0.72f, 0.16f, 1f) : new Color(0.08f, 0.22f, 0.08f, 0.90f);
         var btn = CreateButton(parent, name, "", 1, normal, hover, pressed);
         btn.transition = Selectable.Transition.None;
         btn.targetGraphic.color = normal;
@@ -542,7 +540,7 @@ public class MainMenuUI : MonoBehaviour
         if (emptyLabel != null) Destroy(emptyLabel.gameObject);
 
         Color titleColor = primary ? Color.black : DispatchGreen;
-        Color subColor = primary ? new Color(0.05f, 0.13f, 0.05f, 1f) : BlackCommissionUiTheme.CrtGreenDim;
+        Color subColor = primary ? new Color(0.08f, 0.18f, 0.08f, 1f) : BlackCommissionUiTheme.CrtGreenDim;
 
         var iconText = AddText(btn.transform, "Icon", icon, primary ? 29 : 26, titleColor, TextAlignmentOptions.Center);
         iconText.fontStyle = FontStyles.Bold;
@@ -572,8 +570,8 @@ public class MainMenuUI : MonoBehaviour
         TMP_Text desc, Color normalBg, Color hoverBg, bool primary)
     {
         Color normalTitle = primary ? Color.black : DispatchGreen;
-        Color normalDesc = primary ? new Color(0.05f, 0.13f, 0.05f, 1f) : BlackCommissionUiTheme.CrtGreenDim;
-        Color darkText = Color.black; // hovered rows fill with phosphor green — inverse video
+        Color normalDesc = primary ? new Color(0.08f, 0.18f, 0.08f, 1f) : BlackCommissionUiTheme.CrtGreenDim;
+        Color darkText = Color.black;
         string plainTitle = title.text.TrimStart('>', ' ');
         Vector2 iconHome = icon.rectTransform.anchoredPosition;
         Vector2 titleHome = title.rectTransform.anchoredPosition;
@@ -585,7 +583,7 @@ public class MainMenuUI : MonoBehaviour
             bool inverted = hovered || primary;
             icon.color = inverted ? darkText : normalTitle;
             title.color = inverted ? darkText : normalTitle;
-            desc.color = inverted ? new Color(0.05f, 0.13f, 0.05f, 1f) : normalDesc;
+            desc.color = inverted ? new Color(0.06f, 0.14f, 0.05f, 1f) : normalDesc;
             icon.rectTransform.anchoredPosition = iconHome + (hovered ? new Vector2(10f, 0f) : Vector2.zero);
             title.rectTransform.anchoredPosition = titleHome + (hovered ? new Vector2(10f, 0f) : Vector2.zero);
             desc.rectTransform.anchoredPosition = descHome + (hovered ? new Vector2(10f, 0f) : Vector2.zero);
@@ -610,13 +608,11 @@ public class MainMenuUI : MonoBehaviour
 
     void BuildReferenceJobStrip(Transform parent)
     {
-        // Aged-paper commission notice pinned at the bottom (same paperwork grammar as
-        // the tower's 催缴/封条 dressing) — stamp-red tab, ink text.
         var root = AddRect(parent, "JobStrip", new Vector2(258f, 28f), new Vector2(900f, 118f),
-            new Color(0.839f, 0.800f, 0.682f, 0.92f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+            new Color(0.16f, 0.13f, 0.085f, 0.88f), new Vector2(0f, 0f), new Vector2(0f, 0f));
         AddRect(root.transform, "PostedTab", new Vector2(16f, 92f), new Vector2(235f, 24f),
-            new Color(0.761f, 0.227f, 0.169f, 0.92f), new Vector2(0f, 0f), new Vector2(0f, 0f));
-        var tab = AddText(root.transform, "PostedLabel", "NEW COMMISSION POSTED", 13, AgedPaper, TextAlignmentOptions.Left);
+            new Color(0.10f, 0.30f, 0.10f, 0.88f), new Vector2(0f, 0f), new Vector2(0f, 0f));
+        var tab = AddText(root.transform, "PostedLabel", "NEW COMMISSION POSTED", 13, DispatchGreen, TextAlignmentOptions.Left);
         tab.fontStyle = FontStyles.Bold;
         tab.rectTransform.anchorMin = new Vector2(0f, 0f);
         tab.rectTransform.anchorMax = new Vector2(0f, 0f);
@@ -625,8 +621,8 @@ public class MainMenuUI : MonoBehaviour
         tab.rectTransform.sizeDelta = new Vector2(250f, 22f);
 
         var details = AddText(root.transform, "JobDetails",
-            "委托方: 匿名买家（火星汇款）\n需求: 回收「真实海岸」生态柱\n报酬: 300G\n备注: 地球海岸壹号·烂尾预售楼，注意密封完整度。", 15,
-            new Color(0.10f, 0.095f, 0.075f, 1f), TextAlignmentOptions.Left);
+            "Client: Ms. Wang\nRequest: Recover son's homework notebook\nReward: 120G\nNote: Child says something was in the classroom after school.", 15,
+            Color.black, TextAlignmentOptions.Left);
         details.fontStyle = FontStyles.Bold;
         details.rectTransform.anchorMin = new Vector2(0f, 0f);
         details.rectTransform.anchorMax = new Vector2(0f, 0f);
@@ -636,7 +632,7 @@ public class MainMenuUI : MonoBehaviour
 
         AddRect(root.transform, "Photo", new Vector2(500f, 16f), new Vector2(245f, 86f),
             new Color(0.11f, 0.19f, 0.18f, 0.95f), new Vector2(0f, 0f), new Vector2(0f, 0f));
-        var photoText = AddText(root.transform, "PhotoText", "现场照片 · 烂尾预售楼", 13,
+        var photoText = AddText(root.transform, "PhotoText", "SCHOOL HALLWAY PHOTO", 13,
             new Color(0.58f, 0.76f, 0.70f, 0.70f), TextAlignmentOptions.Center);
         photoText.rectTransform.anchorMin = new Vector2(0f, 0f);
         photoText.rectTransform.anchorMax = new Vector2(0f, 0f);
@@ -644,7 +640,7 @@ public class MainMenuUI : MonoBehaviour
         photoText.rectTransform.anchoredPosition = new Vector2(500f, 48f);
         photoText.rectTransform.sizeDelta = new Vector2(245f, 26f);
 
-        var open = AddText(root.transform, "OpenTerminal", "前往委托终端  ›\nOPEN TERMINAL", 20,
+        var open = AddText(root.transform, "OpenTerminal", "Go to Commission Terminal  ›\nOPEN TERMINAL", 20,
             DispatchGreen, TextAlignmentOptions.Center);
         open.fontStyle = FontStyles.Bold;
         open.rectTransform.anchorMin = new Vector2(0f, 0f);
@@ -1173,9 +1169,9 @@ public class MainMenuUI : MonoBehaviour
         wait.rectTransform.sizeDelta = new Vector2(420f, 22f);
 
         AddRect(panel.transform, "ProgressRail", new Vector2(0f, -66f), new Vector2(360f, 8f),
-            new Color(0.045f, 0.070f, 0.068f, 0.90f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            new Color(0.050f, 0.085f, 0.045f, 0.90f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         AddRect(panel.transform, "ProgressFill", new Vector2(-72f, -66f), new Vector2(216f, 8f),
-            new Color(0.330f, 0.490f, 0.473f, 0.85f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            new Color(0.310f, 0.950f, 0.250f, 0.78f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
         return panel;
     }
@@ -1238,7 +1234,7 @@ public class MainMenuUI : MonoBehaviour
         BuildVolumeSection(panel.transform, new Vector2(0f, 0f));
         BuildSensitivitySection(panel.transform, new Vector2(0f, -90f));
 
-        settingsQuitBtn = CreateButton(panel.transform, "SettingsQuit", "退出游戏", 18,
+        settingsQuitBtn = CreateButton(panel.transform, "SettingsQuit", "Quit Game", 18,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
         var quitRt = settingsQuitBtn.GetComponent<RectTransform>();
         quitRt.anchoredPosition = new Vector2(0f, -150f);
@@ -1249,11 +1245,11 @@ public class MainMenuUI : MonoBehaviour
 
     void BuildLangSection(Transform parent, Vector2 position)
     {
-        AddText(parent, "LangLabel", "语言 / Language", 14,
+        AddText(parent, "LangLabel", "Language", 14,
             HintText, TextAlignmentOptions.Left)
             .rectTransform.anchoredPosition = position + new Vector2(0f, 18f);
 
-        var zhBtn = CreateButton(parent, "ZhBtn", "简体中文", 16,
+        var zhBtn = CreateButton(parent, "ZhBtn", "Simplified Chinese", 16,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
         zhBtn.GetComponent<RectTransform>().anchoredPosition = position + new Vector2(-90f, -10f);
         zhBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(160f, 38f);
@@ -1268,7 +1264,7 @@ public class MainMenuUI : MonoBehaviour
 
     void BuildVolumeSection(Transform parent, Vector2 position)
     {
-        AddText(parent, "VolumeLabel", "音量 / Master Volume", 14,
+        AddText(parent, "VolumeLabel", "Master Volume", 14,
             HintText, TextAlignmentOptions.Left)
             .rectTransform.anchoredPosition = position + new Vector2(0f, 18f);
 
@@ -1328,7 +1324,7 @@ public class MainMenuUI : MonoBehaviour
 
     void BuildSensitivitySection(Transform parent, Vector2 position)
     {
-        AddText(parent, "SensLabel", "鼠标灵敏度 / Sensitivity", 14,
+        AddText(parent, "SensLabel", "Mouse Sensitivity", 14,
             HintText, TextAlignmentOptions.Left)
             .rectTransform.anchoredPosition = position + new Vector2(0f, 18f);
 
@@ -1390,24 +1386,24 @@ public class MainMenuUI : MonoBehaviour
         var panel = CreatePanel(parent, "QuitConfirmPanel", new Vector2(460f, 220f));
         panel.SetActive(false);
 
-        var title = AddText(panel.transform, "Title", "确认退出？", 28,
+        var title = AddText(panel.transform, "Title", "Confirm Quit?", 28,
             DispatchGreen, TextAlignmentOptions.Center);
         title.fontStyle = FontStyles.Bold;
         title.rectTransform.anchoredPosition = new Vector2(0f, 62f);
         title.rectTransform.sizeDelta = new Vector2(380f, 40f);
 
-        var body = AddText(panel.transform, "Body", "退出到桌面 / Exit to desktop", 16,
+        var body = AddText(panel.transform, "Body", "Exit to desktop", 16,
             AgedPaper, TextAlignmentOptions.Center);
         body.rectTransform.anchoredPosition = new Vector2(0f, 14f);
         body.rectTransform.sizeDelta = new Vector2(390f, 28f);
 
-        quitConfirmYesBtn = CreateButton(panel.transform, "ConfirmQuit", "退出", 18,
+        quitConfirmYesBtn = CreateButton(panel.transform, "ConfirmQuit", "Quit", 18,
             BtnPrimary, BtnPrimaryHover, BtnPrimaryPressed);
         var yesRt = quitConfirmYesBtn.GetComponent<RectTransform>();
         yesRt.anchoredPosition = new Vector2(-92f, -64f);
         yesRt.sizeDelta = new Vector2(150f, 44f);
 
-        quitConfirmNoBtn = CreateButton(panel.transform, "CancelQuit", "取消", 18,
+        quitConfirmNoBtn = CreateButton(panel.transform, "CancelQuit", "Cancel", 18,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
         var noRt = quitConfirmNoBtn.GetComponent<RectTransform>();
         noRt.anchoredPosition = new Vector2(92f, -64f);
@@ -1583,7 +1579,7 @@ public class MainMenuUI : MonoBehaviour
         AnchorLeftCenter(lobbyHintText.rectTransform, 42f, 8f, new Vector2(380f, 132f));
 
         var procedure = AddText(panel.transform, "Procedure",
-            "01  委托终端盖章\n02  旧货柜采购装备\n03  全员上车派往封锁区", 14,
+            "01  Stamp commission at terminal\n02  Buy gear from supply cabinet\n03  All aboard — dispatch to restricted zone", 14,
             BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Left);
         procedure.lineSpacing = 10f;
         AnchorLeftCenter(procedure.rectTransform, 42f, -150f, new Vector2(380f, 92f));
@@ -1674,9 +1670,9 @@ public class MainMenuUI : MonoBehaviour
         // Primary action: a stamped dispatch button, not a neon app CTA.
         lobbyEnterBtn = CreateButton(panel.transform, "EnterOffice",
             MvpLocale.T("lobby_enter_office") + "   ›", 20,
-            new Color(0.105f, 0.165f, 0.158f, 0.96f),
-            new Color(0.180f, 0.275f, 0.265f, 0.98f),
-            new Color(0.060f, 0.095f, 0.090f, 1f));
+            new Color(0.075f, 0.140f, 0.070f, 0.96f),
+            new Color(0.105f, 0.210f, 0.095f, 0.98f),
+            new Color(0.040f, 0.080f, 0.040f, 1f));
         var enterRt = lobbyEnterBtn.GetComponent<RectTransform>();
         enterRt.anchoredPosition = new Vector2(330f, -158f);
         enterRt.sizeDelta = new Vector2(230f, 54f);
@@ -2155,7 +2151,7 @@ public class MainMenuUI : MonoBehaviour
         newOfficeBtn.onClick.AddListener(StartHost);
         joinBtn.onClick.AddListener(() => SetState(MenuState.JoinInput));
         if (recordsBtn != null)
-            recordsBtn.onClick.AddListener(() => SetStatus("公司档案暂未归档。"));
+            recordsBtn.onClick.AddListener(() => SetStatus("Company records not yet archived."));
         settingsBtn.onClick.AddListener(ShowSettingsPanel);
         if (quitBtn != null)
             quitBtn.onClick.AddListener(ShowQuitConfirm);

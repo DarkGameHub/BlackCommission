@@ -28,46 +28,46 @@ Avoid clean sci-fi, cozy office decor, or generic school grayboxes. The world sh
 
 ```mermaid
 flowchart TD
-    A["主菜单"] --> B{"选择模式"}
-    B --> B1["单人游玩 / 创建主机"]
-    B --> B2["加入主机"]
-    B1 --> C["破旧事务所"]
+    A["Main Menu"] --> B{"Select Mode"}
+    B --> B1["Solo Play / Create Host"]
+    B --> B2["Join Host"]
+    B1 --> C["Rundown Office"]
     B2 --> C
 
-    C --> D["办公室电脑"]
-    D --> D1["电脑商店采购道具\nF1 回血药 / F2 诱饵 / F3 喷雾 / F4 手电"]
-    D1 --> E["锁定任务: 找回作业本"]
-    E --> E2["全员进入事务所面包车"]
-    E2 --> F["车内等待转场\n到达学校门口"]
+    C --> D["Office Computer"]
+    D --> D1["Buy gear from computer shop\nF1 Medkit / F2 Decoy / F3 Spray / F4 Flashlight"]
+    D1 --> E["Lock in job: Find Homework Notebook"]
+    E --> E2["All players board office dispatch van"]
+    E2 --> F["In-van transit overlay\nArrive at school entrance"]
 
-    F --> G["寻找作业本 / 可选登记簿"]
-    G --> H{"任务中发生什么?"}
-    H -->|找到作业本| I["作业本携带者前往校门委托车"]
-    H -->|找到登记簿| H2["拍照留证\n增加外快"]
-    H -->|被怪物追击| J["用走位 / 喷雾 / 诱饵 / 回血药求生"]
-    H -->|主动止损| M["委托车提前返程\n部分结算"]
+    F --> G["Search for notebook / optional overdue ledger"]
+    G --> H{"What happens mid-mission?"}
+    H -->|Found notebook| I["Notebook carrier heads to school gate van"]
+    H -->|Found ledger| H2["Photograph as evidence\nEarn bonus payment"]
+    H -->|Chased by monster| J["Survive with positioning / spray / decoy / medkit"]
+    H -->|Cut losses early| M["Van returns early\nPartial settlement"]
     H2 --> G
     J --> G
-    H -->|全员倒地| K["任务失败"]
+    H -->|All players downed| K["Mission failed"]
 
-    I --> L["委托车完整返程\n任务成功"]
-    K --> M["返回事务所"]
+    I --> L["Van returns fully\nMission success"]
+    K --> M["Return to office"]
     L --> M
-    M --> N["办公室电脑领取结算"]
+    M --> N["Claim settlement at office computer"]
 
-    N --> O{"结算结果"}
-    O -->|成功| P["获得金钱 / 声望 / 经验"]
-    O -->|失败| Q["少量安慰金 / 声望下降 / 吞并压力上升"]
+    N --> O{"Settlement result"}
+    O -->|Success| P["Earn money / reputation / experience"]
+    O -->|Failure| Q["Small consolation payment / reputation drops / takeover pressure rises"]
 
-    P --> R{"完成 2 个失物任务\n且资金 >= 150G\n且吞并压力 < 70?"}
-    R -->|是| S["吞并 0 级事务所\n事务所升到 2 级"]
-    R -->|否| D
+    P --> R{"Completed 2 lost-item jobs\nAND funds >= 150G\nAND takeover pressure < 70?"}
+    R -->|Yes| S["Acquire level-0 office\nOffice upgrades to level 2"]
+    R -->|No| D
     S --> D
 
-    Q --> T{"吞并压力 100\n且资金/声望仍为负?"}
-    T -->|第一次| U["收到竞对最后通牒"]
-    T -->|再次失败| V["被竞对吞并重组\n债务增加，进度回退"]
-    T -->|否| D
+    Q --> T{"Takeover pressure at 100\nAND funds/reputation still negative?"}
+    T -->|First time| U["Receive competitor ultimatum"]
+    T -->|Fail again| V["Forcibly acquired and restructured by competitor\nDebt increases, progress resets"]
+    T -->|No| D
     U --> D
     V --> D
 ```

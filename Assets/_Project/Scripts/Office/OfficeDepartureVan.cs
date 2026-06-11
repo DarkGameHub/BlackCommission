@@ -10,16 +10,16 @@ public class OfficeDepartureVan : MonoBehaviour, IInteractable
         get
         {
             OfficeComputer computer = GetComputer();
-            if (computer == null) return "车库电脑离线";
-            if (MvpPendingReward.HasPending) return "先去电脑领取结算";
-            if (VanTransitOverlay.IsActive) return "司机已经发车";
-            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return "先创建主机再出车";
-            if (!computer.HasSelectedDemoTask) return "先去绿光 COMPUTER 终端锁定委托";
+            if (computer == null) return "Garage terminal offline";
+            if (MvpPendingReward.HasPending) return "Collect your settlement at the terminal first";
+            if (VanTransitOverlay.IsActive) return "Van already departed";
+            if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening) return "Create a host session before departing";
+            if (!computer.HasSelectedDemoTask) return "Lock a commission at the green COMPUTER terminal first";
             PlayerController.GetSeatedCounts(out int seated, out int total);
-            if (!NetworkManager.Singleton.IsHost) return $"[E]上车  {seated}/{total} 已就座";
+            if (!NetworkManager.Singleton.IsHost) return $"[E] Board  {seated}/{total} seated";
             if (total > 0 && seated < total)
-                return $"等待全员上车  {seated}/{total}";
-            return "[SPACE] 发车";
+                return $"Waiting for all crew to board  {seated}/{total}";
+            return "[SPACE] Depart";
         }
     }
 

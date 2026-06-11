@@ -22,7 +22,7 @@ namespace BlackCommission.Level
     public enum RoomSlotRole
     {
         Random,       // shuffled content from the catalog
-        Objective,    // the sales model (沙盘) pedestal + monster nest
+        Objective,    // the sales model (diorama) pedestal + monster nest
         PowerGate,    // the breaker that unlocks floor 2
         Van,          // dispatch van: spawn / return / partial-settlement
         Stair,        // stair core (never randomized; must align across floors)

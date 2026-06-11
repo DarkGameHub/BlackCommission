@@ -1,4 +1,4 @@
-# Floor Plan & Modular Room Kit — 地球海岸壹号烂尾楼
+# Floor Plan & Modular Room Kit — Earth Coast No.1 Abandoned Tower
 
 > Companion to `abandoned-tower-earth-coast-01.md`. Defines a **modular room-size kit**
 > (4 sizes) and a **slot-based floor plan** for both floors so rooms can be **randomly
@@ -93,12 +93,12 @@ z=0  └───┴───┴──┬──────┬──┴───
 | Slot | Default room (blockout name) | Size | Origin (x,z) | Role | Notes |
 |------|------------------------------|------|--------------|------|-------|
 | VAN | `F1_S1_StartVanArea` | — | x14–22, z<0 | **Fixed** | Spawn / return / partial-settlement |
-| S3 | `F1_M1_LobbySecurityPassage` | L (12×8) | 8,0 | **Fixed** | Entry hall; "断电" readout; opens to van |
+| S3 | `F1_M1_LobbySecurityPassage` | L (12×8) | 8,0 | **Fixed** | Entry hall; "Power Off" readout; opens to van |
 | S1 | `F1_S3_PowerRoom` | S (4×4) | 4,0 | **Fixed (gate)** | Restore power → unlock F2 |
 | S2 | `F1_S2_TemporaryOffice` | S (4×4) | 24,0 | Random (S, F1) | Holds power-room clue |
 | S4 | `F1_M2_EastAssistantWorkshop` | M (8×8) | 28,0 | Random (M, F1) | Consumables |
 | N1 | `F1_L2_WestMaterialWarehouse` | L (12×8) | 4,12 | Random (L, F1) | Consumables loot |
-| N2 | `F1_M3_MainWorkerDorm` | M (8×8) | 16,12 | Random (M, F1) | **Evidence** (隔离公告) |
+| N2 | `F1_M3_MainWorkerDorm` | M (8×8) | 16,12 | Random (M, F1) | **Evidence** (Isolation Notice) |
 | N3 | util/storage | S (4×4) | 24,12 | Random (S) | Filler/loot |
 | STAIR-A | `F1_A_MainStair` | core (4×8) | 32,8 | **Fixed** | Fast/exposed; aligns with F2 |
 | STAIR-B | `F1_B_SideStair` | core (4×8) | 0,4 | **Fixed** | Slow/safe; aligns with F2 |
@@ -115,7 +115,7 @@ objective run across the gap (or a long safe loop via Stair-B in the west).
 ```
 z=20 ┌────────────┬──────────┬─────┐
      │  DEEP TARGET (L)      │N-util│     NORTH BAYS (z 12–20)
-     │  沙盘 + monster nest  │ (S) │STAIR│  <- objective FAR from van/StairA
+     │  Scale model + monster nest  │ (S) │STAIR│  <- objective FAR from van/StairA
 z=12 ├──────┬──────┴────┬────┴─────┤  A  │
      │ L4(M)│           │          │(4×8)│
  spine======│===[SCAFFOLD▒BRIDGE]==│=====│  cross the open shaft here
@@ -129,7 +129,7 @@ z=0  └─────┴──────┴──────────┴
 
 | Slot | Default room (blockout name) | Size | Origin (x,z) | Role | Notes |
 |------|------------------------------|------|--------------|------|-------|
-| TARGET | `F2_L5_DeepTargetArea` | L (12×8) | 4,12 | **Fixed (objective+nest)** | 沙盘 on lit pedestal; far NW |
+| TARGET | `F2_L5_DeepTargetArea` | L (12×8) | 4,12 | **Fixed (objective+nest)** | Scale model on lit pedestal; far NW |
 | L4 | `F2_L4_SampleOffice_HalfFinished` | M (8×8) | 4,8 | Random (M, F2) | Show-flat; "wrong" warm light |
 | M4 | `F2_M4_SalesOffice_RichLoot` | M (8×8) | 28,0 | Random (M, F2) | Rich loot near Stair-A |
 | L3 | `F2_L3_FlowPlatform_UnfinishedShaft` | L (12×8) | 8,0 | **Fixed (shaft edge)** | Wraps the void; fall risk |
@@ -147,11 +147,11 @@ z=0  └─────┴──────┴──────────┴
 - **Vertical gimmick**: stairs A/B + shaft + scaffold bridge = floor-by-floor risk
   with a chase choice (fast exposed Stair-A vs slow safe Stair-B-west loop).
 - **Objective ↔ exit separation**: TARGET is NW on F2; VAN is south-center on F1.
-  Carrying the heavy 沙盘 out forces the full descent — the pressure phase.
+  Carrying the heavy scale model out forces the full descent — the pressure phase.
 - **Risk gradient**: F1 lobby/bays (low→med) → ascend → F2 sales/sample (med) →
   scaffold + deep target (high).
 - **One memorable wrong detail / strong silhouette**: the pristine warm-lit show-flat
-  (L4) + lit 沙盘 pedestal glowing inside the dark concrete shell, visible across the
+  (L4) + lit scale model pedestal glowing inside the dark concrete shell, visible across the
   shaft from F1 — doubles as a navigation beacon.
 - **Readability for co-op**: 4 m corridors and a central double-height shaft keep
   navigation legible for 1–4 players + a chasing monster.
@@ -166,7 +166,7 @@ F1 Lobby (must touch van), F2 TARGET (objective+nest), F2 ScaffoldBridge, F2 Sha
 **Random pools (fill remaining same-size slots):**
 - Each `RoomDef` is `floor1Only` / `floor2Only` / any.
 - `PowerRoom` clue must spawn in a Random **S** slot on **F1** (so the gate is always solvable).
-- `Evidence (隔离公告)` spawns in exactly **one** Random slot on F1 (M preferred: dorm/office).
+- `Evidence (Isolation Notice)` spawns in exactly **one** Random slot on F1 (M preferred: dorm/office).
 - "At most one of each rich-loot room per floor" to avoid loot flooding.
 - Guarantee ≥1 consumable room reachable **before** any stair (teach gear use early).
 - Monster nest is tied to the Fixed TARGET slot — never randomized onto a stair/van.
@@ -191,4 +191,3 @@ generator only swaps room *contents*; it never moves a door. Test once, valid fo
 > **Test note (high-risk per `design/systems-index.md`):** the slot generator and the
 > power-gate/heavy-carry state are server-authoritative. Add EditMode tests that the
 > generated layout is identical on host and clients (seed-synced) and always solvable.
-```

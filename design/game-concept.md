@@ -1,4 +1,4 @@
-# Game Concept — Black Commission (黑色外包 / 外包事故组)
+# Game Concept — Black Commission (Black Outsourcing / Outsourcing Incident Unit)
 
 > **Index file.** This points to the canonical design docs so framework skills
 > can find the concept. Do not duplicate content here — edit the source docs.
@@ -27,6 +27,6 @@ HQ settlement`
 
 ## Current Playable MVP Focus
 
-Snow-line / White-thorn Lotus (封山雪线 / 白棘雪莲) mission: enter the commissioned
+Snow-line / White-thorn Lotus mission: enter the commissioned
 level, retrieve the objective, avoid infection-zone risk, return to HQ to settle
 money / reputation / experience.

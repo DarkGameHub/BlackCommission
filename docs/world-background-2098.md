@@ -1,433 +1,433 @@
-# Black Commission 世界观与进度设定
+# Black Commission — World Background and Progression Design
 
-## 核心一句话
+## Core Logline
 
-富人买走未来以后，又开始向穷人订购过去。
+After the rich bought the future, they started ordering the past from the poor.
 
-故事发生在 **2098 年**。人类已经完成火星殖民，但“移民火星”从来不是全人类的未来，而是少数人的未来。第一批登上火星的人，是财阀、政客、科学集团、轨道公司高层、资产阶级家庭，以及拥有足够信用、资本和关系的人。
+The story takes place in **2098**. Humanity has completed the colonization of Mars, but "emigrating to Mars" was never the future of all humanity — only of a few. The first people to reach Mars were the plutocrats, politicians, science consortiums, orbital company executives, bourgeois families, and those with enough credit, capital, and connections.
 
-火星被建设成干净、安全、封闭、昂贵的世界。那里有稳定的氧气、水循环、合成食物、人工生态、医疗舱、私人穹顶和安静的天空。
+Mars was built into a clean, safe, closed, and expensive world. It has stable oxygen, water cycles, synthetic food, artificial ecosystems, medical pods, private domes, and quiet skies.
 
-地球则被留下了。
+Earth was left behind.
 
-留下来的是负债者、合同工、失业者、低信用人口、没有移民资格的人，以及被系统判定为“低迁移价值”的普通人。
+Those left behind are the indebted, the contract workers, the unemployed, the low-credit population, those without emigration qualifications, and the ordinary people whom the system judged as having "low migration value."
 
-## 世界背景
+## World Background
 
-后来，火星上层曾短暂回到地球。他们回来参加纪念仪式、慈善晚宴、旧宅迁移、遗产拍卖和商业谈判。他们把自己包装成“没有忘记地球的人”。
+Later, the Martian upper class briefly returned to Earth. They came back for memorial ceremonies, charity dinners, estate relocations, inheritance auctions, and business negotiations. They packaged themselves as "people who had not forgotten Earth."
 
-但他们带回来的不只是怀旧。
+But they brought back more than nostalgia.
 
-他们把一种火星适应性病原体带回了地球。
+They brought a Mars-adapted pathogen back to Earth.
 
-官方称它为：
+Officially it was called:
 
-**MRC-7 返航适应体。**
+**MRC-7 Return-Adaptation Organism.**
 
-地球民间称它为：
+Among Earth's common people, it was called:
 
-**贵客瘟。**
+**The Noble Guest Plague.**
 
-这种病原体感染了人、动物、植物、真菌、土壤和旧实验室样本。很多地区开始出现异常生态：人类感染体、畸变动物、肉质植物、孢子雾、会模仿声音的菌群、在废弃建筑中游荡的感染群体，慢慢成为地球封锁区的一部分。
+This pathogen infected humans, animals, plants, fungi, soil, and old laboratory samples. Many regions began experiencing abnormal ecosystems: infected humans, mutated animals, fleshy plants, spore mists, fungal colonies that mimic sounds, and infected clusters roaming abandoned buildings — all of which slowly became part of Earth's lockdown zones.
 
-火星官方把这件事称为“地表生态自身崩溃”。  
-火星公司把感染区称为“高风险自然环境”。  
-地球人知道，那是贵客们带来的瘟。
+The Martian government called this "surface ecological self-collapse."  
+Martian corporations called the infected zones "high-risk natural environments."  
+Earth people know: it is the plague the noble guests brought.
 
-从此以后，火星富人再也不愿意亲自回到地球。
+From that point on, the Martian wealthy refused to personally return to Earth.
 
-但问题是，他们仍然想要地球的东西。
+But the problem is, they still want Earth's things.
 
-火星不缺资源。火星缺的是 **真实的地球**。
+Mars does not lack resources. What Mars lacks is **the real Earth**.
 
-合成玫瑰、人工木材、仿生宠物、模拟雪景、复制古董，火星都有。但它们不够真，不够稀有，不够有身份象征。
+Synthetic roses, artificial timber, bionic pets, simulated snowscapes, and replica antiques — Mars has all of these. But they are not genuine enough, not rare enough, not prestigious enough.
 
-于是，火星上层开始通过离岸平台、轨道货运公司和灰色中介，向地球发布各种采回委托。他们想要真实的植物样本、旧地球生态残留、污染区里没有完全变异的种子、感染生物组织、旧医疗设施里的封存材料、被封锁地区里的异常物，以及那些无法合法采购、无法复制、无法公开说明用途的东西。
+So the Martian upper class began issuing collection commissions to Earth through offshore platforms, orbital freight companies, and gray-market intermediaries. They want real plant specimens, remnants of old Earth ecosystems, seeds from contaminated zones that have not fully mutated, infected biological tissue, materials sealed in old medical facilities, anomalies from within blockaded regions — and things that cannot be legally purchased, cannot be replicated, and whose intended use cannot be stated publicly.
 
-他们不会自己回来。
+They will not come back themselves.
 
-他们雇地球人去拿。
+They hire Earth people to retrieve things for them.
 
-于是，地球上出现了一种新的底层行业：
+So a new underclass industry emerged on Earth:
 
-**地表采回事务所。**
+**Surface Retrieval Agencies.**
 
-## 玩家身份
+## Player Identity
 
-玩家经营一家快要倒闭的地表采回事务所。
+Players run a nearly bankrupt surface retrieval agency.
 
-这不是英雄组织，不是正规军，也不是探险队。它就是一家破公司。
+This is not a heroic organization, not a regular army, not an exploration team. It is just a broke company.
 
-办公室很小，灯管坏了一半，墙皮脱落，电脑还是火星淘汰下来的旧 CRT 终端。楼下停着一辆二手厢式车。员工很少，设备很烂，债务很多。
+The office is small. Half the fluorescent lights are out. The walls are peeling. The computer is a secondhand CRT terminal discarded from Mars. Parked downstairs is a secondhand van. Few employees, terrible equipment, enormous debt.
 
-事务所唯一值钱的东西，是一张即将过期的：
+The only thing of value in the agency is a soon-to-expire:
 
-**地表采回许可证。**
+**Surface Retrieval License.**
 
-有了许可证，玩家才能接火星客户的指定委托。没有许可证，玩家就只能在地球上捡垃圾，连轨道平台都不会收。
+With the license, players can accept specific commissions from Martian clients. Without the license, players can only scavenge on Earth — and even the orbital platform will not accept their haul.
 
-开局时，玩家欠着火星资本旗下金融公司的钱。每天都有还款压力。修车要钱，买装备要钱，治疗感染要钱，办公室维护要钱，许可证续期也要钱。
+At the start, players owe money to a financial company owned by Martian capital. There is debt pressure every day. Fixing the van costs money. Buying equipment costs money. Treating infections costs money. Office upkeep costs money. Renewing the license also costs money.
 
-玩家接任务不是为了拯救世界，而是因为：
+Players take commissions not to save the world, but because:
 
-- 不接单，就还不了债。
-- 还不了债，事务所会被竞争公司收购。
-- 事务所被收购，玩家连留在地球上的这点东西都没了。
+- If they don't take jobs, they can't repay the debt.
+- If they can't repay the debt, the agency will be acquired by a competitor.
+- If the agency is acquired, players lose even the little they have left on Earth.
 
-所以玩家进入感染区、废弃医院、封山疗养站、污染工厂、轨道坠落区，不是因为伟大，而是因为账单到了。
+So players enter contaminated zones, abandoned hospitals, sealed mountain sanitariums, polluted factories, and orbital impact zones — not out of greatness, but because the bill has come due.
 
-## 核心基调
+## Core Tone
 
-游戏表面上是轻松的。
+The game's surface is light-hearted.
 
-玩家每天打开任务列表，选任务，准备装备，开车出发，进地图，找东西，躲怪物，把东西带回来，结算赚钱。
+Every day, players open the mission list, pick a job, prepare equipment, drive out, enter the map, find the target, evade monsters, bring things back, and settle for payment.
 
-但黑暗感不会一开始就讲出来。它会从细节里慢慢出现。
+But the darkness does not announce itself from the start. It emerges slowly from the details.
 
-一开始，玩家只觉得任务有点怪。比如某个火星客户愿意出高价，让玩家去雪线废弃疗养站采一株变异白棘雪莲。玩家可能只觉得：“这单钱多，地点危险，怪物有点恶心。”
+At first, players simply notice the jobs feel a little strange. For example, a Martian client is willing to pay a high price for players to retrieve a mutated white-spine snow lotus from a sealed mountain sanitarium. Players might just think: "This job pays well, the location is dangerous, and the monsters are pretty gross."
 
-等玩家好不容易把雪莲带回来，结算界面显示：
+After players struggle to bring back the snow lotus, the settlement screen shows:
 
 ```text
-样本完整度：87%
-低温保存：通过
-车厢污染费：扣款
-轨道检疫费：扣款
-人员冻伤补贴：无
-客户用途：阿瑞斯穹顶区私人晚宴桌面装饰
-客户评价：花粉造成的轻微灼伤增强了现场真实感
+Sample integrity: 87%
+Cold preservation: passed
+Cabin contamination fee: deducted
+Orbital quarantine fee: deducted
+Personnel frostbite supplement: none
+Client intended use: centerpiece decoration for a private dinner in the Ares Dome District
+Client feedback: The mild burns caused by the pollen enhanced the authentic atmosphere
 ```
 
-这时候玩家才会意识到：自己冒死带回来的东西，只是火星富人餐桌上的摆件。
+Only then do players realize: the thing they risked their lives to bring back is nothing more than a table decoration at a Martian rich person's dinner.
 
-游戏不需要直接告诉玩家“富人很坏”。合同会告诉玩家，扣款会告诉玩家，客户留言会告诉玩家，任务用途会告诉玩家，玩家自己为了钱继续接单这件事也会告诉玩家。
+The game does not need to tell players "the rich are bad." The contracts will tell them. The deductions will tell them. The client notes will tell them. The stated purpose of the commissions will tell them. And the fact that players keep taking jobs for the money will tell them too.
 
-整体基调：
+Overall tone:
 
-- 好笑，但笑完不舒服。
-- 荒诞，但逻辑很严。
-- 轻剧情，但世界很黑。
-- 不是英雄史诗，而是底层承包商日常。
-- 不是废土热血，而是被外包清理的感染现场。
+- Funny, but uncomfortable after the laugh.
+- Absurd, but with rigorous internal logic.
+- Light on explicit story, but the world is dark.
+- Not a heroic epic — the daily life of a bottom-rung subcontractor.
+- Not post-apocalyptic hot-blooded action — a contaminated scene outsourced and cleaned up.
 
-## 任务系统
+## Mission System
 
-游戏主要有两类任务。
+The game has two main types of missions.
 
-### 指定委托
+### Commissioned Jobs
 
-指定委托是火星客户发布的任务。客户有明确需求，目标物明确，报酬较高，风险也高。
+Commissioned jobs are missions posted by Martian clients. The client has specific needs, the target is well-defined, payment is relatively high, and so is the risk.
 
-例子：
+Examples:
 
-- 采回变异白棘雪莲。
-- 回收感染植物样本。
-- 取得旧检疫站封存箱。
-- 带回未完全污染的生态材料。
-- 取回异常矿物、真菌组织、旧医疗样本、火星返航遗留物。
-- 捕获或扫描特定感染体。
-- 回收某个被封锁设施中的特殊物件。
+- Retrieve a mutated white-spine snow lotus.
+- Recover infected plant specimens.
+- Obtain a sealed crate from an old quarantine station.
+- Bring back ecological materials that have not fully degraded.
+- Retrieve anomalous minerals, fungal tissue, old medical samples, or Mars return-flight remnants.
+- Capture or scan a specific infected entity.
+- Recover a special item from inside a sealed facility.
 
-这些任务承担游戏的讽刺核心。玩家每次完成指定委托，都会看到客户用途和客户反馈。有时候客户说是科研，实际像收藏。有时候客户说是纪念，实际像炫耀。有时候客户说是公共利益，实际只是私人项目。
+These missions carry the satirical core of the game. Every time players complete a commissioned job, they see the client's stated purpose and feedback. Sometimes the client says it's research, but it looks like collecting. Sometimes the client says it's a memorial, but it feels like showing off. Sometimes the client claims it's in the public interest, but it is clearly a private project.
 
-### 自由采集
+### Free Salvage
 
-自由采集是玩家在解锁轨道运送资格证后获得的日常赚钱方式。
+Free salvage is the everyday income method players unlock after obtaining an orbital shipping certification.
 
-玩家每天可以选择一个没有固定委托目标的地图，进入废弃区域自由捡废料。比如旧金属、电池、过滤芯、医疗钢、轨道货运残骸、反应炉零件、污染区可回收物、普通样本材料。
+Each day, players can choose a map with no fixed commission target and enter an abandoned area to freely scavenge debris. For example: old metals, batteries, filter cores, medical steel, orbital freight wreckage, reactor parts, contaminated zone recyclables, and ordinary sample materials.
 
-自由采集没有强剧情，没有固定客户，也不一定有讽刺结尾。它的作用是让玩家喘口气，补资源，修车，攒钱，刷装备，体验比较轻松的“地表捡废料”循环。
+Free salvage has no strong narrative, no fixed client, and no guaranteed satirical ending. Its role is to let players breathe, replenish resources, repair the van, save up money, grind equipment, and experience a relatively relaxed "scavenging on Earth's surface" loop.
 
-但它在世界观上也很讽刺：
+But it is also satirically loaded in terms of the world:
 
-地球明明是地球人的。可玩家想把地球上的废料卖给轨道平台，必须先拿到火星认可的运送资格证。
+Earth belongs to Earth people. Yet if players want to sell Earth's scrap to the orbital platform, they must first obtain a shipping certification approved by Mars.
 
-在地球上捡垃圾不犯法。但想把垃圾变成钱，得先被火星允许。
+Picking up trash on Earth is not illegal. But turning trash into money requires Martian permission first.
 
-## 许可证进度
+## License Progression
 
-许可证是整个游戏的进度骨架。它不是单纯的升级按钮，而是这个世界控制地球人的方式。
+The license is the entire game's progress backbone. It is not a simple upgrade button — it is the mechanism by which this world controls Earth people.
 
-### 第一阶段：临时采回许可证
+### Stage 1: Temporary Retrieval License
 
-开局玩家只有低级许可证，只能接低风险、低报酬的指定委托。
+At the start, players only have a low-tier license and can only accept low-risk, low-pay commissioned jobs.
 
-这时候玩家还不太了解世界，只是在为债务奔波。任务内容看起来像普通的危险采集。玩家会接触到感染区、怪物、样本箱、合同扣款、客户评分这些基础系统。
+At this point, players do not yet understand the world well — they are just scrambling to handle their debt. The mission content looks like ordinary dangerous retrieval. Players encounter contaminated zones, monsters, sample crates, contract deductions, and client ratings as baseline systems.
 
-这一阶段的感觉是：
+The feeling at this stage:
 
-**我开了一家破事务所，接危险活赚钱。**
+**I've opened a broke agency. I'm doing dangerous work to make money.**
 
-### 第二阶段：正式采回许可证
+### Stage 2: Full Retrieval License
 
-完成一定任务后，玩家事务所获得正式采回资格。
+After completing a certain number of missions, the agency obtains full retrieval qualifications.
 
-此时火星客户变多，任务报酬提高，目标物也更奇怪。玩家开始频繁看到火星客户对“真实地球”的迷恋。他们要真实植物、真实土壤、真实动物组织、真实木材、真实旧生态样本。
+Now more Martian clients appear, mission payments increase, and the targets become stranger. Players begin frequently seeing Martian clients' obsession with "the real Earth." They want real plants, real soil, real animal tissue, real timber, real old-ecosystem samples.
 
-这一阶段的感觉是：
+The feeling at this stage:
 
-**这些客户不是缺资源，他们是在消费地球。**
+**These clients don't need resources. They're consuming Earth.**
 
-### 第三阶段：轨道运送资格证
+### Stage 3: Orbital Shipping Certification
 
-玩家做够一定任务后，解锁轨道运送资格证。
+After completing enough missions, the orbital shipping certification unlocks.
 
-从这以后，每天任务列表中固定出现一个自由采集选项。游戏进入双循环：
+From this point on, a free salvage option appears in the daily mission list every day. The game enters a dual loop:
 
-- 想赚大钱，可以接火星指定委托。
-- 想稳一点，可以去自由采集废料。
+- Want big money: accept Martian commissioned jobs.
+- Want steady income: go free salvage for scrap.
 
-自由采集让游戏节奏变松，也让世界更真实。不是每天都有一个夸张的富人委托，有时候玩家就是去废楼里拆电池、搬旧过滤器、捡轨道残骸。
+Free salvage lets the game pace slow down and makes the world feel more real. Not every day brings an outrageous wealthy client commission — sometimes players just go strip batteries out of an abandoned building, haul old filters, and pick up orbital wreckage.
 
-这一阶段的感觉是：
+The feeling at this stage:
 
-**我不只是接单，我也开始靠地球废墟维持事务所。**
+**I'm not just taking jobs. I'm starting to sustain the agency from Earth's ruins too.**
 
-### 第四阶段：特殊样本转运许可
+### Stage 4: Special Specimen Transfer Permit
 
-后期玩家可以解锁更高级权限，允许运输感染样本、异常材料、活体组织、封存箱、旧检疫资料等高风险物品。
+Late in the game, players can unlock higher-tier clearance that allows transporting infected specimens, anomalous materials, live tissue, sealed crates, old quarantine records, and other high-risk items.
 
-这些任务统称**「黑色委托」**（Black Commissions）——报酬很高，但合同更恶心，风险更大，客户身份也更模糊。
+These missions are collectively called **"Black Commissions"** — payment is high, but the contracts are more unsettling, the risks are greater, and the client identities are more ambiguous.
 
-> **设计注释（2026-06-09 锁定）**：黑色委托是游戏三层任务结构的顶层：
-> 自由采集（安全，低回报）→ 指定委托（中高风险，讽刺结算）→ 黑色委托（高风险，道德代价）。
-> 报酬越高，代价越黑。这是「道德斜坡」支柱的机械化表达。游戏名「Black Commission」在此闭环：
-> 玩家从接黑色委托，到最终成为发布黑色委托的那类人。
+> **Design note (locked 2026-06-09)**: Black Commissions are the top tier of the game's three-tier mission structure:
+> Free Salvage (safe, low return) → Commissioned Jobs (moderate-to-high risk, satirical settlement) → Black Commissions (high risk, moral cost).
+> The higher the payment, the darker the cost. This is the mechanical expression of the "Moral Slope" pillar. The game name "Black Commission" completes the loop here:
+> players begin by accepting Black Commissions, and ultimately may become the kind of people who post them.
 
-这时候玩家会逐渐发现：
+At this point, players gradually discover:
 
-- 很多高价值任务都和贵客瘟有关。
-- 很多感染区都和当年火星返航活动有关。
-- 火星平台一直把风险写成“地表原生风险”，但证据显示，它们早就知道病毒来源。
+- Many high-value jobs are connected to the Noble Guest Plague.
+- Many contaminated zones are linked to Mars return-flight activities from back then.
+- The Martian platform has always described risks as "surface-native risks," but evidence suggests they knew the origin of the virus long ago.
 
-这一阶段的感觉是：
+The feeling at this stage:
 
-**我接到的活越来越脏了。**
+**The work I'm taking is getting darker.**
 
-### 第五阶段：移民资格审查
+### Stage 5: Immigration Qualification Review
 
-当玩家赚够钱、事务所等级足够高、许可证记录足够完整后，会收到火星移民资格审查通知。
+When players have earned enough money, reached a high enough agency level, and have a clean enough license record, they receive a Martian immigration qualification review notice.
 
-这本来是玩家开局以来的目标：去火星，离开地球，离开感染区，离开这间破办公室，成为那个干净世界的一部分。
+This was the player's goal from the very start: go to Mars, leave Earth, leave the contaminated zones, leave this broken office, and become part of that clean world.
 
-但此时玩家已经经历了很多任务，看过很多客户用途，也知道了很多真相碎片。
+But by now, players have been through many missions, seen many client purposes, and pieced together many fragments of truth.
 
-于是最后的问题变成：
+So the final question becomes:
 
-**你真的还想去火星吗？**
+**Do you still actually want to go to Mars?**
 
-## 情绪曲线
+## Emotional Arc
 
-### 前期：好笑和生存压力
+### Early Phase: Comedy and Survival Pressure
 
-玩家主要感受到的是穷、忙、危险、好笑。
+The dominant feeling is poverty, busyness, danger, and absurdity.
 
-办公室破，车破，合同恶心，怪物吓人，客户要求离谱，结算扣款很烦。此时黑暗还不是主菜，游戏更像一个荒诞的底层经营游戏。
+The office is a wreck, the van is a wreck, the contracts are gross, the monsters are frightening, the client demands are outrageous, and the deductions are infuriating. The darkness is not the main course yet — the game feels more like an absurd survival-management game about the underclass.
 
-### 中期：荒诞感加重
+### Middle Phase: Absurdity Deepens
 
-玩家开始发现，火星客户想要的东西越来越怪。
+Players begin to notice that what Martian clients want is getting stranger.
 
-他们不是需要地球资源，而是需要“真实地球感”：真实的花，真实的污染，真实的旧生态，真实的病变样本，真实的危险。
+They do not need Earth resources — they need the "feeling of real Earth": real flowers, real pollution, real old ecosystems, real diseased specimens, real danger.
 
-玩家慢慢意识到：
+Players slowly realize:
 
-**火星人抛弃了地球，却又把地球变成了高级消费品。**
+**The Martians abandoned Earth, and then turned Earth into a premium consumer product.**
 
-### 后期：黑暗浮现
+### Late Phase: Darkness Surfaces
 
-玩家开始接触贵客瘟的证据。
+Players begin encountering evidence of the Noble Guest Plague.
 
-某些地图出现火星返航标志。某些封存箱日期早于官方感染公告。某些任务要求销毁旧记录。某些客户明明是收藏家，收货地址却是研究机构。某些自由采集地图里，能看到当年临时隔离公告，但公告日期已经过去几十年。
+Some maps show Martian return-flight insignias. Some sealed crates bear dates that predate the official infection announcements. Some missions require destroying old records. Some clients are clearly collectors, but the delivery address is a research institution. In some free salvage maps, players can see old temporary quarantine notices — but the dates on the notices are decades in the past.
 
-游戏不需要安排大段解释。玩家会自己拼出结论：
+The game does not need to arrange long explanations. Players piece the conclusion together themselves:
 
-- 地球上的怪物不是单纯自然灾害。
-- 火星人制造了问题。
-- 然后他们让地球人承担问题。
-- 最后，他们还要从这个问题里购买稀缺商品。
+- The monsters on Earth are not simply natural disasters.
+- The Martians created the problem.
+- Then they made Earth people bear the consequences.
+- And finally, they purchase rare goods out of that problem.
 
-### 终局：选择
+### Endgame: Choice
 
-玩家终于有机会离开地球。
+Players finally have the chance to leave Earth.
 
-但此时“去火星”已经不再是单纯奖励，而是一次价值选择。
+But at this point, "going to Mars" is no longer a simple reward — it is a value choice.
 
-## 代表性任务：白棘雪莲
+## Representative Mission: The White-Spine Snow Lotus
 
-白棘雪莲应该成为整个游戏的标志任务。
+The white-spine snow lotus should become the signature mission of the entire game.
 
-任务地点是旧雪线疗养站。那里曾经是地球富人的康养设施，后来在贵客瘟爆发后被封锁。高山、低温、断电、冰封、旧广告屏、空荡病房、被雪压塌的温室，以及疗养站后方被感染植物占据的纪念花园，共同构成任务场景。
+The mission location is an old mountain sanitarium above the snowline. It was once a health resort for Earth's wealthy, later sealed off after the Noble Guest Plague outbreak. High altitude, low temperature, no power, ice-locked, old advertising screens, empty wards, greenhouses collapsed under snow, and the memorial garden behind the sanitarium now overtaken by infected plants — all of this forms the mission environment.
 
-客户是火星阿瑞斯穹顶区的私人宴会策划方。
+The client is a private banquet planner for the Ares Dome District on Mars.
 
-任务要求：
+Mission requirement:
 
-采回一株自然变异、未完全肉质化、花瓣完整度较高的白棘雪莲。
+Retrieve one naturally mutated white-spine snow lotus that has not fully become fleshy and has relatively intact petals.
 
-合同写得很冷：
+The contract is written coldly:
 
 ```text
-花瓣破损超过 12%，扣除 40% 报酬。
-根须攻击性超过 3 级，不予接收。
-轻微荧光可接受。
-明显人脸纹理需提前报备。
-采集人员冻伤、失踪、感染不影响交付标准。
-客户不接受合成温室替代品。
+Petal damage exceeding 12%: 40% payment deducted.
+Root aggression level exceeding Grade 3: not accepted.
+Mild fluorescence is acceptable.
+Obvious human-face texture patterns must be reported in advance.
+Frostbite, disappearance, or infection of retrieval personnel does not affect delivery standards.
+Client does not accept synthetic greenhouse substitutes.
 ```
 
-玩家冒死进入疗养站，穿过冻结病房和感染花园，在怪物巢附近找到目标雪莲，带回事务所。
+Players risk their lives to enter the sanitarium, cross frozen wards and infected gardens, find the target snow lotus near the monster nest, and bring it back to the agency.
 
-结算时显示：
+At settlement, this is displayed:
 
 ```text
-白棘雪莲完整度：87%
-低温保存：通过
-车厢污染：扣款
-轨道检疫：扣款
-人员冻伤补贴：无
-客户用途：火星私人晚宴桌面装饰
-客户评价：花粉造成的轻微灼伤增强了现场真实感
+White-spine snow lotus integrity: 87%
+Cold preservation: passed
+Cabin contamination: deducted
+Orbital quarantine: deducted
+Personnel frostbite supplement: none
+Client intended use: centerpiece decoration for a private Mars dinner
+Client feedback: The mild burns caused by the pollen enhanced the authentic atmosphere
 ```
 
-这个任务最能表达游戏核心：
+This mission best expresses the game's core:
 
-**地球人冒死采雪莲。火星客户拿去装饰晚宴。**
+**Earth people risk death to retrieve the snow lotus. Martian clients use it to decorate a dinner party.**
 
-## 自由采集的剧情位置
+## Free Salvage's Narrative Role
 
-自由采集不能只是玩法补充，它也应该服务基调。
+Free salvage cannot only be a gameplay supplement — it must also serve the tone.
 
-它代表的是地球人的日常。
+It represents the daily life of Earth people.
 
-不是每天都有高级委托。很多时候，事务所只是缺钱，车要修，债要还，员工要治疗，许可证要续费。于是玩家只能去废弃地图里捡东西卖。
+Not every day brings a grand commission. Much of the time, the agency is just short on money — the van needs repairs, the debt needs paying, the staff need treatment, the license needs renewal. So players simply go into abandoned maps to pick things up and sell them.
 
-自由采集的地图可以比指定委托更开放、更轻松，也更适合重复游玩。但结算仍然可以有轻微讽刺。
+Free salvage maps can be more open, more relaxed, and more suited to repeated play than commissioned jobs. But the settlement can still carry mild satire.
 
-例子：
+Example:
 
 ```text
-今日回收：旧过滤芯、铜线、医疗钢、废电池
-平台回收价：下调 18%
-原因：地表回收者供给过剩
-轨道清洁费：扣款
-污染检测费：扣款
-备注：感谢您参与地球生态恢复计划
+Today's haul: old filter cores, copper wire, medical steel, dead batteries
+Platform buyback price: down 18%
+Reason: oversupply of surface scavengers
+Orbital cleaning fee: deducted
+Contamination inspection fee: deducted
+Note: Thank you for participating in the Earth Ecological Restoration Program
 ```
 
-玩家会明白：所谓恢复计划，其实就是让地球穷人自己承担废墟清理成本。
+Players will understand: the so-called restoration program is just making Earth's poor bear the cost of cleaning up the ruins themselves.
 
-指定委托是火星富人的怀旧消费。自由采集是火星公司的废墟回收经济。两者都是这个世界运作的方式。
+Commissioned jobs are Martian wealthy people's nostalgia consumption. Free salvage is Martian corporations' ruins-recycling economy. Both are how this world operates.
 
-## 结局设计
+## Ending Design
 
-### 结局一：前往火星
+### Ending 1: Go to Mars
 
-玩家还清债务，达到移民资格要求，选择前往火星。
+Players pay off their debt, meet the immigration qualification requirements, and choose to go to Mars.
 
-表面上，这是成功结局。玩家终于离开感染区、破办公室、债务、怪物和地球废墟，进入干净、安全、明亮的火星穹顶。
+On the surface, this is the success ending. Players finally leave the contaminated zone, the broken office, the debt, the monsters, and Earth's ruins, and enter the clean, safe, bright domes of Mars.
 
-但抵达后，系统显示：
+But upon arrival, the system shows:
 
 ```text
-恭喜您抵达阿瑞斯穹顶。
-根据您的地表采回经验，系统已自动为您匹配岗位：
-地球遗产采购顾问。
+Congratulations on arriving at the Ares Dome.
+Based on your surface retrieval experience, the system has automatically matched you to a position:
+Earth Heritage Procurement Consultant.
 ```
 
-玩家在火星晚宴上，再次看见那株白棘雪莲。
+At a Martian dinner party, players see the white-spine snow lotus again.
 
-它被放在透明罩里，作为高级餐桌中央的装饰。旁边标签写着：
+It is placed under a transparent case as the centerpiece of a high-end table. The label next to it reads:
 
 ```text
-地球自然遗产，第 2098-443 号。
-采集人员：未公开。
+Earth Natural Heritage, No. 2098-443.
+Retrieval personnel: undisclosed.
 ```
 
-火星客人赞叹它很美，很真实，很有旧世界气息。
+The Martian guests admire how beautiful it is, how authentic, how evocative of the old world.
 
-玩家知道它是怎么来的。但没人问。
+Players know how it got there. But nobody asks.
 
-这个结局不是传统坏结局。它是讽刺性的成功结局。玩家逃离了地球，却进入了那个制造地球苦难的系统。
+This ending is not a conventional bad ending. It is an ironic success ending. Players escaped Earth, but entered the very system that created Earth's suffering.
 
-### 结局二：留在地球
+### Ending 2: Stay on Earth
 
-玩家赚够钱，也获得火星资格，但选择不走。
+Players earn enough money and obtain Martian qualifications, but choose not to leave.
 
-事务所还在。办公室还是破。车还是旧。CRT 终端还是闪。地球还是危险。
+The agency is still there. The office is still broken. The van is still old. The CRT terminal still flickers. Earth is still dangerous.
 
-但这一次，玩家不再只是为了火星客户工作。
+But this time, players are no longer only working for Martian clients.
 
-墙上多了一块牌子：
+A new sign goes up on the wall:
 
 ```text
-拒接晚宴装饰类委托。
+Declining commissions for dinner party decoration.
 ```
 
-电话响起。这次不是火星私人客户，而是地球本地人。
+The phone rings. This time it is not a Martian private client, but a local Earth resident.
 
-对方说：
+The caller says:
 
 ```text
-听说你们能进封锁区。
-我们想找一样东西。
+I heard you can get into the lockdown zones.
+We're looking for something.
 ```
 
-玩家拿起车钥匙。游戏结束。
+Players pick up the van keys. The game ends.
 
-这个结局不是英雄式胜利。玩家没有拯救地球，也没有推翻火星资本。但玩家做了一个选择：不把离开地球当作唯一的成功，不再无条件替火星搬运地球。
+This ending is not a heroic victory. Players did not save Earth, did not overthrow Martian capital. But players made a choice: not treating leaving Earth as the only form of success, and no longer unconditionally shipping Earth's contents to Mars.
 
-它是苦中作乐的结局。
+It is a bittersweet ending.
 
-### 结局三：真相寄送
+### Ending 3: Send the Truth
 
-如果玩家在后期收集了足够多的证据，可以解锁隐藏结局。
+If players have gathered enough evidence in the late game, a hidden ending is unlocked.
 
-玩家发现贵客瘟并不是地球自然灾害，而是火星返航人员带回来的。火星公司早就知道风险，却把责任写成“地表原生风险”，并继续利用感染区获取样本和利润。
+Players discover that the Noble Guest Plague was not a natural Earth disaster — it was brought back by Martian returnees. The Martian corporations knew the risk long ago, but wrote the liability off as "surface-native risk" and continued profiting from contaminated zones through specimen collection.
 
-玩家利用自己的轨道运送资格，把证据、样本记录、合同备份和旧检疫数据送上火星网络。
+Players use their orbital shipping certification to send evidence, specimen records, contract copies, and old quarantine data up to the Martian network.
 
-真相被公开。
+The truth is made public.
 
-但火星媒体很快把它包装成新的公共展览：
+But Martian media quickly packages it as a new public exhibition:
 
 ```text
-地球苦难档案：
-关于韧性、记忆与文明代价的沉浸式教育项目。
+Earth Suffering Archive:
+An immersive educational project on resilience, memory, and the cost of civilization.
 ```
 
-真相也被商品化了。
+The truth was commodified too.
 
-但结尾处，一个火星底层工作人员偷偷复制了文件。地球事务所的旧 CRT 收到一条匿名消息：
+But at the very end, a low-ranking Martian worker secretly copies the files. The old CRT terminal at the Earth agency receives an anonymous message:
 
 ```text
-我们看到了。
+We saw it.
 ```
 
-这不是彻底胜利。但裂缝出现了。
+This is not a complete victory. But a crack has appeared.
 
-## 设计备注
+## Design Notes
 
-这个设定和当前项目已有系统非常贴合：
+This setting fits very naturally with the systems already in the project:
 
-- **债务 / 资金 / 声望 / 收购压力** 可以解释为火星资本对地表事务所的金融控制。
-- **办公室电脑和 CRT 风格** 不是复古，而是地球底层只能使用火星淘汰设备。
-- **委托车** 是地表采回行业最廉价、最危险、也最有辨识度的劳动工具。
-- **白棘雪莲** 可以从 MVP 任务升级为游戏主题任务，承担“地球被消费”的核心表达。
-- **自由采集** 适合作为指定委托之间的低压循环，让经营节奏更有弹性。
+- **Debt / funds / reputation / acquisition pressure** can be explained as Martian capital's financial control over surface agencies.
+- **The office computer and CRT aesthetic** are not retro nostalgia — Earth's underclass can only use equipment discarded by Mars.
+- **The dispatch van** is the cheapest, most dangerous, and most recognizable labor tool in the surface retrieval industry.
+- **The white-spine snow lotus** can be upgraded from the MVP mission into the game's thematic centrepiece mission, carrying the core expression of "Earth being consumed."
+- **Free salvage** suits a low-pressure loop between commissioned jobs, giving the management rhythm more elasticity.
 
-需要注意的一点：不要把火星富人写成脸谱化的“坏人宣言”。更强的黑色幽默来自制度、合同和结算文本。客户越礼貌、越专业、越像在认真办公，讽刺越有力。
+One important note: do not write the Martian wealthy as cartoonish "villain speeches." Stronger black humor comes from institutions, contracts, and settlement text. The more polite, professional, and businesslike the client sounds — as if they are simply doing serious work — the more powerful the satire.
 
-## 最终概括
+## Final Summary
 
-这款游戏的故事不靠大段剧情推动。它应该像一份越看越不对劲的工作。
+This game's story is not driven by long stretches of narrative. It should feel like a job that becomes more and more wrong the longer you look at it.
 
-玩家一开始只是接单赚钱。后来发现客户需求很荒唐。再后来发现火星想买的不是资源，而是地球的真实残骸。再后来发现地球的怪物和感染，可能正是火星贵客留下的后果。最后玩家终于赚够钱，有资格离开地球，却必须决定自己要不要成为那个世界的一部分。
+At first, players are just taking jobs to make money. Then they notice the client demands are absurd. Then they realize that what Mars wants to buy is not resources — it is the real ruins of Earth. Then they discover that Earth's monsters and infections may be the very consequence left behind by Mars's noble guests. Finally, players have earned enough to leave Earth, but must decide whether they want to become part of that world.
 
-游戏的核心不是“打怪”，也不是“捡垃圾”，而是：
+The game's core is not "fighting monsters" or "picking up scrap." It is:
 
-**在一个被富人抛弃、污染、再消费的地球上，穷人被迫把自己的世界一点一点打包寄往火星。**
+**On an Earth abandoned, polluted, and then re-consumed by the wealthy, the poor are forced to pack up their world piece by piece and ship it to Mars.**
 
-最核心的意象是：
+The most central image is:
 
-**地球人冒死采回白棘雪莲。火星客户把它放在晚宴中央。**
+**Earth people risk death to retrieve the white-spine snow lotus. Martian clients place it at the center of a dinner table.**

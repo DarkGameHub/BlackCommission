@@ -24,7 +24,7 @@ public class VanTransitOverlay : MonoBehaviour
     string locationName = "";
     int boardedCount;
 
-    // Transit progress: set when the drive begins so the HUD can show a moving "抵达进度" bar
+    // Transit progress: set when the drive begins so the HUD can show a moving "arrival progress" bar
     // that matches the dispatch duration the OfficeComputer / mission manager is counting down.
     float transitDuration;
     float transitStartTime;
@@ -296,7 +296,7 @@ public class VanTransitOverlay : MonoBehaviour
         }
     }
 
-    // En-route HUD: a cycling "派遣途中…" line plus a fill bar that tracks the dispatch
+    // En-route HUD: a cycling "dispatch in transit..." line plus a fill bar that tracks the dispatch
     // countdown (or a pulsing indeterminate sweep if no duration was supplied).
     void DrawTransitProgress(Rect rect, float w)
     {

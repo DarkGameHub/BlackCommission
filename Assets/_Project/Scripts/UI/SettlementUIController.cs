@@ -56,28 +56,28 @@ public class SettlementUIController : MonoBehaviour
             normal = { textColor = _data.Net >= 0 ? BlackCommissionUiTheme.CrtGreen : BlackCommissionUiTheme.RustWarning }
         };
 
-        string resultTitle = _data.Net >= 0 ? "任务完成" : "任务结束 (亏损)";
+        string resultTitle = _data.Net >= 0 ? "Mission Complete" : "Mission Over (Loss)";
         GUILayout.Label(resultTitle, titleStyle);
         GUILayout.Space(10);
 
         int mins = (int)(_data.TimeElapsed / 60);
         int secs = (int)(_data.TimeElapsed % 60);
 
-        GUILayout.Label($"救出幸存者: {_data.SurvivorsRescued}/2", labelStyle);
-        GUILayout.Label($"排水泵: {(_data.PumpRepaired ? "已修复" : "未修复")}", labelStyle);
-        GUILayout.Label($"任务用时: {mins:00}:{secs:00}", labelStyle);
+        GUILayout.Label($"Survivors Rescued: {_data.SurvivorsRescued}/2", labelStyle);
+        GUILayout.Label($"Pump Repaired: {(_data.PumpRepaired ? "Yes" : "No")}", labelStyle);
+        GUILayout.Label($"Time Elapsed: {mins:00}:{secs:00}", labelStyle);
         GUILayout.Space(8);
-        GUILayout.Label($"收入: ¥{_data.Income}", labelStyle);
-        GUILayout.Label($"扣款: -¥{_data.Expenses}", labelStyle);
+        GUILayout.Label($"Income: ¥{_data.Income}", labelStyle);
+        GUILayout.Label($"Expenses: -¥{_data.Expenses}", labelStyle);
         GUILayout.Space(4);
-        GUILayout.Label($"净利润: ¥{_data.Net}", profitStyle);
+        GUILayout.Label($"Net Profit: ¥{_data.Net}", profitStyle);
         GUILayout.Space(8);
 
         var fundsStyle = new GUIStyle(labelStyle)
         {
             normal = { textColor = CompanyData.Current.IsInDebt ? BlackCommissionUiTheme.RustWarning : BlackCommissionUiTheme.Text }
         };
-        GUILayout.Label($"事务所资金: ¥{CompanyData.Current.Funds}", fundsStyle);
+        GUILayout.Label($"Office Funds: ¥{CompanyData.Current.Funds}", fundsStyle);
 
         GUILayout.Space(16);
 
@@ -99,14 +99,14 @@ public class SettlementUIController : MonoBehaviour
 
         if (isClient)
         {
-            GUILayout.Label("等待主机返回...", new GUIStyle(GUI.skin.label)
+            GUILayout.Label("Waiting for host to return...", new GUIStyle(GUI.skin.label)
             {
                 fontSize = 14,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = BlackCommissionUiTheme.MutedText }
             });
         }
-        else if (GUILayout.Button("返回事务所", btnStyle))
+        else if (GUILayout.Button("Return to Office", btnStyle))
         {
             _visible = false;
             Cursor.lockState = CursorLockMode.Locked;

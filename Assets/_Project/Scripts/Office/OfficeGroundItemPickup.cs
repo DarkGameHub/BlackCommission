@@ -10,7 +10,7 @@ public class OfficeGroundItemPickup : MonoBehaviour, IInteractable
         {
             OfficeComputer computer = Object.FindAnyObjectByType<OfficeComputer>();
             int count = computer != null ? computer.GetDroppedItemCount(itemId) : 0;
-            return count > 0 ? $"拾取地上存放: {GetItemLabel(itemId)} x{count}" : "";
+            return count > 0 ? $"Pick up from floor: {GetItemLabel(itemId)} x{count}" : "";
         }
     }
 
@@ -31,6 +31,6 @@ public class OfficeGroundItemPickup : MonoBehaviour, IInteractable
     {
         MvpHotbarItemId.Flashlight => MvpLocale.T("flashlight"),
         MvpHotbarItemId.Battery => MvpLocale.T("battery"),
-        _ => "物品"
+        _ => "Item"
     };
 }

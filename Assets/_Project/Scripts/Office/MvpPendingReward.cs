@@ -20,11 +20,11 @@ public static class MvpPendingReward
             switch (ResultKind)
             {
                 case MvpMissionResultKind.Success:
-                    return "完成";
+                    return "Complete";
                 case MvpMissionResultKind.Partial:
-                    return "部分结算";
+                    return "Partial Settlement";
                 default:
-                    return "失败";
+                    return "Failed";
             }
         }
     }

@@ -16,8 +16,8 @@ public static class PlayerGestures
         public bool hideHeldItem;
     }
 
-    public static readonly string[] Names = { "", "Shush", "Come Here", "Stop", "Middle Finger", "Shrug" };
-    public static readonly string[] NamesCN = { "", "嘘", "过来", "别动", "竖中指", "摊手" };
+    public static readonly string[] Names   = { "", "Shush", "Come Here", "Stop",  "Middle Finger", "Shrug" };
+    public static readonly string[] NamesCN = { "", "嘘",    "过来",      "别动",  "竖中指",        "耸肩"  };
 
     public static readonly GesturePose[] Poses =
     {
@@ -92,7 +92,7 @@ public static class PlayerGestures
 
     public static string GetName(int id, int language = 0)
     {
-        string[] names = language == 0 ? NamesCN : Names;
+        string[] names = language == 0 ? Names : NamesCN;
         if (id < 0 || id >= names.Length) return "";
         return names[id];
     }

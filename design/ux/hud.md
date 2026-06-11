@@ -19,7 +19,7 @@ During missions, all survival-critical information is always visible — but org
 
 **HQ context**: the office computer terminal is the game's loud information surface. The in-mission HUD is its inverse — quiet, ledger-formatted, background. They share the same visual grammar but operate at opposite volume levels.
 
-**The wristwatch rule**: the time mechanic doubles as a design test for the whole HUD. Without a wristwatch, the player sees daylight-judgment language ("天光判断") — approximate, ambient, human. With a wristwatch, they see exact clock values. The HUD earns precision only when the player invests in it. Apply this thinking to other elements: start subdued, escalate only when earned or urgent.
+**The wristwatch rule**: the time mechanic doubles as a design test for the whole HUD. Without a wristwatch, the player sees daylight-judgment language ("ambient daylight read") — approximate, ambient, human. With a wristwatch, they see exact clock values. The HUD earns precision only when the player invests in it. Apply this thinking to other elements: start subdued, escalate only when earned or urgent.
 
 ---
 
@@ -81,42 +81,42 @@ All information the game generates during a mission, mapped to its source system
 ```
 ┌─────────────────────────────────────────────┐
 │ ZONE A — Contextual Alerts (top-left)        │
-│ 任务目标 / 追击警报 / 通知                    │
-│ 仅触发时显示，淡入淡出，不占据常驻空间        │
+│ Mission objective / Chase alert / Notif.     │
+│ Shown on trigger only; fades in/out; no      │
+│ persistent screen space                      │
 │                                              │
-│                                              │
-│                    +                         │  ← ZONE B: 准星（中心固定）
+│                    +                         │  ← ZONE B: Crosshair (center, fixed)
 │                                              │
 │                                              │
 │                                              │
 │          ┌──┬──┬──┬──┬──┐                  │
-│          │  │  │  │  │  │                   │  ← ZONE C: 热栏（底部居中）
+│          │  │  │  │  │  │                   │  ← ZONE C: Hotbar (bottom-center)
 │          └──┴──┴──┴──┴──┘                  │
 │          [HP  ▓▓▓▓▓▓░░░░]                  │
-│          [STA ▓▓▓░░░░░░░]                  │  ← ZONE D: 状态条（热栏正上方）
+│          [STA ▓▓▓░░░░░░░]                  │  ← ZONE D: Status bars (above hotbar)
 └─────────────────────────────────────────────┘
 ```
 
 ### Zone Definitions
 
-| Zone | 位置 | 元素 | 显示规则 |
+| Zone | Position | Elements | Display Rule |
 |---|---|---|---|
-| **A — Contextual** | 左上，屏幕边距 24px | 任务目标文字、持有者身份、追击警报、超时警告、电源门恢复、重物携带标记 | 触发时淡入（0.2s），保持 4s（通知类）或持续到状态结束（警告类），淡出（0.5s） |
-| **B — Crosshair** | 屏幕正中 | 准星（默认中性色；交互目标时变 CRT 绿） | 常驻 |
-| **C — Hotbar** | 底部居中，距底边 24px | 5格热栏（图标、数量、槽号）；手电格内含电量细条 | 常驻 |
-| **D — Status bars** | 热栏正上方，间距 6px | HP 条（上），耐力条（下） | 常驻；两条等宽，与热栏总宽对齐 |
+| **A — Contextual** | Top-left, 24px screen margin | Mission objective text, carrier identity, chase alert, overtime warning, power gate restored, heavy carry badge | Fade in on trigger (0.2s), hold 4s (notifications) or persist until state ends (warnings), fade out (0.5s) |
+| **B — Crosshair** | Screen center | Crosshair (default neutral color; turns CRT green on interactable) | Always visible |
+| **C — Hotbar** | Bottom-center, 24px from bottom edge | 5-slot hotbar (icon, quantity, slot number); flashlight slot contains battery strip | Always visible |
+| **D — Status bars** | Directly above hotbar, 6px gap | HP bar (top), Stamina bar (bottom) | Always visible; both bars equal width, aligned to hotbar total width |
 
 ### Bar Alignment Rules
 
-- HP 条和耐力条宽度 = 热栏总宽（5格之和，含格间距）
-- HP 条在上，耐力条在下，行间距 6px
-- 两条均无数字标注；信息通过色块长度传达
-- HP 条降至 ≤25% 时，颜色切换为 stamp-red（#C23B2B）以触发紧迫感
-- 耐力条在满值时透明度降至 60%（"在场但安静"），冲刺时恢复至 100%
+- HP bar and Stamina bar width = hotbar total width (sum of 5 slots including gaps)
+- HP bar on top, Stamina bar below, 6px row gap
+- Neither bar shows numeric labels; information is conveyed through fill length alone
+- When HP drops to ≤25%, color switches to stamp-red (#C23B2B) to trigger urgency
+- Stamina bar fades to 60% opacity at full value ("present but quiet"), returns to 100% during sprint
 
 ### Damage Flash
 
-全屏叠层，不属于任何固定区域。红色（#C23B2B，alpha 0.35），受击瞬间满帧，0.3s 淡出。
+Full-screen overlay, not attached to any fixed zone. Red (#C23B2B, alpha 0.35), full opacity on hit frame, fades out over 0.3s.
 
 ---
 

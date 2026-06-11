@@ -741,8 +741,8 @@ Every mission site must pass the identity test: a player must be able to name th
 - **Route arrows:** Adhesive or hand-painted arrows marked with the commission job number. From a prior survey or earlier team. They do not reliably mark the correct path — they mark the path the prior team took.
 - **Inventory tags:** Stamped-metal or printed-label tags on equipment flagged for removal. Tag format: BC mark, job number, asset number, condition note (faded pen, barely legible).
 - **Commission forms:** BC-7 (Job Acceptance), BC-12 (Site Entry Record), BC-19 (Partial Recovery Authorization). Filled with rubber-stamp dates, handwritten names, mostly empty checkboxes. Last checkbox on BC-19: "Confirmed return: ____"
-- **Payment notices:** Stamp-red ink stamp "PAYMENT OVERDUE / 欠款未结" on overdue BC paperwork. Physical ink. Does not glow. Does not animate.
-- **Debt access signage:** Stenciled or printed at zone transitions: "DEBT ACCESS ONLY / 欠款通道" — installed by the institution as a condition of the contract, humiliating the contractor.
+- **Payment notices:** Stamp-red ink stamp "PAYMENT OVERDUE / PAYMENT OUTSTANDING" on overdue BC paperwork. Physical ink. Does not glow. Does not animate.
+- **Debt access signage:** Stenciled or printed at zone transitions: "DEBT ACCESS ONLY / DEBT PASSAGE" — installed by the institution as a condition of the contract, humiliating the contractor.
 
 **Per-institution failure signature:**
 
@@ -1258,7 +1258,7 @@ Also: Phasmophobia's environments are British domestic (suburban houses, schools
 
 **What to take:** The Stanley Parable demonstrates that institutional signage, directory panels, and door labels are themselves a narrative layer. The Parable's office is legible as a specific kind of office before a single interactive event occurs, because the environmental text tells you who this building thinks you are and what it expects of you.
 
-Black Commission draws one specific technique from this: **every readable surface in the game world should be written in the voice of the institution that produced it, not in the voice of the game designer.** A school corridor sign does not say "CAUTION: RESTRICTED AREA." It says "管理区域 — 非学生请勿入内" (Administrative Zone — Students Prohibited) in the typeface and stamp-red ink that a school administration would actually use. A warehouse bay marker is a stenciled number, not a floating waypoint.
+Black Commission draws one specific technique from this: **every readable surface in the game world should be written in the voice of the institution that produced it, not in the voice of the game designer.** A school corridor sign does not say "CAUTION: RESTRICTED AREA." It says "Administrative Zone — Students Prohibited" in the typeface and stamp-red ink that a school administration would actually use. A warehouse bay marker is a stenciled number, not a floating waypoint.
 
 This produces the BC identity injection mechanic described in Section 6: the commission's paperwork (BC-7, BC-12, BC-19) becomes legible as a distinct bureaucratic voice the moment it appears alongside the institution's own signage — a foreign administrative layer imposed on a pre-existing one.
 

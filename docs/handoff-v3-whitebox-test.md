@@ -1,9 +1,6 @@
 # Handoff — Verify the v3 Tower Whitebox (run on the Unity machine)
 
-> **TL;DR (中文)**：这台开发机没有 Unity,下面的代码都是**盲写、未编译验证**的。请在有 Unity 的机子上
-> 按本文步骤跑一遍:① 编译过没过 → ② 跑 EditMode 测试(应全绿)→ ③ 跑菜单生成 v3 白模 → ④ 烘 NavMesh →
-> ⑤ 目视/试走 → ⑥ 把**报错、重叠警告、截图、测试结果**发回。坐标第一版可能要在编辑器里挪,但
-> **连通性是图驱动的,从第一版就应是对的**。
+> **TL;DR**: This dev machine has no Unity — all code below was written blind without compile verification. Please run through the following steps on a machine with Unity: ① Does it compile? → ② Run EditMode tests (all should be green) → ③ Run the menu to generate the v3 whitebox → ④ Bake NavMesh → ⑤ Visual inspection/walkthrough → ⑥ Send back **errors, overlap warnings, screenshots, and test results**. Coordinates in the first pass may need nudging in the editor, but **connectivity is graph-driven and should be correct from the first pass**.
 
 This session redesigned the first level (Earth Coast abandoned tower) toward Lethal-Company-grade
 density + disorientation, and built the code for it. Nothing here was compiled or run — the dev
@@ -141,7 +138,7 @@ git push
 2. Author a `TowerRoomCatalog` + `RoomDef` assets (S/M/L pools) so slots fill.
 3. Wire connector `geometry`/`blocker` for any hand-placed extras; confirm blockers carry working
    `NavMeshObstacle` carving.
-4. The two server-authoritative mechanics still unbuilt: **heavy two-hand 沙盘 carry** + **power gate**
+4. The two server-authoritative mechanics still unbuilt: **heavy two-hand scale model carry** + **power gate**
    (high-risk untested — add EditMode tests like the topology ones).
 5. Time-scaled monster aggression; the infected-inspector monster + nest placement.
 6. Re-run `Tools → … → Tower → Setup Playable Tower Mission` to promote the blockout into the playable

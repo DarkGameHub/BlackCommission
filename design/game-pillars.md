@@ -14,7 +14,7 @@
 2. **The dispatch van ritual** — the team boarding and riding out together; the loop is the ritual.
 3. **The contract speaks** — satire is delivered through settlement screens, client usage notes, and deduction clauses — never through narration.
 4. **Partial settlement choices** — extract now for less, or push for more.
-5. **The moral slope** — three mission tiers: 自由采集 (safe, low pay) → 指定委托 (commissioned, satirical) → 黑色委托 (high pay, dark cost). Higher reward always comes with a darker price.
+5. **The moral slope** — three mission tiers: Free Collection (safe, low pay) → Designated Commission (commissioned, satirical) → Black Commission (high pay, dark cost). Higher reward always comes with a darker price.
 6. **License as leash** — progress is gated by Mars-capital-issued permits; "advancement" is itself the satire.
 
 ## Production-Method Reference (NOT to copy)
@@ -48,8 +48,8 @@ Five license stages drive all progress — not office levels, not a reputation b
 
 | Stage | License | Unlock | Emotional register |
 |---|---|---|---|
-| 1 | 临时采回许可证 | Basic commissioned jobs | Just trying to pay the debt |
-| 2 | 正式采回许可证 | Weirder clients, satirical reveals sharpen | These people are consuming Earth |
-| 3 | 轨道运送资格证 | 自由采集 (junk collection) unlocks | I'm surviving on Earth's ruins |
-| 4 | 特殊样本转运许可 | **黑色委托** formally appears — high pay, dark cost | These jobs are getting darker |
-| 5 | 移民资格审查 | Unlocked after all story missions complete | Do you still want to go to Mars? |
+| 1 | Temporary Recovery Permit | Basic commissioned jobs | Just trying to pay the debt |
+| 2 | Formal Recovery Permit | Weirder clients, satirical reveals sharpen | These people are consuming Earth |
+| 3 | Orbital Transport Qualification | Free Collection (junk collection) unlocks | I'm surviving on Earth's ruins |
+| 4 | Special Sample Transfer Permit | **Black Commission** formally appears — high pay, dark cost | These jobs are getting darker |
+| 5 | Immigration Qualification Review | Unlocked after all story missions complete | Do you still want to go to Mars? |

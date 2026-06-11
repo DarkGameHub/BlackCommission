@@ -3,7 +3,7 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class OfficeMonsterBestiary : MonoBehaviour, IInteractable
 {
-    public string InteractHint => "查看怪物图鉴";
+    public string InteractHint => "View monster bestiary";
 
     void Awake()
     {

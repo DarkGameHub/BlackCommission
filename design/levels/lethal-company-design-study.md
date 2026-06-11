@@ -33,7 +33,7 @@ several mechanics stacked into *continuous* risk-management tension:
    which is what made it spread.
 
 **Takeaway for BC:** tension is a *system stack*, not a level-art problem. A prettier
-whitebox alone won't fix "小儿科" — the loop has to keep pressing.
+whitebox alone won't fix "feels too easy" — the loop has to keep pressing.
 
 ---
 
@@ -70,7 +70,7 @@ of disorientation (you pop out somewhere unexpected).
 
 ---
 
-## ⚠️ 3. The key finding — why the current BC map feels "小儿科"
+## ⚠️ 3. The key finding — why the current BC map feels like "child's play"
 
 The existing slot system (`abandoned-tower-floorplan.md`, §2 and §6) explicitly
 **"randomizes content, not topology"**: a *fixed* skeleton (envelope, corridors,
@@ -79,7 +79,7 @@ stairs, doors) with room *contents* shuffled into slots.
 This is the **opposite** of LC. Consequence:
 
 - **Fixed skeleton + reskinned rooms → players memorize the building in one run.**
-  Run two onward, nobody is lost, nobody is tense → linear, predictable = childish.
+  Run two onward, nobody is lost, nobody is tense → linear, predictable = feels trivial.
 - LC's replayability and dread are rooted in **topology changing every run + tile
   repetition + no map**. Content-only shuffling can't produce that.
 
@@ -105,13 +105,13 @@ or netcode:
 | # | LC principle | Black Commission application (2-floor abandoned pre-sale tower) |
 |---|---|---|
 | 1 | **Procedural topology** (tiles, doorways, main path + branches) | Upgrade the slot system: connectors (corridors/doors) are **seed-toggled open/closed** so loops and dead-ends differ every run. Keep seed determinism. |
-| 2 | **Tile repetition → weak landmarks** | The 烂尾楼 is naturally homogeneous (raw concrete, rebar, scaffold, tarps). Repetition *is* the disorientation and fits the noir-jobsite identity. |
-| 3 | **1–2 strong landmarks for partial orientation** | Keep the **lit show-flat + 沙盘 light-pedestal** as a beacon visible across the shaft; the **two stair towers** (one bright/exposed, one dim/enclosed) as the other anchor. |
+| 2 | **Tile repetition → weak landmarks** | The abandoned tower is naturally homogeneous (raw concrete, rebar, scaffold, tarps). Repetition *is* the disorientation and fits the noir-jobsite identity. |
+| 3 | **1–2 strong landmarks for partial orientation** | Keep the **lit show-flat + scale model light-pedestal** as a beacon visible across the shaft; the **two stair towers** (one bright/exposed, one dim/enclosed) as the other anchor. |
 | 4 | **Fire exits = escape valves** | Beyond the main return route, add **2–3 secondary descents** (side stair / maintenance ladder / scaffold fast-drop) **far from the van** → you *can* flee under pressure, but you surface somewhere unfamiliar. |
 | 5 | **Time pressure + threat scales with time** | Reuse `MvpMissionClock`; make the **Infected Site Inspector** patrol wider / hunt harder the longer the team stays inside. |
-| 6 | **Two-handed loot = extraction vulnerability** | The heavy two-hand 沙盘 carry (slowed carrier, hotbar lock, droppable/relay) is already designed — keep it as the core friction. |
+| 6 | **Two-handed loot = extraction vulnerability** | The heavy two-hand scale model carry (slowed carrier, hotbar lock, droppable/relay) is already designed — keep it as the core friction. |
 | 7 | **Darkness + navigable light** | Pre-power = flashlight-dependent dark (sodium-amber emergency strips); post-power = harsh worklights. Light is the only readability tool. |
-| 8 | **Objective ↔ exit separation + risk gradient** | 沙盘 far NW on F2; van south-center on F1. Carrying it out forces the full descent — the pressure phase. Strengthen, don't change. |
+| 8 | **Objective ↔ exit separation + risk gradient** | Scale model far NW on F2; van south-center on F1. Carrying it out forces the full descent — the pressure phase. Strengthen, don't change. |
 
 ---
 

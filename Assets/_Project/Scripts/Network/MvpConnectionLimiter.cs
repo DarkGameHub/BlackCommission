@@ -46,7 +46,7 @@ public class MvpConnectionLimiter : MonoBehaviour
         response.CreatePlayerObject = approved;
         response.Pending = false;
         response.Reason = !versionOk
-            ? $"版本不一致 / Version mismatch (host {GameBuild.Version} ≠ client {clientVersion})。"
-            : !roomHasSpace ? "事务所最多支持 4 名玩家。" : string.Empty;
+            ? $"Version mismatch (host {GameBuild.Version} ≠ client {clientVersion})."
+            : !roomHasSpace ? "The office supports a maximum of 4 players." : string.Empty;
     }
 }

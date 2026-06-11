@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class OfficeComputer : NetworkBehaviour, IInteractable
 {
     const float OfficeGroundStorageUseDistance = 5.2f;
-    const string DefaultTaskResourcePath = "Tasks/TowerEarthCoast_01";
+    const string DefaultTaskResourcePath = "Tasks/SnowLotus_01";
 
     [SerializeField] OfficeTaskDefinition demoTask;
     [SerializeField] string returnOfficeScene = "HQ";
@@ -25,13 +25,13 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     public OfficeTaskDefinition DemoTask => ResolveDemoTask();
     public bool HasSelectedDemoTask => ResolveDemoTask() != null && MvpMissionRuntime.SelectedTask == ResolveDemoTask();
-    public string DemoTaskTitle => ResolveDemoTask()?.title ?? "暂无可用委托";
-    public string DemoTaskClient => ResolveDemoTask()?.client ?? "未知客户";
-    public string DemoTaskDescription => ResolveDemoTask()?.description ?? "当前没有可接受的委托。";
-    public string DemoTaskLocation => ResolveDemoTask()?.locationName ?? "未知地点";
-    public int DemoTaskMoneyReward => ResolveDemoTask()?.moneyReward ?? 0;
-    public int DemoTaskReputationReward => ResolveDemoTask()?.reputationReward ?? 0;
-    public int DemoTaskExperienceReward => ResolveDemoTask()?.experienceReward ?? 0;
+    public string DemoTaskTitle => demoTask != null ? demoTask.title : "The Forgotten Homework";
+    public string DemoTaskClient => demoTask != null ? demoTask.client : "Parent";
+    public string DemoTaskDescription => demoTask != null ? demoTask.description : "Go to the school and retrieve the forgotten homework, then evacuate safely.";
+    public string DemoTaskLocation => demoTask != null ? demoTask.locationName : "School";
+    public int DemoTaskMoneyReward => demoTask != null ? demoTask.moneyReward : 0;
+    public int DemoTaskReputationReward => demoTask != null ? demoTask.reputationReward : 0;
+    public int DemoTaskExperienceReward => demoTask != null ? demoTask.experienceReward : 0;
 
     OfficeTaskDefinition ResolveDemoTask()
     {
@@ -61,17 +61,17 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             if (MvpPendingReward.HasPending)
             {
                 if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !NetworkManager.Singleton.IsHost)
-                    return "等待房主领取结算";
-                return "打开委托终端: 领取结算";
+                    return "Waiting for host to collect settlement";
+                return "Open commission terminal: collect settlement";
             }
 
             if (MvpMissionRuntime.HasSelectedTask)
-                return "打开委托终端: 查看已锁定委托";
+                return "Open commission terminal: view locked commission";
 
             if (CompanyData.Current.CanShowTutorialAcquisition)
-                return "打开委托终端: 事务所收购文件";
+                return "Open commission terminal: office acquisition file";
 
-            return "打开委托终端";
+            return "Open commission terminal";
         }
     }
 
@@ -112,19 +112,19 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     {
         if (missionLaunching)
         {
-            message = "委托车正在调度中。";
+            message = "Commission van is being dispatched.";
             return false;
         }
 
         if (MvpPendingReward.HasPending)
         {
-            message = "先领取上一单结算。";
+            message = "Collect the previous settlement first.";
             return false;
         }
 
         if (CompanyData.Current.CanAffordTutorialAcquisition)
         {
-            message = "先处理事务所收购文件。";
+            message = "Handle the office acquisition file first.";
             return false;
         }
 
@@ -134,17 +134,17 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             if (allowNonNetworkSoloStart && CanStartDemoTask(out message))
             {
                 QueueDemoTask();
-                message = $"已接受委托: {DemoTaskTitle}";
+                message = $"Commission accepted: {DemoTaskTitle}";
                 return MvpMissionRuntime.HasSelectedTask;
             }
 
-            message = "先创建事务所。";
+            message = "Create an office session first.";
             return false;
         }
 
         if (!network.IsHost)
         {
-            message = "只有房主能接受委托。";
+            message = "Only the host can accept commissions.";
             return false;
         }
 
@@ -153,7 +153,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
         QueueDemoTask();
         bool accepted = MvpMissionRuntime.HasSelectedTask;
-        message = accepted ? $"已接受委托: {DemoTaskTitle}" : "委托锁定失败。";
+        message = accepted ? $"Commission accepted: {DemoTaskTitle}" : "Commission lock failed.";
         return accepted;
     }
 
@@ -342,17 +342,17 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         ResolveDemoTask();
         if (demoTask == null)
         {
-            reason = "终端没有配置可用委托。";
+            reason = "No commission configured for this terminal.";
             return false;
         }
         if (CompanyData.Current.OfficeLevel < demoTask.requiredOfficeLevel)
         {
-            reason = $"事务所等级不足: 需要 LV.{demoTask.requiredOfficeLevel}。";
+            reason = $"Office level too low: requires LV.{demoTask.requiredOfficeLevel}.";
             return false;
         }
         if (CompanyData.Current.Reputation < demoTask.minimumReputation)
         {
-            reason = $"声望不足: 需要 {demoTask.minimumReputation}。";
+            reason = $"Insufficient reputation: requires {demoTask.minimumReputation}.";
             return false;
         }
         reason = "";

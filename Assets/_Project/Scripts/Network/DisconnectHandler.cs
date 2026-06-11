@@ -87,7 +87,7 @@ public class DisconnectHandler : MonoBehaviour
 
         if (NetworkManager.Singleton.IsServer)
         {
-            Debug.Log($"[Disconnect] 客户端 {clientId} 断开连接");
+            Debug.Log($"[Disconnect] Client {clientId} disconnected");
             return;
         }
 

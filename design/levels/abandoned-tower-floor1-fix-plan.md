@@ -1,45 +1,45 @@
-# 烂尾楼一层 · 修复方案(门 + 重叠 + slot)
+# Abandoned Tower Floor 1 · Fix Plan (Doors + Overlaps + Slots)
 
-> 仅针对**第一层**。基于 `abandoned-tower-floor1-asbuilt.md` 的真实场景核对。
-> 落地方式:Editor 菜单工具 `Tools/Black Commission/MVP/Tower/F1 ...`(本机无 Unity,
-> 工具在你机器上点菜单执行,只动一层,保留布局/材质/楼梯,可重跑、可撤销)。
+> Covers **Floor 1 only**. Based on the real scene verification in `abandoned-tower-floor1-asbuilt.md`.
+> Implementation method: Editor menu tool `Tools/Black Commission/MVP/Tower/F1 ...` (Unity not available
+> on this machine; run the tool via menu on your machine, affects only this floor, preserves
+> layout/materials/stairs, re-runnable, undoable).
 
-## 1. 标准门(PM 定:用导入的两个工业门,门洞留空、无过梁)
+## 1. Standard Doors (PM decision: use the two imported industrial doors; door openings left clear, no lintel)
 
-| 用途 | Prefab | 净宽 | 门洞宽 | 高 |
+| Use | Prefab | Clear Width | Opening Width | Height |
 |---|---|---|---|---|
-| 宽门(主动线/大房/走廊口/楼梯口) | `Assets/TirgamesAssets/Factory/Prefabs/DoorIndustrial01_1` 双开 | ≈2.36m | **2.4m** | 2.17m |
-| 窄门(小房) | `Assets/TirgamesAssets/Factory/Prefabs/DoorIndustrial01_2` 单开 | ≈1.16m | **1.2m** | 2.17m |
+| Wide door (main routes / large rooms / corridor entries / stair entries) | `Assets/TirgamesAssets/Factory/Prefabs/DoorIndustrial01_1` double-leaf | ≈2.36m | **2.4m** | 2.17m |
+| Narrow door (small rooms) | `Assets/TirgamesAssets/Factory/Prefabs/DoorIndustrial01_2` single-leaf | ≈1.16m | **1.2m** | 2.17m |
 
-规则:
-- 现有洞口**宽度≥2.3m → 宽门(2.4)**;**1.0–2.3m → 窄门(1.2)**;**<1.0m 的碎缝 → 封掉**(消除 0.1/0.2m 乱缝)。
-- 门洞居中于原洞位置;门贴墙居中安装(单开门按铰链偏移居中);门上方敞开,**不做过梁**。
-- 门朝向沿墙;高度保持 2.17m,只按门洞宽缩放门的宽度。
+Rules:
+- Existing opening **width ≥2.3m → wide door (2.4)**; **1.0–2.3m → narrow door (1.2)**; **<1.0m gaps → seal** (eliminate 0.1/0.2m stray gaps).
+- Center the door opening at the original opening position; install door flush with wall, centered (single-leaf door centered on hinge offset); opening above the door is clear, **no lintel**.
+- Door faces along the wall; height stays at 2.17m; only scale door width to match the opening width.
 
-## 2. 重叠地面 / 几何修复
+## 2. Overlapping Floor / Geometry Fixes
 
-**工具自动修(安全、明确):**
-- **VAN 地板**西缘 x10.2 → 12(不再压西仓库 1.8m)。
-- **STAIRA1 地板**从拉歪的 11.2m 缩回墙体尺寸 **4×8**(中心 z=32)。
-- 删**重复楼梯 prop** `Factory1Stairs03 (1)` 在 (4.79,0,18) 的其中一个。
-- 删整个旧根 **`TOWER_SLOTS`**(19 个老命名失效 slot)。
+**Tool auto-fixes (safe, unambiguous):**
+- **VAN floor** west edge x10.2 → 12 (no longer overlapping the west warehouse by 1.8m).
+- **STAIRA1 floor** reset from distorted 11.2m back to wall dimensions **4×8** (center z=32).
+- Delete the **duplicate stair prop** `Factory1Stairs03 (1)` at (4.79,0,18) — one of the two instances.
+- Delete the entire old root **`TOWER_SLOTS`** (19 old invalidly-named slots).
 
-**需要你拍板的"真冲突"(工具只标记、不乱改):**
-- **SECUR 房与 LOBBY→POWER 走廊(E-LPWR)占同一块地** ([8,10]-[12,14])。这是房间压在走廊上的真冲突,
-  自动裁会破坏连通——要么挪 SECUR,要么改走廊走位。
-- **T6 连接器是 6.9×15.6 的大板**(塌角↔工头),不是走廊。建议删了重画成标准 4m 走廊。
+**True conflicts requiring your call (tool flags but does not auto-fix):**
+- **SECUR room and the LOBBY→POWER corridor (E-LPWR) occupy the same space** ([8,10]-[12,14]). This is a genuine room-over-corridor conflict;
+  auto-cropping would break connectivity — either move SECUR or reroute the corridor.
+- **T6 connector is a large 6.9×15.6 slab** (collapse corner ↔ foreman), not a corridor. Recommend deleting and redrawing as a standard 4m corridor.
 
-## 3. slot
-- 删旧 `TOWER_SLOTS` 根。保留 `Tower_v3_Whitebox` 下的 v3 slot(已在房中心)。
+## 3. Slots
+- Delete the old `TOWER_SLOTS` root. Keep the v3 slots under `Tower_v3_Whitebox` (already centered in rooms).
 
-## 4. 平面图
-- 一律以**墙**为房间边界(已确认墙≈地板,唯 STAIRA1 地板需缩);修完后据墙重画 `tower_floor1_accurate.svg`。
+## 4. Floor Plan
+- Use **walls** as room boundaries throughout (confirmed walls ≈ floors; only STAIRA1 floor needs reset); redraw `tower_floor1_accurate.svg` based on walls after fix.
 
-## 5. 落地步骤
-1. Unity 里跑 `F1 - Cleanup`(VAN/STAIRA1/重复楼梯/删旧slot)。
-2. 跑 `F1 - Install Doors`(统一门洞 + 装宽/窄门)。
-3. 看效果反馈;SECUR/T6 两个真冲突单独定。
-4. 修完重画一层平面图。
+## 5. Implementation Steps
+1. Run `F1 - Cleanup` in Unity (VAN/STAIRA1/duplicate stairs/delete old slots).
+2. Run `F1 - Install Doors` (unify door openings + install wide/narrow doors).
+3. Review results; resolve SECUR/T6 two true conflicts separately.
+4. Redraw Floor 1 floor plan after fix.
 
-> 工具为本机无 Unity 下盲写,**首次运行需在编辑器内核对**(门朝向/位置可能要微调);可重跑。
-</content>
+> Tool written blind (Unity not available on this machine). **First run requires verification in the editor** (door orientation/position may need minor adjustment); re-runnable.

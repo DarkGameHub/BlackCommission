@@ -10,7 +10,7 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
 
     static CabinetSaveData data;
 
-    public string InteractHint => "打开补给柜";
+    public string InteractHint => "Open supply cabinet";
 
     void Awake()
     {
@@ -42,14 +42,14 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
         message = "";
         if (hotbar == null)
         {
-            message = "没有找到本地玩家热栏。";
+            message = "Local player hotbar not found.";
             return false;
         }
 
         HotbarSlot source = hotbar.GetSlot(hotbarSlotIndex);
         if (source == null || source.IsEmpty)
         {
-            message = "这个热栏格是空的。";
+            message = "This hotbar slot is empty.";
             return false;
         }
 
@@ -57,19 +57,19 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
         int targetIndex = FindStoreSlot(itemId);
         if (targetIndex < 0)
         {
-            message = "补给柜已经满了。";
+            message = "Supply cabinet is full.";
             return false;
         }
 
         if (!hotbar.TryRemoveOneFromSlotForStorage(hotbarSlotIndex, itemId))
         {
-            message = "没能从热栏取出物品。";
+            message = "Failed to remove item from hotbar.";
             return false;
         }
 
         AddOneToCabinetSlot(targetIndex, itemId);
         Save();
-        message = $"已存入: {GetItemLabel(itemId)}。";
+        message = $"Stored: {GetItemLabel(itemId)}.";
         return true;
     }
 
@@ -79,20 +79,20 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
         message = "";
         if (!IsValidSlot(cabinetSlotIndex))
         {
-            message = "无效柜格。";
+            message = "Invalid cabinet slot.";
             return false;
         }
 
         HotbarSlot slot = data.slots[cabinetSlotIndex];
         if (slot == null || slot.IsEmpty)
         {
-            message = "这个柜格是空的。";
+            message = "This cabinet slot is empty.";
             return false;
         }
 
         if (hotbar == null)
         {
-            message = "没有找到本地玩家热栏。";
+            message = "Local player hotbar not found.";
             return false;
         }
 
@@ -105,7 +105,7 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
 
         if (!hotbar.TryReceiveItemFromStorage(itemId, 1))
         {
-            message = "热栏暂时无法接收。";
+            message = "Hotbar cannot receive item right now.";
             return false;
         }
 
@@ -113,7 +113,7 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
         if (slot.quantity <= 0)
             slot.itemId = MvpHotbarItemId.None;
         Save();
-        message = $"已取出: {GetItemLabel(itemId)}。";
+        message = $"Taken: {GetItemLabel(itemId)}.";
         return true;
     }
 
@@ -121,9 +121,9 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
     {
         return itemId switch
         {
-            MvpHotbarItemId.Flashlight => "手电筒",
-            MvpHotbarItemId.Battery => "电池",
-            _ => "空"
+            MvpHotbarItemId.Flashlight => "Flashlight",
+            MvpHotbarItemId.Battery => "Battery",
+            _ => "Empty"
         };
     }
 

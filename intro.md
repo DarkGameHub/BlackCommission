@@ -1,20 +1,20 @@
-《外包事故组》第一阶段 MVP 开发清单
+Phase 1 MVP Development Checklist — "Outsourced Incident Response"
 
-> 现状说明：本文是早期“地下商场积水事故”原型清单，保留作旧方案参考。当前可玩 MVP 已转向 `docs/mvp-core-loop.md` 中的“破产事务所 -> 电脑接学校找作业本委托 -> 直接进入任务场所 -> 返回事务所结算”流程；第一阶段不做车辆/停车场出发流程。
+> **Status note**: This document is the early "underground mall flooding incident" prototype checklist, kept as a reference for the old approach. The current playable MVP has shifted to the flow described in `docs/mvp-core-loop.md`: "bankrupt office → office computer → accept school homework-retrieval commission → go directly to the mission site → return to office for settlement." The Phase 1 build does not include a vehicle/parking-lot departure flow.
 
-MVP 目标
+MVP Goal
 
-第一阶段只做一个完整可玩的 Demo：
+Phase 1 delivers one complete, playable Demo:
 
-4 名玩家从穷酸事务所接到“地下商场积水事故”工单，进入事故现场，救人、修泵、躲避失控清洁机器人、带证据撤离，最后回事务所结算。
+4 players accept an "underground mall flooding incident" work order from a broke office, enter the incident site, rescue survivors, repair the pump, evade a malfunctioning cleaning robot, collect evidence and evacuate, then return to the office for settlement.
 
-0. 项目基础搭建
-P0 必须完成
-0.1 创建 Unity 项目
-使用 Unity 6 LTS 或稳定 LTS 版本。
-项目类型：3D。
-渲染管线：URP。
-设置项目目录结构：
+0. Project Foundation
+P0 Required
+0.1 Create Unity Project
+Use Unity 6 LTS or a stable LTS release.
+Project type: 3D.
+Render pipeline: URP.
+Set up the project directory structure:
 Assets/
   Art/
   Audio/
@@ -26,1215 +26,1215 @@ Assets/
   ScriptableObjects/
   UI/
   VFX/
-0.2 基础场景
+0.2 Base Scenes
 
-需要创建以下场景：
+Create the following scenes:
 
 MainMenu
 Office_Hub
 Mission_MallFlood
 ResultScreen
-0.3 版本管理
-Git 仓库。
-设置 .gitignore。
-大文件使用 Git LFS。
-分支建议：
+0.3 Version Control
+Git repository.
+Set up .gitignore.
+Use Git LFS for large files.
+Recommended branches:
 main
 develop
 feature/*
 bugfix/*
-0.4 基础构建目标
-Windows PC。
-支持本地打包。
-支持局域网/Steam 前测试环境。
-1. 联机系统
+0.4 Base Build Targets
+Windows PC.
+Support local builds.
+Support LAN/Steam pre-testing environment.
+1. Networking System
 
-这是 MVP 最重要的技术模块之一。
+This is one of the most critical technical modules in the MVP.
 
-P0 必须完成
-1.1 房间系统
+P0 Required
+1.1 Room System
 
-功能：
+Features:
 
-创建房间；
-加入房间；
-离开房间；
-房主开始游戏；
-最多 4 人。
+Create room;
+Join room;
+Leave room;
+Host starts game;
+Up to 4 players.
 
-第一阶段可以先不做公开匹配。
+Public matchmaking is not required for Phase 1.
 
 Host Game
 Join Game
 Ready
 Start Mission
 Leave Lobby
-1.2 玩家同步
-
-需要同步：
-
-玩家位置；
-玩家旋转；
-玩家动画状态；
-玩家手持物；
-玩家是否倒地；
-玩家是否撤离；
-玩家当前交互状态。
-1.3 房主权威
-
-以下逻辑由 Host 判定：
-
-任务状态；
-水位阶段；
-清洁机器人 AI；
-幸存者状态；
-道具生成；
-结算结果；
-撤离判定。
-1.4 断线处理
-
-MVP 简单处理即可：
-
-玩家断线后角色消失或变为倒地状态；
-房主断线则任务失败或回大厅；
-显示断线提示。
-P1 建议完成
-1.5 简单大厅准备状态
-每名玩家可以点击 Ready。
-房主只有在至少 1 人 Ready 后可开始。
-UI 显示玩家名、准备状态。
-1.6 简单邀请/加入码
-房间码加入。
-或 Steam 好友邀请，视技术方案而定。
-2. 玩家控制器
-P0 必须完成
-2.1 第一人称移动
-
-基础操作：
-
-WASD 移动；
-鼠标视角；
-跑步；
-蹲下；
-跳跃；
-交互键；
-丢弃键；
-使用工具键。
-2.2 体力系统
-
-体力影响：
-
-奔跑；
-搬运；
-抬幸存者；
-推重物。
-
-功能：
-
-奔跑消耗体力；
-停止奔跑后恢复；
-搬运重物时体力消耗更快；
-体力为 0 时不能冲刺。
-2.3 玩家受伤/倒地
-
-MVP 简单版：
-
-玩家被机器人撞击或触电后扣血；
-血量归零倒地；
-队友可救起；
-倒地玩家移动受限或无法移动；
-倒地时间过长算重伤。
-2.4 交互系统
-
-统一交互框架：
-
-看向物体显示交互提示；
-按 E 交互；
-长按 E 进行维修/救援/拾取；
-可被打断；
-联机同步交互状态。
-P1 建议完成
-2.5 稳定度系统
-
-轻量版即可。
-
-降低情况：
-
-长时间黑暗；
-被机器人追；
-靠近危险区域；
-队友倒地；
-水位进入失控阶段。
-
-影响：
-
-轻微画面晃动；
-呼吸声变大；
-维修速度稍慢。
-
-不要做太重，避免烦人。
-
-3. 语音系统
-P0 必须完成
-3.1 近距离语音
-
-功能：
-
-玩家距离越远声音越小；
-墙体可简单降低音量；
-倒地玩家声音可以变小或断续。
-3.2 对讲机语音
-
-功能：
-
-按键说话；
-全队听见；
-有简单杂音音效；
-水位失控阶段杂音更明显。
-3.3 语音 UI
-
-显示：
-
-谁正在说话；
-是否使用对讲机；
-对讲机信号是否不稳定。
-P1 建议完成
-3.4 区域信号干扰
-
-在地下仓库、泵房等区域，对讲机音质变差。
-
-4. 事务所大厅
-P0 必须完成
-4.1 Office_Hub 场景
-
-基础布局：
-
-破旧办公室；
-工单电脑；
-装备架；
-出发门；
-白板；
-资金/信誉显示。
-4.2 工单电脑
-
-功能：
-
-查看当前工单；
-查看任务目标；
-查看预计报酬；
-查看风险等级；
-开始任务。
-
-MVP 只需要一个工单：
-
-地下商场积水事故
-4.3 装备选择
-
-玩家可从装备架选择基础工具。
-
-第一阶段工具：
-
-手电筒；
-对讲机；
-工具箱；
-担架；
-临时电池。
-4.4 出发流程
-所有人准备；
-房主确认出发；
-切换到任务场景；
-同步所有玩家进入关卡。
-P1 建议完成
-4.5 大厅氛围交互
-电话铃；
-墙上债务白板；
-上次任务结算单；
-事务所资金显示；
-“零事故 0 天”标语。
-5. 工单系统
-P0 必须完成
-5.1 工单数据结构
-
-建议字段：
-
-工单名称
-工单描述
-地点
-风险等级
-基础报酬
-主目标列表
-可选目标列表
-隐藏目标列表
-失败条件
-时间限制
-5.2 主目标
-
-地下商场积水事故主目标：
-
-1. 救出至少 1 名幸存者
-2. 重启排水泵
-3. 至少 1 名玩家成功撤离
-5.3 可选目标
-
-第一阶段可选目标：
-
-1. 救出第 2 名幸存者
-2. 带回事故证据
-3. 带回保险柜
-4. 15 分钟内完成
-5.4 任务 UI
-
-关卡内显示：
-
-当前主目标；
-目标完成状态；
-可选目标；
-撤离提示；
-事故升级警告。
-5.5 任务完成判定
-
-完成条件：
-
-主目标完成；
-玩家到达撤离点；
-房主判定任务成功；
-进入结算。
-
-失败条件：
-
-所有玩家倒地；
-强制封闭时间结束；
-主目标未完成但玩家撤离，算部分失败；
-幸存者全部死亡，救援目标失败。
-6. 地图：地下商场积水事故
-P0 必须完成
-6.1 灰盒地图
-
-地图区域：
-
-入口大厅
-商铺走廊
-美食区
-后厨
-员工通道
-电力控制室
-排水泵房
-地下仓库
-停车场撤离区
-6.2 路线结构
-
-必须包含：
-
-环形路线；
-至少 2 条前往泵房的路线；
-至少 2 条前往仓库的路线；
-一个后期会被水封锁的路线；
-一个需要通电开启的安全门；
-一个可从背后解锁的捷径门。
-6.3 临时安全点
-
-入口大厅作为临时安全点。
-
-功能：
-
-初期安全；
-可放置幸存者；
-可重新分配装备；
-显示任务状态；
-后期不保证绝对安全。
-6.4 撤离点
-
-停车场撤离区。
-
-功能：
-
-玩家进入撤离区后显示等待撤离；
-幸存者需要带到此处才算救出；
-任务目标满足后可撤离；
-房主确认或倒计时后结算。
-P1 建议完成
-6.5 地图美术替换
-
-优先替换：
-
-入口大厅；
-泵房；
-仓库；
-停车场撤离区。
-6.6 环境动态变化
-水面上升视觉；
-灯光闪烁；
-警报灯；
-广播提示；
-门禁故障火花。
-7. 事故升级系统
-P0 必须完成
-7.1 全局事故计时器
-
-一局默认：
-
-0-5 分钟：可控期
-5-10 分钟：恶化期
-10-15 分钟：失控期
-15 分钟后：强制撤离期
-7.2 水位阶段
-
-至少 4 个阶段：
-
-阶段 0：无明显积水
-阶段 1：低水位，轻微减速
-阶段 2：中水位，明显减速，部分电器危险
-阶段 3：高水位，部分通道封锁
-7.3 水位影响
-
-影响内容：
-
-玩家移动速度；
-搬运速度；
-某些门无法打开；
-某些电区触电；
-幸存者移动速度；
-清洁机器人路径变化。
-7.4 泵房修复影响
-
-排水泵启动后：
-
-水位上涨速度降低；
-某些区域重新可通行；
-完成主目标；
-触发新的事故事件，例如机器人警戒增强。
-7.5 阶段广播
-
-每个阶段触发广播：
-
-“地下二层排水系统异常。”
-“水位持续上涨，请勿进入低洼区域。”
-“停车场闸门将在 3 分钟后封闭。”
-“物业感谢您的配合。”
-P1 建议完成
-7.6 随机事故事件
-
-简单随机事件：
-
-某扇门短路锁死；
-某区域灯光熄灭；
-机器人改变巡逻路线；
-幸存者发出呼救暴露位置；
-一件证据被水冲走。
-8. 幸存者系统
-P0 必须完成
-8.1 幸存者基础状态
-
-状态：
-
-等待救援
-跟随玩家
-被拖拽
-被抬起
-倒地
-已撤离
-死亡
-8.2 幸存者 1：轻伤
-
-位置：美食区后厨。
-
-行为：
-
-玩家找到后可安抚；
-安抚后跟随最近玩家；
-遇到机器人会恐慌；
-水位过高会减速；
-到撤离点后算救出。
-8.3 幸存者 2：重伤
-
-位置：地下仓库。
-
-行为：
-
-无法自行移动；
-单人拖拽；
-双人担架抬走；
-掉入高水位区域会持续恶化；
-被机器人发现可能被拖走。
-8.4 幸存者生命状态
-
-影响：
-
-长时间未救援会恶化；
-被机器人撞击会恶化；
-高水位会恶化；
-玩家可简单急救延缓恶化。
-8.5 救援判定
-
-幸存者进入撤离区：
-
-状态改为已撤离；
-更新任务目标；
-结算加钱加信誉。
-P1 建议完成
-8.6 幸存者情绪
-
-轻量行为：
-
-害怕时喊叫；
-停止跟随；
-躲起来；
-需要玩家安抚。
-9. 排水泵维修系统
-P0 必须完成
-9.1 泵房设备
-
-泵房包含：
-
-主控制台；
-保险丝槽；
-手动阀门；
-临时电池接口。
-9.2 维修流程
-
-流程：
-
-进入泵房
-→ 检查控制台
-→ 找到保险丝
-→ 安装保险丝
-→ 安装临时电池或恢复供电
-→ 一名玩家操作控制台
-→ 一名玩家转动阀门
-→ 读条完成
-→ 排水泵启动
-9.3 双人协作
-
-要求：
-
-控制台和阀门需要短时间内同时操作；
-如果只有一人，操作会失败；
-操作时被机器人撞击会中断。
-9.4 维修反馈
-进度条；
-声音反馈；
-灯光恢复；
-水泵启动震动；
-任务目标完成提示。
-P1 建议完成
-9.5 维修小游戏
-
-轻量即可：
-
-接线顺序；
-指针对齐；
-阀门压力保持在安全范围。
-10. 清洁机器人 AI
-P0 必须完成
-10.1 机器人基础行为
-
-状态机：
-
-巡逻
-听声调查
-发现目标
-冲撞
-拖拽物品/幸存者
-返回巡逻
-短暂停机
-10.2 巡逻
-沿固定路线巡逻；
-会经过商铺走廊、美食区、员工通道；
-水位高时改变路线。
-10.3 听声调查
-
-声音来源：
-
-玩家奔跑；
-物品掉落；
-对讲机；
-幸存者呼救；
-维修失败；
-门被撞开。
-
-机器人听到声音后前往调查点。
-
-10.4 发现玩家
-
-发现玩家后：
-
-发出物业语音；
-短暂锁定；
-冲撞玩家；
-撞击造成伤害和击退；
-打断玩家搬运/维修。
-10.5 拖拽物品
-
-机器人会尝试拖走：
-
-掉落的小道具；
-证据箱；
-倒地幸存者；
-轻伤幸存者。
-10.6 弱点
-
-玩家可以用手电筒强光短暂停机。
-
-限制：
-
-停机时间短；
-有冷却；
-后期机器人抗性增强。
-P1 建议完成
-10.7 机器人语音
-
-示例：
-
-“检测到障碍物。”
-“请保持商场清洁。”
-“人形垃圾，请配合回收。”
-“感谢您的理解。”
-10.8 机器人升级
-
-事故阶段越高：
-
-巡逻速度更快；
-听觉更敏感；
-冲撞冷却更短。
-11. 道具与装备系统
-P0 必须完成
-11.1 通用物品系统
-
-物品需要支持：
-
-拾取；
-丢弃；
-携带；
-使用；
-联机同步；
-被机器人拖走；
-被水损坏。
-11.2 手电筒
-
-功能：
-
-照明；
-电量；
-强光短暂停机器人；
-可开关。
-11.3 对讲机
-
-功能：
-
-远距离语音；
-电量或信号状态；
-使用时产生声音风险。
-11.4 工具箱
-
-功能：
-
-修门；
-修电箱；
-修泵；
-打开维修面板。
-11.5 担架
-
-功能：
-
-折叠/展开；
-双人抬重伤幸存者；
-搬运时需要两名玩家配合；
-卡门、撞击会掉落。
-11.6 临时电池
-
-功能：
-
-给门禁供电；
-给泵房控制台供电；
-重物；
-掉水里会损坏。
-11.7 保险丝
-
-功能：
-
-泵房维修必要物品；
-可在电力控制室找到；
-小物品，可被机器人吸走。
-11.8 证据箱/硬盘
-
-功能：
-
-可选目标；
-带回撤离点结算加钱；
-进水后损坏，价值降低。
-P1 建议完成
-11.9 保险柜
-重物；
-双人搬运；
-高价值；
-掉落或进水会降低价值。
-12. 搬运系统
-P0 必须完成
-12.1 单人搬运
-
-支持：
-
-小物品手持；
-重物双手抱；
-拖拽重伤者。
-
-影响：
-
-移动速度降低；
-无法使用部分工具；
-奔跑受限。
-12.2 双人搬运
-
-支持：
-
-担架；
-重伤幸存者；
-保险柜；
-大型电池。
-
-要求：
-
-两名玩家分别交互两端；
-移动需要同步；
-转向会有惯性；
-撞击会掉落；
-卡门要能产生物理喜剧。
-12.3 掉落与损坏
-
-掉落后：
-
-幸存者状态变差；
-证据损坏；
-保险柜价值下降；
-产生声音吸引机器人。
-P1 建议完成
-12.4 简单物理反馈
-重物撞门；
-水中拖拽阻力；
-担架倾斜；
-撞击音效。
-13. 门、电力与环境交互
-P0 必须完成
-13.1 门系统
-
-门类型：
-
-普通门；
-门禁门；
-捷径门；
-被水压卡住的门；
-需要工具箱修复的门。
-13.2 电力系统
-
-状态：
-
-正常；
-不稳定；
-断电。
-
-影响：
-
-灯光；
-门禁；
-对讲机信号；
-泵房控制台；
-触电区域。
-13.3 电力控制室
-
-功能：
-
-可恢复部分区域电力；
-需要工具箱；
-可能触发机器人警戒。
-P1 建议完成
-13.4 触电危险
-水中带电区域；
-玩家进入会受伤；
-关闭电闸可解除。
-14. 撤离系统
-P0 必须完成
-14.1 撤离区域
-
-停车场撤离点。
-
-功能：
-
-玩家进入显示撤离状态；
-幸存者进入后记录；
-任务目标满足后可撤离。
-14.2 撤离判定
-
-支持：
-
-全员撤离；
-部分玩家撤离；
-玩家倒地未撤离；
-幸存者撤离；
-物品撤离。
-14.3 强制撤离倒计时
-
-15 分钟后启动：
-
-显示倒计时；
-停车场门即将关闭；
-未撤离角色视为失踪/重伤。
-15. 结算系统
-P0 必须完成
-15.1 结算数据收集
-
-记录：
-
-主目标是否完成；
-救出幸存者数量；
-带回证据数量；
-带回保险柜；
-玩家受伤情况；
-幸存者死亡情况；
-设备损坏；
-财产损坏；
-完成时间。
-15.2 收入计算
-
-收入项：
-
-主目标完成奖金
-幸存者救援奖金
-泵房修复奖金
-证据奖金
-保险柜回收奖金
-速度奖金
-15.3 扣款计算
-
-扣款项：
-
-队员医疗费
-幸存者死亡赔偿
-设备损坏费
-客户财产损坏费
-超时罚款
-工具遗失费
-15.4 净利润
-
-计算：
-
-净利润 = 总收入 - 总扣款
-事务所资金 += 净利润
-15.5 信誉变化
-
-增加：
-
-完成主目标；
-救出幸存者；
-快速完成；
-带回证据。
-
-降低：
-
-任务失败；
-幸存者死亡；
-队员重伤；
-证据损坏；
-财产严重损坏。
-15.6 结算界面
-
-显示：
-
-任务结果
-救出人数
-完成时间
-收入明细
-扣款明细
-净利润
-信誉变化
-事务所当前资金
-队员状态
-P1 建议完成
-15.7 搞笑结算评价
-
-例如：
-
-“勉强没有破产”
-“客户表示不会再找你们”
-“救援成功，但物业很生气”
-“本次净赚 37 元，值得庆祝”
-16. UI 系统
-P0 必须完成
-16.1 主菜单 UI
-开始游戏；
-创建房间；
-加入房间；
-设置；
-退出。
-16.2 大厅 UI
-玩家列表；
-当前资金；
-当前信誉；
-工单详情；
-装备选择；
-准备状态；
-出发按钮。
-16.3 关卡内 UI
-主目标；
-可选目标；
-队友状态；
-当前携带物；
-体力条；
-水位警告；
-事故阶段；
-撤离方向；
-交互提示。
-16.4 结算 UI
-任务完成情况；
-收入；
-扣款；
-信誉；
-返回事务所按钮。
-P1 建议完成
-16.5 任务提示
-
-首次游玩时提示：
-
-如何救人；
-如何修泵；
-如何使用担架；
-如何撤离。
-17. 音频系统
-P0 必须完成
-17.1 环境音
-水滴；
-积水流动；
-远处广播；
-商场空调噪音；
-电力短路；
-机器人移动声。
-17.2 交互音
-开门；
-拾取；
-丢弃；
-维修；
-阀门转动；
-水泵启动；
-电池安装；
-保险丝安装。
-17.3 危险音
-水位警报；
-机器人锁定；
-机器人冲撞；
-幸存者呼救；
-倒计时广播；
-对讲机杂音。
-17.4 结算音
-收入音效；
-扣款音效；
-信誉变化音效。
-P1 建议完成
-17.5 机器人语音库
-
-至少 10 条。
-
-17.6 事务所氛围音
-老风扇；
-电话铃；
-打印机卡纸；
-楼上漏水。
-18. 美术资产清单
-P0 必须完成
-18.1 玩家角色
-4 个颜色区分的低成本制服角色；
-第一人称手部；
-简单第三人称模型；
-基础动画：
-站立
-行走
-跑步
-蹲下
-拾取
-搬运
-倒地
-救援
-维修
-18.2 地图灰盒资产
-墙；
-地板；
-门；
-楼梯/斜坡；
-商铺门面；
-泵房设备；
-控制台；
-仓库货架；
-停车场门。
-18.3 关键道具
-手电筒；
-对讲机；
-工具箱；
-担架；
-临时电池；
-保险丝；
-证据硬盘；
-证据箱；
-保险柜。
-18.4 幸存者
-轻伤幸存者模型；
-重伤幸存者模型；
-简单动画：
-坐着等待
-站起
-跟随
-恐慌
-倒地
-被抬
-18.5 清洁机器人
-一个主要机器人模型；
-巡逻动画；
-冲撞动画；
-拖拽动画；
-短路停机动画。
-P1 建议完成
-18.6 氛围美术
-警戒线；
-湿地反光；
-商场招牌；
-损坏广告牌；
-漂浮杂物；
-垃圾袋；
-水中电火花；
-物业提示牌。
-19. 特效系统
-P0 必须完成
-水面效果；
-水花；
-电火花；
-灯光闪烁；
-机器人撞击火花；
-维修完成效果；
-泵房启动效果。
-P1 建议完成
-水位上升视觉过渡；
-触电特效；
-对讲机干扰屏幕效果；
-机器人短暂停机冒烟效果。
-20. 教程与引导
-P0 必须完成
-20.1 大厅说明
-
-工单电脑说明：
-
-目标：救出幸存者，修复排水泵，然后撤离。
-水位会随时间上涨。
-拖太久会亏钱，死太多人也会亏钱。
-20.2 关卡内提示
-
-第一次触发时显示：
-
-找到幸存者；
-需要抬/护送；
-找到泵房；
-需要保险丝；
-需要两人操作；
-可以撤离。
-P1 建议完成
-20.3 训练角
-
-事务所里放一个小训练区：
-
-练习搬担架；
-练习拾取；
-练习维修。
-21. 测试清单
-P0 必须测试
-21.1 联机稳定性
-
-测试项：
-
-4 人加入；
-房主开始任务；
-任务中有人掉线；
-多人同时拾取物品；
-多人同时交互泵房；
-多人抬担架；
-多人撤离。
-21.2 核心流程
-
-必须完整跑通：
-
-大厅接工单
-→ 选装备
-→ 进入地图
-→ 找到幸存者
-→ 修复排水泵
-→ 撤离
-→ 结算
-→ 返回大厅
-21.3 任务判定
-
-测试：
-
-只救 1 人是否能完成；
-救 2 人是否加钱；
-不修泵是否不能完成；
-有玩家未撤离如何结算；
-幸存者死亡如何扣款；
-证据损坏如何结算。
-21.4 水位系统
-
-测试：
-
-水位按时间上涨；
-泵修好后变化正确；
-水位影响移动；
-水位封锁通道；
-水位影响幸存者。
-21.5 清洁机器人
-
-测试：
-
-巡逻正常；
-听声调查正常；
-冲撞玩家；
-打断搬运；
-拖走物品；
-能被手电短暂停机。
-22. 平衡目标
-P0 平衡标准
-单局时长
-
-目标：
-
-熟练玩家：8-12 分钟完成；
-普通玩家：12-18 分钟完成；
-贪心玩家：18 分钟以上高风险。
-任务难度
-
-第一阶段目标：
-
-第一次玩可能失败；
-第二三局能理解流程；
-熟练后可以尝试救 2 人和拿证据；
-玩家应经常产生“要不要多拿一个”的争论。
-经济
-
-目标：
-
-完成主目标小赚；
-完成可选目标大赚；
-失败会亏；
-带伤/损坏会显著影响利润。
-23. MVP 验收标准
-
-Demo 是否成功，不看内容多少，看这几个现象有没有出现。
-
-必须出现
-
-玩家应该会自然说：
-
-“你去修泵，我去找人。”
-“担架卡住了！”
-“扫地机把人拖走了！”
-“水涨上来了，快撤。”
-“要不要顺手拿那个保险柜？”
-“这单怎么又亏钱了？”
-如果没有出现，说明设计失败
-
-失败信号：
-
-玩家不知道目标；
-玩家不需要沟通；
-玩家一直抱团；
-玩家没有分工；
-时间压力不明显；
-机器人只是烦人，不制造笑点；
-搬运不好玩；
-结算没有情绪反馈。
-24. 建议开发顺序
-第 1 步：联机灰盒
-
-优先做：
-
-4 人进房
-第一人称移动
-基础交互
-灰盒地图
-第 2 步：完整任务闭环
-
-做：
-
-工单目标
-幸存者
-泵房维修
-撤离
-结算
-第 3 步：事故升级
-
-做：
-
-水位上涨
-灯光变化
-广播倒计时
-路线封锁
-第 4 步：混乱源
-
-做：
-
-清洁机器人
-撞击
-拖拽物品
-听声调查
-第 5 步：搬运乐趣
-
-做：
-
-担架
-双人搬运
-重物
-掉落损坏
-第 6 步：事务所包装
-
-做：
-
-大厅
-工单电脑
-装备架
-资金信誉
-返回大厅
-第 7 步：音频和美术
-
-做：
-
-关键音效
-机器人语音
-水位视觉
-地图美术替换
-UI 打磨
-25. 第一阶段最终交付物
-
-开发团队第一阶段结束时应交付：
-
-1. 可 4 人联机的 Windows Demo
-2. 一个事务所大厅
-3. 一个完整工单：地下商场积水事故
-4. 一张可玩的地下商场地图
-5. 救援系统
-6. 排水泵维修系统
-7. 水位事故升级系统
-8. 清洁机器人
-9. 搬运系统
-10. 撤离系统
-11. 结算系统
-12. 基础音效和 UI
-13. 可连续游玩至少 3 局
-26. 最小可玩版本定义
-
-真正的最小可玩版本可以压缩到这条线：
-
-4 人联机
-→ 从事务所接工单
-→ 进入地下商场
-→ 找到 1 个幸存者
-→ 找保险丝
-→ 修排水泵
-→ 躲清洁机器人
-→ 带幸存者撤离
-→ 结算赚钱/亏钱
-→ 回事务所
-
-只要这条线跑通，就可以开始找朋友测试。
+1.2 Player Synchronization
+
+Sync the following:
+
+Player position;
+Player rotation;
+Player animation state;
+Item held by player;
+Whether player is downed;
+Whether player has evacuated;
+Player's current interaction state.
+1.3 Host Authority
+
+The following logic is determined by the Host:
+
+Mission state;
+Water level phase;
+Cleaning robot AI;
+Survivor state;
+Item spawning;
+Settlement result;
+Evacuation determination.
+1.4 Disconnect Handling
+
+Simple handling is sufficient for MVP:
+
+On disconnect, player character disappears or becomes downed;
+If the host disconnects, mission fails or returns to lobby;
+Show disconnect notification.
+P1 Recommended
+1.5 Simple Lobby Ready State
+Each player can click Ready.
+Host can only start when at least 1 player is Ready.
+UI shows player names and ready state.
+1.6 Simple Invite/Join Code
+Join via room code.
+Or Steam friend invite, depending on the technical solution.
+2. Player Controller
+P0 Required
+2.1 First-Person Movement
+
+Basic controls:
+
+WASD movement;
+Mouse look;
+Sprint;
+Crouch;
+Jump;
+Interact key;
+Drop key;
+Use tool key.
+2.2 Stamina System
+
+Stamina affects:
+
+Sprinting;
+Carrying items;
+Lifting survivors;
+Pushing heavy objects.
+
+Features:
+
+Sprinting drains stamina;
+Stamina recovers after stopping;
+Stamina drains faster when carrying heavy items;
+Cannot sprint when stamina is at 0.
+2.3 Player Injury/Downed State
+
+MVP simple version:
+
+Player takes damage when hit or shocked by the robot;
+Health at zero = downed;
+Teammates can revive;
+Downed player has limited or no movement;
+Being downed too long counts as seriously injured.
+2.4 Interaction System
+
+Unified interaction framework:
+
+Look at an object to show interaction prompt;
+Press E to interact;
+Hold E for repairs/rescues/pickups;
+Can be interrupted;
+Interaction state synced over network.
+P1 Recommended
+2.5 Stability System
+
+Lightweight version is fine.
+
+Decreases when:
+
+In darkness for a long time;
+Chased by the robot;
+Near a hazard zone;
+A teammate is downed;
+Water level enters the out-of-control phase.
+
+Effects:
+
+Slight screen shake;
+Louder breathing sound;
+Slightly slower repair speed.
+
+Keep it light — avoid making it annoying.
+
+3. Voice System
+P0 Required
+3.1 Proximity Voice
+
+Features:
+
+Sound gets quieter the farther players are;
+Walls can simply reduce volume;
+Downed player's voice can be quieter or intermittent.
+3.2 Walkie-Talkie Voice
+
+Features:
+
+Push to talk;
+Heard by the whole team;
+Simple static noise effect;
+More obvious static during the out-of-control water phase.
+3.3 Voice UI
+
+Shows:
+
+Who is speaking;
+Whether walkie-talkie is in use;
+Whether walkie-talkie signal is unstable.
+P1 Recommended
+3.4 Zone Signal Interference
+
+Walkie-talkie audio quality degrades in underground storage and pump rooms.
+
+4. Office Hub
+P0 Required
+4.1 Office_Hub Scene
+
+Basic layout:
+
+Rundown office;
+Work order computer;
+Gear rack;
+Departure door;
+Whiteboard;
+Funds/reputation display.
+4.2 Work Order Computer
+
+Features:
+
+View current work order;
+View mission objectives;
+View estimated payment;
+View risk level;
+Start mission.
+
+MVP only needs one work order:
+
+Underground mall flooding incident
+4.3 Gear Selection
+
+Players can choose basic tools from the gear rack.
+
+Phase 1 tools:
+
+Flashlight;
+Walkie-talkie;
+Toolbox;
+Stretcher;
+Temporary battery.
+4.4 Departure Flow
+Everyone ready;
+Host confirms departure;
+Switch to mission scene;
+Sync all players into the level.
+P1 Recommended
+4.5 Hub Atmosphere Interactions
+Ringing phone;
+Debt whiteboard on the wall;
+Previous mission settlement slip;
+Office funds display;
+"Zero Incidents: 0 Days" sign.
+5. Work Order System
+P0 Required
+5.1 Work Order Data Structure
+
+Recommended fields:
+
+Work order name
+Work order description
+Location
+Risk level
+Base payment
+Primary objective list
+Optional objective list
+Hidden objective list
+Failure conditions
+Time limit
+5.2 Primary Objectives
+
+Primary objectives for the underground mall flooding incident:
+
+1. Rescue at least 1 survivor
+2. Restart the drainage pump
+3. At least 1 player successfully evacuates
+5.3 Optional Objectives
+
+Phase 1 optional objectives:
+
+1. Rescue a 2nd survivor
+2. Bring back incident evidence
+3. Bring back the safe
+4. Complete within 15 minutes
+5.4 Mission UI
+
+Displayed in-level:
+
+Current primary objective;
+Objective completion status;
+Optional objectives;
+Evacuation prompt;
+Incident escalation warning.
+5.5 Mission Completion Determination
+
+Completion conditions:
+
+Primary objective complete;
+Player reaches the evacuation point;
+Host determines mission success;
+Proceed to settlement.
+
+Failure conditions:
+
+All players downed;
+Forced lockdown time expires;
+Player evacuates without completing primary objective — counts as partial failure;
+All survivors die — rescue objective fails.
+6. Map: Underground Mall Flooding Incident
+P0 Required
+6.1 Graybox Map
+
+Map areas:
+
+Entrance hall
+Shop corridor
+Food court
+Kitchen
+Staff passage
+Electrical control room
+Drainage pump room
+Underground storage
+Parking lot evacuation zone
+6.2 Route Structure
+
+Must include:
+
+Loop route;
+At least 2 routes to the pump room;
+At least 2 routes to the storage room;
+One route that gets blocked by water later;
+One security door that needs power to open;
+One shortcut door that can be unlocked from behind.
+6.3 Temporary Safe Zone
+
+Entrance hall serves as a temporary safe zone.
+
+Features:
+
+Safe in the early phase;
+Can place survivors here;
+Can redistribute gear;
+Show mission status;
+Not guaranteed to be safe later.
+6.4 Evacuation Point
+
+Parking lot evacuation zone.
+
+Features:
+
+Players entering the evacuation zone trigger "waiting to evacuate" display;
+Survivors must be brought here to count as rescued;
+Can evacuate once mission objectives are met;
+Host confirms or countdown ends, then settlement begins.
+P1 Recommended
+6.5 Map Art Replacement
+
+Priority replacements:
+
+Entrance hall;
+Pump room;
+Storage room;
+Parking lot evacuation zone.
+6.6 Dynamic Environment Changes
+Rising water visual;
+Flickering lights;
+Warning lights;
+Broadcast announcements;
+Access door malfunctions and sparks.
+7. Incident Escalation System
+P0 Required
+7.1 Global Incident Timer
+
+Default for one session:
+
+0–5 minutes: Controlled phase
+5–10 minutes: Deteriorating phase
+10–15 minutes: Out-of-control phase
+After 15 minutes: Forced evacuation phase
+7.2 Water Level Phases
+
+At least 4 phases:
+
+Phase 0: No visible flooding
+Phase 1: Low water, slight slowdown
+Phase 2: Medium water, noticeable slowdown, some electrical hazards
+Phase 3: High water, some passages blocked
+7.3 Water Level Effects
+
+Affects:
+
+Player movement speed;
+Carry speed;
+Some doors cannot be opened;
+Some electrical zones cause shock damage;
+Survivor movement speed;
+Cleaning robot path changes.
+7.4 Pump Repair Effects
+
+After the drainage pump starts:
+
+Water rise rate decreases;
+Some areas become passable again;
+Primary objective completed;
+New incident events trigger, e.g. robot alert level increases.
+7.5 Phase Broadcasts
+
+Each phase triggers a broadcast:
+
+"Drainage system anomaly detected on basement level 2."
+"Water level continues to rise. Avoid low-lying areas."
+"Parking lot gate will close in 3 minutes."
+"Property management thanks you for your cooperation."
+P1 Recommended
+7.6 Random Incident Events
+
+Simple random events:
+
+A door short-circuits and locks;
+Lights go out in an area;
+Robot changes patrol route;
+Survivor cries out and reveals their position;
+A piece of evidence gets washed away.
+8. Survivor System
+P0 Required
+8.1 Survivor Base States
+
+States:
+
+Waiting for rescue
+Following player
+Being dragged
+Being carried
+Downed
+Evacuated
+Dead
+8.2 Survivor 1: Lightly Injured
+
+Location: Food court kitchen.
+
+Behavior:
+
+Player can calm them down after finding them;
+After being calmed, follows the nearest player;
+Panics when the robot is near;
+Slows down when water level is high;
+Counts as rescued when they reach the evacuation point.
+8.3 Survivor 2: Seriously Injured
+
+Location: Underground storage.
+
+Behavior:
+
+Cannot move on their own;
+Can be dragged by one person;
+Requires two people with a stretcher to carry;
+Deteriorates continuously if left in a high water zone;
+May be dragged away by the robot if it finds them.
+8.4 Survivor Health State
+
+Effects:
+
+Deteriorates if not rescued for a long time;
+Deteriorates if hit by the robot;
+Deteriorates in high water;
+Players can perform simple first aid to slow deterioration.
+8.5 Rescue Determination
+
+Survivor enters the evacuation zone:
+
+Status changes to "evacuated";
+Updates mission objective;
+Settlement adds money and reputation.
+P1 Recommended
+8.6 Survivor Emotion
+
+Lightweight behaviors:
+
+Cries out in fear;
+Stops following;
+Hides;
+Needs a player to calm them down.
+9. Drainage Pump Repair System
+P0 Required
+9.1 Pump Room Equipment
+
+Pump room contains:
+
+Main control panel;
+Fuse slot;
+Manual valve;
+Temporary battery port.
+9.2 Repair Flow
+
+Flow:
+
+Enter pump room
+→ Inspect control panel
+→ Find fuse
+→ Install fuse
+→ Install temporary battery or restore power
+→ One player operates the control panel
+→ One player turns the valve
+→ Progress bar fills
+→ Drainage pump starts
+9.3 Two-Person Cooperation
+
+Requirements:
+
+Control panel and valve must be operated simultaneously within a short window;
+If only one person is present, the operation fails;
+Being hit by the robot during operation will interrupt it.
+9.4 Repair Feedback
+Progress bar;
+Sound feedback;
+Lights restored;
+Pump start vibration;
+Mission objective completion prompt.
+P1 Recommended
+9.5 Repair Mini-Game
+
+Lightweight options:
+
+Wire sequence;
+Pointer alignment;
+Keeping valve pressure within the safe range.
+10. Cleaning Robot AI
+P0 Required
+10.1 Robot Base Behavior
+
+State machine:
+
+Patrol
+Investigate sound
+Detect target
+Charge
+Drag item/survivor
+Return to patrol
+Brief shutdown
+10.2 Patrol
+Patrols along fixed route;
+Passes through shop corridor, food court, and staff passage;
+Changes route when water level is high.
+10.3 Sound Investigation
+
+Sound sources:
+
+Player sprinting;
+Item dropping;
+Walkie-talkie;
+Survivor crying out;
+Failed repair;
+Door being knocked open.
+
+Robot heads to the source location after hearing a sound.
+
+10.4 Detect Player
+
+After spotting a player:
+
+Emits a property management announcement;
+Brief lock-on;
+Charges the player;
+Impact deals damage and knockback;
+Interrupts carrying/repair.
+10.5 Drag Items
+
+Robot attempts to drag away:
+
+Dropped small props;
+Evidence boxes;
+Downed survivors;
+Lightly injured survivors.
+10.6 Weakness
+
+Players can temporarily shut down the robot with a flashlight's bright beam.
+
+Limitations:
+
+Short shutdown duration;
+Has a cooldown;
+Robot resistance increases in later phases.
+P1 Recommended
+10.7 Robot Voice Lines
+
+Examples:
+
+"Obstacle detected."
+"Please keep the mall clean."
+"Humanoid waste, please cooperate with recycling."
+"Thank you for your understanding."
+10.8 Robot Escalation
+
+The higher the incident phase:
+
+Patrol speed increases;
+Hearing becomes more sensitive;
+Charge cooldown is shorter.
+11. Item and Equipment System
+P0 Required
+11.1 Universal Item System
+
+Items must support:
+
+Pickup;
+Drop;
+Carry;
+Use;
+Network sync;
+Being dragged away by the robot;
+Being damaged by water.
+11.2 Flashlight
+
+Features:
+
+Illumination;
+Battery charge;
+Bright beam temporarily shuts down robot;
+Can be toggled.
+11.3 Walkie-Talkie
+
+Features:
+
+Long-distance voice communication;
+Battery or signal state;
+Generates noise risk when in use.
+11.4 Toolbox
+
+Features:
+
+Repair doors;
+Repair electrical panels;
+Repair pump;
+Open maintenance panels.
+11.5 Stretcher
+
+Features:
+
+Fold/unfold;
+Two players carry a seriously injured survivor;
+Two players must cooperate when carrying;
+Drops when it hits a door or takes impact.
+11.6 Temporary Battery
+
+Features:
+
+Powers access doors;
+Powers pump room control panel;
+Heavy item;
+Damaged if dropped in water.
+11.7 Fuse
+
+Features:
+
+Required item for pump repair;
+Can be found in the electrical control room;
+Small item, can be vacuumed up by the robot.
+11.8 Evidence Box/Hard Drive
+
+Features:
+
+Optional objective;
+Returning it to the evacuation point adds money at settlement;
+Damaged by water, reducing its value.
+P1 Recommended
+11.9 Safe
+Heavy item;
+Two-person carry;
+High value;
+Value decreases if dropped or flooded.
+12. Carrying System
+P0 Required
+12.1 Single-Person Carry
+
+Supports:
+
+Hold small items in one hand;
+Carry heavy items with both hands;
+Drag a seriously injured person.
+
+Effects:
+
+Movement speed reduced;
+Some tools cannot be used;
+Sprinting limited.
+12.2 Two-Person Carry
+
+Supports:
+
+Stretcher;
+Seriously injured survivor;
+Safe;
+Large battery.
+
+Requirements:
+
+Two players interact with the two ends separately;
+Movement must be synchronized;
+Turning has inertia;
+Impact causes a drop;
+Getting stuck in doors should produce physical comedy.
+12.3 Dropping and Damage
+
+After dropping:
+
+Survivor's condition worsens;
+Evidence is damaged;
+Safe value decreases;
+Sound is generated, attracting the robot.
+P1 Recommended
+12.4 Simple Physics Feedback
+Heavy item hitting a door;
+Drag resistance in water;
+Stretcher tilting;
+Impact sound effects.
+13. Doors, Power, and Environment Interaction
+P0 Required
+13.1 Door System
+
+Door types:
+
+Normal door;
+Access-controlled door;
+Shortcut door;
+Door jammed by water pressure;
+Door requiring a toolbox to repair.
+13.2 Power System
+
+States:
+
+Normal;
+Unstable;
+Power outage.
+
+Effects:
+
+Lighting;
+Access doors;
+Walkie-talkie signal;
+Pump room control panel;
+Electrocution zones.
+13.3 Electrical Control Room
+
+Features:
+
+Can restore power to some areas;
+Requires a toolbox;
+May trigger robot alert.
+P1 Recommended
+13.4 Electrocution Hazard
+Electrified zones in water;
+Player takes damage on entry;
+Can be disarmed by cutting the breaker.
+14. Evacuation System
+P0 Required
+14.1 Evacuation Zone
+
+Parking lot evacuation point.
+
+Features:
+
+Players entering the zone triggers "evacuating" status;
+Survivors entering the zone are recorded;
+Can evacuate once mission objectives are met.
+14.2 Evacuation Determination
+
+Supports:
+
+Full team evacuation;
+Partial player evacuation;
+Player downed without evacuating;
+Survivor evacuation;
+Item evacuation.
+14.3 Forced Evacuation Countdown
+
+Starts after 15 minutes:
+
+Countdown displayed;
+Parking lot gate about to close;
+Characters not evacuated are treated as missing/seriously injured.
+15. Settlement System
+P0 Required
+15.1 Settlement Data Collection
+
+Records:
+
+Whether primary objective was completed;
+Number of survivors rescued;
+Number of evidence items returned;
+Whether the safe was returned;
+Player injury status;
+Survivor death status;
+Equipment damage;
+Property damage;
+Completion time.
+15.2 Income Calculation
+
+Income items:
+
+Primary objective completion bonus
+Survivor rescue bonus
+Pump repair bonus
+Evidence bonus
+Safe recovery bonus
+Speed bonus
+15.3 Deduction Calculation
+
+Deduction items:
+
+Team member medical fees
+Survivor death compensation
+Equipment damage fees
+Client property damage fees
+Overtime penalty
+Lost tool fees
+15.4 Net Profit
+
+Calculation:
+
+Net profit = total income - total deductions
+Office funds += net profit
+15.5 Reputation Changes
+
+Increases:
+
+Complete primary objective;
+Rescue survivors;
+Finish quickly;
+Return evidence.
+
+Decreases:
+
+Mission failure;
+Survivor death;
+Team member seriously injured;
+Evidence damaged;
+Severe property damage.
+15.6 Settlement Screen
+
+Displays:
+
+Mission result
+Number rescued
+Completion time
+Income breakdown
+Deduction breakdown
+Net profit
+Reputation change
+Office current funds
+Team member status
+P1 Recommended
+15.7 Humorous Settlement Rating
+
+Examples:
+
+"Barely avoided bankruptcy"
+"Client says they won't be hiring you again"
+"Rescue successful, but property management is furious"
+"Net profit this run: 37 credits. Worth celebrating"
+16. UI System
+P0 Required
+16.1 Main Menu UI
+Start game;
+Create room;
+Join room;
+Settings;
+Quit.
+16.2 Hub UI
+Player list;
+Current funds;
+Current reputation;
+Work order details;
+Gear selection;
+Ready status;
+Depart button.
+16.3 In-Level UI
+Primary objective;
+Optional objectives;
+Teammate status;
+Currently carried item;
+Stamina bar;
+Water level warning;
+Incident phase;
+Evacuation direction;
+Interaction prompts.
+16.4 Settlement UI
+Mission completion status;
+Income;
+Deductions;
+Reputation;
+Return to office button.
+P1 Recommended
+16.5 Mission Prompts
+
+Show on first encounter:
+
+How to rescue a person;
+How to repair the pump;
+How to use the stretcher;
+How to evacuate.
+17. Audio System
+P0 Required
+17.1 Ambient Audio
+Water dripping;
+Pooled water flowing;
+Distant broadcast;
+Mall air conditioning noise;
+Electrical short circuit;
+Robot movement sounds.
+17.2 Interaction Audio
+Opening a door;
+Picking up;
+Dropping;
+Repairing;
+Turning a valve;
+Pump starting;
+Installing a battery;
+Installing a fuse.
+17.3 Danger Audio
+Water level alarm;
+Robot lock-on;
+Robot charging;
+Survivor calling for help;
+Countdown broadcast;
+Walkie-talkie static.
+17.4 Settlement Audio
+Income sound effect;
+Deduction sound effect;
+Reputation change sound effect.
+P1 Recommended
+17.5 Robot Voice Line Library
+
+At least 10 lines.
+
+17.6 Office Ambient Audio
+Old fan;
+Phone ringing;
+Printer paper jam;
+Upstairs water leak.
+18. Art Asset List
+P0 Required
+18.1 Player Characters
+4 color-coded low-cost uniform characters;
+First-person hands;
+Simple third-person model;
+Base animations:
+Idle
+Walk
+Run
+Crouch
+Pick up
+Carry
+Downed
+Revive
+Repair
+18.2 Map Graybox Assets
+Walls;
+Floors;
+Doors;
+Stairs/ramps;
+Shop storefronts;
+Pump room equipment;
+Control panel;
+Storage shelves;
+Parking lot gate.
+18.3 Key Props
+Flashlight;
+Walkie-talkie;
+Toolbox;
+Stretcher;
+Temporary battery;
+Fuse;
+Evidence hard drive;
+Evidence box;
+Safe.
+18.4 Survivors
+Lightly injured survivor model;
+Seriously injured survivor model;
+Simple animations:
+Sitting and waiting
+Standing up
+Following
+Panicking
+Downed
+Being carried
+18.5 Cleaning Robot
+One main robot model;
+Patrol animation;
+Charge animation;
+Drag animation;
+Short-circuit shutdown animation.
+P1 Recommended
+18.6 Atmosphere Art
+Hazard tape;
+Wet floor reflections;
+Mall signage;
+Damaged advertising boards;
+Floating debris;
+Garbage bags;
+Electrical sparks in water;
+Property management notice boards.
+19. VFX System
+P0 Required
+Water surface effect;
+Water splashes;
+Electrical sparks;
+Light flickering;
+Robot impact sparks;
+Repair completion effect;
+Pump start effect.
+P1 Recommended
+Water level rise visual transition;
+Electrocution effect;
+Walkie-talkie interference screen effect;
+Robot brief shutdown smoke effect.
+20. Tutorial and Guidance
+P0 Required
+20.1 Hub Introduction
+
+Work order computer instructions:
+
+Objective: Rescue survivors, repair the drainage pump, then evacuate.
+Water level rises over time.
+Waiting too long loses money; too many deaths also loses money.
+20.2 In-Level Prompts
+
+Show on first trigger:
+
+Find the survivor;
+Need to carry/escort them;
+Find the pump room;
+Need a fuse;
+Requires two people to operate;
+You can evacuate.
+P1 Recommended
+20.3 Training Corner
+
+Place a small training area in the office:
+
+Practice carrying a stretcher;
+Practice picking up items;
+Practice repairs.
+21. Test Checklist
+P0 Must Test
+21.1 Network Stability
+
+Test items:
+
+4 players join;
+Host starts mission;
+A player disconnects mid-mission;
+Multiple players pick up items simultaneously;
+Multiple players interact with pump room simultaneously;
+Multiple players carry a stretcher;
+Multiple players evacuate.
+21.2 Core Flow
+
+Must complete end-to-end:
+
+Accept work order in hub
+→ Select gear
+→ Enter map
+→ Find survivor
+→ Repair drainage pump
+→ Evacuate
+→ Settlement
+→ Return to hub
+21.3 Mission Determination
+
+Test:
+
+Rescuing only 1 person — does it complete;
+Rescuing 2 people — does it add money;
+Not repairing pump — can mission complete;
+How settlement works when a player doesn't evacuate;
+How deductions work when a survivor dies;
+How settlement works when evidence is damaged.
+21.4 Water Level System
+
+Test:
+
+Water rises over time;
+Correct change after pump repair;
+Water level affects movement;
+Water level blocks passages;
+Water level affects survivors.
+21.5 Cleaning Robot
+
+Test:
+
+Patrol works normally;
+Sound investigation works;
+Robot charges player;
+Interrupts carrying;
+Drags away items;
+Can be temporarily shut down by flashlight.
+22. Balance Goals
+P0 Balance Standards
+Session Duration
+
+Target:
+
+Experienced players: complete in 8–12 minutes;
+Average players: complete in 12–18 minutes;
+Greedy players: 18+ minutes at high risk.
+Mission Difficulty
+
+Phase 1 target:
+
+May fail on first attempt;
+Understand the flow by the second or third run;
+After getting good, can attempt rescuing 2 survivors and grabbing evidence;
+Players should frequently debate "should we grab one more thing?"
+Economy
+
+Target:
+
+Completing primary objective makes a small profit;
+Completing optional objectives makes a large profit;
+Failure results in a loss;
+Injuries/damage significantly impacts profit.
+23. MVP Acceptance Criteria
+
+The Demo succeeds not by how much content it has, but by whether these moments occur naturally.
+
+Must Occur
+
+Players should naturally say:
+
+"You go repair the pump, I'll find the person."
+"The stretcher is stuck!"
+"The robot dragged the person away!"
+"Water's rising, let's evacuate quickly."
+"Should we grab that safe on the way out?"
+"How did we lose money again this run?"
+If these don't happen, the design has failed
+
+Failure Signals:
+
+Players don't know the objectives;
+Players don't need to communicate;
+Players always stick together;
+Players have no division of labor;
+Time pressure isn't noticeable;
+The robot is just annoying, not funny;
+Carrying isn't fun;
+Settlement has no emotional payoff.
+24. Recommended Development Order
+Step 1: Networked Graybox
+
+Prioritize:
+
+4 players in room
+First-person movement
+Basic interactions
+Graybox map
+Step 2: Complete Mission Loop
+
+Build:
+
+Work order objectives
+Survivor
+Pump repair
+Evacuation
+Settlement
+Step 3: Incident Escalation
+
+Build:
+
+Water level rising
+Lighting changes
+Broadcast countdown
+Route blockage
+Step 4: Chaos Source
+
+Build:
+
+Cleaning robot
+Impact
+Dragging items
+Sound investigation
+Step 5: Carrying Fun
+
+Build:
+
+Stretcher
+Two-person carry
+Heavy items
+Drop/damage
+Step 6: Office Wrapper
+
+Build:
+
+Hub
+Work order computer
+Gear rack
+Funds and reputation
+Return to hub
+Step 7: Audio and Art
+
+Build:
+
+Key sound effects
+Robot voice lines
+Water level visuals
+Map art replacement
+UI polish
+25. Phase 1 Final Deliverables
+
+At the end of Phase 1, the development team should deliver:
+
+1. A Windows Demo supporting 4-player online co-op
+2. One office hub
+3. One complete work order: underground mall flooding incident
+4. One playable underground mall map
+5. Rescue system
+6. Drainage pump repair system
+7. Water level incident escalation system
+8. Cleaning robot
+9. Carrying system
+10. Evacuation system
+11. Settlement system
+12. Basic sound effects and UI
+13. Supports at least 3 consecutive playable sessions
+26. Minimum Viable Version Definition
+
+The true minimum viable version can be compressed to this:
+
+4-player online
+→ Accept work order from office
+→ Enter underground mall
+→ Find 1 survivor
+→ Find fuse
+→ Repair drainage pump
+→ Evade cleaning robot
+→ Bring survivor to evacuation
+→ Settlement: profit or loss
+→ Return to office
+
+Once this loop runs end-to-end, you can start testing with friends.

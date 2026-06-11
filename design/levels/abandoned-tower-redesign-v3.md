@@ -1,21 +1,11 @@
-# Level Map v3 — 地球海岸壹号 烂尾楼 (irregular footprint + single exit + exterior)
+# Level Map v3 — Earth Coast No.1 Abandoned Tower (irregular footprint + single exit + exterior)
 
 > Canonical layout. Supersedes v2 (`abandoned-tower-redesign-v2.md`) and the rectangle
 > in `abandoned-tower-floorplan.md`. Same fiction (`abandoned-tower-earth-coast-01.md`),
-> same objective (沙盘 / power gate / heavy two-hand carry). Principles & rationale:
+> same objective (scale model / power gate / heavy two-hand carry). Principles & rationale:
 > `lethal-company-design-study.md`. **LC is a method reference only — no layout copied.**
 >
-> Status: **AS-BUILT (whitebox).** The v3 whitebox is built. The authoritative geometry
-> is now the coordinate table in `Assets/_Project/Editor/TowerV3WhiteboxBuilder.cs` plus
-> the connectivity graph in `Assets/_Project/Scripts/Level/Topology/TowerTopologyV3.cs`;
-> the exact F2 visual is `References/Tower_EarthCoast_01_F2_DesignPlan_v5.png`. This doc
-> is the design *intent* — where it disagreed with the build, the build won (PM, 2026-06-09).
->
-> **Reconciliation (PM, 2026-06-09):** two original §3/§9 claims were updated to match the
-> as-built v5 layout: (1) the objective (TARGET/沙盘) sits in the **SE**, reached via
-> EXEC→SALES→VIP→TARGET — *not* the NW as earlier drafts said; (2) F2's core footprint
-> shrinks but an **east wing juts out** (TARGET + BALCONY past x48) so F2 is **not** uniformly
-> smaller than F1. The "only stairs + shaft align across floors" rule is unchanged.
+> Status: **DRAFT for PM approval.** 3D rebuild starts only after sign-off.
 >
 > **What changed from v2 (PM decisions, 2026-06-07):**
 > 1. **Irregular, fiction-driven footprint** — no square envelope. Jagged silhouette
@@ -53,7 +43,7 @@ abandoned mid-construction tower actually stands:
 
 | Mass | Built state | Role |
 |------|-------------|------|
-| **Finished Core** (center) | the only complete part; full 2 floors | Lobby below, show-flat + 沙盘 above; the **beacon** |
+| **Finished Core** (center) | the only complete part; full 2 floors | Lobby below, show-flat + scale model above; the **beacon** |
 | **Shaft** (in/next to core) | double-height void | vertical sightline; F2 scaffold bridge crosses it |
 | **West Wing** (juts SW, shallow) | raw concrete | Power gate + offices; ends ragged at rebar |
 | **East Wing** (juts E, deep) | raw concrete + dock | warehouse/workshop + Loading Dock sticking out |
@@ -102,14 +92,14 @@ Some room edges are open to sky (rebar/void). The grid governs *alignment*, not 
 
 | Room | Size | Role | Loot / beat |
 |------|------|------|-------------|
-| Lobby / Sales Hall ★ | L | **Fixed** (touches van) | "二层断电/卷帘锁定" readout |
+| Lobby / Sales Hall ★ | L | **Fixed** (touches van) | "Floor 2 Power Off / Shutter Locked" readout |
 | Power Room ⚡ | S | **Fixed (gate)** | restore power → unlock F2 |
 | Temporary Office | S | Random | **clue** to power room |
 | Security Office | S | Random | 1H(30) |
 | Sample Store | S | Random | 1H(55) |
 | Central Construction Hall + Shaft | L | **Fixed** | double-height; see up to F2 |
 | East Workshop | M | Random | consumables |
-| Worker Dorm | M | **Fixed-ish** | **EVIDENCE** 隔离公告 (bonus) |
+| Worker Dorm | M | **Fixed-ish** | **EVIDENCE** Isolation Notice (bonus) |
 | Canteen | M | Random | 1H(40) |
 | Foreman Office | M | Random | 1H(90) |
 | Loading Dock | M | Random | 2H(110) (loot, not an exit) |
@@ -120,43 +110,40 @@ Some room edges are open to sky (rebar/void). The grid governs *alignment*, not 
 
 ---
 
-## 3. FLOOR 2 — Show-flat (offset footprint, shrunk core + east wing; objective SE)
+## 3. FLOOR 2 — Show-flat (smaller, offset footprint; objective NW)
 
-F2 is **not the same outline as F1** — its **core shrinks** (much of the north/west wing
-was never built, so there are **open gaps down to F1** where slabs were never poured) but
-an **east wing juts out** past x48 carrying the objective and the balcony drop, so F2 is
-**not uniformly smaller** than F1. Only **Stairs A/B and the Shaft align** with F1. The
-scaffold bridge is the one direct E↔W route across the void, and the critical approach now
-runs **STAIRA2 → EXEC → SALES → VIP → TARGET** (and SHOWFLAT → MODEL → EDGE → BRIDGE → SALES
-from Stair-B), so the player crosses the shaft pinch before reaching the SE objective.
-
-> **Exact visual is canonical in** `References/Tower_EarthCoast_01_F2_DesignPlan_v5.png`
-> and the coordinate table in `TowerV3WhiteboxBuilder.BuildNodeTable()`. The schematic
-> below is a directional summary of that as-built layout, not a pixel map.
+F2 is **not the same outline as F1** — it's a smaller cap with **open gaps down to F1**
+where floor slabs were never poured. Only **Stairs A/B and the Shaft align** with F1.
+The scaffold bridge is the one direct E↔W route across the void.
 
 ```
- as-built F2 zones (x east 0→64, z north 0→48; grid 4 m; SHAFT void ≈ x18–44, z6–10)
-
-   WEST edge (x0–12)        CENTER (x16–40)             EAST (x44–64)
- ─────────────────────────────────────────────────────────────────────────────
- N  ·                       NEGOT (M, densify) z40      ·
-    STAIRB2 ⇣ + STAIRA2 ⇣ (A aligns F1 @26,28; B @0,16) EXEC (M) ·· DANGER(S,2H95)
-    SHOWFLAT ★ (M, warm     MODEL (M) ·· SALES (2H130)  VIP (M, sealed gate)
-    desk-lamp beacon)       ── SCAFFOLD ▒BRIDGE▒ pinch ──   │
- ─  MARKET(S)·ARCHIVE(S)    EDGE (L, ▒SHAFT▒ fall edge)  TARGET ☠ (L, 沙盘 2H★★★) ── BALCONY ⇣
- S  TANK(S)·FIN(S) densify  BRIDGE junction              (objective SE)   drop→F1 DOCK
+ z36 · · · · · · · · · · · · · · · · · ·          (north wing was never built on F2:
+ z32 · ┌─────────┬─────────┐ · · · · · ·           open to F1 below — fall risk)
+       │ DEEP    │ EXEC    │
+ z28 · │ TARGET  │ SUITE(M)│ · ┌───╥───┐ ·
+       │ (L) ☠   │ 1H(120) │   │STAIR-A│
+ z24 · │ Scale   ├────┬────┤   │ ⇣4×8  │ ·
+       │ model   │MODEL│   │   └───┬───┘
+ z20 · │ 2H(★★★) │SHOW │SALES  · · │ · · ·        ← objective far NW, away from
+       │         │ROOM │OFF(M) │   ?               Stair-A and from van
+ z16 · │ SHOW-   │(M)  │2H(130)╞═══╡ · · ·
+       │ FLAT ★  │1H60 │       │VIP│
+ z12 · │ [==SCAFFOLD▒BRIDGE▒==]│LNG│ · · ·        ← bridge = only direct E↔W
+       │ STAIR ║ ▒ SHAFT ▒     │(M)│
+ z8  · │  B    ╠═╪════════╤════╡70 ├──┐ ·
+       │ ⇣4×8  │ │SHAFT-  │DANG│   │BAL          ← Balcony = scaffold fast-drop ⇣
+ z4  · │ DIM   │M│ EDGE(L)│(S) │~~~│CONY│ ·          to F1 ground (internal redundancy,
+       │       │A│ unfin. │2H95│   │(S) │            NOT a building exit)
+ z0  · └───────┴I┴────────┴────┴───┴─⇣──┘ ·
+       x0  4  8 12 16 20 24 28 32 36 40 44
+       (MAINT(S) shortcut tucked at 'MA/I')
 ```
-
-Critical approach (red backbone): **STAIRA2 → EXEC → SALES → VIP → TARGET**, with the
-Stair-B side feeding **SHOWFLAT → MODEL → EDGE → BRIDGE → SALES** across the shaft pinch.
-Objective is **SE** (away from both stair landings and the F1 van); Balcony is the
-scaffold fast-drop ⇣ to F1 DOCK (internal redundancy, NOT a building exit).
 
 ### Floor 2 rooms (~15)
 
 | Room | Size | Role | Loot / beat |
 |------|------|------|-------------|
-| Deep Target ☠ | L | **Fixed (objective+nest)** | 沙盘 lit pedestal, heavy 2H carry |
+| Deep Target ☠ | L | **Fixed (objective+nest)** | Scale model lit pedestal, heavy 2H carry |
 | Sample Office / Show-flat ★ | M | **Fixed (beacon)** | cold overheads function cleanly (only zone); single warm tungsten desk lamp marks presence; pristine material condition = the wrong detail |
 | Exec Suite | M | Random | 1H(120) |
 | Model Showroom | M | Random | 1H(60) |
@@ -189,7 +176,7 @@ scaffold fast-drop ⇣ to F1 DOCK (internal redundancy, NOT a building exit).
 
 ## 5. Exterior — simple, just enough to make the fire exit mean something
 
-The building sits in a **fenced construction lot (工地围挡)**. Keep it a thin shell, not
+The building sits in a **fenced construction lot (construction site hoarding)**. Keep it a thin shell, not
 a second level.
 
 ```
@@ -208,7 +195,7 @@ a second level.
 ```
 
 - **Forecourt (south)**: van parks (spawn / return / partial settlement); site gate in
-  the hoarding; banners ("拥有真正的地球海岸"); signage points to the Lobby. **The van's
+  the hoarding; banners ("Own a Real Earth Coastline Home"); signage points to the Lobby. **The van's
   glow is the safe beacon.**
 - **Perimeter run (one side only)**: a navigable strip down the **east** side linking the
   far-north fire exit back to the forecourt. Not a full wrap — keep it simple.
@@ -243,13 +230,13 @@ topology on every peer → bakeable & net-syncable.
 
 ## 7. Oppression + escape, pacing, carryover (from v2)
 
-- **Oppression**: 沙盘 pickup aggros the Infected Site Inspector; monster **scales with
+- **Oppression**: scale model pickup aggros the Infected Site Inspector; monster **scales with
   time-in-building** (`MvpMissionClock`); heavy 2H carry slows + locks hotbar; darkness.
 - **Escape**: the single fire exit + 3 internal descents + the dim safe stair = "you can
   always try to flee," but the fire exit costs you the exposed perimeter run.
-- **Pacing**: Van → Lobby(teach) → gather+power gate → ascend/maze → 沙盘+nest →
+- **Pacing**: Van → Lobby(teach) → gather+power gate → ascend/maze → scale model+nest →
   descent/exit, climax on the carry-out chase (monster time-scaled).
-- **Carryover unchanged**: 沙盘 heavy carry (droppable/relay, server-auth carrier id),
+- **Carryover unchanged**: scale model heavy carry (droppable/relay, server-auth carrier id),
   power gate (server-auth), monster (reskin `SchoolMonsterAI`+`HidingSpot`), mission
   state/return/partial/fail, van settlement, office commission, evidence photo bonus.
 
@@ -261,7 +248,7 @@ topology on every peer → bakeable & net-syncable.
    per-variant NavMesh strategy. ⚠️ server-authoritative, seed-synced → **EditMode tests**
    (identical layout host+clients; always solvable) — the high-risk untested area.
 2. **Irregular footprint authoring** — wings/collapse/scaffold as grid-snapped masses;
-   F2 shrunk core + jutting east wing, with open fall-gaps; bake NavMesh across the ragged plan.
+   F2 smaller offset cap with open fall-gaps; bake NavMesh across the ragged plan.
 3. **Single fire exit + exterior perimeter** — fire-exit interaction, exterior NavMesh,
    light exterior hazard, monster brief-pursue-then-break.
 4. **Time-scaled monster aggression** curve.
@@ -282,7 +269,7 @@ topology on every peer → bakeable & net-syncable.
 3. **One van extraction + one fire exit + 3 internal descents**; critical path always
    solvable; no single campable chokepoint (invariant e).
 4. Topology = finite seed-driven toggle set with §6 invariants.
-5. Objective SE on F2 (reached via EXEC→SALES→VIP→TARGET), van S on F1; beacons = show-flat + stair towers. Show-flat beacon = brightest functioning cold-light zone on F2, visible through the shaft void from F1; a single warm tungsten desk lamp on the sales desk marks human presence (art-bible Section 4 accent rule).
+5. Objective NW on F2, van S on F1; beacons = show-flat + stair towers. Show-flat beacon = brightest functioning cold-light zone on F2, visible through the shaft void from F1; a single warm tungsten desk lamp on the sales desk marks human presence (art-bible Section 4 accent rule).
 6. **Simple exterior**: fenced lot, forecourt+van, one-sided perimeter run, cover props,
    mostly dark + van beacon, light hazard only — no exterior nest/fight.
 7. Target 15-min 1–4p run; oppression (time-scaled monster, heavy carry) + escape valves.

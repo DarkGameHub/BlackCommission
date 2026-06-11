@@ -56,7 +56,7 @@ definition.
 - Updated show-flat landmark description to match cold-beacon rule.
 - Updated Points of Interest table description for show-flat.
 - Added BC Identity Injection section (art-bible Section 6 gap): 5-location table
-  specifying commission forms BC-12, "欠款通道 / DEBT ACCESS ONLY" signage, route
+  specifying commission forms BC-12, "DEBT ACCESS ONLY" signage, route
   arrows, tagged equipment, and overdue payment notices.
 
 ### abandoned-tower-redesign-v3.md

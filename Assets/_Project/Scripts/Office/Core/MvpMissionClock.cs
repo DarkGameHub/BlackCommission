@@ -70,8 +70,8 @@ public static class MvpMissionClock
         if (day == 0)
             return $"{hour:00}:{minute:00}";
         if (day == 1)
-            return $"次日 {hour:00}:{minute:00}";
-        return $"第{day + 1}天 {hour:00}:{minute:00}";
+            return $"Next day {hour:00}:{minute:00}";
+        return $"Day {day + 1} {hour:00}:{minute:00}";
     }
 
     public static string FormatGameHours(float gameHours)
@@ -92,16 +92,16 @@ public static class MvpMissionClock
     {
         float realMinutes = GetContractWindowGameHours(task) * GetRealSecondsPerGameHour(task) / 60f;
         if (realMinutes < 1f)
-            return $"{Mathf.RoundToInt(realMinutes * 60f)}秒";
+            return $"{Mathf.RoundToInt(realMinutes * 60f)}s";
         if (Mathf.Abs(realMinutes - Mathf.Round(realMinutes)) < 0.05f)
-            return $"{Mathf.RoundToInt(realMinutes)}分钟";
-        return $"{realMinutes:0.0}分钟";
+            return $"{Mathf.RoundToInt(realMinutes)}min";
+        return $"{realMinutes:0.0}min";
     }
 
     public static string GetScheduleSummary(OfficeTaskDefinition task)
     {
         return $"{FormatClock(GetStartClockHour(task))} - {FormatClock(GetDeadlineClockHour(task))} " +
-            $"({FormatGameHours(GetContractWindowGameHours(task))} / 约{FormatRealDurationForWindow(task)})";
+            $"({FormatGameHours(GetContractWindowGameHours(task))} / ~{FormatRealDurationForWindow(task)})";
     }
 
     public static string GetOvertimeRuleSummary(OfficeTaskDefinition task)
@@ -116,18 +116,18 @@ public static class MvpMissionClock
             ? Mathf.Max(0, task.overtimeReputationPenaltyPerBlock)
             : DefaultOvertimeReputationPenaltyPerBlock;
 
-        return $"超时: 每超时任务小时 -{money}G，满 {FormatGameHours(repBlock)} 再 -{rep} 声望";
+        return $"Overtime: -{money}G per overtime task hour, -{rep} reputation every {FormatGameHours(repBlock)}";
     }
 
     public static string GetDaylightLabel(float absoluteClockHour)
     {
         float hour = Mathf.Repeat(absoluteClockHour, 24f);
-        if (hour < 5.5f) return "深夜";
-        if (hour < 8f) return "清晨";
-        if (hour < 12f) return "上午";
-        if (hour < 16.5f) return "下午";
-        if (hour < 19.5f) return "黄昏";
-        if (hour < 22f) return "夜间";
-        return "深夜";
+        if (hour < 5.5f) return "Late Night";
+        if (hour < 8f) return "Early Morning";
+        if (hour < 12f) return "Morning";
+        if (hour < 16.5f) return "Afternoon";
+        if (hour < 19.5f) return "Dusk";
+        if (hour < 22f) return "Evening";
+        return "Late Night";
     }
 }

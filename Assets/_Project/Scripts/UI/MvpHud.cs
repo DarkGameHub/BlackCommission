@@ -6,7 +6,7 @@ public class MvpHud : MonoBehaviour
 {
     const float OfficeComputerShopDistance = 3.4f;
     static OfficeComputer activeComputer;
-    static MissionVanExitPoint activeMissionVan;
+    static SchoolExitPoint activeMissionVan;
     static OfficeCabinetStorage activeCabinet;
     static OfficeMonsterBestiary activeBestiary;
     public static bool IsComputerOpen => activeComputer != null;
@@ -68,7 +68,7 @@ public class MvpHud : MonoBehaviour
     Vector2 bestiaryScrollPosition;
     string cabinetMessage;
     float cabinetMessageUntil;
-    static MissionVanExitPoint partialReturnConfirmVan;
+    static SchoolExitPoint partialReturnConfirmVan;
     static float partialReturnConfirmUntil;
 
     static int LanguageIndex
@@ -110,7 +110,7 @@ public class MvpHud : MonoBehaviour
         AudioListener.volume = MasterVolume;
         ProximityVoiceChat.EnsureInstance();
         SettingsOverlay.EnsureInstance();
-        if (TowerMissionManager.Instance != null)
+        if (LostItemMissionManager.Instance != null)
             RestoreGameplayCursor();
     }
 
@@ -166,7 +166,7 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        if (TowerMissionManager.Instance != null) return;
+        if (LostItemMissionManager.Instance != null) return;
     }
 
     void TryBuy(PlayerHotbar hotbar, MvpHotbarItemId itemId)
@@ -174,22 +174,22 @@ public class MvpHud : MonoBehaviour
         int cost = PlayerHotbar.GetItemCost(itemId);
         if (CompanyData.Current.Funds < cost)
         {
-            SetShopMessage($"资金不足: {GetShopItemLabel(itemId)} 需要 {cost}G。");
+            SetShopMessage($"Insufficient funds: {GetShopItemLabel(itemId)} costs {cost}G.");
             return;
         }
 
         if (!hotbar.CanReceiveItem(itemId, out string reason))
         {
-            SetShopMessage($"{GetShopItemLabel(itemId)}无法入库: {reason}");
+            SetShopMessage($"{GetShopItemLabel(itemId)} can't be stored: {reason}");
             return;
         }
 
         if (hotbar.TryPurchaseItem(itemId))
             SetShopMessage(IsNetworkedPlay()
-                ? $"采购申请已提交: {GetShopItemLabel(itemId)}，等待账本同步。"
-                : $"采购申请已盖章: {GetShopItemLabel(itemId)} -{cost}G。");
+                ? $"Purchase submitted: {GetShopItemLabel(itemId)}, syncing."
+                : $"Purchase approved: {GetShopItemLabel(itemId)} -{cost}G.");
         else
-            SetShopMessage($"{GetShopItemLabel(itemId)}采购失败。");
+            SetShopMessage($"{GetShopItemLabel(itemId)} purchase failed.");
     }
 
     void TryBuyWristwatch(PlayerHotbar hotbar)
@@ -197,22 +197,22 @@ public class MvpHud : MonoBehaviour
         if (hotbar == null) return;
         if (hotbar.HasWristwatchOwned)
         {
-            SetShopMessage("你已经戴着一块廉价工时表。");
+            SetShopMessage("You already have a cheap wristwatch.");
             return;
         }
 
         if (CompanyData.Current.Funds < PlayerHotbar.WristwatchCost)
         {
-            SetShopMessage($"资金不足: 廉价工时表需要 {PlayerHotbar.WristwatchCost}G。");
+            SetShopMessage($"Insufficient funds: Wristwatch costs {PlayerHotbar.WristwatchCost}G.");
             return;
         }
 
         if (hotbar.TryPurchaseWristwatch())
             SetShopMessage(IsNetworkedPlay()
-                ? "采购申请已提交: 廉价工时表，等待账本同步。"
-                : $"采购申请已盖章: 廉价工时表 -{PlayerHotbar.WristwatchCost}G。");
+                ? "Purchase submitted: Wristwatch, syncing."
+                : $"Purchase approved: Wristwatch -{PlayerHotbar.WristwatchCost}G.");
         else
-            SetShopMessage("廉价工时表采购失败。");
+            SetShopMessage("Wristwatch purchase failed.");
     }
 
     void SetShopMessage(string message)
@@ -235,7 +235,7 @@ public class MvpHud : MonoBehaviour
         EnsureStyles();
         BlackCommissionUiTheme.ApplyButtonSkin(buttonStyle);
 
-        if (TowerMissionManager.Instance != null)
+        if (LostItemMissionManager.Instance != null)
         {
             DrawMissionPanel();
             if (activeMissionVan != null)
@@ -300,9 +300,7 @@ public class MvpHud : MonoBehaviour
         }
 
         bool hasTarget = cachedLocalInteraction != null && cachedLocalInteraction.CurrentTarget != null;
-        // Interact dot warms to sodium amber on a target — the map's "warm point in
-        // cold space" signal — instead of screen-only CRT green.
-        Color dotColor = hasTarget ? new Color(0.780f, 0.550f, 0.200f, 0.95f) : new Color(0.72f, 0.74f, 0.68f, 0.55f);
+        Color dotColor = hasTarget ? new Color(0.424f, 1.000f, 0.373f, 0.92f) : new Color(0.72f, 0.74f, 0.68f, 0.55f);
         float size = hasTarget ? 6f : 4f;
 
         Texture2D dot = hpBarBg ?? MakeTexture(Color.white);
@@ -387,11 +385,11 @@ public class MvpHud : MonoBehaviour
     {
         if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
         {
-            DrawTerminalSection("已锁定委托 / ACTIVE FILE");
+            DrawTerminalSection("ACTIVE FILE / ACTIVE FILE");
             DrawTerminalBlock(() =>
             {
-                GUILayout.Label($"已接受委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
-                GUILayout.Label("采购完道具后，去外面的公司车出发。", mutedStyle);
+                GUILayout.Label($"Commission accepted: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
+                GUILayout.Label("Buy gear, then head to the company van outside.", mutedStyle);
             });
             return;
         }
@@ -409,7 +407,7 @@ public class MvpHud : MonoBehaviour
         GUI.Label(new Rect(content.x, content.y, 520f, 24f),
             "BLACK COMMISSION OFFICE MANAGEMENT SYSTEM v1.3", terminalTitleStyle);
         GUI.Label(new Rect(content.x, content.y + 22f, 340f, 22f),
-            "事务所办公管理系统。", terminalMutedStyle);
+            "Office Management System.", terminalMutedStyle);
         GUI.Label(new Rect(content.xMax - 250f, content.y, 250f, 22f),
             "1998-11-07   22:13", terminalLabelStyle);
         GUI.Label(new Rect(content.xMax - 250f, content.y + 22f, 250f, 22f),
@@ -428,16 +426,16 @@ public class MvpHud : MonoBehaviour
     {
         GUI.Box(rect, GUIContent.none, terminalBoxStyle);
         GUI.Label(new Rect(rect.x + 14f, rect.y + 14f, rect.width - 28f, 22f),
-            "主菜单 / MAIN MENU", terminalLabelStyle);
+            "MAIN MENU / MAIN MENU", terminalLabelStyle);
 
         string[] items =
         {
-            "1. 委托管理\nCOMMISSION FILES",
-            "2. 公司账本\nLEDGER",
-            "3. 采购目录\nSUPPLY CATALOG",
-            "4. 档案记录\nARCHIVES",
-            "5. 员工管理\nSTAFF RECORD",
-            "6. 系统设置\nSYSTEM"
+            "1. Commission Files\nCOMMISSION FILES",
+            "2. Company Ledger\nLEDGER",
+            "3. Supply Catalog\nSUPPLY CATALOG",
+            "4. Archives\nARCHIVES",
+            "5. Staff Records\nSTAFF RECORD",
+            "6. System Settings\nSYSTEM"
         };
 
         for (int i = 0; i < items.Length; i++)
@@ -452,9 +450,9 @@ public class MvpHud : MonoBehaviour
         }
 
         GUI.Label(new Rect(rect.x + 16f, rect.yMax - 54f, rect.width - 32f, 20f),
-            "使用方向键选择，按回车确认。", terminalSmallStyle);
+            "Use arrow keys to navigate, Enter to confirm.", terminalSmallStyle);
         GUI.Label(new Rect(rect.x + 16f, rect.yMax - 30f, rect.width - 32f, 20f),
-            "↑↓  选择     Enter  确认", terminalSmallStyle);
+            "↑↓  Navigate     Enter  Confirm", terminalSmallStyle);
     }
 
     static string MenuGlyph(int index)
@@ -478,64 +476,64 @@ public class MvpHud : MonoBehaviour
 
         GUI.Box(table, GUIContent.none, terminalBoxStyle);
         GUI.Label(new Rect(table.x + 14f, table.y + 12f, 360f, 24f),
-            "委托管理 / COMMISSION FILES", terminalTitleStyle);
+            "Commission Files / COMMISSION FILES", terminalTitleStyle);
         DrawTerminalLine(new Rect(table.x + 12f, table.y + 42f, table.width - 24f, 1f));
 
         float y = table.y + 48f;
         DrawOfficeTableHeader(table.x + 14f, y, table.width - 28f);
         y += 25f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "001", computer != null ? computer.DemoTaskTitle : "失踪的作业本",
-            computer != null ? computer.DemoTaskClient : "家长", GetDemoTaskStatus(computer), "23天后", true);
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "001", computer != null ? computer.DemoTaskTitle : "The Missing Homework",
+            computer != null ? computer.DemoTaskClient : "Parent", GetDemoTaskStatus(computer), "In 23 days", true);
         y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "002", "地下室的异响", "宿管", "进行中", "—", false);
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "002", "Strange Noise in the Basement", "Dorm Manager", "In Progress", "—", false);
         y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "003", "夜班公交异常", "交通局", "进行中", "—", false);
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "003", "Night Bus Anomaly", "Transit Bureau", "In Progress", "—", false);
         y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "004", "404号房的回声", "学校", "可接受", "17天后", false);
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "004", "Echo from Room 404", "School", "Available", "In 17 days", false);
         y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "005", "废弃工厂的货物", "仓库管理员", "已完成", "—", false);
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "005", "Cargo from Abandoned Factory", "Warehouse Manager", "Complete", "—", false);
         y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "006", "医院地下室的钥匙", "医院", "已锁定", "—", false);
+        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "006", "Keys in the Hospital Basement", "Hospital", "Locked", "—", false);
         GUI.Label(new Rect(table.x + table.width * 0.5f - 70f, table.yMax - 28f, 140f, 20f),
-            "第 1 页 / 共 2 页   ◀  ▶", terminalSmallStyle);
+            "Page 1 / 2   ◀  ▶", terminalSmallStyle);
 
         GUI.Box(detail, GUIContent.none, terminalBoxStyle);
         GUI.Label(new Rect(detail.x + 14f, detail.y + 10f, detail.width - 28f, 22f),
-            "委托详情 / FILE DETAIL [001]", terminalLabelStyle);
+            "FILE DETAIL / FILE DETAIL [001]", terminalLabelStyle);
         DrawTerminalLine(new Rect(detail.x + 12f, detail.y + 36f, detail.width - 24f, 1f));
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 48f, "委托名称", computer != null ? computer.DemoTaskTitle : "失踪的作业本", "LOST HOMEWORK");
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 70f, "委托人", computer != null ? computer.DemoTaskClient : "家长", "PARENT");
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 92f, "地点", computer != null ? computer.DemoTaskLocation : "西区小学", "WESTSIDE ELEMENTARY");
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 114f, "报酬", $"{(computer != null ? computer.DemoTaskMoneyReward : 120)}G", null);
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 136f, "预计时长", "10 - 15 MIN", null);
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 158f, "结局方式", "全部 / 部分 / 失败", "FULL / PARTIAL / FAILED");
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 48f, "Commission Name", computer != null ? computer.DemoTaskTitle : "The Missing Homework", "LOST HOMEWORK");
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 70f, "Client", computer != null ? computer.DemoTaskClient : "Parent", "PARENT");
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 92f, "Location", computer != null ? computer.DemoTaskLocation : "Westside Elementary", "WESTSIDE ELEMENTARY");
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 114f, "Reward", $"{(computer != null ? computer.DemoTaskMoneyReward : 120)}G", null);
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 136f, "Est. Duration", "10 - 15 MIN", null);
+        DrawTerminalDetailLine(detail.x + 14f, detail.y + 158f, "Outcome", "Full / Partial / Failed", "FULL / PARTIAL / FAILED");
         GUI.Label(new Rect(detail.x + 14f, detail.y + 182f, detail.width - 28f, 38f),
-            "备注: 孩子的作业本在放学后的教室中失踪。\n      家长担心里面记录着重要信息。", terminalSmallStyle);
+            "Notes: The child's homework was lost in the classroom after school.\n      The parent suspects it contained important information.", terminalSmallStyle);
 
         GUI.Box(action, GUIContent.none, terminalBoxStyle);
         GUI.Label(new Rect(action.x + 14f, action.y + 10f, action.width - 28f, 22f),
-            "操作 / ACTION", terminalLabelStyle);
+            "ACTION / ACTION", terminalLabelStyle);
         DrawTerminalLine(new Rect(action.x + 12f, action.y + 36f, action.width - 24f, 1f));
 
         DrawTerminalPrimaryAction(new Rect(action.x + 18f, action.y + 54f, action.width - 36f, 34f),
             computer, company);
 
         if (GUI.Button(new Rect(action.x + 18f, action.y + 96f, action.width - 36f, 30f),
-            "查看详情 (VIEW DETAIL)", terminalButtonStyle))
-            SetOfficeMessage("详情已显示在左侧文件栏。");
+            "VIEW DETAIL (VIEW DETAIL)", terminalButtonStyle))
+            SetOfficeMessage("Details are shown in the left file panel.");
         if (GUI.Button(new Rect(action.x + 18f, action.y + 132f, action.width - 36f, 30f),
-            "标记完成 (MARK COMPLETE)", terminalButtonStyle))
-            SetOfficeMessage("任务完成标记将在后续版本开放。");
+            "MARK COMPLETE (MARK COMPLETE)", terminalButtonStyle))
+            SetOfficeMessage("Task complete marking will be available in a future version.");
         if (GUI.Button(new Rect(action.x + 18f, action.y + 168f, action.width - 36f, 30f),
-            "放弃委托 (ABANDON COMMISSION)", terminalButtonStyle))
-            SetOfficeMessage("当前演示委托不可放弃。");
+            "ABANDON COMMISSION (ABANDON COMMISSION)", terminalButtonStyle))
+            SetOfficeMessage("The current demo commission cannot be abandoned.");
 
         DrawTerminalStatusStrip(rect, company, nearShop);
     }
 
     void DrawTerminalPrimaryAction(Rect rect, OfficeComputer computer, CompanyState company)
     {
-        string label = "› 接受委托 (ACCEPT COMMISSION)";
+        string label = "› ACCEPT COMMISSION (ACCEPT COMMISSION)";
         bool enabled = CanAcceptFromTerminal(computer);
         System.Action action = () =>
         {
@@ -549,27 +547,27 @@ public class MvpHud : MonoBehaviour
 
         if (MvpPendingReward.HasPending)
         {
-            label = "› 领取结算 (CLAIM SETTLEMENT)";
+            label = "› CLAIM SETTLEMENT (CLAIM SETTLEMENT)";
             enabled = IsLocalHostOrSolo();
             action = () =>
             {
                 computer?.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("结算申请已提交。");
+                SetOfficeMessage("Settlement application submitted.");
             };
         }
         else if (company.CanShowTutorialAcquisition)
         {
-            label = "› 确认收购 (CONFIRM ACQUISITION)";
+            label = "› CONFIRM ACQUISITION (CONFIRM ACQUISITION)";
             enabled = company.CanAffordTutorialAcquisition && IsLocalHostOrSolo();
             action = () =>
             {
                 computer?.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("收购文件已提交。");
+                SetOfficeMessage("Acquisition file submitted.");
             };
         }
         else if (MvpMissionRuntime.HasSelectedTask)
         {
-            label = "› 委托已锁定 (COMMISSION LOCKED)";
+            label = "› COMMISSION LOCKED (COMMISSION LOCKED)";
             enabled = false;
         }
 
@@ -581,11 +579,11 @@ public class MvpHud : MonoBehaviour
 
     void DrawOfficeTableHeader(float x, float y, float width)
     {
-        GUI.Label(new Rect(x + 8f, y, 54f, 20f), "编号", terminalSmallStyle);
-        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 20f), "委托名称", terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.47f, y, width * 0.20f, 20f), "委托人", terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.68f, y, width * 0.14f, 20f), "状态", terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.83f, y, width * 0.16f, 20f), "截止日期", terminalSmallStyle);
+        GUI.Label(new Rect(x + 8f, y, 54f, 20f), "No.", terminalSmallStyle);
+        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 20f), "Commission Name", terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.47f, y, width * 0.20f, 20f), "Client", terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.68f, y, width * 0.14f, 20f), "Status", terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.83f, y, width * 0.16f, 20f), "Deadline", terminalSmallStyle);
         DrawTerminalLine(new Rect(x, y + 22f, width, 1f));
     }
 
@@ -597,8 +595,8 @@ public class MvpHud : MonoBehaviour
         GUI.Label(new Rect(x + 8f, y + 2f, 54f, 22f), id, terminalSmallStyle);
         GUI.Label(new Rect(x + 70f, y, width * 0.32f, 24f), title + "\n" + EnglishTaskName(id), terminalSmallStyle);
         GUI.Label(new Rect(x + width * 0.47f, y + 2f, width * 0.20f, 22f), client, terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.68f, y + 2f, width * 0.14f, 22f), status, status == "已锁定" ? warningStyle : terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.83f, y + 2f, width * 0.16f, 22f), due, due.Contains("天") ? warningStyle : terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.68f, y + 2f, width * 0.14f, 22f), status, status == "Locked" ? warningStyle : terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.83f, y + 2f, width * 0.16f, 22f), due, due.Contains(" days") ? warningStyle : terminalSmallStyle);
     }
 
     static string EnglishTaskName(string id)
@@ -626,9 +624,9 @@ public class MvpHud : MonoBehaviour
     {
         string message = !string.IsNullOrEmpty(officeMessage) && Time.time < officeMessageUntil
             ? officeMessage
-            : $"资金 {company.Funds}G   债务 {company.Debt}G   声望 {company.Reputation}   电脑连接 {(nearShop ? "稳定" : "本地")}";
+            : $"Funds {company.Funds}G   Debt {company.Debt}G   Reputation {company.Reputation}   Terminal {(nearShop ? "Connected" : "Local")}";
         GUI.Label(new Rect(rect.x + 28f, rect.yMax - 30f, rect.width - 56f, 22f), message,
-            message.Contains("失败") || message.Contains("不足") || message.Contains("只有") ? warningStyle : terminalSmallStyle);
+            message.Contains("failed") || message.Contains("insufficient") || message.Contains("only") ? warningStyle : terminalSmallStyle);
     }
 
     bool CanAcceptFromTerminal(OfficeComputer computer)
@@ -642,15 +640,15 @@ public class MvpHud : MonoBehaviour
     string GetDemoTaskStatus(OfficeComputer computer)
     {
         if (MvpMissionRuntime.HasSelectedTask)
-            return "已锁定";
+            return "Locked";
         if (MvpPendingReward.HasPending)
-            return "待结算";
+            return "Pending Settlement";
         if (computer == null)
-            return "离线";
+            return "Offline";
         NetworkManager network = NetworkManager.Singleton;
         if (network == null || !network.IsListening)
-            return "待联机";
-        return network.IsHost ? "可接受" : "等房主";
+            return "Awaiting Network";
+        return network.IsHost ? "Available" : "Waiting for Host";
     }
 
     void DrawTerminalLine(Rect rect)
@@ -666,13 +664,13 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        DrawTerminalSection("可用委托 / COMMISSION FILE");
+        DrawTerminalSection("AVAILABLE COMMISSION / COMMISSION FILE");
         GUILayout.BeginVertical(selectedSlotStyle);
         GUILayout.Label(computer.DemoTaskTitle, titleStyle);
-        DrawLedgerLine("委托人 / 地点", $"{computer.DemoTaskClient} / {computer.DemoTaskLocation}");
+        DrawLedgerLine("Client / Location", $"{computer.DemoTaskClient} / {computer.DemoTaskLocation}");
         GUILayout.Label(computer.DemoTaskDescription, mutedStyle);
-        DrawLedgerLine("报酬 / 声望 / 经验", $"{computer.DemoTaskMoneyReward}G / +{computer.DemoTaskReputationReward} / +{computer.DemoTaskExperienceReward}");
-        DrawLedgerLine("作业窗口", MvpMissionClock.GetScheduleSummary(computer.DemoTask));
+        DrawLedgerLine("Reward / Reputation / Experience", $"{computer.DemoTaskMoneyReward}G / +{computer.DemoTaskReputationReward} / +{computer.DemoTaskExperienceReward}");
+        DrawLedgerLine("Work Window", MvpMissionClock.GetScheduleSummary(computer.DemoTask));
         GUILayout.Label(MvpMissionClock.GetOvertimeRuleSummary(computer.DemoTask), mutedStyle);
         GUILayout.Space(8);
 
@@ -703,14 +701,14 @@ public class MvpHud : MonoBehaviour
         }
 
         if (!string.IsNullOrEmpty(officeMessage) && Time.time < officeMessageUntil)
-            GUILayout.Label(officeMessage, officeMessage.StartsWith("已") ? accentStyle : warningStyle);
+            GUILayout.Label(officeMessage, officeMessage.StartsWith("Accepted") ? accentStyle : warningStyle);
 
         GUILayout.EndVertical();
     }
 
     void DrawOfficeShop(bool nearShop)
     {
-        DrawTerminalSection("旧货采购 / USED GEAR");
+        DrawTerminalSection("USED GEAR PURCHASE / USED GEAR");
         PlayerHotbar activeHotbar = FindLocalHotbar();
         GUILayout.BeginVertical(slotStyle);
         GUILayout.Label(MvpLocale.T("shop_title"), accentStyle);
@@ -734,7 +732,7 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndHorizontal();
 
         if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
-            GUILayout.Label(shopMessage, shopMessage.Contains("不足") ? warningStyle : accentStyle);
+            GUILayout.Label(shopMessage, shopMessage.Contains("Insufficient") ? warningStyle : accentStyle);
         if (!canBuy)
             GUILayout.Label(MvpLocale.T("shop_stand_near"), mutedStyle);
         GUILayout.EndVertical();
@@ -752,7 +750,7 @@ public class MvpHud : MonoBehaviour
     {
         bool alreadyOwned = hotbar != null && hotbar.HasWristwatchOwned;
         GUI.enabled = canBuy && !alreadyOwned;
-        string label = alreadyOwned ? "廉价工时表 已佩戴" : $"廉价工时表  {PlayerHotbar.WristwatchCost}G";
+        string label = alreadyOwned ? "Cheap Wristwatch (Equipped)" : $"Cheap Wristwatch  {PlayerHotbar.WristwatchCost}G";
         if (GUILayout.Button(label, GUILayout.Height(30)))
             TryBuyWristwatch(hotbar);
         GUI.enabled = true;
@@ -770,8 +768,8 @@ public class MvpHud : MonoBehaviour
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        DrawTerminalHeader("补给柜", "STORAGE");
-        if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
+        DrawTerminalHeader("Supply Cabinet", "STORAGE");
+        if (GUILayout.Button("Close", GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseCabinet();
             GUILayout.EndHorizontal();
@@ -781,17 +779,17 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndHorizontal();
 
         cabinetScrollPosition = GUILayout.BeginScrollView(cabinetScrollPosition, false, true);
-        DrawTerminalSection("柜内库存 / CABINET");
+        DrawTerminalSection("CABINET INVENTORY / CABINET");
         for (int i = 0; i < OfficeCabinetStorage.SlotCount; i++)
         {
             HotbarSlot slot = cabinet.GetSlot(i);
             bool empty = slot == null || slot.IsEmpty;
             GUILayout.BeginHorizontal(empty ? slotStyle : selectedSlotStyle);
-            GUILayout.Label($"{i + 1}. {(empty ? "空" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
+            GUILayout.Label($"{i + 1}. {(empty ? "Empty" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
             GUILayout.FlexibleSpace();
             GUILayout.Label(empty ? "" : $"x{slot.quantity}", mutedStyle, GUILayout.Width(48));
             GUI.enabled = !empty && hotbar != null;
-            if (GUILayout.Button("取出", GUILayout.Width(72), GUILayout.Height(28)))
+            if (GUILayout.Button("Take", GUILayout.Width(72), GUILayout.Height(28)))
             {
                 cabinet.TryTakeToHotbar(hotbar, i, out cabinetMessage);
                 cabinetMessageUntil = Time.time + 2.5f;
@@ -800,10 +798,10 @@ public class MvpHud : MonoBehaviour
             GUILayout.EndHorizontal();
         }
 
-        DrawTerminalSection("个人热栏 / HOTBAR");
+        DrawTerminalSection("PERSONAL HOTBAR / HOTBAR");
         if (hotbar == null)
         {
-            GUILayout.Label("没有找到本地玩家热栏。", warningStyle);
+            GUILayout.Label("Local player hotbar not found.", warningStyle);
         }
         else
         {
@@ -813,11 +811,11 @@ public class MvpHud : MonoBehaviour
                 bool empty = slot == null || slot.IsEmpty;
                 bool selected = hotbar.SelectedSlot.Value == i;
                 GUILayout.BeginHorizontal(selected ? selectedSlotStyle : slotStyle);
-                GUILayout.Label($"{i + 1}. {(empty ? "空" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
+                GUILayout.Label($"{i + 1}. {(empty ? "Empty" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(empty ? "" : $"x{slot.quantity}", mutedStyle, GUILayout.Width(48));
                 GUI.enabled = !empty;
-                if (GUILayout.Button("存入", GUILayout.Width(72), GUILayout.Height(28)))
+                if (GUILayout.Button("Store", GUILayout.Width(72), GUILayout.Height(28)))
                 {
                     cabinet.TryStoreFromHotbar(hotbar, i, out cabinetMessage);
                     cabinetMessageUntil = Time.time + 2.5f;
@@ -828,7 +826,7 @@ public class MvpHud : MonoBehaviour
         }
 
         if (!string.IsNullOrEmpty(cabinetMessage) && Time.time < cabinetMessageUntil)
-            GUILayout.Label(cabinetMessage, cabinetMessage.Contains("不能") || cabinetMessage.Contains("无法") || cabinetMessage.Contains("没有") ? warningStyle : accentStyle);
+            GUILayout.Label(cabinetMessage, cabinetMessage.Contains("cannot") || cabinetMessage.Contains("unable") || cabinetMessage.Contains("not found") ? warningStyle : accentStyle);
 
         GUILayout.EndScrollView();
         GUILayout.EndArea();
@@ -844,8 +842,8 @@ public class MvpHud : MonoBehaviour
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        DrawTerminalHeader("怪物图鉴", "EVIDENCE FILE");
-        if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
+        DrawTerminalHeader("Monster Bestiary", "EVIDENCE FILE");
+        if (GUILayout.Button("Close", GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseBestiary();
             GUILayout.EndHorizontal();
@@ -856,25 +854,25 @@ public class MvpHud : MonoBehaviour
 
         bestiaryScrollPosition = GUILayout.BeginScrollView(bestiaryScrollPosition, false, true);
         bool unlocked = MonsterBestiaryProgress.IsHomeworkDebtCollectorUnlocked;
-        DrawTerminalSection(unlocked ? "已归档异常 / VERIFIED" : "未解锁档案 / LOCKED");
+        DrawTerminalSection(unlocked ? "Archived Anomaly / VERIFIED" : "Locked File / LOCKED");
         GUILayout.BeginVertical(unlocked ? selectedSlotStyle : slotStyle);
-        GUILayout.Label(unlocked ? "作业债务催收员" : "未解锁档案", accentStyle);
+        GUILayout.Label(unlocked ? "Homework Debt Collector" : "Locked File", accentStyle);
         if (unlocked)
         {
-            GUILayout.Label("介绍", accentStyle);
-            GUILayout.Label("一种在逾期表格、家长签字和旧教室灯管之间徘徊的异常。它会被错误翻找、噪声和落单玩家吸引，追击时像是在索要一笔永远算不清的账。", labelStyle);
+            GUILayout.Label("Description", accentStyle);
+            GUILayout.Label("An anomaly that lingers among overdue forms, parent signatures, and old classroom fluorescent lights. It is drawn to incorrect rummaging, noise, and isolated players. When it gives chase, it feels like demanding a debt that can never be settled.", labelStyle);
             GUILayout.Space(8);
-            GUILayout.Label("弱点", accentStyle);
-            GUILayout.Label("强光会让它短暂失去行动节奏；错误作业本和登记簿附近的响动可以把它引开。保持距离、利用储物柜和路线分岔，别在空走廊里硬跑。", labelStyle);
+            GUILayout.Label("Weakness", accentStyle);
+            GUILayout.Label("Bright light briefly disrupts its movement rhythm. Sounds near wrong homework books and registries can lure it away. Keep your distance, use lockers and route forks — don't sprint down empty corridors.", labelStyle);
             GUILayout.Space(8);
-            GUILayout.Label("解锁记录: 已遭遇异常，已采集毛发/踪迹。", mutedStyle);
+            GUILayout.Label("Unlock record: Anomaly encountered, hair/trace collected.", mutedStyle);
         }
         else
         {
-            string encounter = MonsterBestiaryProgress.HasEncounteredHomeworkDebtCollector ? "已遭遇" : "未遭遇";
-            string trace = MonsterBestiaryProgress.HasHomeworkDebtCollectorTrace ? "已采集" : "未采集";
-            GUILayout.Label($"解锁条件: 遭遇怪物 + 采集毛发/踪迹。当前: {encounter} / {trace}。", mutedStyle);
-            GUILayout.Label("档案纸页上只有水渍和空白格，等你带回足够可靠的证据。", labelStyle);
+            string encounter = MonsterBestiaryProgress.HasEncounteredHomeworkDebtCollector ? "Encountered" : "Not encountered";
+            string trace = MonsterBestiaryProgress.HasHomeworkDebtCollectorTrace ? "Collected" : "Not collected";
+            GUILayout.Label($"Unlock condition: Encounter the monster + collect hair/trace. Current: {encounter} / {trace}.", mutedStyle);
+            GUILayout.Label("The file pages show only water stains and blank fields — bring back enough reliable evidence.", labelStyle);
         }
         GUILayout.EndVertical();
 
@@ -882,32 +880,26 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndArea();
     }
 
-
-
     void DrawMissionPanel()
     {
-        TowerMissionManager mission = TowerMissionManager.Instance;
+        LostItemMissionManager mission = LostItemMissionManager.Instance;
         GUILayout.BeginArea(new Rect(18, 18, panelWidth, 230), GUIContent.none, panelStyle);
+        DrawFieldClockLine(mission);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
-        float completeness = mission.SyncedCompleteness.Value;
-        GUILayout.Label($"密封完整度: {completeness:P0}", completeness < 0.5f ? warningStyle : mutedStyle);
-        if (!string.IsNullOrEmpty(missionMessage) && Time.time < missionMessageUntil)
-            GUILayout.Label(missionMessage, missionMessage.Contains("警告") ? warningStyle : accentStyle);
-        DrawSpectatorHint();
-        GUILayout.EndArea();
-    }
+        GUILayout.Label(GetCarrierText(mission), mission.LostItemCollected.Value ? accentStyle : mutedStyle);
+        string bonusText = GetBonusEvidenceText(mission);
+        if (!string.IsNullOrEmpty(bonusText))
+            GUILayout.Label(bonusText, accentStyle);
 
-    static string GetMissionObjective(TowerMissionManager mission)
-    {
-        switch ((TowerMissionState)mission.SyncedState.Value)
-        {
-            case TowerMissionState.InProgress: return "目标: 恢复供电，找到「真实海岸」生态柱。";
-            case TowerMissionState.ObjectiveSecured: return "目标: 把生态柱送回货舱并拉杆发车——轻拿轻放。";
-            case TowerMissionState.Delivered: return "目标: 已交付，即将返回事务所结算。";
-            case TowerMissionState.PartialReturn: return "目标: 部分结算，即将返回事务所。";
-            case TowerMissionState.Failed: return "目标: 委托失败，返回事务所复盘。";
-            default: return "目标: 等待任务状态。";
-        }
+        string monsterText = GetMonsterStatus();
+        if (!string.IsNullOrEmpty(monsterText))
+            GUILayout.Label(monsterText, monsterText.Contains("追击") ? warningStyle : mutedStyle);
+        if (!string.IsNullOrEmpty(missionMessage) && Time.time < missionMessageUntil)
+            GUILayout.Label(missionMessage, missionMessage.Contains("Warning") ? warningStyle : accentStyle);
+
+        DrawSpectatorHint();
+
+        GUILayout.EndArea();
     }
 
     void DrawSpectatorHint()
@@ -942,7 +934,7 @@ public class MvpHud : MonoBehaviour
 
     void DrawMissionVanPanel()
     {
-        MissionVanExitPoint van = activeMissionVan;
+        SchoolExitPoint van = activeMissionVan;
         if (van == null) return;
 
         float width = Mathf.Clamp(Screen.width - 36f, 320f, 560f);
@@ -960,9 +952,9 @@ public class MvpHud : MonoBehaviour
         }
         GUILayout.EndHorizontal();
 
-        DrawTerminalSection("返程决策 / RETURN");
+        DrawTerminalSection("Return Decision / RETURN");
         GUILayout.Label(van.GetReturnSummary(), accentStyle);
-
+        DrawVehicleClockBlock(LostItemMissionManager.Instance);
         GUILayout.Label(MvpLocale.T("van_decide_hint"), mutedStyle);
         GUILayout.Space(10);
 
@@ -974,7 +966,7 @@ public class MvpHud : MonoBehaviour
 
         DrawTerminalSection(MvpLocale.T("van_locker") + " / LOCKER");
         PlayerHotbar localHotbar = FindLocalHotbar();
-        for (int i = 0; i < MissionVanExitPoint.LockerSlotCount; i++)
+        for (int i = 0; i < SchoolExitPoint.LockerSlotCount; i++)
         {
             GUILayout.BeginHorizontal(slotStyle);
             MvpHotbarItemId itemId = van.GetLockerItemId(i);
@@ -986,7 +978,7 @@ public class MvpHud : MonoBehaviour
             if (GUILayout.Button(MvpLocale.T("take_item"), GUILayout.Width(88), GUILayout.Height(28)))
             {
                 van.TryTakeLockerItem(i);
-                SetMissionMessage($"车载物资申请: {GetShopItemLabel(itemId)}。");
+                SetMissionMessage($"Van supply request: {GetShopItemLabel(itemId)}.");
             }
             GUI.enabled = true;
             if (quantity > 0 && localHotbar != null && !canReceive)
@@ -1005,7 +997,7 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndArea();
     }
 
-    bool DrawMissionVanReturnControls(MissionVanExitPoint van)
+    bool DrawMissionVanReturnControls(SchoolExitPoint van)
     {
         bool canReturn = van.CanLocalPlayerRequestReturn();
         GUI.enabled = canReturn;
@@ -1015,7 +1007,7 @@ public class MvpHud : MonoBehaviour
             {
                 partialReturnConfirmVan = van;
                 partialReturnConfirmUntil = Time.unscaledTime + 4f;
-                SetMissionMessage("警告: 再次点击返程会让全队提前回事务所，只做部分结算。");
+                SetMissionMessage("Warning: Clicking Return again will send the whole team back early with only a partial settlement.");
                 GUI.enabled = true;
                 return false;
             }
@@ -1032,11 +1024,53 @@ public class MvpHud : MonoBehaviour
         return false;
     }
 
+    void DrawFieldClockLine(LostItemMissionManager mission)
+    {
+        if (mission == null) return;
 
+        if (HasLocalWristwatch())
+        {
+            GUILayout.Label(
+                $"Work Hours: {mission.CurrentClockLabel}    Contract Deadline: {mission.DeadlineClockLabel}",
+                mission.IsOvertime ? warningStyle : labelStyle);
+            DrawOvertimeLine(mission);
+            return;
+        }
 
+        GUILayout.Label($"Daylight Reading: {MvpMissionClock.GetDaylightLabel(mission.CurrentClockHour)}", labelStyle);
+        GUILayout.Label("Exact time: check the van's onboard clock, or buy a cheap work-hours watch at the office.", mutedStyle);
+        if (mission.IsOvertime)
+            GUILayout.Label("It feels like you've run past the contract window — your return settlement will be penalised.", warningStyle);
+    }
 
+    void DrawVehicleClockBlock(LostItemMissionManager mission)
+    {
+        if (mission == null) return;
 
+        GUILayout.BeginVertical(slotStyle);
+        GUILayout.Label(
+            $"Van Clock: {mission.CurrentClockLabel}    Standard End Time: {mission.DeadlineClockLabel}",
+            mission.IsOvertime ? warningStyle : labelStyle);
+        if (mission.IsOvertime)
+        {
+            DrawOvertimeLine(mission);
+        }
+        else
+        {
+            GUILayout.Label($"Remaining Window: {MvpMissionClock.FormatGameHours(mission.RemainingGameHours)}", accentStyle);
+        }
+        GUILayout.EndVertical();
+        GUILayout.Space(8);
+    }
 
+    void DrawOvertimeLine(LostItemMissionManager mission)
+    {
+        if (mission == null || !mission.IsOvertime) return;
+
+        GUILayout.Label(
+            $"Overtime: {MvpMissionClock.FormatGameHours(mission.OvertimeGameHours)}    Estimated Penalty -{mission.OvertimeMoneyPenalty}G / Reputation -{mission.OvertimeReputationPenalty}",
+            warningStyle);
+    }
 
     bool HasLocalWristwatch()
     {
@@ -1113,7 +1147,7 @@ public class MvpHud : MonoBehaviour
         if (maxStamina <= 0f) return;
 
         float normalized = Mathf.Clamp01(stamina / maxStamina);
-        bool inMission = TowerMissionManager.Instance != null;
+        bool inMission = LostItemMissionManager.Instance != null;
         if (!inMission && normalized >= 0.999f && !localPlayer.IsSprinting && !localPlayer.IsExhausted)
             return;
 
@@ -1170,11 +1204,9 @@ public class MvpHud : MonoBehaviour
         float normalized = fl.BatteryNormalized;
         float barW = slotRect.width - 8f;
         float barY = slotRect.y + slotRect.height - 8f;
-        // Battery reads in lamp colors: sodium amber when healthy, stamp red when dying
-        // (CRT green stays on actual screens per the art bible).
         Color barColor = normalized > 0.4f
-            ? new Color(BlackCommissionUiTheme.OldWood.r, BlackCommissionUiTheme.OldWood.g, BlackCommissionUiTheme.OldWood.b, 0.95f)
-            : new Color(BlackCommissionUiTheme.RustWarning.r, BlackCommissionUiTheme.RustWarning.g, BlackCommissionUiTheme.RustWarning.b, 0.95f);
+            ? new Color(0.424f, 1.000f, 0.373f, 0.9f)
+            : new Color(0.720f, 0.420f, 0.260f, 0.9f);
 
         GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW, 4), hpBarBg);
         GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW * normalized, 4), MakeTexture(barColor));
@@ -1182,17 +1214,68 @@ public class MvpHud : MonoBehaviour
 
     void DrawFooterHint()
     {
-        string text = "多人 MVP: Start Host 后接任务；1-5 切热栏，左键/H 使用，HQ 内按 G 丢当前格到地上存放。";
+        string text = "Multiplayer MVP: Accept a task after Start Host; 1-5 to switch hotbar slots, LMB/H to use, press G in HQ to drop the current slot to the floor.";
         GUI.Label(new Rect(18, Screen.height - 30, 720, 24), text, mutedStyle);
     }
 
+    static string GetMissionObjective(LostItemMissionManager mission)
+    {
+        string paperworkRisk = mission.WrongHomeworkAttempts.Value > 0
+            ? $" Wrong books checked: {mission.WrongHomeworkAttempts.Value}/3, estimated penalty -{mission.WrongHomeworkMoneyPenalty}G."
+            : "";
 
+        switch (mission.CurrentPhase.Value)
+        {
+            case LostItemMissionManager.MissionPhase.Searching:
+                return "Objective: Find the commission target and bring it back to the van." + paperworkRisk;
+            case LostItemMissionManager.MissionPhase.ReturnToExit:
+                return "Objective: Bring the target to the van and press E to board and return." + paperworkRisk;
+            case LostItemMissionManager.MissionPhase.Completed:
+                return "Objective: Commission complete — return to the office to collect your reward.";
+            case LostItemMissionManager.MissionPhase.ReturnedEarly:
+                return "Objective: Returned early — head back to the office for a partial settlement.";
+            case LostItemMissionManager.MissionPhase.Failed:
+                return "Objective: Commission failed — return to the office for a debrief.";
+            default:
+                return "Objective: Waiting for mission status.";
+        }
+    }
 
+    static string GetCarrierText(LostItemMissionManager mission)
+    {
+        if (!mission.LostItemCollected.Value) return "Target item: not yet retrieved";
+        ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
+        return mission.CarrierClientId.Value == localId
+            ? "Target item: you have it — get back to the van."
+            : $"Target item: teammate {mission.CarrierClientId.Value} has it.";
+    }
 
+    static string GetBonusEvidenceText(LostItemMissionManager mission)
+    {
+        // Bonus evidence is an optional, mission-specific objective (e.g. the homework job's
+        // logbook photo). Only surface a line once it's actually been collected, so missions
+        // without any bonus evidence (like the lake dive) don't show a misleading hint.
+        if (mission.BonusEvidenceCollected.Value)
+            return "Bonus evidence: collected — settlement will be more favourable.";
 
+        return "";
+    }
 
+    static string GetMonsterStatus()
+    {
+        SchoolMonsterAI[] monsters = FindObjectsByType<SchoolMonsterAI>(FindObjectsSortMode.None);
+        if (monsters.Length == 0) return "";   // missions without monsters (e.g. lake dive) show no danger line
+        bool anyStunned = false;
+        foreach (var monster in monsters)
+        {
+            if (monster == null) continue;
+            if (monster.IsChasing) return "Danger: monster is in pursuit.";
+            anyStunned |= monster.IsStunned;
+            if (monster.IsDistracted) return "Danger: monster briefly lured by bait.";
+        }
 
-
+        return anyStunned ? "Danger: monster temporarily suppressed." : "Danger: stay quiet, don't get too close.";
+    }
 
     static PlayerHotbar FindLocalHotbar()
     {
@@ -1231,7 +1314,7 @@ public class MvpHud : MonoBehaviour
         AudioManager.Instance?.PlayComputerOpen(computer.transform.position);
     }
 
-    public static void OpenMissionVan(MissionVanExitPoint van)
+    public static void OpenMissionVan(SchoolExitPoint van)
     {
         activeComputer = null;
         activeCabinet = null;
@@ -1328,7 +1411,7 @@ public class MvpHud : MonoBehaviour
         missionMessageUntil = Time.time + 3f;
     }
 
-    bool IsPartialReturnConfirmed(MissionVanExitPoint van)
+    bool IsPartialReturnConfirmed(SchoolExitPoint van)
     {
         return partialReturnConfirmVan == van && Time.unscaledTime <= partialReturnConfirmUntil;
     }
@@ -1367,7 +1450,7 @@ public class MvpHud : MonoBehaviour
 
     static string GetHotbarStorageSummary(PlayerHotbar hotbar)
     {
-        if (hotbar == null) return "热栏: 未找到本地玩家。";
+        if (hotbar == null) return "Hotbar: local player not found.";
 
         int usedSlots = 0, flashlights = 0, batteries = 0;
         for (int i = 0; i < PlayerHotbar.SlotCount; i++)

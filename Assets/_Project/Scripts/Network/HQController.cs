@@ -38,12 +38,12 @@ public class HQController : MonoBehaviour
         GUI.DrawTexture(new Rect(x - 4, y - 4, w + 8, 130), panelBg);
 
         GUILayout.BeginArea(new Rect(x, y, w, 122));
-        GUILayout.Label("黑色委托", headerStyle);
-        GUILayout.Label($"资金: ¥{CompanyData.Current.Funds}", labelStyle);
-        GUILayout.Label($"声誉: {CompanyData.Current.Reputation}", labelStyle);
+        GUILayout.Label("BLACK COMMISSION", headerStyle);
+        GUILayout.Label($"Funds: ¥{CompanyData.Current.Funds}", labelStyle);
+        GUILayout.Label($"Reputation: {CompanyData.Current.Reputation}", labelStyle);
         GUILayout.Space(4);
-        GUILayout.Label("办公室电脑可查看委托", labelStyle);
-        GUILayout.Label("装备架可补充任务道具", labelStyle);
+        GUILayout.Label("Use the office terminal to browse commissions", labelStyle);
+        GUILayout.Label("Use the gear rack to restock mission equipment", labelStyle);
         GUILayout.EndArea();
     }
 }

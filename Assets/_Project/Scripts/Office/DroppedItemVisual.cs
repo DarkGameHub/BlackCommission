@@ -25,7 +25,7 @@ public class DroppedItemVisual : MonoBehaviour, IInteractable
             string name = itemId == MvpHotbarItemId.Flashlight
                 ? MvpLocale.T("flashlight")
                 : MvpLocale.T("battery");
-            return $"拾取: {name} x{count}";
+            return $"Pick up: {name} x{count}";
         }
     }
 
