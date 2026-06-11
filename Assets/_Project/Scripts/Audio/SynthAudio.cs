@@ -272,6 +272,156 @@ public static class SynthAudio
         return clip;
     }
 
+    /// <summary>Short electrical fizz — played repeatedly while the breaker hold charges.</summary>
+    public static AudioClip BreakerCrackle(string name)
+    {
+        float duration = 0.16f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = 4242;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            // Sparse spark bursts gated by a fast square + 50Hz mains undertone.
+            float gate = Mathf.PerlinNoise(t * 90f, 0.3f) > 0.55f ? 1f : 0.15f;
+            float mains = Mathf.Sin(2f * Mathf.PI * 50f * t) * 0.05f;
+            data[i] = (noise * 0.22f * gate + mains) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Relay thunk + hum swelling on — the building taking power again.</summary>
+    public static AudioClip PowerRestore(string name)
+    {
+        float duration = 1.4f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = 616;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            float thunk = t < 0.09f ? Mathf.Sin(2f * Mathf.PI * 70f * t) * Mathf.Exp(-t * 30f) * 0.9f : 0f;
+            float humOn = Mathf.Clamp01((t - 0.15f) * 1.4f);
+            float hum = (Mathf.Sin(2f * Mathf.PI * 100f * t) * 0.10f
+                       + Mathf.Sin(2f * Mathf.PI * 200f * t) * 0.04f) * humOn;
+            data[i] = (thunk + hum + noise * 0.015f * humOn) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Sheet-metal slam with rattle decay — the debt shutters dropping open.</summary>
+    public static AudioClip ShutterSlam(string name)
+    {
+        float duration = 0.75f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = 2718;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            float slam = Mathf.Sin(2f * Mathf.PI * 55f * t) * Mathf.Exp(-t * 22f) * 0.8f;
+            // Metallic ring pair + rattling tail.
+            float ring = (Mathf.Sin(2f * Mathf.PI * 410f * t) + Mathf.Sin(2f * Mathf.PI * 633f * t))
+                * 0.10f * Mathf.Exp(-t * 9f);
+            float rattle = noise * 0.12f * Mathf.Exp(-t * 6f) * (Mathf.Sin(2f * Mathf.PI * 13f * t) * 0.5f + 0.5f);
+            data[i] = (slam + ring + rattle) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Strain-and-thump of hoisting something heavy onto your shoulder.</summary>
+    public static AudioClip HeavyHoist(string name)
+    {
+        float duration = 0.4f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = 9001;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            float scrape = noise * 0.10f * Mathf.Clamp01(t * 12f) * Mathf.Exp(-t * 7f);
+            float thump = t > 0.18f ? Mathf.Sin(2f * Mathf.PI * 65f * (t - 0.18f)) * Mathf.Exp(-(t - 0.18f) * 28f) * 0.55f : 0f;
+            data[i] = (scrape + thump) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Dull heavy thud with a worrying glass ring — the eco column landing hard.</summary>
+    public static AudioClip GlassThud(string name)
+    {
+        float duration = 0.6f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            float thud = Mathf.Sin(2f * Mathf.PI * 50f * t) * Mathf.Exp(-t * 26f) * 0.85f;
+            // High glass partials, slightly detuned so it rings "sealed jar", not "bell".
+            float glass = (Mathf.Sin(2f * Mathf.PI * 1180f * t) * 0.05f
+                         + Mathf.Sin(2f * Mathf.PI * 1741f * t) * 0.035f) * Mathf.Exp(-t * 11f);
+            data[i] = (thud + glass) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Mechanical lever clank: spring creak into a latched clunk.</summary>
+    public static AudioClip LeverClank(string name)
+    {
+        float duration = 0.34f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            float creak = Wave(WaveShape.Saw, 240f + t * 320f, t) * 0.07f * Mathf.Clamp01(1f - t * 4f);
+            float clunk = t > 0.16f ? Mathf.Sin(2f * Mathf.PI * 95f * (t - 0.16f)) * Mathf.Exp(-(t - 0.16f) * 34f) * 0.7f : 0f;
+            float click = t > 0.16f && t < 0.18f ? Wave(WaveShape.Square, 900f, t) * 0.12f : 0f;
+            data[i] = (creak + clunk + click) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Rubber stamp coming down on paper — the settlement getting official.</summary>
+    public static AudioClip StampThunk(string name)
+    {
+        float duration = 0.22f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = 1097;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            float thunk = Mathf.Sin(2f * Mathf.PI * 120f * t) * Mathf.Exp(-t * 45f) * 0.7f;
+            float paper = noise * 0.06f * Mathf.Exp(-t * 30f);
+            data[i] = (thunk + paper) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
     public enum WaveShape { Sine, Square, Saw, Triangle }
 
     static float Wave(WaveShape shape, float freq, float t)

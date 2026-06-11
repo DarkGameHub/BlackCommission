@@ -319,7 +319,7 @@ MonoBehaviour:
   staminaDrainRate: 20
   staminaRegenRate: 10
   cameraRoot: {fileID: 5193395001453616976}
-  crouchCameraDrop: 0.55
+  crouchCameraDrop: 0.85
   cameraCrouchLerpSpeed: 12
   swimSpeed: 3.2
   swimAcceleration: 7
@@ -735,7 +735,7 @@ Transform:
   m_GameObject: {fileID: 6879008089021463769}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.7, z: 0}
+  m_LocalPosition: {x: 0, y: 1.7, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

@@ -228,10 +228,10 @@ public class VanTransitOverlay : MonoBehaviour
     void RequestDepart(PlayerController local)
     {
         // Return trip from a mission site.
-        var missionManager = LostItemMissionManager.Instance;
+        var missionManager = TowerMissionManager.Instance;
         if (missionManager != null)
         {
-            missionManager.RequestDepartVan();
+            missionManager.RequestDepart();
             return;
         }
 
@@ -259,12 +259,20 @@ public class VanTransitOverlay : MonoBehaviour
         PlayerController local = FindLocalPlayer();
         bool seated = local != null && local.IsSeated;
 
+        // 派遣单 ticket: aged-paper slip with a civic-teal rule and a stamp-red seal —
+        // the same civic-paperwork grammar as the tower's identity dressing.
         float w = 520f;
         var rect = new Rect((Screen.width - w) * 0.5f, 24f, w, 60f);
-        GUI.DrawTexture(new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, rect.height + 18f),
+        var ticket = new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, rect.height + 18f);
+        GUI.DrawTexture(new Rect(ticket.x - 2f, ticket.y - 2f, ticket.width + 4f, ticket.height + 4f),
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
-        GUI.DrawTexture(new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, 2f),
+        GUI.DrawTexture(ticket, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
+        GUI.DrawTexture(new Rect(ticket.x, ticket.y, ticket.width, 3f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+        GUI.DrawTexture(new Rect(ticket.x, ticket.yMax - 2f, ticket.width, 2f),
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreenDim));
+        GUI.DrawTexture(new Rect(ticket.x + 8f, ticket.y + 10f, 14f, 14f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.RustWarning)); // 章
 
         string header = string.IsNullOrEmpty(taskTitle)
             ? MvpLocale.T("van_cabin")
@@ -285,10 +293,6 @@ public class VanTransitOverlay : MonoBehaviour
                 status + "    " + MvpLocale.T("press_space_depart") + "    " + MvpLocale.T("press_x_leave"),
                 smallStyle);
 
-            // Return-trip grace countdown: a teammate armed departure; stragglers can still board.
-            int countdown = Mathf.CeilToInt(LostItemMissionManager.DepartCountdownSeconds);
-            if (countdown > 0)
-                GUI.Label(new Rect(rect.x, rect.y + 52f, w, 22f), MvpLocale.T("departing_in", countdown), smallStyle);
         }
     }
 
@@ -307,17 +311,17 @@ public class VanTransitOverlay : MonoBehaviour
         }
         GUI.Label(new Rect(rect.x, rect.y + 24f, w, 20f), line, smallStyle);
 
+        // Progress = a civic-teal fill drawn on the paper slip (ink on a form, not a
+        // glowing bar — CRT green stays on actual screens).
         float barY = rect.y + 46f;
         var bg = new Rect(rect.x, barY, w, 9f);
-        GUI.DrawTexture(bg, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.ConcreteBlack));
-        GUI.DrawTexture(new Rect(bg.x, bg.y, bg.width, 1f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreenDim));
+        GUI.DrawTexture(bg, BlackCommissionUiTheme.MakeTex(new Color(0.18f, 0.17f, 0.13f, 0.30f)));
 
         float fillW = transitDuration > 0f
             ? w * progress
             : w * (0.42f + 0.30f * Mathf.Sin(Time.unscaledTime * 3f));   // indeterminate sweep
         GUI.DrawTexture(new Rect(bg.x, bg.y, Mathf.Clamp(fillW, 2f, w), 9f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.CrtGreen));
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
     }
 
     void EnsureStyles()
@@ -325,18 +329,19 @@ public class VanTransitOverlay : MonoBehaviour
         if (headingStyle != null) return;
         if (GUI.skin == null || GUI.skin.label == null) return;
 
+        // Ink on paper (the ticket background is aged paper, so text is dark ink).
         headingStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 18,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = BlackCommissionUiTheme.OldPaper }
+            normal = { textColor = new Color(0.10f, 0.095f, 0.075f, 1f) }
         };
         smallStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 13,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = BlackCommissionUiTheme.CrtGreen }
+            normal = { textColor = new Color(0.19f, 0.17f, 0.13f, 0.9f) }
         };
         MvpFontProvider.ApplyToStyle(headingStyle);
         MvpFontProvider.ApplyToStyle(smallStyle);
@@ -358,9 +363,12 @@ public class VanTransitOverlay : MonoBehaviour
 
         // Textured (procedurally grimed) materials for the big surfaces so the cabin reads as
         // worn painted metal instead of flat plastic cubes; small props stay flat-shaded.
-        Material wallMat = MakeGrimeMaterial(BlackCommissionUiTheme.MilitaryGreen, 0.22f, 5f);
-        Material metalMat = MakeGrimeMaterial(BlackCommissionUiTheme.ConcretePanel, 0.30f, 7f);
-        Material benchMat = MakeGrimeMaterial(BlackCommissionUiTheme.MilitaryGreenDark, 0.26f, 6f);
+        // Colors match the tower's V8 whitebox palette exactly (TowerV8WhiteboxBuilder
+        // EnsureMaterials) so the van and the map read as the same world: civic teal paint
+        // #3F5F5C, dark steel #4A4845 / #2A2826, aged paper #D6CCAE, stamp red #C23A2B.
+        Material wallMat = MakeGrimeMaterial(new Color(0.247f, 0.373f, 0.361f), 0.26f, 5f);   // V8_Civic_TealPaint
+        Material metalMat = MakeGrimeMaterial(new Color(0.290f, 0.282f, 0.271f), 0.32f, 7f);  // V8_Steel_Dark
+        Material benchMat = MakeGrimeMaterial(new Color(0.165f, 0.157f, 0.149f), 0.28f, 6f);  // tray steel, darker
         Material blackMat = MakeFlatMaterial(new Color(0.035f, 0.04f, 0.037f));
         Material tungstenMat = MakeFlatMaterial(BlackCommissionUiTheme.OldPaper);
 
@@ -379,11 +387,11 @@ public class VanTransitOverlay : MonoBehaviour
 
         CreateInteriorBox("Light", root.transform, new Vector3(0.45f, 1.39f, 0f), new Vector3(0.72f, 0.012f, 0.025f), tungstenMat);
 
-        // Industrial office detail layer.
-        Material paperMat = MakeFlatMaterial(BlackCommissionUiTheme.OldPaper);
-        Material debtMat = MakeFlatMaterial(BlackCommissionUiTheme.Rust);
-        Material greenMat = MakeFlatMaterial(BlackCommissionUiTheme.CrtGreen);
-        Material grimeMat = MakeFlatMaterial(BlackCommissionUiTheme.MilitaryGreenDark);
+        // Civic-paperwork detail layer (same identity grammar as the tower's
+        // IdentityDressing: aged paper + stamp red on paper/signage only).
+        Material paperMat = MakeFlatMaterial(new Color(0.839f, 0.800f, 0.682f));  // V8_Paper_Aged
+        Material debtMat = MakeFlatMaterial(new Color(0.761f, 0.227f, 0.169f));   // V8_Stamp_Red
+        Material grimeMat = MakeFlatMaterial(new Color(0.10f, 0.10f, 0.095f));
 
         CreateInteriorBox("SafetyNotice", root.transform,
             new Vector3(0.35f, 0.95f, -0.66f), new Vector3(0.32f, 0.22f, 0.01f), paperMat);
@@ -391,8 +399,13 @@ public class VanTransitOverlay : MonoBehaviour
             new Vector3(0.42f, 0.88f, -0.655f), new Vector3(0.1f, 0.06f, 0.008f), debtMat);
         CreateInteriorBox("NoSmokingSign", root.transform,
             new Vector3(0.72f, 1.05f, 0.665f), new Vector3(0.18f, 0.12f, 0.01f), debtMat);
-        CreateInteriorBox("CompanyLogoBar", root.transform,
-            new Vector3(-0.54f, 1.18f, 0f), new Vector3(0.01f, 0.06f, 0.48f), greenMat);
+        // Bulkhead: company plate in paper + a single small dispatch-green status lamp
+        // (CRT green is restricted to screens/lamps per the art bible — no glowing bars).
+        CreateInteriorBox("CompanyPlate", root.transform,
+            new Vector3(-0.54f, 1.18f, 0f), new Vector3(0.01f, 0.10f, 0.48f), paperMat);
+        Material lampMat = MakeFlatMaterial(BlackCommissionUiTheme.CrtGreenDim);
+        CreateInteriorBox("DispatchLamp", root.transform,
+            new Vector3(-0.54f, 1.05f, 0.20f), new Vector3(0.012f, 0.03f, 0.03f), lampMat);
         CreateInteriorBox("FloorGrimeA", root.transform,
             new Vector3(0.55f, 0.372f, -0.22f), new Vector3(0.35f, 0.005f, 0.28f), grimeMat);
         CreateInteriorBox("FloorGrimeB", root.transform,
@@ -454,8 +467,14 @@ public class VanTransitOverlay : MonoBehaviour
 
     static Texture2D MakeGrimeTexture(Color baseColor, float grime)
     {
+        // Lo-fi rules (style-lock v2): small texture, Point filter, no mips — the chunky
+        // texel grain is the feature and matches the tower's 256px/Point material language.
         const int size = 64;
-        var tex = new Texture2D(size, size, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Repeat };
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+        {
+            wrapMode = TextureWrapMode.Repeat,
+            filterMode = FilterMode.Point
+        };
         // Two octaves of value noise + faint vertical streaking for a used, dripped-on feel.
         float seed = Random.value * 100f;
         for (int y = 0; y < size; y++)

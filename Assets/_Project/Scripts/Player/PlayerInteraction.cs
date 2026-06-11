@@ -184,7 +184,8 @@ public class PlayerInteraction : NetworkBehaviour
                 fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = BlackCommissionUiTheme.CrtGreen, background = hintBg },
+                // Aged paper on rubber black: world-prompt grammar (green = screens only).
+                normal = { textColor = BlackCommissionUiTheme.OldPaper, background = hintBg },
                 padding = new RectOffset(16, 16, 8, 8)
             };
             MvpFontProvider.ApplyToStyle(hintStyle);

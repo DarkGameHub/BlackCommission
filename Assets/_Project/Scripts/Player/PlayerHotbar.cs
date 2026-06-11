@@ -132,6 +132,11 @@ public class PlayerHotbar : NetworkBehaviour
         if (TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
             return;
 
+        // Heavy two-hand carry locks the hotbar — both hands are on the objective
+        // (GDD: carrier hotbar lock while carrying = true).
+        if (TryGetComponent<CarrySystem>(out var carry) && carry.IsCarryingHeavy)
+            return;
+
         UseSlotServerRpc(index, slots[index].itemId);
     }
 
@@ -168,7 +173,7 @@ public class PlayerHotbar : NetworkBehaviour
     {
         if (!IsOwner) return false;
         if (HasWristwatchOwned) return false;
-        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
+        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
         if (!IsNearOfficeComputer()) return false;
         if (CompanyData.Current.Funds < WristwatchCost) return false;
 
@@ -435,7 +440,7 @@ public class PlayerHotbar : NetworkBehaviour
     void PurchaseItemServerRpc(MvpHotbarItemId itemId)
     {
         EnsureSlots();
-        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return;
+        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return;
         if (!IsNearOfficeComputer()) return;
 
         int cost = GetItemCost(itemId);
@@ -458,7 +463,7 @@ public class PlayerHotbar : NetworkBehaviour
     void PurchaseWristwatchServerRpc()
     {
         if (HasWristwatch.Value) return;
-        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return;
+        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return;
         if (!IsNearOfficeComputer()) return;
         if (CompanyData.Current.Funds < WristwatchCost) return;
 
@@ -534,7 +539,7 @@ public class PlayerHotbar : NetworkBehaviour
 
     bool TryPurchaseLocal(MvpHotbarItemId itemId)
     {
-        if (LostItemMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
+        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
         if (!IsNearOfficeComputer()) return false;
 
         int cost = GetItemCost(itemId);

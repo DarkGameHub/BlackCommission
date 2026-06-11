@@ -1,7 +1,8 @@
 # Black Commission — Art Bible
 
 > **Status**: Complete — all 9 sections authored 2026-06-09.
-> **Source of truth for style decisions**: `docs/art/black-commission-style-lock-v1.md`
+> **Source of truth for style decisions**: `docs/art/black-commission-style-lock-v2.md` (低保真工业恐怖, 2026-06-10)
+> — fidelity clauses in this bible are AMENDED by style-lock v2 §6 (lo-fi low-poly, ≤256px textures).
 > **Art Director Sign-Off (AD-ART-BIBLE)**: Skipped — Lean mode (2026-06-09)
 >
 > **Note:** `docs/art/black-commission-style-lock-v1.md` partially superseded — warm tungsten amber is now the primary accent; CRT green is restricted to electronic screens only. Update style-lock-v1 to reflect this when convenient.

@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d1a7e60ef846d785533fd019ae4600, type: 3}
+  m_Name: TowerEarthCoast_01
+  m_EditorClassIdentifier:
+  taskId: tower_ecocolumn_01
+  title: "「真实海岸」生态柱回收"
+  client: "匿名委托人（火星中继）"
+  description: "地球海岸壹号烂尾预售楼内封存着一根密封活体生态柱。取回它，密封罩破损不予接收，每次跌落按完整度扣减。楼内断电，配电房在一层。注意：原项目监理仍在岗。"
+  locationName: "地球海岸壹号·烂尾预售楼"
+  sceneName: Tower_EarthCoast_01
+  recommendedPlayersMin: 1
+  recommendedPlayersMax: 4
+  requiredOfficeLevel: 1
+  minimumReputation: -100
+  missionStartClockHour: 8
+  contractWindowGameHours: 12
+  realSecondsPerGameHour: 60
+  overtimeMoneyPenaltyPerGameHour: 30
+  overtimeReputationPenaltyBlockGameHours: 2
+  overtimeReputationPenaltyPerBlock: 1
+  moneyReward: 300
+  reputationReward: 5
+  experienceReward: 80
+  failureConsolationMoney: 20
+  failureReputationPenalty: -2
+  failureExperience: 0

@@ -4,7 +4,7 @@ namespace BlackCommission.Level
 {
     /// <summary>
     /// Scene-side geometry for one connector in the tower graph. The connectivity graph
-    /// itself is authored in code (<see cref="TowerTopologyV3"/>) and resolved per seed by
+    /// itself is authored in code (<see cref="TowerPlanV8"/>) and resolved per seed by
     /// <see cref="TowerTopology"/>; this component just supplies the physical corridor/door
     /// and its rubble blocker, matched by <see cref="id"/>.
     ///
@@ -13,8 +13,8 @@ namespace BlackCommission.Level
     /// </summary>
     public class Connector : MonoBehaviour
     {
-        [Header("Identity (must match an edge id in TowerTopologyV3)")]
-        [Tooltip("Stable edge id, e.g. \"T4\" or \"E-LH\". Matched against the resolved open set.")]
+        [Header("Identity (must match an edge id in TowerPlanV8)")]
+        [Tooltip("Stable edge id = plan door id, e.g. \"T4\" or \"D33\". Matched against the resolved open set.")]
         public string id;
 
         [Header("Endpoints (authoring reference only)")]

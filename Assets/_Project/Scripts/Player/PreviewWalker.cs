@@ -34,6 +34,13 @@ public class PreviewWalker : MonoBehaviour
 
     void OnEnable()
     {
+        // Walkthrough rig only: in a hosted session the real networked players arrive
+        // via the HQ flow, so the preview rig removes itself.
+        if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsListening)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -75,5 +82,60 @@ public class PreviewWalker : MonoBehaviour
         vy += gravity * Time.deltaTime;
 
         cc.Move((dir * speed + Vector3.up * vy) * Time.deltaTime);
+
+        UpdateInteract(kb);
+    }
+
+    // ── preview-only interaction (E) ──
+    // Lets walkthroughs exercise interactables that have an offline fallback (e.g. the
+    // P-01 breaker's local-solo hold). Interactables that genuinely need a network
+    // session may reject the null player — that's expected; full tests run hosted.
+    IInteractable currentTarget;
+    bool interacting;
+
+    void UpdateInteract(Keyboard kb)
+    {
+        IInteractable target = null;
+        if (cam != null && Physics.Raycast(cam.position, cam.forward, out RaycastHit hit, 2.5f,
+                ~0, QueryTriggerInteraction.Collide))
+            target = hit.collider.GetComponentInParent<IInteractable>();
+
+        if (!ReferenceEquals(target, currentTarget))
+        {
+            EndInteract();
+            currentTarget = target;
+        }
+        if (currentTarget == null) return;
+
+        if (kb.eKey.wasPressedThisFrame && !interacting)
+        {
+            interacting = true;
+            try { currentTarget.OnInteractStart(null); }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[PreviewWalker] interactable needs a real player session: {e.Message}");
+                interacting = false;
+            }
+        }
+        if (kb.eKey.wasReleasedThisFrame) EndInteract();
+    }
+
+    void EndInteract()
+    {
+        if (interacting && currentTarget != null)
+        {
+            try { currentTarget.OnInteractEnd(null); }
+            catch { /* preview-only: a networked interactable may throw on null player */ }
+        }
+        interacting = false;
+    }
+
+    void OnGUI()
+    {
+        if (currentTarget == null) return;
+        string hint = currentTarget.InteractHint;
+        if (string.IsNullOrEmpty(hint)) return;
+        var style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontSize = 16 };
+        GUI.Label(new Rect(Screen.width * 0.5f - 200f, Screen.height * 0.62f, 400f, 28f), $"[E] {hint}", style);
     }
 }

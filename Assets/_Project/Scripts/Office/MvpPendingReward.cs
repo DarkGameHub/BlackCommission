@@ -1,10 +1,4 @@
-public enum MvpMissionResultKind
-{
-    Success,
-    Partial,
-    Failed
-}
-
+// MvpMissionResultKind lives in Office/Core/MvpMissionResultKind.cs (BlackCommission.Office.Core).
 public static class MvpPendingReward
 {
     public static bool HasPending { get; private set; }

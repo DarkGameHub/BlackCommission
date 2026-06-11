@@ -23,7 +23,10 @@ public static class VanCabin
     // VanTransitOverlay then AUTO-FITS it from its measured bounds (no guessed transform) so
     // it lands centred on the bay with its floor at the seat height. ModelEuler is the only
     // manual hint — set it if the mesh imports facing the wrong way (bounds can't infer facing).
-    public static bool UseModeledInterior = true;
+    // OFF since 2026-06-10: the ASV4 model predates style-lock v2 (lo-fi) and read as a
+    // different game than the tower (PM: UI/UX 前后不一致). The procedural cabin now uses
+    // the tower's V8 palette so the van speaks the map's material language.
+    public static bool UseModeledInterior = false;
     public const string InteriorResourcePath = "GeneratedArt/ASV4_VanTransitInterior";
     public static readonly Vector3 ModelEuler = Vector3.zero;
 

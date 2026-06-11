@@ -1,6 +1,10 @@
 # Black Commission Style Lock v1
 
-Status: locked direction for MVP and generated asset work
+> **DEPRECATED (2026-06-10)**: superseded by `black-commission-style-lock-v2.md`
+> (PM 回锁类 LC 低保真方向). Kept for history only. 另：v1 期间 art-bible 已将主点缀色
+> 修正为暖钨丝橙黄、CRT 绿限电子屏——该修正在 v2 中继续有效。
+
+Status: SUPERSEDED by v2
 Locked style name: **Semi-Realistic Industrial Horror**
 Working description: a semi-realistic industrial ghost-story look, between
 photorealistic and stylized.

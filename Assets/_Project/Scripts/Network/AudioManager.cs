@@ -1,8 +1,21 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
+
+    /// <summary>
+    /// The manager historically lived only in the HQ scene; playing the tower scene
+    /// directly (preview / tests) left the whole game silent. Self-bootstrap instead.
+    /// </summary>
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Bootstrap()
+    {
+        if (Instance != null) return;
+        var go = new GameObject("AudioManager (Auto)");
+        go.AddComponent<AudioManager>();
+    }
 
     [Header("Inspector Clips (optional overrides)")]
     [SerializeField] AudioClip[] robotDialogueClips;
@@ -16,7 +29,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] AudioClip[] phaseBroadcastClips;
 
     AudioSource sfxSource;
-    AudioSource ambientSource;
+    AudioSource ambientSource;   // scene ambience (room tone / wind)
+    AudioSource engineSource;    // van engine — separate so transit doesn't fight the scene bed
 
     // Synth-generated clips (lazy init)
     AudioClip synthFootstepA;
@@ -34,6 +48,13 @@ public class AudioManager : MonoBehaviour
     AudioClip synthFlashlightClick;
     AudioClip synthPlayerDowned;
     AudioClip synthPlayerRevived;
+    AudioClip synthBreakerCrackle;
+    AudioClip synthPowerRestore;
+    AudioClip synthShutterSlam;
+    AudioClip synthHeavyHoist;
+    AudioClip synthGlassThud;
+    AudioClip synthLeverClank;
+    AudioClip synthStampThunk;
 
     void Awake()
     {
@@ -53,12 +74,39 @@ public class AudioManager : MonoBehaviour
         ambientSource.spatialBlend = 0f;
         ambientSource.volume = 0.4f;
 
+        engineSource = gameObject.AddComponent<AudioSource>();
+        engineSource.loop = true;
+        engineSource.spatialBlend = 0f;
+        engineSource.volume = 0.25f;
+
         GenerateSynthClips();
+
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+        ApplySceneAmbient(SceneManager.GetActiveScene().name);
     }
 
     void OnDestroy()
     {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
         if (Instance == this) Instance = null;
+    }
+
+    // ─── Scene ambience auto-switch ───
+    // HQ = fluorescent office hum; the tower = wind through the raw plate. Engine
+    // idle lives on its own source, so transit overlaps the new scene's bed cleanly.
+
+    void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (mode == LoadSceneMode.Additive) return;
+        ApplySceneAmbient(scene.name);
+    }
+
+    void ApplySceneAmbient(string sceneName)
+    {
+        if (ambientSource == null) return;
+        if (sceneName == "HQ") PlayOfficeAmbient();
+        else if (sceneName.StartsWith("Tower")) PlayTowerAmbient();
+        else ambientSource.Stop();
     }
 
     void GenerateSynthClips()
@@ -78,6 +126,13 @@ public class AudioManager : MonoBehaviour
         synthFlashlightClick = SynthAudio.FlashlightClick("synth_flashlight_click");
         synthPlayerDowned = SynthAudio.Tone("synth_player_downed", 180f, 0.6f, 0.25f, SynthAudio.WaveShape.Saw);
         synthPlayerRevived = SynthAudio.Tone("synth_player_revived", 520f, 0.3f, 0.2f, SynthAudio.WaveShape.Sine);
+        synthBreakerCrackle = SynthAudio.BreakerCrackle("synth_breaker_crackle");
+        synthPowerRestore = SynthAudio.PowerRestore("synth_power_restore");
+        synthShutterSlam = SynthAudio.ShutterSlam("synth_shutter_slam");
+        synthHeavyHoist = SynthAudio.HeavyHoist("synth_heavy_hoist");
+        synthGlassThud = SynthAudio.GlassThud("synth_glass_thud");
+        synthLeverClank = SynthAudio.LeverClank("synth_lever_clank");
+        synthStampThunk = SynthAudio.StampThunk("synth_stamp_thunk");
     }
 
     // ─── Footsteps ───
@@ -109,18 +164,16 @@ public class AudioManager : MonoBehaviour
 
     public void PlayEngineIdle()
     {
-        if (ambientSource == null) return;
-        if (ambientSource.clip == synthEngineIdle && ambientSource.isPlaying) return;
-        ambientSource.clip = synthEngineIdle;
-        ambientSource.volume = 0.25f;
-        ambientSource.Play();
+        if (engineSource == null) return;
+        if (engineSource.clip == synthEngineIdle && engineSource.isPlaying) return;
+        engineSource.clip = synthEngineIdle;
+        engineSource.Play();
     }
 
     public void StopEngineIdle()
     {
-        if (ambientSource == null) return;
-        if (ambientSource.clip == synthEngineIdle)
-            ambientSource.Stop();
+        if (engineSource == null) return;
+        engineSource.Stop();
     }
 
     // ─── Doors ───
@@ -141,6 +194,50 @@ public class AudioManager : MonoBehaviour
     public void PlayFlashlightClick(Vector3 position)
     {
         AudioSource.PlayClipAtPoint(synthFlashlightClick, position, 0.4f);
+    }
+
+    // ─── Tower mission beats ───
+
+    /// <summary>Electrical fizz while the breaker hold is charging (call ~every 0.4s).</summary>
+    public void PlayBreakerCrackle(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(synthBreakerCrackle, position, 0.5f);
+    }
+
+    /// <summary>Relay thunk + hum swell at the breaker when power returns.</summary>
+    public void PlayPowerRestored(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(synthPowerRestore, position, 0.8f);
+    }
+
+    /// <summary>Sheet-metal slam at a debt shutter dropping open.</summary>
+    public void PlayShutterSlam(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(synthShutterSlam, position, 0.7f);
+    }
+
+    /// <summary>Hoisting a heavy carriable onto both hands.</summary>
+    public void PlayHeavyPickup(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(synthHeavyHoist, position, 0.6f);
+    }
+
+    /// <summary>Hard landing of a fragile heavy object (completeness damage moment).</summary>
+    public void PlayHeavyImpact(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(synthGlassThud, position, 0.85f);
+    }
+
+    /// <summary>The van depart lever latching.</summary>
+    public void PlayLever(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(synthLeverClank, position, 0.6f);
+    }
+
+    /// <summary>Stamp-on-paper: a settlement becoming official (UI, non-positional).</summary>
+    public void PlayStamp()
+    {
+        if (sfxSource != null) sfxSource.PlayOneShot(synthStampThunk, 0.7f);
     }
 
     // ─── Monster ───
@@ -183,7 +280,7 @@ public class AudioManager : MonoBehaviour
         ambientSource.Play();
     }
 
-    public void PlaySchoolAmbient()
+    public void PlayTowerAmbient()
     {
         if (ambientSource == null) return;
         ambientSource.clip = synthWindAmbient;

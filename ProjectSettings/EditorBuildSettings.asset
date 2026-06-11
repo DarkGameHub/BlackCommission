@@ -9,9 +9,6 @@ EditorBuildSettings:
     path: Assets/_Project/Scenes/HQ.unity
     guid: 3ae364412dfa4c147b932551de2c00ae
   - enabled: 1
-    path: Assets/_Project/Scenes/Snow_Lotus_01.unity
-    guid: 1d8fcabe45ac63949a5bb7a2b3d75d69
-  - enabled: 1
     path: Assets/_Project/Scenes/Tower_EarthCoast_01.unity
     guid: 7d628e2fe3b37b44bbced9f4e22dc0ef
   m_configObjects:

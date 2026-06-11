@@ -5,21 +5,26 @@ public static class BlackCommissionUiTheme
 {
     static readonly Dictionary<int, Texture2D> TextureCache = new();
 
-    public static readonly Color ConcreteBlack = new(0.020f, 0.024f, 0.022f, 0.94f);
-    public static readonly Color ConcretePanel = new(0.055f, 0.060f, 0.055f, 0.94f);
-    public static readonly Color ConcreteRaised = new(0.095f, 0.102f, 0.092f, 0.96f);
-    public static readonly Color MilitaryGreen = new(0.270f, 0.315f, 0.235f, 0.95f);
-    public static readonly Color MilitaryGreenDim = new(0.160f, 0.190f, 0.145f, 0.92f);
-    public static readonly Color MilitaryGreenDark = new(0.090f, 0.110f, 0.080f, 0.94f);
-    public static readonly Color OldWood = new(0.330f, 0.260f, 0.190f, 0.92f);
-    public static readonly Color OldPaper = new(0.720f, 0.675f, 0.555f, 1f);
-    public static readonly Color PaperDim = new(0.540f, 0.515f, 0.440f, 1f);
-    public static readonly Color Text = new(0.830f, 0.850f, 0.790f, 1f);
-    public static readonly Color MutedText = new(0.560f, 0.600f, 0.545f, 1f);
-    public static readonly Color CrtGreen = new(0.424f, 1.000f, 0.373f, 1f);
+    // Municipal Debt Noir tokens, matched 1:1 to the tower's V8 whitebox palette
+    // (TowerV8WhiteboxBuilder.EnsureMaterials + art-bible/style-lock v2) so every UI
+    // surface speaks the same language as the map. Field names are legacy — the
+    // "MilitaryGreen" slots now hold civic teal (#3F5F5C family), "RustWarning" holds
+    // stamp red (#C23A2B), "OldPaper" holds aged paper (#D6CCAE).
+    public static readonly Color ConcreteBlack = new(0.020f, 0.024f, 0.022f, 0.94f);   // dead rubber black
+    public static readonly Color ConcretePanel = new(0.058f, 0.062f, 0.060f, 0.94f);
+    public static readonly Color ConcreteRaised = new(0.098f, 0.104f, 0.100f, 0.96f);
+    public static readonly Color MilitaryGreen = new(0.247f, 0.373f, 0.361f, 0.95f);   // civic teal #3F5F5C
+    public static readonly Color MilitaryGreenDim = new(0.148f, 0.226f, 0.218f, 0.92f);
+    public static readonly Color MilitaryGreenDark = new(0.082f, 0.130f, 0.125f, 0.94f);
+    public static readonly Color OldWood = new(0.780f, 0.550f, 0.200f, 0.92f);          // sodium amber
+    public static readonly Color OldPaper = new(0.839f, 0.800f, 0.682f, 1f);            // aged paper #D6CCAE
+    public static readonly Color PaperDim = new(0.610f, 0.578f, 0.490f, 1f);
+    public static readonly Color Text = new(0.835f, 0.842f, 0.790f, 1f);
+    public static readonly Color MutedText = new(0.565f, 0.585f, 0.545f, 1f);
+    public static readonly Color CrtGreen = new(0.424f, 1.000f, 0.373f, 1f);            // screens/lamps ONLY
     public static readonly Color CrtGreenDim = new(0.260f, 0.560f, 0.250f, 1f);
-    public static readonly Color Rust = new(0.570f, 0.350f, 0.215f, 1f);
-    public static readonly Color RustWarning = new(0.720f, 0.420f, 0.260f, 1f);
+    public static readonly Color Rust = new(0.549f, 0.349f, 0.216f, 1f);                // rust steel #8C5937
+    public static readonly Color RustWarning = new(0.761f, 0.227f, 0.169f, 1f);         // stamp red #C23A2B
     public static readonly Color Shadow = new(0f, 0f, 0f, 0.62f);
 
     public static Texture2D MakeTex(Color color)

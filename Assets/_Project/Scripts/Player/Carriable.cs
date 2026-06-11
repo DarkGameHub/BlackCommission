@@ -36,6 +36,24 @@ public class Carriable : NetworkBehaviour
         carrierRef = carried ? new NetworkObjectReference(carrier) : default;
     }
 
+    /// <summary>Server-side: the player NetworkObject currently carrying this, or null.</summary>
+    public NetworkObject CurrentCarrier =>
+        IsBeingCarried.Value && carrierRef.TryGet(out NetworkObject carrier) ? carrier : null;
+
+    /// <summary>
+    /// Server-side: find the carriable held by this player, if any. Used to force-drop
+    /// when a carrier goes down mid-carry (GDD edge: 沙盘 drops in place, any teammate
+    /// can pick it up).
+    /// </summary>
+    public static Carriable FindCarriedBy(NetworkObject carrier)
+    {
+        if (carrier == null) return null;
+        foreach (Carriable candidate in FindObjectsByType<Carriable>(FindObjectsSortMode.None))
+            if (candidate.CurrentCarrier == carrier)
+                return candidate;
+        return null;
+    }
+
     public void AttachToHolder(Transform holdPoint)
     {
         rb.isKinematic = true;

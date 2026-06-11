@@ -86,12 +86,12 @@ namespace BlackCommission.Level
         /// <summary>
         /// Resolve the authoritative connectivity graph for this seed and toggle every scene
         /// <see cref="Connector"/> to match. The graph and validation live in code
-        /// (<see cref="TowerTopologyV3"/> / <see cref="TowerTopology"/>) so connectivity is
-        /// guaranteed; the scene only supplies geometry keyed by edge id.
+        /// (<see cref="TowerPlanV8"/> / <see cref="TowerTopology"/>) so connectivity is
+        /// guaranteed; the scene only supplies geometry keyed by edge id (= plan door id).
         /// </summary>
         void ApplyTopology(int seed)
         {
-            TopoGraph graph = TowerTopologyV3.BuildCanonical();
+            TopoGraph graph = TowerPlanV8.BuildCanonicalGraph();
             TopoResult result = TowerTopology.Resolve(graph, seed);
 
             if (result.UsedFallback)
@@ -99,7 +99,7 @@ namespace BlackCommission.Level
                                  $"(no seeded roll validated within the re-roll cap). Verdict: {result.Verdict}.");
             else if (!result.Ok)
                 Debug.LogError($"[TowerLayoutGenerator] Topology invalid even at fallback for seed {seed}: " +
-                               $"{result.Verdict}. Check TowerTopologyV3 backbone.");
+                               $"{result.Verdict}. Check the TowerPlanV8 backbone.");
 
             int open = 0, closed = 0, unmatched = 0;
 #if UNITY_2023_1_OR_NEWER

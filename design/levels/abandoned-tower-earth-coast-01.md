@@ -3,8 +3,27 @@
 > First designated-commission map after the school lost-item demo. Builds directly
 > on the existing `Assets/Scene/AbandonedBuilding_Blockout.unity` blockout — room
 > names below match that scene's GameObject names so this doc is buildable as-is.
-> Decisions locked 2026-06-06 (PM Yan Dai): objective = sales scale model;
-> floor-2 gate = restore power; objective carry = heavy two-hand carry.
+> Decisions locked 2026-06-06 (PM Yan Dai): floor-2 gate = restore power;
+> objective carry = heavy two-hand carry.
+>
+> **Decisions revised 2026-06-10 (PM Yan Dai):**
+> 1. **Objective = 「真实海岸」生态柱** (sealed live coastal-ecosystem display column,
+>    the show-flat's 2071 marketing centerpiece) — REPLACES the sales scale model
+>    as objective. The 沙盘 stays as non-pickable set dressing in the F2 sales
+>    office, hooked for a stage-4 black-commission return job ("回收沙盘").
+> 2. **F2 = show-flat island, not a full floor**: a sealed pristine island
+>    (~6–8 interior spaces) surrounded by open raw slab (毛坯开放板) with material
+>    stacks as cover. Honors the 烂尾 fiction; halves V7 authoring.
+> 3. **Atrium (中庭挑空) over F1 HALL**: the existing shaft is upgraded to one
+>    grand atrium directly above the central construction hall; the scaffold
+>    bridge is the ONLY crossing. From the F1 hub players look up and see the
+>    lit show-flat island — the navigation beacon moment moves to first entry.
+>
+> **v7 floor plans (slab-partition model, proposal):**
+> `Assets/_Project/Art/Maps/Tower_EarthCoast_01/References/Tower_EarthCoast_01_F{1,2}_Plan_v7_proposal.svg`
+> (generator: `tools/generate_tower_floorplans_v7.js`, validation built in).
+> These supersede the Overview Map below where they conflict; the v6 graph
+> remains valid as topology, only the geometric realization changed.
 
 ## Quick Reference
 
@@ -12,7 +31,7 @@
 - **Type**: Mixed — vertical exploration + extraction under chase
 - **Estimated Play Time**: 15–20 min (coordinating 1–4p group); ~10–12 min solo rush
 - **Difficulty**: 5/10 (vs school demo 3/10)
-- **Prerequisite**: Office computer accepts the "楼盘沙盘采回" commission; team boards dispatch van
+- **Prerequisite**: Office computer accepts the "「真实海岸」生态柱采回" commission; team boards dispatch van
 - **Status**: Graybox exists (blockout) → this doc drives the Layout→Graybox content pass
 
 ## Narrative Context
@@ -25,10 +44,20 @@
   lockdown zone. The whole tower is raw concrete, rebar, scaffold and tarps —
   **except one fully finished, pristine luxury show-flat floor**: a clean rich island
   rotting inside a concrete skeleton.
-- **The commission (satire core)**: A Mars client (a "Earth's Unbuilt Dream" themed
-  exhibition / private collector) pays well to retrieve the **sales scale model (楼盘沙盘)**
-  — a miniature of the Earth future that was never built. They want the *unfinished*
-  dream as a collectible: 烂尾 itself is the luxury.
+- **The commission (satire core)**: A Mars client (Ares dome exhibition hall /
+  private collector) pays well to retrieve the **「真实海岸」生态柱** — the show-flat's
+  sealed live coastal-ecosystem display column, the 2071 marketing prop that made
+  the slogan "拥有真正的地球海岸" literal. Sealed for 27 years, its algae and
+  intertidal life have mutated (faint bioluminescence) but survive. Real, alive,
+  un-synthesizable — exactly what Mars buys. The thing once sold to Earth's rich
+  as "owning the real coast" gets crated whole and shipped to Mars as decor.
+  Contract lines (cold register): 密封罩破损不予接收 / 每次跌落按完整度扣减 /
+  内容物病变属预期,轻微荧光可接受 / 搬运人员坠落、感染不影响交付标准 /
+  不接受火星人工生态替代品。
+- **沙盘 (set dressing + future hook)**: the sales scale model remains on display
+  in the F2 sales office, non-pickable. Stage-4 black-commission hook: a return
+  job to this tower ("回收沙盘" — collecting the unbuilt dream itself) lands the
+  conceptual irony once the player understands the world.
 - **Emotional target**: curiosity → unease. "This place was sold to people who left,
   and now their descendants want the leftovers."
 - **Lore discoveries**: A 临时隔离公告 dated *before* the official infection
@@ -37,11 +66,11 @@
 ### Settlement Text (satire payoff — draft)
 
 ```text
-楼盘沙盘完整度：91%        项目状态：2071 年停工
+生态柱密封完整度：91%      内容物存活：确认
 车厢防尘：通过             结构粉尘清洁费：扣款
 轨道检疫费：扣款           人员坠落/感染补贴：无
-客户用途：火星「地球未竟之梦」主题展 · 私人收藏
-客户评价：未完成的样子最真实，比建成更值得收藏。
+客户用途：阿瑞斯穹顶展厅「真实海岸」生态陈列
+客户评价：藻类的病变色泽比宣传册更有说服力。
 ```
 
 ## Layout
@@ -66,7 +95,7 @@ The level uses the project's three spatial rules:
 
 ```
 FLOOR 2 (Show-flat / Sales floor — HIGH RISK)
-  [F2_L5_DeepTargetArea] (R!B)  <-- 沙盘 objective + monster nest
+  [F2_L5_DeepTargetArea] (R!B)  <-- 生态柱 objective + monster nest
         |  (LeftLowerConnector)
   [F2_L4_SampleOffice_HalfFinished] (!)   [F2_S5_DangerousShaftRoom] (?R)
         |                                        |
@@ -106,10 +135,10 @@ Legend: S=start E=exit C=combat/chase P=puzzle/gate R=loot !=story beat ?=option
 5. **F2_M4_SalesOffice_RichLoot → F2_M5_ScaffoldBridge → F2_L4_SampleOffice →
    F2_L5_DeepTargetArea** — the signature traversal: cross the exposed scaffold
    bridge (fall risk) into the pristine show-flat, then the deep target room.
-6. **Grab the 沙盘 (objective, step 2 / pressure trigger)** — heavy two-hand carry.
+6. **Grab the 生态柱 (objective, step 2 / pressure trigger)** — heavy two-hand carry.
    Pickup wakes/aggros the **infected site inspector** (monster nest in F2_L5).
 7. **Descend under pressure** — F2_MainReturnCorridor → stairs down → Floor 1.
-8. **[E] Return to F1_S1 van** — full return with 沙盘 = full settlement; early
+8. **[E] Return to F1_S1 van** — full return with 生态柱 = full settlement; early
    return without it (drop/leave) = partial settlement; all downed = failure.
 
 ### Optional Paths
@@ -129,7 +158,7 @@ Legend: S=start E=exit C=combat/chase P=puzzle/gate R=loot !=story beat ?=option
 | F1_S3_PowerRoom | Gate | Restore power, hold-interaction | 2-step objective gate; paces the run |
 | F2_M4_SalesOffice_RichLoot | Wrong detail | Pristine materials (clean surfaces, intact furniture) vs concrete shell — wrongness from condition, not color | Map's memorable detail + loot |
 | F2_M5_ScaffoldBridge | Traversal risk | Exposed scaffold crossing | Signature vertical tension |
-| F2_L5_DeepTargetArea | Objective + nest | 沙盘 on a pedestal; monster nest | Climax / pressure trigger |
+| F2_L5_DeepTargetArea | Objective + nest | 生态柱 on a lit display base (bioluminescent glow); monster nest | Climax / pressure trigger |
 
 ## Encounters
 
@@ -138,7 +167,7 @@ Legend: S=start E=exit C=combat/chase P=puzzle/gate R=loot !=story beat ?=option
 | ID | Position | Threat | Difficulty | Arena Notes |
 |----|----------|--------|-----------|-------------|
 | E-01 | F2 (patrol M4↔L4↔L5) | 1× Infected Site Inspector (reskinned `SchoolMonsterAI`) | 5/10 | Dormant/patrolling until objective grabbed; then hunts |
-| E-02 | F2_M5_ScaffoldBridge | Environmental: fall/gap (no rail) | — | Carrier with 沙盘 is slow → tense crossing |
+| E-02 | F2_M5_ScaffoldBridge | Environmental: fall/gap (no rail) | — | Carrier with 生态柱 is slow → tense crossing |
 
 **Monster — Infected Site Inspector (感染监理/安全员)**: hard hat + hi-vis vest +
 acceptance clipboard, long limbs, glowing warning-light eyes. "Still doing inspection
@@ -168,7 +197,7 @@ Intensity
 
 - **Valley**: lobby + ground exploration (learn layout, gather, find power). No monster yet.
 - **First rise**: ascending — monster patrol audible/visible, scaffold crossing.
-- **Climax**: grab 沙盘 → monster active → heavy carry descent. Peak tension at scaffold/stairs.
+- **Climax**: grab 生态柱 → monster active → heavy carry descent. Peak tension at scaffold/stairs.
 - **Rest/decision**: at the van — full vs partial vs push-back-in.
 
 ## Visual Direction
@@ -198,7 +227,7 @@ layer imposed on the tower's own institutional signage.
 
 | Location | BC Marker | Description |
 |----------|-----------|-------------|
-| F1_S1_StartVanArea (van) | Route arrow + job number | "COMMISSION BC-12 / 外包施工场地 → 目标：沙盘" stenciled on the fence |
+| F1_S1_StartVanArea (van) | Route arrow + job number | "COMMISSION BC-12 / 外包施工场地 → 目标：生态柱" stenciled on the fence |
 | F1_M1_LobbySecurityPassage | BC-12 form pinned to reception | Commission intake form with job reference and "委托人：火星私人收藏者" |
 | F2 security shutter (post-power) | "欠款通道 / DEBT ACCESS ONLY" | Signage applied to the shutter frame — the commission office's access authorization |
 | F1_S3_PowerRoom entrance | BC-12 equipment tag | Tagged breaker panel: "危险作业 / 外包事故组 BC-12 / 断路器" |
@@ -211,7 +240,8 @@ Institutional host text (sales banners, warning signs) uses the tower's own voic
 
 | Item | Location | Visibility | Hint | Required For |
 |------|----------|-----------|------|-------------|
-| 楼盘沙盘 (objective) | F2_L5_DeepTargetArea | High (lit pedestal) | Lit show-flat beacon | Full settlement |
+| 「真实海岸」生态柱 (objective) | F2_L5_DeepTargetArea | High (lit base + bioluminescence) | Lit show-flat beacon | Full settlement |
+| 楼盘沙盘 (set dressing, non-pickable) | F2 sales office | Medium | Sales-desk warm lamp | — (stage-4 hook) |
 | 临时隔离公告 (evidence) | F1_M3_MainWorkerDorm | Medium | Pinned to dorm board | Bonus payout |
 | Consumables | F1_L2 / F2_S4 | Medium | Open shelves | Survival |
 
@@ -220,21 +250,22 @@ Institutional host text (sales banners, warning signs) uses the tower's own voic
 | Knob | Default | Notes |
 |------|---------|-------|
 | Power-gate hold time | 3.0 s | Long enough to feel like a beat, not a chore |
-| 沙盘 carry move-speed multiplier | 0.55× | Heavy; carrier vulnerable, others must protect |
+| 生态柱 carry move-speed multiplier | 0.55× | Heavy; carrier vulnerable, others must protect |
 | Carrier hotbar lock while carrying | true | Can't use items while two-hand carrying |
-| 沙盘 can be dropped/handed off | true | Co-op relay; drop near van = partial; re-grab allowed |
+| 生态柱 can be dropped/handed off | true | Co-op relay; drop near van = partial; re-grab allowed |
+| 生态柱 completeness penalty per drop | -(small)% | Maps the contract's 跌落扣减 line; tune in playtest |
 | Monster aggro trigger | on objective pickup | Dormant patrol before; hunts after |
 | Monster speed vs carrier | slightly > carrier carry speed | Forces escorts/distraction, not impossible solo |
 | Evidence photo bonus | +(small) 外快 | Mirror school ledger value |
-| Partial settlement (evidence only, no 沙盘) | partial % | Reuse early-return partial path |
+| Partial settlement (evidence only, no 生态柱) | partial % | Reuse early-return partial path |
 
 ## Edge Cases
 
-- **Carrier downed mid-carry**: 沙盘 drops in place; any teammate can pick it up.
-- **沙盘 dropped off the scaffold/shaft**: define a recovery rule (respawn at last
+- **Carrier downed mid-carry**: 生态柱 drops in place; any teammate can pick it up.
+- **生态柱 dropped off the scaffold/atrium**: define a recovery rule (respawn at last
   safe floor vs. lost → forces partial). Recommend: lands on floor below, recoverable.
 - **Power restored, then host migration/late joiner**: gate state must be server-authoritative.
-- **Early return with 沙盘 not yet grabbed**: partial settlement (existing path).
+- **Early return with 生态柱 not yet grabbed**: partial settlement (existing path).
 - **Solo player**: heavy carry + chase must be *survivable* solo (use decoy/spray);
   tune monster speed so a careful solo can extract.
 
@@ -263,11 +294,11 @@ Institutional host text (sales banners, warning signs) uses the tower's own voic
 
 1. Team boards van, arrives at tower; lobby clearly signals F2 is powered-down.
 2. Restoring power in F1_S3 (server-authoritative) audibly/visibly unlocks F2 for all clients.
-3. 沙盘 in F2_L5 can be grabbed only by an alive player at range; pickup syncs to all
+3. 生态柱 in F2_L5 can be grabbed only by an alive player at range; pickup syncs to all
    and aggros the monster.
-4. Carrying 沙盘 slows the carrier and locks their hotbar; it can be dropped/handed off;
+4. Carrying 生态柱 slows the carrier and locks their hotbar; it can be dropped/handed off;
    carrier identity is server-validated (a client cannot remotely "finish").
-5. Full return with 沙盘 to the van = full settlement; early return without it = partial;
+5. Full return with 生态柱 to the van = full settlement; early return without it = partial;
    all-downed = failure — all three reuse existing settlement paths.
 6. Optional dorm evidence grants a bonus, mirroring the school ledger.
 7. Target play time 15–20 min for a first-time 2–4p group (measure in playtest).
@@ -284,6 +315,6 @@ Institutional host text (sales banners, warning signs) uses the tower's own voic
   office computer commission, HUD objective + carry indicator.
 - **Performance**: two-floor sightline down the shaft — watch overdraw; the lit show-flat
   is the only warm-lit zone, keep dynamic lights bounded.
-- **Next steps**: `/design-review` this doc → (optional) `/asset-spec` for 沙盘 + inspector
+- **Next steps**: `/design-review` this doc → (optional) `/asset-spec` for 生态柱 + inspector
   monster → `/create-stories` for the 2 new mechanics → `/qa-plan` for the sync tests.
 ```

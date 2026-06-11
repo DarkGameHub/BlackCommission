@@ -6,7 +6,7 @@ public class MvpHud : MonoBehaviour
 {
     const float OfficeComputerShopDistance = 3.4f;
     static OfficeComputer activeComputer;
-    static SchoolExitPoint activeMissionVan;
+    static MissionVanExitPoint activeMissionVan;
     static OfficeCabinetStorage activeCabinet;
     static OfficeMonsterBestiary activeBestiary;
     public static bool IsComputerOpen => activeComputer != null;
@@ -68,7 +68,7 @@ public class MvpHud : MonoBehaviour
     Vector2 bestiaryScrollPosition;
     string cabinetMessage;
     float cabinetMessageUntil;
-    static SchoolExitPoint partialReturnConfirmVan;
+    static MissionVanExitPoint partialReturnConfirmVan;
     static float partialReturnConfirmUntil;
 
     static int LanguageIndex
@@ -110,7 +110,7 @@ public class MvpHud : MonoBehaviour
         AudioListener.volume = MasterVolume;
         ProximityVoiceChat.EnsureInstance();
         SettingsOverlay.EnsureInstance();
-        if (LostItemMissionManager.Instance != null)
+        if (TowerMissionManager.Instance != null)
             RestoreGameplayCursor();
     }
 
@@ -166,7 +166,7 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        if (LostItemMissionManager.Instance != null) return;
+        if (TowerMissionManager.Instance != null) return;
     }
 
     void TryBuy(PlayerHotbar hotbar, MvpHotbarItemId itemId)
@@ -235,7 +235,7 @@ public class MvpHud : MonoBehaviour
         EnsureStyles();
         BlackCommissionUiTheme.ApplyButtonSkin(buttonStyle);
 
-        if (LostItemMissionManager.Instance != null)
+        if (TowerMissionManager.Instance != null)
         {
             DrawMissionPanel();
             if (activeMissionVan != null)
@@ -300,7 +300,9 @@ public class MvpHud : MonoBehaviour
         }
 
         bool hasTarget = cachedLocalInteraction != null && cachedLocalInteraction.CurrentTarget != null;
-        Color dotColor = hasTarget ? new Color(0.424f, 1.000f, 0.373f, 0.92f) : new Color(0.72f, 0.74f, 0.68f, 0.55f);
+        // Interact dot warms to sodium amber on a target — the map's "warm point in
+        // cold space" signal — instead of screen-only CRT green.
+        Color dotColor = hasTarget ? new Color(0.780f, 0.550f, 0.200f, 0.95f) : new Color(0.72f, 0.74f, 0.68f, 0.55f);
         float size = hasTarget ? 6f : 4f;
 
         Texture2D dot = hpBarBg ?? MakeTexture(Color.white);
@@ -880,26 +882,32 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndArea();
     }
 
+
+
     void DrawMissionPanel()
     {
-        LostItemMissionManager mission = LostItemMissionManager.Instance;
+        TowerMissionManager mission = TowerMissionManager.Instance;
         GUILayout.BeginArea(new Rect(18, 18, panelWidth, 230), GUIContent.none, panelStyle);
-        DrawFieldClockLine(mission);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
-        GUILayout.Label(GetCarrierText(mission), mission.LostItemCollected.Value ? accentStyle : mutedStyle);
-        string bonusText = GetBonusEvidenceText(mission);
-        if (!string.IsNullOrEmpty(bonusText))
-            GUILayout.Label(bonusText, accentStyle);
-
-        string monsterText = GetMonsterStatus();
-        if (!string.IsNullOrEmpty(monsterText))
-            GUILayout.Label(monsterText, monsterText.Contains("追击") ? warningStyle : mutedStyle);
+        float completeness = mission.SyncedCompleteness.Value;
+        GUILayout.Label($"密封完整度: {completeness:P0}", completeness < 0.5f ? warningStyle : mutedStyle);
         if (!string.IsNullOrEmpty(missionMessage) && Time.time < missionMessageUntil)
             GUILayout.Label(missionMessage, missionMessage.Contains("警告") ? warningStyle : accentStyle);
-
         DrawSpectatorHint();
-
         GUILayout.EndArea();
+    }
+
+    static string GetMissionObjective(TowerMissionManager mission)
+    {
+        switch ((TowerMissionState)mission.SyncedState.Value)
+        {
+            case TowerMissionState.InProgress: return "目标: 恢复供电，找到「真实海岸」生态柱。";
+            case TowerMissionState.ObjectiveSecured: return "目标: 把生态柱送回货舱并拉杆发车——轻拿轻放。";
+            case TowerMissionState.Delivered: return "目标: 已交付，即将返回事务所结算。";
+            case TowerMissionState.PartialReturn: return "目标: 部分结算，即将返回事务所。";
+            case TowerMissionState.Failed: return "目标: 委托失败，返回事务所复盘。";
+            default: return "目标: 等待任务状态。";
+        }
     }
 
     void DrawSpectatorHint()
@@ -934,7 +942,7 @@ public class MvpHud : MonoBehaviour
 
     void DrawMissionVanPanel()
     {
-        SchoolExitPoint van = activeMissionVan;
+        MissionVanExitPoint van = activeMissionVan;
         if (van == null) return;
 
         float width = Mathf.Clamp(Screen.width - 36f, 320f, 560f);
@@ -954,7 +962,7 @@ public class MvpHud : MonoBehaviour
 
         DrawTerminalSection("返程决策 / RETURN");
         GUILayout.Label(van.GetReturnSummary(), accentStyle);
-        DrawVehicleClockBlock(LostItemMissionManager.Instance);
+
         GUILayout.Label(MvpLocale.T("van_decide_hint"), mutedStyle);
         GUILayout.Space(10);
 
@@ -966,7 +974,7 @@ public class MvpHud : MonoBehaviour
 
         DrawTerminalSection(MvpLocale.T("van_locker") + " / LOCKER");
         PlayerHotbar localHotbar = FindLocalHotbar();
-        for (int i = 0; i < SchoolExitPoint.LockerSlotCount; i++)
+        for (int i = 0; i < MissionVanExitPoint.LockerSlotCount; i++)
         {
             GUILayout.BeginHorizontal(slotStyle);
             MvpHotbarItemId itemId = van.GetLockerItemId(i);
@@ -997,7 +1005,7 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndArea();
     }
 
-    bool DrawMissionVanReturnControls(SchoolExitPoint van)
+    bool DrawMissionVanReturnControls(MissionVanExitPoint van)
     {
         bool canReturn = van.CanLocalPlayerRequestReturn();
         GUI.enabled = canReturn;
@@ -1024,53 +1032,11 @@ public class MvpHud : MonoBehaviour
         return false;
     }
 
-    void DrawFieldClockLine(LostItemMissionManager mission)
-    {
-        if (mission == null) return;
 
-        if (HasLocalWristwatch())
-        {
-            GUILayout.Label(
-                $"工时表: {mission.CurrentClockLabel}    合同截止: {mission.DeadlineClockLabel}",
-                mission.IsOvertime ? warningStyle : labelStyle);
-            DrawOvertimeLine(mission);
-            return;
-        }
 
-        GUILayout.Label($"天光判断: {MvpMissionClock.GetDaylightLabel(mission.CurrentClockHour)}", labelStyle);
-        GUILayout.Label("准确时间: 回委托车看车载钟，或在事务所购买廉价工时表。", mutedStyle);
-        if (mission.IsOvertime)
-            GUILayout.Label("你感觉已经拖过合同窗口了，返程结算会被扣。", warningStyle);
-    }
 
-    void DrawVehicleClockBlock(LostItemMissionManager mission)
-    {
-        if (mission == null) return;
 
-        GUILayout.BeginVertical(slotStyle);
-        GUILayout.Label(
-            $"车载时钟: {mission.CurrentClockLabel}    标准下班: {mission.DeadlineClockLabel}",
-            mission.IsOvertime ? warningStyle : labelStyle);
-        if (mission.IsOvertime)
-        {
-            DrawOvertimeLine(mission);
-        }
-        else
-        {
-            GUILayout.Label($"剩余窗口: {MvpMissionClock.FormatGameHours(mission.RemainingGameHours)}", accentStyle);
-        }
-        GUILayout.EndVertical();
-        GUILayout.Space(8);
-    }
 
-    void DrawOvertimeLine(LostItemMissionManager mission)
-    {
-        if (mission == null || !mission.IsOvertime) return;
-
-        GUILayout.Label(
-            $"超时: {MvpMissionClock.FormatGameHours(mission.OvertimeGameHours)}    预计扣款 -{mission.OvertimeMoneyPenalty}G / 声望 -{mission.OvertimeReputationPenalty}",
-            warningStyle);
-    }
 
     bool HasLocalWristwatch()
     {
@@ -1147,7 +1113,7 @@ public class MvpHud : MonoBehaviour
         if (maxStamina <= 0f) return;
 
         float normalized = Mathf.Clamp01(stamina / maxStamina);
-        bool inMission = LostItemMissionManager.Instance != null;
+        bool inMission = TowerMissionManager.Instance != null;
         if (!inMission && normalized >= 0.999f && !localPlayer.IsSprinting && !localPlayer.IsExhausted)
             return;
 
@@ -1204,9 +1170,11 @@ public class MvpHud : MonoBehaviour
         float normalized = fl.BatteryNormalized;
         float barW = slotRect.width - 8f;
         float barY = slotRect.y + slotRect.height - 8f;
+        // Battery reads in lamp colors: sodium amber when healthy, stamp red when dying
+        // (CRT green stays on actual screens per the art bible).
         Color barColor = normalized > 0.4f
-            ? new Color(0.424f, 1.000f, 0.373f, 0.9f)
-            : new Color(0.720f, 0.420f, 0.260f, 0.9f);
+            ? new Color(BlackCommissionUiTheme.OldWood.r, BlackCommissionUiTheme.OldWood.g, BlackCommissionUiTheme.OldWood.b, 0.95f)
+            : new Color(BlackCommissionUiTheme.RustWarning.r, BlackCommissionUiTheme.RustWarning.g, BlackCommissionUiTheme.RustWarning.b, 0.95f);
 
         GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW, 4), hpBarBg);
         GUI.DrawTexture(new Rect(slotRect.x + 4, barY, barW * normalized, 4), MakeTexture(barColor));
@@ -1218,64 +1186,13 @@ public class MvpHud : MonoBehaviour
         GUI.Label(new Rect(18, Screen.height - 30, 720, 24), text, mutedStyle);
     }
 
-    static string GetMissionObjective(LostItemMissionManager mission)
-    {
-        string paperworkRisk = mission.WrongHomeworkAttempts.Value > 0
-            ? $" 已翻错 {mission.WrongHomeworkAttempts.Value}/3 本，预计扣 {mission.WrongHomeworkMoneyPenalty}G。"
-            : "";
 
-        switch (mission.CurrentPhase.Value)
-        {
-            case LostItemMissionManager.MissionPhase.Searching:
-                return "目标: 找到委托目标物，并带回委托车。" + paperworkRisk;
-            case LostItemMissionManager.MissionPhase.ReturnToExit:
-                return "目标: 带着目标物回到委托车，按 E 上车返程。" + paperworkRisk;
-            case LostItemMissionManager.MissionPhase.Completed:
-                return "目标: 委托完成，返回事务所领取奖励。";
-            case LostItemMissionManager.MissionPhase.ReturnedEarly:
-                return "目标: 已提前返程，回事务所做部分结算。";
-            case LostItemMissionManager.MissionPhase.Failed:
-                return "目标: 委托失败，返回事务所复盘。";
-            default:
-                return "目标: 等待任务状态。";
-        }
-    }
 
-    static string GetCarrierText(LostItemMissionManager mission)
-    {
-        if (!mission.LostItemCollected.Value) return "目标物: 尚未找回";
-        ulong localId = NetworkManager.Singleton != null ? NetworkManager.Singleton.LocalClientId : 0;
-        return mission.CarrierClientId.Value == localId
-            ? "目标物: 你拿到了，快回委托车。"
-            : $"目标物: 队友 {mission.CarrierClientId.Value} 拿到了。";
-    }
 
-    static string GetBonusEvidenceText(LostItemMissionManager mission)
-    {
-        // Bonus evidence is an optional, mission-specific objective (e.g. the homework job's
-        // logbook photo). Only surface a line once it's actually been collected, so missions
-        // without any bonus evidence (like the lake dive) don't show a misleading hint.
-        if (mission.BonusEvidenceCollected.Value)
-            return "附加证据: 已获取，结算更有利。";
 
-        return "";
-    }
 
-    static string GetMonsterStatus()
-    {
-        SchoolMonsterAI[] monsters = FindObjectsByType<SchoolMonsterAI>(FindObjectsSortMode.None);
-        if (monsters.Length == 0) return "";   // missions without monsters (e.g. lake dive) show no danger line
-        bool anyStunned = false;
-        foreach (var monster in monsters)
-        {
-            if (monster == null) continue;
-            if (monster.IsChasing) return "危险: 怪物正在追击。";
-            anyStunned |= monster.IsStunned;
-            if (monster.IsDistracted) return "危险: 怪物被诱饵短暂吸引。";
-        }
 
-        return anyStunned ? "危险: 怪物被短暂控制。" : "危险: 保持安静，别靠太近。";
-    }
+
 
     static PlayerHotbar FindLocalHotbar()
     {
@@ -1314,7 +1231,7 @@ public class MvpHud : MonoBehaviour
         AudioManager.Instance?.PlayComputerOpen(computer.transform.position);
     }
 
-    public static void OpenMissionVan(SchoolExitPoint van)
+    public static void OpenMissionVan(MissionVanExitPoint van)
     {
         activeComputer = null;
         activeCabinet = null;
@@ -1411,7 +1328,7 @@ public class MvpHud : MonoBehaviour
         missionMessageUntil = Time.time + 3f;
     }
 
-    bool IsPartialReturnConfirmed(SchoolExitPoint van)
+    bool IsPartialReturnConfirmed(MissionVanExitPoint van)
     {
         return partialReturnConfirmVan == van && Time.unscaledTime <= partialReturnConfirmUntil;
     }

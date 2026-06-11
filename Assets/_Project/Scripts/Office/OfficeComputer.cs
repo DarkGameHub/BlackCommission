@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class OfficeComputer : NetworkBehaviour, IInteractable
 {
     const float OfficeGroundStorageUseDistance = 5.2f;
-    const string DefaultTaskResourcePath = "Tasks/SnowLotus_01";
+    const string DefaultTaskResourcePath = "Tasks/TowerEarthCoast_01";
 
     [SerializeField] OfficeTaskDefinition demoTask;
     [SerializeField] string returnOfficeScene = "HQ";
@@ -25,13 +25,13 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     public OfficeTaskDefinition DemoTask => ResolveDemoTask();
     public bool HasSelectedDemoTask => ResolveDemoTask() != null && MvpMissionRuntime.SelectedTask == ResolveDemoTask();
-    public string DemoTaskTitle => demoTask != null ? demoTask.title : "被遗忘的作业本";
-    public string DemoTaskClient => demoTask != null ? demoTask.client : "家长";
-    public string DemoTaskDescription => demoTask != null ? demoTask.description : "去学校找回被遗忘的作业本，然后安全撤离。";
-    public string DemoTaskLocation => demoTask != null ? demoTask.locationName : "学校";
-    public int DemoTaskMoneyReward => demoTask != null ? demoTask.moneyReward : 0;
-    public int DemoTaskReputationReward => demoTask != null ? demoTask.reputationReward : 0;
-    public int DemoTaskExperienceReward => demoTask != null ? demoTask.experienceReward : 0;
+    public string DemoTaskTitle => ResolveDemoTask()?.title ?? "暂无可用委托";
+    public string DemoTaskClient => ResolveDemoTask()?.client ?? "未知客户";
+    public string DemoTaskDescription => ResolveDemoTask()?.description ?? "当前没有可接受的委托。";
+    public string DemoTaskLocation => ResolveDemoTask()?.locationName ?? "未知地点";
+    public int DemoTaskMoneyReward => ResolveDemoTask()?.moneyReward ?? 0;
+    public int DemoTaskReputationReward => ResolveDemoTask()?.reputationReward ?? 0;
+    public int DemoTaskExperienceReward => ResolveDemoTask()?.experienceReward ?? 0;
 
     OfficeTaskDefinition ResolveDemoTask()
     {

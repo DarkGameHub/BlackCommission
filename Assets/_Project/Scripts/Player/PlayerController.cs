@@ -461,7 +461,7 @@ public class PlayerController : NetworkBehaviour
         }
 
         bool hasMoveInput = moveInput.sqrMagnitude > 0.01f;
-        bool emergencySprint = SchoolMonsterAI.IsEmergencySprintAllowed(transform.position);
+        bool emergencySprint = false; // school emergency-sprint rule retired with the school monster
 
         if (crouchHeld != isCrouching)
             SetCrouch(crouchHeld);
@@ -576,7 +576,7 @@ public class PlayerController : NetworkBehaviour
 
     void HandleStamina()
     {
-        bool emergencySprint = SchoolMonsterAI.IsEmergencySprintAllowed(transform.position);
+        bool emergencySprint = false; // school emergency-sprint rule retired with the school monster
         if (isSprinting && !emergencySprint)
         {
             Stamina = Mathf.Max(0, Stamina - staminaDrainRate * Time.deltaTime);

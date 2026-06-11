@@ -16,7 +16,7 @@ namespace BlackCommission.Level
 
     /// <summary>
     /// One connector in the tower graph. Immutable. The graph is defined in code
-    /// (<see cref="TowerTopologyV3"/>) so it is the single, testable source of truth;
+    /// (<see cref="TowerPlanV8"/>) so it is the single, testable source of truth;
     /// the scene only supplies the matching geometry keyed by <see cref="Id"/>.
     /// </summary>
     public readonly struct Edge
@@ -82,7 +82,7 @@ namespace BlackCommission.Level
     /// <summary>
     /// Pure, engine-free description of a tower's connectivity: nodes (with floor),
     /// edges (connectors), and the role tags the invariants check against. Built in code
-    /// by <see cref="TowerTopologyV3"/>; consumed by <see cref="TowerTopology"/>.
+    /// by <see cref="TowerPlanV8"/>; consumed by <see cref="TowerTopology"/>.
     /// </summary>
     public sealed class TopoGraph
     {

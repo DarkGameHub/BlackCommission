@@ -26,6 +26,12 @@ public class CarrySystem : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        // Server watches for the carrier going down: a downed carrier drops the object in
+        // place so any teammate can pick it up (heavy two-hand carry rule). The owner
+        // can't do this client-side — IsGameplayBlocked() rightly blocks downed input.
+        if (IsServer && TryGetComponent<PlayerHealth>(out var health))
+            health.IsDowned.OnValueChanged += HandleDownedChangedServer;
+
         if (!IsOwner) return;
         inputActions = new PlayerInputActions();
         inputActions.Enable();
@@ -37,7 +43,20 @@ public class CarrySystem : NetworkBehaviour
 
     public override void OnNetworkDespawn()
     {
+        if (IsServer && TryGetComponent<PlayerHealth>(out var health))
+            health.IsDowned.OnValueChanged -= HandleDownedChangedServer;
         CleanupInputActions();
+    }
+
+    void HandleDownedChangedServer(bool wasDowned, bool isDowned)
+    {
+        if (!isDowned || !IsServer) return;
+
+        Carriable carried = Carriable.FindCarriedBy(NetworkObject);
+        if (carried == null) return;
+
+        carried.SetCarried(NetworkObject, false);
+        DropClientRpc(carried.NetworkObject);
     }
 
     public override void OnDestroy()
@@ -53,6 +72,19 @@ public class CarrySystem : NetworkBehaviour
         inputActions.Disable();
         inputActions.Dispose();
         inputActions = null;
+    }
+
+    /// <summary>
+    /// Interact-key (E) path: an IInteractable carriable (e.g. the eco column) forwards
+    /// itself here so pickup speaks the same language as every other interaction.
+    /// Owner-only, same gating as the F-key raycast path.
+    /// </summary>
+    public void TryPickUp(Carriable carriable)
+    {
+        if (IsGameplayBlocked()) return;
+        if (carriedObject != null) return;
+        if (carriable == null || !carriable.CanBeCarried) return;
+        PickUpServerRpc(carriable.NetworkObject);
     }
 
     void TryPickUp()
@@ -89,7 +121,14 @@ public class CarrySystem : NetworkBehaviour
         carriedObject.AttachToHolder(holdPoint);
 
         if (carriedObject.IsHeavy)
+        {
             playerController.SpeedMultiplier *= heavySpeedPenalty;
+            AudioManager.Instance?.PlayHeavyPickup(netObj.transform.position);
+        }
+        else
+        {
+            AudioManager.Instance?.PlayPickup(netObj.transform.position);
+        }
 
         if (playerController != null && playerController.IsOwner)
             playerController.IsCarrying.Value = true;
@@ -135,5 +174,9 @@ public class CarrySystem : NetworkBehaviour
     }
 
     public bool IsCarrying => carriedObject != null;
+
+    /// <summary>Two-hand carry: while true the carrier's hotbar is locked (GDD tuning knob).</summary>
+    public bool IsCarryingHeavy => carriedObject != null && carriedObject.IsHeavy;
+
     public Carriable CarriedItem => carriedObject;
 }

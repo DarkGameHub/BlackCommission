@@ -59,8 +59,11 @@ See `docs/COLLABORATIVE-DESIGN-PRINCIPLE.md` for the full protocol.
 
 - The playable HQ is runtime-generated in `MvpSceneStyleDirector`; Blender assets
   are supporting/imported unless the runtime flow uses them explicitly.
-- An MCP bridge to the Unity editor is available (mcp-unity, port 8090) for
-  scene/material/gameobject operations.
+- An MCP bridge to the Unity editor is available (mcp-unity, port 8091 — the
+  canonical port is whatever `ProjectSettings/McpUnitySettings.json` says; the Node
+  bridge reads that file at spawn) for scene/material/gameobject operations.
+  The package is EMBEDDED at `Packages/com.gamelovers.mcp-unity/` with a local
+  patch (background-safe message pump); do not revert to the git-cache version.
 - Framework management directories live at project root and are NOT Unity assets:
   - `design/` — game design documents (GDDs, entity registry)
   - `docs/` — architecture, engine reference, postmortems

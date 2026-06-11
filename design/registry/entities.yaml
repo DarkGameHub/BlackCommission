@@ -37,7 +37,7 @@
 #   Each entry: name, status, source, referenced_by[], attributes{}, added, revised
 
 version: 1
-last_updated: ""
+last_updated: "2026-06-09"
 
 # ─── ENTITIES ────────────────────────────────────────────────────────────────
 # Named game-world objects: enemies, NPCs, characters, factions, bosses.
@@ -106,7 +106,46 @@ items: []
 #   output_range[min, max], added
 # Optional: expression (the actual formula), notes
 
-formulas: []
+formulas:
+  - name: topology_resolve
+    status: active
+    source: design/gdd/level-map-generation.md
+    referenced_by:
+      - design/gdd/level-map-generation.md
+    variables:
+      - runSeed       # the only value synced over the wire (ADR-0001)
+      - floorIndex    # 1..N; floors differ under one seed
+      - openChance    # per-connector open probability, default 0.5
+      - N_max         # re-roll cap before fallback, default 16
+    output_range: [0, 1]   # per-connector open probability; resolution OUTPUT is a validated open-edge SET (not numeric)
+    expression: "first attempt a in [0,N_max) where Validate(graph(open@a)) passes; else all-toggles-open"
+    notes: "Deterministic host-side resolution; clients reconstruct from runSeed. Validate = flood-fill
+      checking invariants I1-I9 (pure function, headless-testable). Fallback (all-open) is valid by
+      construction, so resolution always returns a connected map."
+    added: 2026-06-08
+    revised: ""
+  - name: settlement_reward
+    status: active
+    source: design/gdd/office-economy-progression.md
+    referenced_by:
+      - design/gdd/office-economy-progression.md
+      - design/gdd/mission-state-machine.md   # Mission emits the outcome+payload; Economy owns magnitudes
+    variables:
+      - outcome          # FullSuccess | PartialReturn | Failure
+      - base_money       # full 300 / partial 60 / failure 20
+      - base_reputation  # full +5 / partial 0 / failure -2
+      - base_experience  # full 80 / partial 15 / failure 0 (failure grants no XP)
+      - bonus_money      # +90 additive (optional evidence, success/partial only)
+      - overtime_penalty # owned by MvpMissionClock — subtracted, not defined here
+    output_range: [-9999, 9999]   # net money can go negative when penalties exceed base
+    expression: "Funds += base_money + bonus_money - overtime_money_penalty - wrong_item_penalty;
+      Reputation += base_rep + bonus_rep - overtime_rep_penalty;
+      Experience += (outcome==Failure ? 0 : base_xp + bonus_xp)"
+    notes: "Office Economy owns reward magnitudes; Mission State Machine only emits the payload
+      {outcome, optionalsCollected, elapsedTime}. Applied idempotently (RewardsGranted) on claim.
+      As-built partial money = 20% of full; design-decisions.md wants 30-50% (open question)."
+    added: 2026-06-09
+    revised: ""
 
 # Example:
 #
@@ -139,7 +178,68 @@ formulas: []
 #
 # Required fields: name, status, source, referenced_by, value, unit, added
 
-constants: []
+constants:
+  - name: room_size_classes
+    status: active
+    source: design/gdd/level-map-generation.md
+    referenced_by:
+      - design/gdd/level-map-generation.md
+    value: "Small<=25; Medium<=80; Large>80"
+    unit: sqm
+    notes: "Exactly three classes (legacy 'Hall' dropped). Loot/Content Fill and Mission must use
+      only these three. Slot size + content-fill density key off this."
+    added: 2026-06-08
+    revised: ""
+  - name: f1_stair_anchors
+    status: active
+    source: design/gdd/level-map-generation.md
+    referenced_by:
+      - design/gdd/level-map-generation.md
+    value: "STAIRA1=(26,28,4x8); STAIRB1=(0,16,4x8)"
+    unit: metres (x,z,w,d)
+    notes: "F1 stair cores are LOCKED. Each floor's stair landings must align directly above the floor
+      below (F2 STAIRA2@(26,28), STAIRB2@(0,16)) so descents physically connect. Generator never moves
+      descents. F1 itself is locked in the Unity scene and must not be regenerated."
+    added: 2026-06-08
+    revised: ""
+  - name: company_start_state
+    status: active
+    source: design/gdd/office-economy-progression.md
+    referenced_by:
+      - design/gdd/office-economy-progression.md
+      - docs/mvp-core-loop.md   # describes the same opening (to be superseded by this GDD)
+    value: "Funds=-300; Debt=300; Reputation=0; OfficeLevel=1; Experience=0"
+    unit: game state (G / int)
+    notes: "Fresh company opening (CompanyData.NewState). Two clean full jobs (+600G) clear the
+      opening deficit and afford the 150G tutorial acquisition. Debt is a static backdrop (does not
+      drain funds)."
+    added: 2026-06-09
+    revised: ""
+  - name: full_job_reward
+    status: active
+    source: design/gdd/office-economy-progression.md
+    referenced_by:
+      - design/gdd/office-economy-progression.md
+      - design/gdd/mission-state-machine.md   # "a clean full job ≈ 300G"
+    value: "300"
+    unit: G (money); also +5 reputation, +80 experience
+    notes: "FullSuccess base reward. Partial=60G/+0/+15, Failure=20G/-2/0, Bonus evidence=+90G/+1/+20
+      (additive). Magnitudes owned here; Mission emits only the outcome+payload."
+    added: 2026-06-09
+    revised: ""
+  - name: tutorial_acquisition_cost
+    status: active
+    source: design/gdd/office-economy-progression.md
+    referenced_by:
+      - design/gdd/office-economy-progression.md
+      - docs/mvp-core-loop.md
+    value: "150"
+    unit: G
+    notes: "= TutorialOfficeValuation(100) * 3/2. MVP license stand-in (stage 1->2). Gated by
+      OfficeLevel==1, CompletedLostItemJobs>=2, HasAcquiredTutorialOffice==false, Funds>=150,
+      HostileTakeoverPressure<70. On accept: OfficeLevel->2, Pressure-=20."
+    added: 2026-06-09
+    revised: ""
 
 # Example:
 #
