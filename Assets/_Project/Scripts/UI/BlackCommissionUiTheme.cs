@@ -8,14 +8,17 @@ public static class BlackCommissionUiTheme
     // Municipal Debt Noir tokens, matched 1:1 to the tower's V8 whitebox palette
     // (TowerV8WhiteboxBuilder.EnsureMaterials + art-bible/style-lock v2) so every UI
     // surface speaks the same language as the map. Field names are legacy — the
-    // "MilitaryGreen" slots now hold civic teal (#3F5F5C family), "RustWarning" holds
-    // stamp red (#C23A2B), "OldPaper" holds aged paper (#D6CCAE).
+    // "MilitaryGreen" slots now hold OXBLOOD (#5A2E2A family) — PM 2026-06-12 retired
+    // the civic teal/olive green from all UI chrome (terminal CRT green stays). It is
+    // the structural cool-but-warm colour for panel borders, document headers, primary
+    // buttons. Kept darker + more desaturated than stamp red (#C23A2B) so they don't
+    // clash. "RustWarning" holds stamp red, "OldPaper" holds aged paper (#D6CCAE).
     public static readonly Color ConcreteBlack = new(0.020f, 0.024f, 0.022f, 0.94f);   // dead rubber black
     public static readonly Color ConcretePanel = new(0.058f, 0.062f, 0.060f, 0.94f);
     public static readonly Color ConcreteRaised = new(0.098f, 0.104f, 0.100f, 0.96f);
-    public static readonly Color MilitaryGreen = new(0.247f, 0.373f, 0.361f, 0.95f);   // civic teal #3F5F5C
-    public static readonly Color MilitaryGreenDim = new(0.148f, 0.226f, 0.218f, 0.92f);
-    public static readonly Color MilitaryGreenDark = new(0.082f, 0.130f, 0.125f, 0.94f);
+    public static readonly Color MilitaryGreen = new(0.353f, 0.180f, 0.165f, 0.95f);   // oxblood #5A2E2A
+    public static readonly Color MilitaryGreenDim = new(0.243f, 0.125f, 0.098f, 0.92f);  // #3E2019
+    public static readonly Color MilitaryGreenDark = new(0.165f, 0.086f, 0.071f, 0.94f); // #2A1612
     public static readonly Color OldWood = new(0.780f, 0.550f, 0.200f, 0.92f);          // sodium amber
     public static readonly Color OldPaper = new(0.839f, 0.800f, 0.682f, 1f);            // aged paper #D6CCAE
     public static readonly Color PaperDim = new(0.610f, 0.578f, 0.490f, 1f);
