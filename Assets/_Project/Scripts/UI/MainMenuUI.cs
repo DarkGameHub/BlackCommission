@@ -271,21 +271,116 @@ public class MainMenuUI : MonoBehaviour
         var image = go.GetComponent<Image>();
         image.raycastTarget = false;
 
-        // Mockup B (PM-picked 2026-06-12): dark olive vertical gradient, not black.
-        // Screen-space UI stays sharp at any retro render scale by construction.
+        // Dead-rubber-black base (NOT olive — PM retired green from the UI), with a
+        // dark-office backdrop drawn on top so the menu is never an empty screen
+        // (matches design/ux/mockups/ui-kit/01_main_menu.png). Screen-space UI stays
+        // sharp at any retro render scale by construction.
         usingBakedMenuArt = false;
         var grad = new Texture2D(1, 2, TextureFormat.RGBA32, false)
         {
             filterMode = FilterMode.Bilinear,
             wrapMode = TextureWrapMode.Clamp,
         };
-        grad.SetPixel(0, 1, new Color(0.133f, 0.169f, 0.133f, 1f)); // #222B22 top
-        grad.SetPixel(0, 0, new Color(0.094f, 0.122f, 0.094f, 1f)); // #181F18 bottom
+        grad.SetPixel(0, 1, new Color(0.110f, 0.110f, 0.098f, 1f)); // #1C1C19 top
+        grad.SetPixel(0, 0, new Color(0.078f, 0.078f, 0.067f, 1f)); // #141411 bottom
         grad.Apply();
         image.sprite = Sprite.Create(grad, new Rect(0f, 0f, 1f, 2f), new Vector2(0.5f, 0.5f));
         image.color = Color.white;
         image.type = Image.Type.Simple;
+
+        BuildOfficeBackdrop(go.transform);
         return image;
+    }
+
+    // Procedural dark-office backdrop (mockup 01): right wall, a warm tungsten lamp
+    // pool, the desk CRT with a faint green glow, a filing cabinet, and a hanging
+    // overdue debt notice. All runtime sprites — no baked art.
+    void BuildOfficeBackdrop(Transform parent)
+    {
+        Color wall = new(0.118f, 0.118f, 0.106f, 1f);
+        Color prop = new(0.086f, 0.082f, 0.071f, 1f);
+        Color propDark = new(0.055f, 0.055f, 0.047f, 1f);
+
+        // right wall block (anchored to centre, 1920x1080 space)
+        AddRect(parent, "BackWall", new Vector2(430f, 0f), new Vector2(1060f, 1080f),
+            wall, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        // warm tungsten lamp pool — the one warm source
+        AddGlow(parent, "LampGlow", new Vector2(560f, -180f), 1040f,
+            new Color(1f, 0.596f, 0.157f, 0.30f));
+
+        // desk
+        AddRect(parent, "Desk", new Vector2(560f, -380f), new Vector2(520f, 220f),
+            new Color(0.090f, 0.078f, 0.063f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        // CRT monitor + faint green glow (the only green — electronics)
+        AddGlow(parent, "CrtGlow", new Vector2(470f, -120f), 320f,
+            new Color(0.424f, 1f, 0.373f, 0.14f));
+        AddRect(parent, "CRT", new Vector2(470f, -120f), new Vector2(150f, 120f),
+            propDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(parent, "CRTGlass", new Vector2(470f, -120f), new Vector2(126f, 84f),
+            new Color(0.043f, 0.063f, 0.039f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(parent, "CRTLine", new Vector2(470f, -110f), new Vector2(96f, 3f),
+            new Color(0.180f, 0.360f, 0.165f, 0.8f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        // filing cabinet with drawer lines
+        AddRect(parent, "Cabinet", new Vector2(755f, -230f), new Vector2(130f, 420f),
+            prop, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        for (int i = 0; i < 3; i++)
+            AddRect(parent, "Drawer" + i, new Vector2(755f, -120f - i * 110f), new Vector2(130f, 4f),
+                propDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        // hanging overdue debt notice (aged paper + stamp-red OVERDUE)
+        var notice = AddRect(parent, "DebtNotice", new Vector2(255f, 142f), new Vector2(150f, 196f),
+            new Color(0.839f, 0.800f, 0.682f, 0.32f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        notice.transform.localRotation = Quaternion.Euler(0f, 0f, 2f);
+        var stamp = AddText(notice.transform, "OverdueStamp", "OVERDUE", 14,
+            new Color(0.761f, 0.227f, 0.169f, 0.5f), TextAlignmentOptions.Center);
+        stamp.fontStyle = FontStyles.Bold;
+        stamp.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -10f);
+        Stretch(stamp.rectTransform, new Vector2(0.1f, 0.35f), new Vector2(0.9f, 0.6f));
+
+        // mop / pole silhouette to break the symmetry
+        AddRect(parent, "Pole", new Vector2(290f, -190f), new Vector2(7f, 380f),
+            propDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+    }
+
+    // A soft radial glow as a runtime sprite (uGUI Image is rectangular; this gives a
+    // round falloff for lamp / screen pools).
+    void AddGlow(Transform parent, string name, Vector2 center, float diameter, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image));
+        go.transform.SetParent(parent, false);
+        var img = go.GetComponent<Image>();
+        img.sprite = RadialSprite();
+        img.color = color;
+        img.raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.5f, 0.5f);
+        rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = center;
+        rt.sizeDelta = new Vector2(diameter, diameter);
+    }
+
+    static Sprite cachedRadial;
+    static Sprite RadialSprite()
+    {
+        if (cachedRadial != null) return cachedRadial;
+        const int n = 64;
+        var tex = new Texture2D(n, n, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+        Vector2 c = new(n / 2f, n / 2f);
+        for (int y = 0; y < n; y++)
+            for (int x = 0; x < n; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x, y), c) / (n / 2f);
+                float a = Mathf.Clamp01(1f - d);
+                a = a * a; // softer falloff
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+            }
+        tex.Apply();
+        cachedRadial = Sprite.Create(tex, new Rect(0, 0, n, n), new Vector2(0.5f, 0.5f));
+        return cachedRadial;
     }
 
     GameObject BuildScreenVeil(Transform parent)
@@ -314,32 +409,32 @@ public class MainMenuUI : MonoBehaviour
         prt.offsetMin = Vector2.zero;
         prt.offsetMax = Vector2.zero;
 
-        // ─── Title block (mockup B: plain bone heiti + amber underline) ─
-        titleText = AddText(panel.transform, "Title", "黑色委托", 96,
+        // ─── Title block (mockup 01: 3270 face, amber underline). English-first. ─
+        titleText = AddText(panel.transform, "Title", "BLACK COMMISSION", 72,
             new Color(0.847f, 0.824f, 0.737f, 1f), TextAlignmentOptions.Left);
         titleText.fontStyle = FontStyles.Bold;
-        titleText.characterSpacing = 10f;
+        titleText.characterSpacing = 4f;
         var titleRt = titleText.rectTransform;
         titleRt.anchorMin = new Vector2(0f, 1f);
         titleRt.anchorMax = new Vector2(0f, 1f);
         titleRt.pivot = new Vector2(0f, 1f);
-        titleRt.anchoredPosition = new Vector2(120f, -140f);
-        titleRt.sizeDelta = new Vector2(900f, 110f);
+        titleRt.anchoredPosition = new Vector2(120f, -120f);
+        titleRt.sizeDelta = new Vector2(1100f, 90f);
 
         var underline = new GameObject("TitleUnderline", typeof(RectTransform), typeof(Image));
         underline.transform.SetParent(panel.transform, false);
-        underline.GetComponent<Image>().color = new Color(0.780f, 0.541f, 0.200f, 1f); // #C78A33
+        underline.GetComponent<Image>().color = new Color(1f, 0.596f, 0.157f, 1f); // tungsten amber
         underline.GetComponent<Image>().raycastTarget = false;
         var ulRt = underline.GetComponent<RectTransform>();
         ulRt.anchorMin = new Vector2(0f, 1f);
         ulRt.anchorMax = new Vector2(0f, 1f);
         ulRt.pivot = new Vector2(0f, 1f);
-        ulRt.anchoredPosition = new Vector2(124f, -258f);
-        ulRt.sizeDelta = new Vector2(430f, 6f);
+        ulRt.anchoredPosition = new Vector2(124f, -214f);
+        ulRt.sizeDelta = new Vector2(620f, 5f);
 
         subtitleText = AddText(panel.transform, "Subtitle",
-            "BLACK COMMISSION · " + MvpLocale.T("subtitle"), 24,
-            new Color(0.545f, 0.580f, 0.518f, 1f), TextAlignmentOptions.Left);
+            "OUTSOURCED COMMISSION OFFICE", 22,
+            new Color(0.604f, 0.569f, 0.482f, 1f), TextAlignmentOptions.Left);
         subtitleText.characterSpacing = 8f;
         var subRt = subtitleText.rectTransform;
         subRt.anchorMin = new Vector2(0f, 1f);
@@ -350,7 +445,8 @@ public class MainMenuUI : MonoBehaviour
 
         // Loadout picker DELETED from the main screen (PM 2026-06-12) — vest colour
         // moves to the lobby roster card (and later the surveillance-room picker).
-        BuildVanSilhouette(panel.transform);
+        // The office backdrop (BuildOfficeBackdrop) now fills the right of frame, so the
+        // mockup-B van silhouette is retired here.
 
         // ─── Central commission terminal menu ──────────────────────────
         BuildTerminalMenu(panel.transform);
@@ -846,7 +942,7 @@ public class MainMenuUI : MonoBehaviour
         bool hasSave = SaveIO.AnySave;
 
         continueBtn = CreateMenuRow(parent, "ContinueBtn", MvpLocale.T("menu_continue"),
-            hasSave ? "继续上一份账本" : MvpLocale.T("crt_no_save"), -404f, true);
+            hasSave ? "Resume the last ledger" : MvpLocale.T("crt_no_save"), -404f, true);
         continueBtn.interactable = hasSave;
         if (!hasSave)
         {
@@ -859,13 +955,13 @@ public class MainMenuUI : MonoBehaviour
         }
 
         newOfficeBtn = CreateMenuRow(parent, "NewOfficeBtn", MvpLocale.T("menu_new_office"),
-            "开一间新的事务所", -502f, false);
+            "Open a fresh commission office", -502f, false);
         joinBtn = CreateMenuRow(parent, "JoinBtn", MvpLocale.T("join_office"),
-            "输码加入队友的局", -600f, false);
+            "Enter a teammate's room code", -600f, false);
         settingsBtn = CreateMenuRow(parent, "SettingsBtn", MvpLocale.T("menu_settings"),
-            "名字 / 语言 / 音量 / 灵敏度", -698f, false);
+            "Name / language / volume / sensitivity", -698f, false);
         quitBtn = CreateMenuRow(parent, "QuitBtn", MvpLocale.T("menu_shutdown"),
-            "离岗，关掉这台机器", -796f, false);
+            "Clock out and power down", -796f, false);
 
         // Footer strip: LAN direct link (bottom-left) + debt flavor (bottom-right).
         directBtn = CreateButton(parent, "DirectBtn", MvpLocale.T("lan_direct_link"), 16,
@@ -894,7 +990,7 @@ public class MainMenuUI : MonoBehaviour
         vfRt.anchoredPosition = new Vector2(120f, 58f);
         vfRt.sizeDelta = new Vector2(90f, 24f);
 
-        var debtText = AddText(parent, "FooterDebt", "本季度欠款：1,200G", 16,
+        var debtText = AddText(parent, "FooterDebt", "QUARTERLY DEBT: 1,200G  ·  OVERDUE", 16,
             new Color(0.604f, 0.353f, 0.290f, 1f), TextAlignmentOptions.Right); // #9A5A4A
         var dbRt = debtText.rectTransform;
         dbRt.anchorMin = new Vector2(1f, 0f);
