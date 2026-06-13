@@ -6,6 +6,14 @@ public static class HqOfficePropRestorer
     const string SceneName = "HQ";
     const string RootName = "MVP_RestoredOfficeProps";
 
+    // The HQ office geometry (HQ.unity) is scaled uniformly about the origin by this
+    // factor (PM 2026-06-12: the office reads too small for the player). Props are
+    // placed at fixed LOCAL positions under the root below, so setting the root's
+    // scale to the same factor makes every prop's position AND size scale to match the
+    // scaled walls — no per-prop coordinate edits needed. Keep this in sync with the
+    // scene scale (1.0 = original). If you rescale HQ.unity, change this too.
+    const float OfficeScale = 1.5f;
+
     static readonly Color DeadRubberSoft = Rgb(0x23, 0x28, 0x25);
     static readonly Color AgedPaperDark = Rgb(0x86, 0x7A, 0x58);
     static readonly Color IncandescentWhite = new(1.0f, 0.95f, 0.86f);
@@ -145,10 +153,13 @@ public static class HqOfficePropRestorer
     static GameObject EnsureRoot()
     {
         GameObject root = FindSceneObject(RootName);
-        if (root != null)
-            return root;
-
-        root = new GameObject(RootName);
+        if (root == null)
+            root = new GameObject(RootName);
+        // Root sits at the origin and carries the office scale, so its children (placed
+        // at fixed local positions) line up with the uniformly-scaled HQ geometry.
+        root.transform.position = Vector3.zero;
+        root.transform.rotation = Quaternion.identity;
+        root.transform.localScale = Vector3.one * OfficeScale;
         return root;
     }
 
