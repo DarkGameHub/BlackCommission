@@ -2573,6 +2573,14 @@ public class MainMenuUI : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
+        // C opens the crew/appearance picker (design/ux/lobby.md). Available at the
+        // menu root and in the lobby; ignored while a modal card is open.
+        if (keyboard.cKey.wasPressedThisFrame && !CrewPickerScreen.IsOpen && !AnyModalOpen)
+        {
+            CrewPickerScreen.Open();
+            return;
+        }
+
         if (keyboard.escapeKey.wasPressedThisFrame)
         {
             if (quitConfirmPanel != null && quitConfirmPanel.activeSelf)
