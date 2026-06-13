@@ -1339,17 +1339,18 @@ public class MainMenuUI : MonoBehaviour
             HintText, TextAlignmentOptions.Left)
             .rectTransform.anchoredPosition = position + new Vector2(0f, 18f);
 
-        var zhBtn = CreateButton(parent, "ZhBtn", "Simplified Chinese", 16,
-            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        zhBtn.GetComponent<RectTransform>().anchoredPosition = position + new Vector2(-90f, -10f);
-        zhBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(160f, 38f);
-        zhBtn.onClick.AddListener(() => { MvpHud.LanguageIndexStatic = 0; RebuildAllLabels(); });
-
+        // Index order must match MvpLocale: 0 = English (default), 1 = 中文.
         var enBtn = CreateButton(parent, "EnBtn", "English", 16,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
-        enBtn.GetComponent<RectTransform>().anchoredPosition = position + new Vector2(90f, -10f);
+        enBtn.GetComponent<RectTransform>().anchoredPosition = position + new Vector2(-90f, -10f);
         enBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(160f, 38f);
-        enBtn.onClick.AddListener(() => { MvpHud.LanguageIndexStatic = 1; RebuildAllLabels(); });
+        enBtn.onClick.AddListener(() => { MvpHud.LanguageIndexStatic = 0; RebuildAllLabels(); });
+
+        var zhBtn = CreateButton(parent, "ZhBtn", "中文 (简体)", 16,
+            BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
+        zhBtn.GetComponent<RectTransform>().anchoredPosition = position + new Vector2(90f, -10f);
+        zhBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(160f, 38f);
+        zhBtn.onClick.AddListener(() => { MvpHud.LanguageIndexStatic = 1; RebuildAllLabels(); });
     }
 
     void BuildVolumeSection(Transform parent, Vector2 position)
