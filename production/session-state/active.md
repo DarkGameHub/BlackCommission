@@ -1086,6 +1086,27 @@ NavMesh → EditMode 预期 144/144（本轮无逻辑改动，音频调用全 nu
 - **下一步: PM 看 13 张图纸给批改意见 → 跑 Raise Shell + Fix Proportions 验比例 →
   按批准图纸逐屏实施（终端三页签最大）。**
 
+## Session 2026-06-12 (cont. 6) — terminal redesign + 比例真正落地 + 测试绿（MCP 恢复后）
+
+- **MCP 干净重启恢复**（杀全部 Unity+删 UnityLockfile+重启, 176s 连上, 稳定）。之前几轮
+  桥连续域重载卡死, 导致比例工具跑不成 + 用户在 Play 模式测旧编译（"作业本"+E 无反应的真因）。
+- **办公电脑终端重写**（office-computer-terminal.md）: 删 6 项菜单+6 行假学校任务,
+  换 3 页签 [1]COMMISSIONS [2]SUPPLY [3]LEDGER（数字键直达）, 纸面色→**单色绿磷光**
+  CRT, 负资金/待结算/活动页签=反白行+`!`, 数据驱动（只显真实生态柱任务, 无假行）,
+  单一主行动栏, 3270 字体, 全英文。**E 修复**: Update 原来只接 ESC, 现 E→主行动
+  （领结算/接单/确认收购, 0.25s 去抖）+ 数字键切页签。0 编译错误。
+- **HQ 比例真正应用+保存**: HqShellRaiseTool 棚高 3.4→**4.20m**（塔楼同款, 22 物体×1.244）
+  + HqProportionFixTool（面包车 1.97→**2.36m**、台灯落桌面、门楣）, save_scene + 提交。
+- **菜单背景=真 3D 办公室**: 发现游戏内菜单背景代码还是橄榄绿渐变（已删）, 改死黑底+
+  "左暗右透"渐变让 HQMenuCamera 渲染的真办公室透出来; 进游戏关菜单相机。英文标题 BLACK
+  COMMISSION（72px 3270）。
+- **去橄榄绿全局**: BlackCommissionUiTheme MilitaryGreen 族→官印红褐 #5A2E2A（8 文件公文卡
+  页眉/边/按钮自动生效, 终端 CRT 绿保留）。
+- **测试 3 失败修复**: e635ae2 把 MvpMissionClock 改英文（Day N/Early Morning）但旧测试断言
+  中文"清晨/次日/第3天"→改英文期望。**EditMode 150/150 全绿。**
+- **待 PM Play 验**: 终端（E通/绿磷光/生态柱非作业本）、HQ 比例（人对不对）、菜单实景背景。
+- **剩余队列**: ESC 设置→偏好登记表纸卡; menu 后 4 人等待→lobby.md 官印红褐派工名单卡。
+
 ## Recovery
 
 After compaction or a new session: read this file, then `design/systems-index.md`,
