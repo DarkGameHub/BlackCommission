@@ -21,9 +21,13 @@ import os
 OUT = os.path.join(os.path.dirname(__file__), "..", "design", "ux", "mockups", "ui-kit")
 W, H = 1920, 1080
 
-# Original in-game font is a clean sans (Liberation Sans / system). Terminal = mono.
-SANS = "'Liberation Sans','Arial','Helvetica Neue',sans-serif"
-MONO = "'Consolas','Courier New',monospace"
+# The UI font is 3270 (the real Lethal Company face), embedded below so the mockups
+# render exactly what the game now uses. Latin-only — the kit is all-English.
+import base64 as _b64
+_TTF = os.path.join(os.path.dirname(__file__), "..", "Assets", "_Project", "Art", "UI", "Fonts", "3270-Regular.ttf")
+FONT_B64 = _b64.b64encode(open(_TTF, "rb").read()).decode()
+SANS = "BC3270"
+MONO = "BC3270"
 
 # ── locked palette ──
 BLACK   = "#1A1A17"   # dead rubber black (base bg)
@@ -75,6 +79,7 @@ def ln(x1, y1, x2, y2, stroke, sw=2, op=None):
 
 
 DEFS = f'''<defs>
+  <style>@font-face{{font-family:'BC3270';src:url('data:font/ttf;base64,{FONT_B64}') format('truetype');}}</style>
   <radialGradient id="vig" cx="0.5" cy="0.46" r="0.75">
     <stop offset="0.45" stop-color="#000" stop-opacity="0"/>
     <stop offset="1" stop-color="#000" stop-opacity="0.72"/>
