@@ -1064,7 +1064,48 @@ NavMesh → EditMode 预期 144/144（本轮无逻辑改动，音频调用全 nu
 - **待 PM**: ①编译+Play 看 B 菜单 ②跑 `HQ > Fix Proportions`（上轮交付未执行）→走查
   →Ctrl+S ③字体: 布局过审后引思源黑体 SDF（免费可商用）替换 TMP 回退中文。
 
+## Session 2026-06-12 (cont. 4) — push + remote i18n 审查修复 + 棚高工具 + 13 屏图纸
+
+- **PM 反馈**: ①Fix 后 HQ 里人仍太高、塔楼里正好（=差的是净空: 塔 4.2m vs HQ 3.38m）
+  ②B 菜单"没有背景" ③其余屏未动 → 要求全部 UI 先出 PNG 图纸过目 ④push+查 remote bug。
+- **Git**: 本地全部提交; remote 有 e635ae2（PM 另一会话的 i18n: index 0=EN 默认）;
+  rebase 冲突 5 文件——两个 .cs 取本地重写版（boarding-transit 实现）、hud.md/active.md
+  取本地完整版、MvpLocale 手合（EN-first + 离座语义保留, 菜单键翻转为 EN-first）。
+  **审查发现 e635ae2 漏改 2 处真 bug 并已修**: QuickNetworkUI/MainMenuUI 两个语言选择器
+  仍按旧索引接线（选"中文"实际切英文）→ c109159 已推送。最新推送 dc60930。
+  ⚠️ 遗留: MainMenuUI 新 B 菜单行描述/欠款行为硬编码中文, EN 默认下不翻译（TODO 过
+  MvpLocale）。
+- **NEW `HqShellRaiseTool.cs`** `... > HQ > Raise Shell To 4.2m (tower parity)`:
+  只升墙体/天花/墙碰撞体（×4.2/3.38, 绕地面）, 家具不动, 两个门楣保持下沿净高向上
+  补到墙顶。幂等不自动保存。= "人太高"处方（家具实高已对, 缺的是头顶空间）。
+- **13 屏 UI 图纸全部出齐** `design/ux/mockups/ui-kit/01..13.png`（generator:
+  tools/generate_ui_mockups.py, headless Edge 渲染）: 01 主菜单(带办公室剪影背景层)
+  02 调岗申请单 03 派工名单 04 偏好登记表 05 离岗单 06/07/08 终端三页签(CRT 绿)
+  09 塔楼 HUD(工单行/琥珀准星/热栏) 10 派车单 11 在途票据条 12 提前收工申请单
+  13 委托结算单。三层语言: 橄榄菜单层(B)/盖章公文卡/CRT 绿。**待 PM 逐张过目批改**。
+- **下一步: PM 看 13 张图纸给批改意见 → 跑 Raise Shell + Fix Proportions 验比例 →
+  按批准图纸逐屏实施（终端三页签最大）。**
+
 ## Recovery
 
 After compaction or a new session: read this file, then `design/systems-index.md`,
 then the relevant docs in `docs/`. Files are the memory, not the conversation.
+
+## Session 2026-06-12 (cont. 5) — UI mockup kit v2（PM 否决 v1: 丑/空背景/配色没遵守/字体怪）
+
+- **PM 5 点反馈**: ①参考致命公司 ②背景空、丑 ③配色没遵守约定 ④字体用原来的 ⑤问有没有用
+  UI/UX skills ⑥要新一版、全部同风格、第一版全英文。
+- **配色违规已纠正**（v1 我擅自用了橄榄绿 #222B22 背景 + #E8B25C 琥珀, 都不在调色板）。
+  v2 锁死 art-bible §4 / AGENTS 身份: 死黑橡胶 #1A1A17 底 / 钨丝琥珀 #FF9820·#FFAB40 主强调
+  / CRT 绿 #6CFF5F 仅电子屏 / 盖章红 #C23A2B 仅纸·标牌 / 市政青 #3F5F5C 公文头 / 做旧纸
+  #D6CCAE。字体: 干净 sans（近原版 Liberation Sans）, 等宽仅留给终端。
+- **致命公司参考落地**: 深色面板 + 胶片颗粒(feTurbulence) + 暗角 + 扁平方块按钮 + 不空的
+  背景（暗办公室: 钨丝灯暖池打亮 CRT 绿光/档案柜/墙上催缴单+OVERDUE 红章）+ 绿底等宽终端。
+- **UI/UX skills 诚实说明**: 画 mockup 本身无对应 skill（/ux-design 写 spec、/ux-review 审 spec）;
+  做法=严格锚定已批准的 spec（main-menu.md/hud.md/settlement.md）+ 美术圣经配色, 不靠感觉。
+- **三层统一语言**（全 13 屏一致）: 系统层=深面板+琥珀+颗粒(LC) / 终端层=CRT 绿等宽(LC 终端)
+  / 模态层=盖章公文卡（青头+红章, art-bible「UI 伪装成公文」）。HUD=极简工单。全英文。
+- 生成器整体重写 `tools/generate_ui_mockups.py`; 13 PNG 重出于 `design/ux/mockups/ui-kit/`。
+  **待 PM 逐张过目**。v1 旧 PNG（main-menu-v2/ A/B/C + ui-kit 中文版）已被 v2 覆盖。
+- **下一步: PM 看 v2 13 张定方向 → 按批准稿实施（主菜单已大半在代码里, 需把硬编码中文
+  改 MvpLocale 英文键 + 背景实景层 + 方块按钮样式对齐 mockup）。**
