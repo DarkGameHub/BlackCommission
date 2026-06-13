@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class OfficeComputer : NetworkBehaviour, IInteractable
 {
     const float OfficeGroundStorageUseDistance = 5.2f;
-    const string DefaultTaskResourcePath = "Tasks/SnowLotus_01";
+    const string DefaultTaskResourcePath = "Tasks/TowerEarthCoast_01";
 
     [SerializeField] OfficeTaskDefinition demoTask;
     [SerializeField] string returnOfficeScene = "HQ";
@@ -31,13 +31,13 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     public OfficeTaskDefinition DemoTask => ResolveDemoTask();
     public bool HasSelectedDemoTask => ResolveDemoTask() != null && MvpMissionRuntime.SelectedTask == ResolveDemoTask();
-    public string DemoTaskTitle => demoTask != null ? demoTask.title : "The Forgotten Homework";
-    public string DemoTaskClient => demoTask != null ? demoTask.client : "Parent";
-    public string DemoTaskDescription => demoTask != null ? demoTask.description : "Go to the school and retrieve the forgotten homework, then evacuate safely.";
-    public string DemoTaskLocation => demoTask != null ? demoTask.locationName : "School";
-    public int DemoTaskMoneyReward => demoTask != null ? demoTask.moneyReward : 0;
-    public int DemoTaskReputationReward => demoTask != null ? demoTask.reputationReward : 0;
-    public int DemoTaskExperienceReward => demoTask != null ? demoTask.experienceReward : 0;
+    public string DemoTaskTitle => ResolveDemoTask()?.title ?? "No commission available";
+    public string DemoTaskClient => ResolveDemoTask()?.client ?? "Unknown client";
+    public string DemoTaskDescription => ResolveDemoTask()?.description ?? "No commission is available right now.";
+    public string DemoTaskLocation => ResolveDemoTask()?.locationName ?? "Unknown site";
+    public int DemoTaskMoneyReward => ResolveDemoTask()?.moneyReward ?? 0;
+    public int DemoTaskReputationReward => ResolveDemoTask()?.reputationReward ?? 0;
+    public int DemoTaskExperienceReward => ResolveDemoTask()?.experienceReward ?? 0;
 
     OfficeTaskDefinition ResolveDemoTask()
     {

@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: TowerEarthCoast_01
   m_EditorClassIdentifier:
   taskId: tower_ecocolumn_01
-  title: "「真实海岸」生态柱回收"
-  client: "匿名委托人（火星中继）"
-  description: "地球海岸壹号烂尾预售楼内封存着一根密封活体生态柱。取回它，密封罩破损不予接收，每次跌落按完整度扣减。楼内断电，配电房在一层。注意：原项目监理仍在岗。"
-  locationName: "地球海岸壹号·烂尾预售楼"
+  title: "\"Real Coast\" Eco-Column Recovery"
+  client: "Anonymous client (Mars relay)"
+  description: "A sealed living eco-column is stored inside the derelict Earth Coast 01 pre-sale tower. Recover it. A broken seal voids acceptance; each drop deducts by completeness. The building has no power - the substation is on floor 1. Note: the original site supervisor is still on duty."
+  locationName: "Earth Coast 01 - Derelict Pre-Sale Tower"
   sceneName: Tower_EarthCoast_01
   recommendedPlayersMin: 1
   recommendedPlayersMax: 4
@@ -35,11 +35,11 @@ MonoBehaviour:
   failureReputationPenalty: -2
   failureExperience: 0
   settlementNotesSuccess:
-  - "柱体外缘有指印，已安排除菌。款项照付，下不为例。"
-  - "水封完好。运输用时未计入报酬，属贵所自行安排。"
+  - "Fingerprints found on the column's rim; sterilization arranged. Paid in full. Don't make a habit of it."
+  - "Water seal intact. Transit time is not counted toward pay - that was your own scheduling."
   settlementNotesPartial:
-  - "空手而回也是一种结果。折算条款见背面，背面无字。"
-  - "贵所中途收工，物流舱位照常计费。已自动从报酬中代扣。"
+  - "Coming back empty-handed is also a result. See the reverse for terms; the reverse is blank."
+  - "Your office clocked out early. The cargo berth is billed regardless, and deducted from your pay."
   settlementNotesFailure:
-  - "人员损耗系贵所内部事务。慰问金按下限发放。"
-  - "委托物仍在原址。如贵所恢复运营，欢迎再次报价。"
+  - "Personnel losses are your office's internal affair. Condolence money paid at the floor rate."
+  - "The item is still on site. If your office resumes operations, you are welcome to bid again."
