@@ -112,13 +112,13 @@ namespace BlackCommission.Office.Tests
         [Test]
         public void FormatClock_PastMidnightShowsNextDayPrefix()
         {
-            Assert.AreEqual("次日 01:00", MvpMissionClock.FormatClock(25f));
+            Assert.AreEqual("Next day 01:00", MvpMissionClock.FormatClock(25f));
         }
 
         [Test]
         public void FormatClock_TwoDaysOutShowsDayCounter()
         {
-            Assert.AreEqual("第3天 01:00", MvpMissionClock.FormatClock(49f));
+            Assert.AreEqual("Day 3 01:00", MvpMissionClock.FormatClock(49f));
         }
 
         [Test]
@@ -130,12 +130,12 @@ namespace BlackCommission.Office.Tests
         }
 
         [Test]
-        public void DaylightLabel_MapsClockHourToChineseBands()
+        public void DaylightLabel_MapsClockHourToDaylightBands()
         {
-            Assert.AreEqual("清晨", MvpMissionClock.GetDaylightLabel(6f));
-            Assert.AreEqual("下午", MvpMissionClock.GetDaylightLabel(14f));
-            Assert.AreEqual("深夜", MvpMissionClock.GetDaylightLabel(23f));
-            Assert.AreEqual("深夜", MvpMissionClock.GetDaylightLabel(26f), "Hours wrap modulo 24.");
+            Assert.AreEqual("Early Morning", MvpMissionClock.GetDaylightLabel(6f));
+            Assert.AreEqual("Afternoon", MvpMissionClock.GetDaylightLabel(14f));
+            Assert.AreEqual("Late Night", MvpMissionClock.GetDaylightLabel(23f));
+            Assert.AreEqual("Late Night", MvpMissionClock.GetDaylightLabel(26f), "Hours wrap modulo 24.");
         }
     }
 }
