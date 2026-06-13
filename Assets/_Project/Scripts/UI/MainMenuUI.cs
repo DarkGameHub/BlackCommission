@@ -271,25 +271,36 @@ public class MainMenuUI : MonoBehaviour
         var image = go.GetComponent<Image>();
         image.raycastTarget = false;
 
-        // Dead-rubber-black base (NOT olive — PM retired green from the UI), with a
-        // dark-office backdrop drawn on top so the menu is never an empty screen
-        // (matches design/ux/mockups/ui-kit/01_main_menu.png). Screen-space UI stays
-        // sharp at any retro render scale by construction.
+        // REAL SCENERY (PM 2026-06-12): the menu lives in the HQ scene, so HQMenuCamera
+        // already renders the actual 3D office behind this screen-space overlay. Instead
+        // of painting flat blocks over it, this background is a horizontal scrim — opaque
+        // dark on the LEFT (so the menu rows stay readable) fading to TRANSPARENT on the
+        // RIGHT, revealing the real lit office. No baked art, no little boxes.
         usingBakedMenuArt = false;
-        var grad = new Texture2D(1, 2, TextureFormat.RGBA32, false)
+        EnsureMenuBackdropCamera();
+        var grad = new Texture2D(2, 1, TextureFormat.RGBA32, false)
         {
             filterMode = FilterMode.Bilinear,
             wrapMode = TextureWrapMode.Clamp,
         };
-        grad.SetPixel(0, 1, new Color(0.110f, 0.110f, 0.098f, 1f)); // #1C1C19 top
-        grad.SetPixel(0, 0, new Color(0.078f, 0.078f, 0.067f, 1f)); // #141411 bottom
+        grad.SetPixel(0, 0, new Color(0.063f, 0.063f, 0.055f, 0.96f)); // left: near-opaque dark
+        grad.SetPixel(1, 0, new Color(0.063f, 0.063f, 0.055f, 0f));    // right: transparent → office shows
         grad.Apply();
-        image.sprite = Sprite.Create(grad, new Rect(0f, 0f, 1f, 2f), new Vector2(0.5f, 0.5f));
+        image.sprite = Sprite.Create(grad, new Rect(0f, 0f, 2f, 1f), new Vector2(0.5f, 0.5f));
         image.color = Color.white;
         image.type = Image.Type.Simple;
-
-        BuildOfficeBackdrop(go.transform);
         return image;
+    }
+
+    // Makes sure the HQ scene's backdrop camera is live + framed on the office while the
+    // menu is up, so the real 3D office shows through the transparent side of the scrim.
+    void EnsureMenuBackdropCamera() => SetMenuBackdropCamera(true);
+
+    void SetMenuBackdropCamera(bool on)
+    {
+        var camGo = GameObject.Find("HQMenuCamera");
+        if (camGo != null && camGo.TryGetComponent(out Camera cam))
+            cam.enabled = on;
     }
 
     // Procedural dark-office backdrop (mockup 01): right wall, a warm tungsten lamp
@@ -2729,6 +2740,9 @@ public class MainMenuUI : MonoBehaviour
         // Once connected, show the waiting room first; after dismissal, keep a small corner status badge.
         if (listening)
         {
+            // In-game: the player camera takes over — turn off the menu backdrop camera
+            // so the two don't double-render.
+            SetMenuBackdropCamera(false);
             // The full-screen menu art lives on the canvas root (not inside mainPanel),
             // so hiding the panels alone leaves it covering the 3D office. Hide it too.
             if (backgroundImage != null && backgroundImage.gameObject.activeSelf)
