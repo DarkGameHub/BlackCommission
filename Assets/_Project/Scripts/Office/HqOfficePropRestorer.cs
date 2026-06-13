@@ -70,9 +70,16 @@ public static class HqOfficePropRestorer
         Transform root = EnsureRoot().transform;
         bool changed = false;
 
+        // PM 2026-06-12: remove the on-floor computer floor-guide markers (the painted
+        // arrows pointing at the desk). They clutter the floor and aren't wanted.
+        changed |= DestroyByName("BlenderHQ_ComputerFloorGuide_Main");
+        changed |= DestroyByName("BlenderHQ_ComputerFloorGuide_ArrowL");
+        changed |= DestroyByName("BlenderHQ_ComputerFloorGuide_ArrowR");
+
+        // Sofa model transform set by PM in the Inspector (2026-06-12 screenshot).
         changed |= PlacePropBaked("GeneratedArt/AS_OfficeSofa", "ShellSofa_Generated", root,
             new Vector3(-3.90f, 0f, -2.80f), new Vector3(0f, 90f, 0f),
-            new Vector3(-3.674f, 0.388f, 3.221f), new Vector3(-90f, -180f, 0f), new Vector3(79.2f, 64.3f, 84.5f));
+            new Vector3(0.999f, 0.477f, -0.091f), new Vector3(-90.9f, 0f, 0f), new Vector3(98.9433f, 89.74f, 98.9433f));
 
         changed |= PlacePropBaked("GeneratedArt/AS_OfficeFilingCabinet", "ShellFilingCabinet_Generated", root,
             new Vector3(-4.45f, 0f, 1.70f), new Vector3(0f, 90f, 0f),
@@ -94,9 +101,10 @@ public static class HqOfficePropRestorer
             new Vector3(-0.45f, 1.55f, 3.05f), new Vector3(0f, 180f, 0f),
             new Vector3(0.442f, -0.176f, -0.001f), new Vector3(-90f, 0f, 0f), Vector3.one * 81.64722f);
 
+        // Tool-set model transform set by PM in the Inspector (2026-06-12 screenshot).
         changed |= PlacePropBaked("GeneratedArt/AS_OfficeToolSet", "ShellToolSet_Generated", root,
             new Vector3(-2.60f, 0f, -2.85f), Vector3.zero,
-            new Vector3(-1.514f, 0.277f, 1.001f), new Vector3(-90f, 0f, 82.44f), Vector3.one * 104f);
+            new Vector3(1.65267f, 0.277f, 3.16766f), new Vector3(-90f, 178.03f, 82.44f), Vector3.one * 104f);
 
         changed |= PlaceProp("GeneratedArt/AS_OfficeToolRack", "ShellToolRack_Generated", root,
             new Vector3(2.70f, 0.85f, 2.95f), Quaternion.Euler(0f, 180f, 0f));
@@ -123,9 +131,10 @@ public static class HqOfficePropRestorer
         changed |= CreatePointLightIfMissing("HQ_LampDesk_A_Light", root,
             new Vector3(-1.55f, 1.85f, 1.60f), IncandescentWarm, 1.2f, 3.0f);
 
+        // Desk-lamp B model transform set by PM in the Inspector (2026-06-12 screenshot).
         changed |= PlacePropBaked("GeneratedArt/AS_LampDesk", "ShellLampDesk_B", root,
             new Vector3(-3.80f, 0.75f, 2.00f), new Vector3(0f, 90f, 0f),
-            new Vector3(-4.317f, 1.672f, 4.71f), new Vector3(-90f, 0f, 0f), Vector3.one * 23.69977f);
+            new Vector3(1.683f, 1.672f, 6.54333f), new Vector3(-90f, 0f, 0f), Vector3.one * 23.69977f);
         changed |= CreatePointLightIfMissing("HQ_LampDesk_B_Light", root,
             new Vector3(-3.80f, 1.75f, 2.00f), IncandescentWarm, 1.2f, 3.0f);
 
@@ -324,6 +333,16 @@ public static class HqOfficePropRestorer
             Object.Destroy(obj);
         else
             Object.DestroyImmediate(obj);
+    }
+
+    // Finds a scene object by name and destroys it; returns true if one was removed.
+    static bool DestroyByName(string name)
+    {
+        GameObject go = FindSceneObject(name);
+        if (go == null)
+            return false;
+        DestroySceneObject(go);
+        return true;
     }
 
     static Material MakeOfficeMaterial(string name, Color baseColor, Color accentColor, OfficePattern pattern)
