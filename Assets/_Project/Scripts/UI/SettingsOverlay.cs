@@ -14,8 +14,8 @@ public class SettingsOverlay : MonoBehaviour
 
     Vector2 scroll;
     bool stylesReady;
-    GUIStyle panelStyle, titleStyle, labelStyle, accentStyle, buttonStyle;
-    Texture2D panelTex;
+    GUIStyle panelStyle, titleStyle, labelStyle, accentStyle, buttonStyle, headerTextStyle;
+    Texture2D panelTex, headerBandTex;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Bootstrap() => EnsureInstance();
@@ -79,6 +79,10 @@ public class SettingsOverlay : MonoBehaviour
         panelTex.SetPixel(0, 0, BlackCommissionUiTheme.ConcreteBlack);
         panelTex.Apply();
 
+        headerBandTex = new Texture2D(1, 1);
+        headerBandTex.SetPixel(0, 0, BlackCommissionUiTheme.MilitaryGreen);  // = oxblood now
+        headerBandTex.Apply();
+
         panelStyle = new GUIStyle(GUI.skin.box)
         {
             normal = { background = panelTex },
@@ -89,18 +93,22 @@ public class SettingsOverlay : MonoBehaviour
             fontSize = 20, fontStyle = FontStyle.Bold,
             normal = { textColor = BlackCommissionUiTheme.OldPaper }, wordWrap = true
         };
+        headerTextStyle = new GUIStyle(titleStyle) { fontSize = 18, alignment = TextAnchor.MiddleLeft };
         labelStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 15, normal = { textColor = BlackCommissionUiTheme.Text }, wordWrap = true
         };
+        // Section headers use tungsten amber (the UI accent) — green is reserved for
+        // electronic screens only (terminal), never UI chrome.
         accentStyle = new GUIStyle(labelStyle)
         {
-            fontStyle = FontStyle.Bold, normal = { textColor = BlackCommissionUiTheme.CrtGreen }
+            fontStyle = FontStyle.Bold, normal = { textColor = BlackCommissionUiTheme.OldWood }
         };
         buttonStyle = BlackCommissionUiTheme.ButtonStyle(15);
 
         MvpFontProvider.ApplyToStyle(panelStyle);
         MvpFontProvider.ApplyToStyle(titleStyle);
+        MvpFontProvider.ApplyToStyle(headerTextStyle);
         MvpFontProvider.ApplyToStyle(labelStyle);
         MvpFontProvider.ApplyToStyle(accentStyle);
         MvpFontProvider.ApplyToStyle(buttonStyle);
@@ -116,19 +124,19 @@ public class SettingsOverlay : MonoBehaviour
         float height = Mathf.Clamp(Screen.height - 80f, 420f, 680f);
         Rect rect = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
 
-        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
-
-        GUILayout.BeginHorizontal();
-        GUILayout.Label(MvpLocale.T("pause"), titleStyle);
-        if (GUILayout.Button(MvpLocale.T("resume"), GUILayout.Width(80), GUILayout.Height(30)))
+        // Oxblood "stamped document" header band across the top of the panel.
+        GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 46f), headerBandTex);
+        GUI.Label(new Rect(rect.x + 18f, rect.y + 10f, rect.width - 120f, 28f),
+            "PREFERENCE RECORD", headerTextStyle);
+        GUI.Label(new Rect(rect.x + 18f, rect.y + 28f, rect.width - 120f, 16f),
+            "FORM BC-05", labelStyle);
+        if (GUI.Button(new Rect(rect.xMax - 96f, rect.y + 8f, 80f, 30f), MvpLocale.T("resume"), buttonStyle))
         {
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
             Close();
             return;
         }
-        GUILayout.EndHorizontal();
 
+        GUILayout.BeginArea(new Rect(rect.x, rect.y + 50f, rect.width, rect.height - 50f), GUIContent.none, panelStyle);
         scroll = GUILayout.BeginScrollView(scroll, false, true);
 
         // ─── Game ───
