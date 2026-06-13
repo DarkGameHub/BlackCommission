@@ -1,0 +1,8 @@
+3270 Font — by Ricardo Bánffy
+A modern revival of the IBM 3270 terminal typeface.
+Licensed under the SIL Open Font License v1.1 (OFL) — free for commercial use,
+bundling, and embedding. Source: https://github.com/rbanffy/3270font
+Full OFL text: https://openfontlicense.org
+
+Used in Black Commission as the UI font (menu + terminal), matching the
+Lethal Company retro-terminal look. Latin-only; CJK falls back to FusionPixel12.
