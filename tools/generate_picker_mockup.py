@@ -40,62 +40,87 @@ def path(d,fill,op=None,stroke=None,sw=None):
     return f'<path d="{d}" fill="{fill}"{o}{s}/>'
 
 
-def figure(cx, ground, sc, vest, sharp=True):
-    """Backlit trudging laborer, ~7.5 heads. Dark body + cold rim light on the
-    window-facing (upper/right) edges so it reads as a 3D person, not a blob."""
-    op = 1.0 if sharp else 0.5
-    body = "#0A0B0C" if sharp else "#15161A"
-    coat = "#0E0F10" if sharp else "#181A1E"
-    hh = 360*sc                       # total height
-    head_r = 20*sc
-    hx = cx; hy = ground-hh           # head top
-    neck = hy+head_r*1.7
-    sh = neck+8*sc                    # shoulder line
-    hip = ground-hh*0.45
+def figure(cx, ground, sc, vest, headgear="helmet", tool="torch", sharp=True):
+    """Backlit 'cheap commission worker' per art-bible §5: real-scale temp hire,
+    oversized hi-vis VEST (the one silhouette widener) + reflective tape, distinct
+    headgear (helmet/beanie/bumpcap/hood), rectangular daypack, a carried tool, heavy
+    work boots, tired-competence stance (weight on one hip, slight forward lean).
+    NOT a hiker — no ski poles, no sculpted gear."""
+    op = 1.0 if sharp else 0.46
+    body = "#0B0C0D" if sharp else "#16171B"     # jacket / coverall (dark)
     rim = RIM
+    hh = 300*sc                                   # real proportions (~1.75m, not heroic)
+    head_r = 19*sc
+    hx = cx                                        # head leans slightly forward
+    lean = 8*sc
+    hy = ground-hh
+    sh = hy+head_r*1.9                             # shoulder line
+    hip = ground-hh*0.46
+    vestW = 58*sc                                  # vest is OVERSIZED — wider than torso
     g=f'<g opacity="{op}">'
-    # ── back leg (planted) ──
-    g+=path(f"M {cx-6*sc},{hip} L {cx-30*sc},{ground-6*sc} L {cx-30*sc},{ground} L {cx-12*sc},{ground} "
-            f"L {cx+2*sc},{hip} Z", body)
-    # ── front leg (stride, knee bent) ──
-    g+=path(f"M {cx+6*sc},{hip} L {cx+26*sc},{hip+70*sc} L {cx+44*sc},{ground} L {cx+24*sc},{ground} "
-            f"L {cx+10*sc},{hip+72*sc} L {cx-2*sc},{hip} Z", body)
-    # boots
-    g+=r(cx-32*sc,ground-10*sc,24*sc,12*sc,body)+r(cx+22*sc,ground-10*sc,26*sc,12*sc,body)
-    # ── heavy backpack behind the torso ──
-    g+=r(cx-40*sc,sh+4*sc,20*sc,hh*0.36,coat,rx=6*sc)
-    g+=r(cx-44*sc,sh+hh*0.18,10*sc,10*sc,coat)        # side pocket
-    # ── coat torso (tapered, slight forward hunch) ──
-    g+=path(f"M {cx-26*sc},{sh} C {cx-34*sc},{(sh+hip)/2} {cx-28*sc},{hip} {cx-18*sc},{hip+10*sc} "
-            f"L {cx+22*sc},{hip+10*sc} C {cx+30*sc},{hip} {cx+30*sc},{(sh+hip)/2} {cx+22*sc},{sh} "
-            f"C {cx+10*sc},{sh-12*sc} {cx-14*sc},{sh-12*sc} {cx-26*sc},{sh} Z", coat)
-    # coat fold lines (a touch lighter for form)
-    g+=ln(cx-8*sc,sh+10*sc,cx-2*sc,hip,"#16171A",2*sc,op=0.8)
-    g+=ln(cx+8*sc,sh+8*sc,cx+12*sc,hip,"#16171A",2*sc,op=0.6)
-    # ── forward arm holding a strap / swinging ──
-    g+=path(f"M {cx+18*sc},{sh+6*sc} C {cx+34*sc},{sh+40*sc} {cx+30*sc},{hip-10*sc} {cx+20*sc},{hip} "
-            f"L {cx+10*sc},{hip-4*sc} C {cx+18*sc},{(sh+hip)/2} {cx+14*sc},{sh+30*sc} {cx+8*sc},{sh+10*sc} Z", coat)
-    # chest strap across (pack strap)
-    g+=ln(cx-18*sc,sh+8*sc,cx+16*sc,hip-30*sc,"#0A0B0C",4*sc)
-    # ── vest patch (the only colour = your identity) ──
+    # ── legs: weight on left hip, right leg relaxed (tired stance, slight stride) ──
+    g+=path(f"M {cx-14*sc},{hip} L {cx-16*sc},{ground-12*sc} L {cx-2*sc},{ground-12*sc} L {cx+2*sc},{hip} Z", body)  # weight leg
+    g+=path(f"M {cx+4*sc},{hip} L {cx+16*sc},{ground-12*sc} L {cx+28*sc},{ground-12*sc} L {cx+16*sc},{hip} Z", body)  # trailing leg
+    # ── heavy work boots: wide toe + sole ledge ──
+    for bxoff in (-20*sc, 12*sc):
+        g+=path(f"M {cx+bxoff},{ground-14*sc} L {cx+bxoff+26*sc},{ground-14*sc} L {cx+bxoff+30*sc},{ground-4*sc} "
+                f"L {cx+bxoff+30*sc},{ground} L {cx+bxoff-2*sc},{ground} Z", body)
+    # ── rectangular daypack (zipper + strap, no sculpt) behind torso ──
+    g+=r(cx-34*sc,sh+6*sc,18*sc,hh*0.34,body)
+    g+=ln(cx-25*sc,sh+8*sc,cx-25*sc,sh+6*sc+hh*0.34,"#17181B",1.5*sc,op=0.7)   # zipper
+    # ── jacket torso (real width, slight forward lean) ──
+    g+=path(f"M {cx-18*sc+lean*0.3},{sh} L {cx-20*sc},{hip} L {cx+20*sc},{hip} L {cx+18*sc+lean*0.3},{sh} "
+            f"C {cx+8*sc},{sh-8*sc} {cx-8*sc},{sh-8*sc} {cx-18*sc+lean*0.3},{sh} Z", body)
+    # ── OVERSIZED hi-vis vest: the deliberate widener, sits over the jacket ──
+    vx = cx-vestW/2+lean*0.2
+    g+=path(f"M {vx},{sh+4*sc} L {vx-4*sc},{hip-6*sc} L {vx+vestW+4*sc},{hip-6*sc} L {vx+vestW},{sh+4*sc} "
+            f"L {vx+vestW*0.62},{sh-2*sc} L {vx+vestW*0.5},{sh+18*sc} L {vx+vestW*0.38},{sh-2*sc} Z",
+            vest if sharp else "#2E2A22")
     if sharp:
-        g+=r(cx-12*sc,sh+14*sc,24*sc,30*sc,vest)
-        g+=ln(cx-12*sc,sh+14*sc,cx+12*sc,sh+14*sc,RIM,1.5,op=0.4)
-    else:
-        g+=r(cx-9*sc,sh+12*sc,18*sc,22*sc,"#2C2A26")
-    # ── hooded head, face in shadow ──
-    g+=f'<circle cx="{hx}" cy="{hy+head_r}" r="{head_r}" fill="{body}"/>'
-    g+=path(f"M {hx-head_r-4*sc},{hy+head_r*1.5} Q {hx},{hy-head_r*0.6} {hx+head_r+4*sc},{hy+head_r*1.5} "
-            f"L {hx+head_r+1*sc},{hy+head_r*1.9} Q {hx},{hy+head_r*0.5} {hx-head_r-1*sc},{hy+head_r*1.9} Z", coat)
-    # ── COLD RIM LIGHT from the bright window: thin highlight on upper/right edges ──
+        # reflective safety tape — physical material, reads bright (two horizontal bands)
+        g+=r(vx-2*sc,sh+22*sc,vestW+4*sc,5*sc,"#E8E4D4",op=0.9)
+        g+=r(vx-2*sc,hip-20*sc,vestW+4*sc,5*sc,"#E8E4D4",op=0.85)
+        # tiny company badge, clipped left chest
+        g+=r(vx+8*sc,sh+10*sc,9*sc,6*sc,"#C9C2A8",op=0.8)
+    # ── near arm holding a carried tool, low/forward ──
+    g+=path(f"M {cx+16*sc},{sh+6*sc} L {cx+26*sc},{hip-6*sc} L {cx+18*sc},{hip-2*sc} L {cx+8*sc},{sh+12*sc} Z", body)
+    if tool=="torch":
+        g+=r(cx+18*sc,hip-10*sc,8*sc,18*sc,body)                       # cylindrical torch
+        if sharp:  # short warm beam cone aimed down-forward
+            g+=path(f"M {cx+26*sc},{hip-2*sc} L {cx+70*sc},{hip+30*sc} L {cx+64*sc},{hip+44*sc} L {cx+22*sc},{hip+6*sc} Z",
+                    "#FFD27A",op=0.22)
+    elif tool=="case":
+        g+=r(cx+14*sc,hip-4*sc,30*sc,22*sc,body)+ln(cx+22*sc,hip-4*sc,cx+22*sc,hip-12*sc,body,3*sc)  # equipment case
+    elif tool=="clipboard":
+        g+=r(cx+18*sc,hip-12*sc,18*sc,24*sc,body)+r(cx+21*sc,hip-9*sc,12*sc,12*sc,"#9A917A",op=0.5)   # clipboard + form
+    elif tool=="cable":
+        g+=f'<circle cx="{cx+24*sc}" cy="{hip}" r="{12*sc}" fill="none" stroke="{body}" stroke-width="{5*sc}"/>'  # coiled cable
+    # ── headgear (distinct head-break per variant) ──
+    if headgear=="helmet":
+        g+=f'<path d="M {hx-head_r},{hy+head_r*1.2} A {head_r} {head_r} 0 0 1 {hx+head_r},{hy+head_r*1.2} Z" fill="{body}"/>'
+        g+=r(hx-head_r-5*sc,hy+head_r*1.1,2*head_r+10*sc,5*sc,body)       # brim
+        if sharp: g+=r(hx-head_r,hy+head_r*0.5,2*head_r,4*sc,"#E8E4D4",op=0.85)  # reflective band
+    elif headgear=="beanie":
+        g+=f'<circle cx="{hx}" cy="{hy+head_r}" r="{head_r}" fill="{body}"/>'
+        g+=r(hx-head_r,hy+head_r*0.6,2*head_r,head_r*0.8,body)
+    elif headgear=="bumpcap":
+        g+=f'<circle cx="{hx}" cy="{hy+head_r}" r="{head_r}" fill="{body}"/>'
+        g+=r(hx-head_r,hy+head_r*0.7,2*head_r,4*sc,body)
+        g+=r(hx+head_r-3*sc,hy+head_r*0.8,head_r*0.9,5*sc,body)           # forward peak
+    else:  # hood
+        g+=f'<circle cx="{hx}" cy="{hy+head_r}" r="{head_r*0.85}" fill="{body}"/>'
+        g+=path(f"M {hx-head_r-4*sc},{hy+head_r*1.7} Q {hx},{hy-head_r*0.5} {hx+head_r+4*sc},{hy+head_r*1.7} "
+                f"L {hx+head_r},{hy+head_r*2.1} Q {hx},{hy+head_r*0.6} {hx-head_r},{hy+head_r*2.1} Z", body)
+    # neck/jaw shadow
+    g+=r(hx-6*sc,hy+head_r*1.7,12*sc,8*sc,body)
+    # ── COLD RIM LIGHT (window backlight) on the window-facing edge ──
     if sharp:
-        g+=path(f"M {hx-2*sc},{hy+2*sc} Q {hx+head_r-2*sc},{hy+head_r*0.4} {hx+head_r-3*sc},{hy+head_r*1.3}",
-                "none",stroke=rim,sw=3*sc)                      # head rim
-        g+=ln(cx+20*sc,sh-2*sc,cx+24*sc,hip,rim,3*sc,op=0.85)   # shoulder/arm rim
-        g+=ln(cx+8*sc,sh-9*sc,cx+20*sc,sh-2*sc,rim,3*sc,op=0.7) # shoulder top rim
-        g+=ln(cx+30*sc,hip+30*sc,cx+42*sc,ground-6*sc,rim,2.5*sc,op=0.6)  # front shin rim
+        g+=path(f"M {hx-2*sc},{hy+3*sc} Q {hx+head_r-2*sc},{hy+head_r*0.5} {hx+head_r-3*sc},{hy+head_r*1.4}",
+                "none",stroke=rim,sw=3*sc)
+        g+=ln(vx+vestW,sh+6*sc,vx+vestW+2*sc,hip-6*sc,rim,3*sc,op=0.8)     # vest edge
+        g+=ln(cx+16*sc,sh+6*sc,cx+26*sc,hip-6*sc,rim,2.5*sc,op=0.6)        # arm edge
     else:
-        g+=ln(cx+14*sc,sh,cx+16*sc,hip,rim,2,op=0.4)
+        g+=ln(vx+vestW,sh+6*sc,vx+vestW,hip,rim,2,op=0.35)
     g+="</g>"
     return g
 
@@ -151,13 +176,13 @@ def build():
     g+=r(wx,wy,ww,wh,"url(#dust)")
     for x in range(wx-40,wx+ww,70):
         g+=ln(x,wy,x-90,wy+wh,"#D6D8CE",1.5,op=0.10)
-    # ── backlit candidates (possible versions of you) ──
+    # ── backlit candidates: the 6 worker variants (art-bible §5 head/tool table) ──
     ground=wy+wh-26
-    g+=figure(470,ground,0.60,VESTS[1],sharp=False)
-    g+=figure(660,ground,0.74,VESTS[2],sharp=False)
-    g+=figure(930,ground,1.06,VESTS[0],sharp=True)     # current — tall, detailed, rim-lit
-    g+=figure(1240,ground,0.74,VESTS[3],sharp=False)
-    g+=figure(1430,ground,0.60,VESTS[4],sharp=False)
+    g+=figure(470,ground,0.62,VESTS[1],headgear="beanie",tool="case",sharp=False)
+    g+=figure(665,ground,0.76,VESTS[2],headgear="bumpcap",tool="clipboard",sharp=False)
+    g+=figure(930,ground,1.04,VESTS[0],headgear="helmet",tool="torch",sharp=True)  # featured
+    g+=figure(1235,ground,0.76,VESTS[3],headgear="hood",tool="cable",sharp=False)
+    g+=figure(1425,ground,0.62,VESTS[4],headgear="helmet",tool="torch",sharp=False)
     g+=r(wx,wy,ww,wh,"url(#dust)",op=0.5)               # dust haze over figures
     # mullions
     g+=ln(wx+ww/3,wy,wx+ww/3,wy+wh,"#160E07",10)+ln(wx+2*ww/3,wy,wx+2*ww/3,wy+wh,"#160E07",10)
@@ -190,8 +215,8 @@ def build():
     g+=t(cx0+24,830,"AGENT DOSSIER — THIS IS ME",20,PAPER,font=MONO,sp=4,weight="bold")
     g+=t(cx0+716,829,"FORM BC-04",15,"#A9C0B8",font=MONO,anchor="end")
     g+=r(cx0+28,868,58,58,VESTS[0])+r(cx0+28,868,58,58,None,stroke="#8A7F63",sw=2)
-    g+=t(cx0+108,896,"\"COPPER\" — HEAVY COAT, FULL PACK",24,INK,weight="bold")
-    g+=t(cx0+108,928,"Surface-rated · the build you'll wear on the job",17,INK_D)
+    g+=t(cx0+108,896,"REPAIRMAN — ORANGE HELMET, HI-VIS VEST",22,INK,weight="bold")
+    g+=t(cx0+108,928,"Temp hire · supply-closet kit · carries a hand torch",17,INK_D)
     g+=f'<g transform="translate({cx0+582},864) rotate(-9)" opacity="0.82">'+r(0,0,130,54,None,stroke=RED,sw=4)
     g+=t(65,35,"ASSIGNED",20,RED,anchor="middle",weight="bold")+"</g>"
     g+=t(960,1004,"‹ ›  CYCLE LOOK     ·     [E]  THIS IS ME     ·     [ESC]  KEEP CURRENT",
