@@ -35,6 +35,9 @@ public class MvpHud : MonoBehaviour
     GUIStyle terminalSmallStyle;
     GUIStyle terminalButtonStyle;
     GUIStyle terminalSelectedButtonStyle;
+    GUIStyle terminalInverseStyle;   // dark text on green inverse-video (warnings/active tab)
+    GUIStyle terminalLabelRightStyle; // right-aligned green label (connection state)
+    int terminalTab;                  // 0 = commissions, 1 = supply, 2 = ledger
     Texture2D panelTexture;
     Texture2D slotTexture;
     Texture2D selectedSlotTexture;
@@ -155,7 +158,15 @@ public class MvpHud : MonoBehaviour
                 return;
             }
 
-            // Shop purchases are mouse-click only (buttons in DrawOfficeShop)
+            // Number keys switch tabs even outside OnGUI (so it feels instant).
+            if (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame) terminalTab = 0;
+            else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame) terminalTab = 1;
+            else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame) terminalTab = 2;
+
+            // E triggers the single primary action (claim / accept / confirm). Debounced
+            // so the same E press that opened the terminal doesn't instantly fire it.
+            if (keyboard.eKey.wasPressedThisFrame && Time.unscaledTime - computerOpenedAt > 0.25f)
+                ExecuteTerminalPrimaryAction(activeComputer);
 
             return;
         }
@@ -399,62 +410,87 @@ public class MvpHud : MonoBehaviour
         DrawDemoTaskCard(computer);
     }
 
+    static readonly string[] TerminalTabLabels = { "[1] COMMISSIONS", "[2] SUPPLY", "[3] LEDGER" };
+
+    // Tabbed BC-DOS office management terminal (office-computer-terminal.md): single
+    // monochrome-green CRT — Z1 top bar / Z2 status / Z3 tabs / Z4 content / Z5 action.
     void DrawOfficeManagementTerminal(Rect rect, OfficeComputer computer, CompanyState company, bool nearShop)
     {
-        Color oldColor = GUI.color;
         GUI.BeginGroup(rect, GUIContent.none, terminalPaperStyle);
 
         float pad = 24f;
-        Rect content = new Rect(pad, 20f, rect.width - pad * 2f, rect.height - 40f);
-        GUI.Label(new Rect(content.x, content.y, 520f, 24f),
-            "BLACK COMMISSION OFFICE MANAGEMENT SYSTEM v1.3", terminalTitleStyle);
-        GUI.Label(new Rect(content.x, content.y + 22f, 340f, 22f),
-            "事务所办公管理系统。", terminalMutedStyle);
-        GUI.Label(new Rect(content.xMax - 250f, content.y, 250f, 22f),
-            "1998-11-07   22:13", terminalLabelStyle);
-        GUI.Label(new Rect(content.xMax - 250f, content.y + 22f, 250f, 22f),
-            "USER: BC_STAFF", terminalLabelStyle);
+        float x = pad;
+        float w = rect.width - pad * 2f;
 
-        Rect left = new Rect(content.x, content.y + 58f, 210f, content.height - 72f);
-        Rect main = new Rect(left.xMax + 14f, left.y, content.width - left.width - 14f, content.height - 72f);
-        DrawOfficeTerminalMenu(left);
-        DrawOfficeTerminalFiles(main, computer, company, nearShop);
+        // Z1 — top bar
+        GUI.Label(new Rect(x, 16f, w - 320f, 22f),
+            "BC OFFICE MANAGEMENT SYSTEM v2.1", terminalTitleStyle);
+        GUI.Label(new Rect(x + w - 320f, 16f, 320f, 22f),
+            "2098-11-07  09:13   USER: BC_STAFF", terminalLabelStyle);
+        DrawTerminalLine(new Rect(x, 44f, w, 1f));
 
-        GUI.EndGroup();
-        GUI.color = oldColor;
-    }
+        // Z2 — status strip (funds / debt / license / connection)
+        DrawTerminalStatusBar(new Rect(x, 52f, w, 22f), company);
 
-    void DrawOfficeTerminalMenu(Rect rect)
-    {
-        GUI.Box(rect, GUIContent.none, terminalBoxStyle);
-        GUI.Label(new Rect(rect.x + 14f, rect.y + 14f, rect.width - 28f, 22f),
-            "主菜单 / MAIN MENU", terminalLabelStyle);
+        // Z3 — tabs (number keys jump straight to a tab)
+        HandleTerminalTabKeys();
+        DrawTerminalTabs(new Rect(x, 82f, w, 28f));
+        DrawTerminalLine(new Rect(x, 114f, w, 1f));
 
-        string[] items =
+        // Z4 — content by tab
+        Rect content = new Rect(x, 124f, w, rect.height - 124f - 56f);
+        switch (terminalTab)
         {
-            "1. 委托管理\nCOMMISSION FILES",
-            "2. 公司账本\nLEDGER",
-            "3. 采购目录\nSUPPLY CATALOG",
-            "4. 档案记录\nARCHIVES",
-            "5. 员工管理\nSTAFF RECORD",
-            "6. 系统设置\nSYSTEM"
-        };
-
-        for (int i = 0; i < items.Length; i++)
-        {
-            Rect row = new Rect(rect.x + 12f, rect.y + 52f + i * 58f, rect.width - 24f, 46f);
-            GUI.Box(row, GUIContent.none, i == 0 ? terminalSelectedButtonStyle : terminalBoxStyle);
-            GUI.Label(new Rect(row.x + 18f, row.y + 8f, 28f, 28f), MenuGlyph(i), terminalLabelStyle);
-            GUI.Label(new Rect(row.x + 54f, row.y + 6f, row.width - 70f, row.height - 8f),
-                items[i], terminalSmallStyle);
-            if (i == 0)
-                GUI.Label(new Rect(row.xMax - 18f, row.y + 12f, 12f, 20f), "▶", terminalLabelStyle);
+            case 1: DrawTabSupply(content, nearShop); break;
+            case 2: DrawTabLedger(content, company); break;
+            default: DrawTabCommissions(content, computer, company); break;
         }
 
-        GUI.Label(new Rect(rect.x + 16f, rect.yMax - 54f, rect.width - 32f, 20f),
-            "使用方向键选择，按回车确认。", terminalSmallStyle);
-        GUI.Label(new Rect(rect.x + 16f, rect.yMax - 30f, rect.width - 32f, 20f),
-            "↑↓  选择     Enter  确认", terminalSmallStyle);
+        // Z5 — single primary action bar + key hints
+        DrawTerminalActionBar(new Rect(x, rect.height - 48f, w, 34f), computer, company);
+
+        GUI.EndGroup();
+    }
+
+    void HandleTerminalTabKeys()
+    {
+        Event e = Event.current;
+        if (e == null || e.type != EventType.KeyDown) return;
+        if (e.keyCode is KeyCode.Alpha1 or KeyCode.Keypad1) { terminalTab = 0; e.Use(); }
+        else if (e.keyCode is KeyCode.Alpha2 or KeyCode.Keypad2) { terminalTab = 1; e.Use(); }
+        else if (e.keyCode is KeyCode.Alpha3 or KeyCode.Keypad3) { terminalTab = 2; e.Use(); }
+    }
+
+    void DrawTerminalTabs(Rect rect)
+    {
+        float tw = rect.width / TerminalTabLabels.Length;
+        for (int i = 0; i < TerminalTabLabels.Length; i++)
+        {
+            Rect t = new Rect(rect.x + i * tw, rect.y, tw - 8f, rect.height);
+            bool active = terminalTab == i;
+            if (active) GUI.Box(t, GUIContent.none, terminalSelectedButtonStyle);
+            GUI.Label(new Rect(t.x + 12f, t.y + 3f, t.width - 16f, t.height - 4f),
+                (active ? "▸ " : "  ") + TerminalTabLabels[i],
+                active ? terminalInverseStyle : terminalLabelStyle);
+            if (GUI.Button(t, GUIContent.none, GUIStyle.none)) terminalTab = i;
+        }
+    }
+
+    // Z2: funds / debt / license / connection. Negative funds = inverse-video + '!'.
+    void DrawTerminalStatusBar(Rect rect, CompanyState company)
+    {
+        bool broke = company.Funds < 0;
+        string funds = (broke ? "! FUNDS " : "FUNDS ") + company.Funds + "G";
+        float fw = terminalLabelStyle.CalcSize(new GUIContent(funds)).x + 10f;
+        if (broke) GUI.Box(new Rect(rect.x, rect.y - 1f, fw, rect.height + 2f), GUIContent.none, terminalSelectedButtonStyle);
+        GUI.Label(new Rect(rect.x + 4f, rect.y, fw, rect.height), funds, broke ? terminalInverseStyle : terminalLabelStyle);
+        float fx = rect.x + fw + 22f;
+        GUI.Label(new Rect(fx, rect.y, 150f, rect.height), "DEBT " + company.Debt + "G", terminalLabelStyle);
+        GUI.Label(new Rect(fx + 150f, rect.y, 260f, rect.height), "LICENSE: TIER 1 (PROVISIONAL)", terminalMutedStyle);
+        string conn = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening
+            ? (NetworkManager.Singleton.IsHost ? "HOST" : "CLIENT - VIEW ONLY")
+            : "OFFLINE";
+        GUI.Label(new Rect(rect.x + rect.width - 220f, rect.y, 220f, rect.height), conn, terminalLabelRightStyle);
     }
 
     static string MenuGlyph(int index)
@@ -470,72 +506,185 @@ public class MvpHud : MonoBehaviour
         };
     }
 
-    void DrawOfficeTerminalFiles(Rect rect, OfficeComputer computer, CompanyState company, bool nearShop)
+    // [1] Commissions — fully data-driven (the real task pool; no hardcoded fake rows).
+    void DrawTabCommissions(Rect content, OfficeComputer computer, CompanyState company)
     {
-        Rect table = new Rect(rect.x, rect.y, rect.width, Mathf.Min(284f, rect.height * 0.58f));
-        Rect detail = new Rect(rect.x, table.yMax + 14f, rect.width * 0.58f - 7f, rect.height - table.height - 14f);
-        Rect action = new Rect(detail.xMax + 14f, detail.y, rect.width - detail.width - 14f, detail.height);
+        float y = content.y;
 
-        GUI.Box(table, GUIContent.none, terminalBoxStyle);
-        GUI.Label(new Rect(table.x + 14f, table.y + 12f, 360f, 24f),
-            "委托管理 / COMMISSION FILES", terminalTitleStyle);
-        DrawTerminalLine(new Rect(table.x + 12f, table.y + 42f, table.width - 24f, 1f));
+        // Returning state: a pending-settlement block jumps to the top (inverse video).
+        if (MvpPendingReward.HasPending)
+        {
+            Rect box = new Rect(content.x, y, content.width, 50f);
+            GUI.Box(box, GUIContent.none, terminalSelectedButtonStyle);
+            GUI.Label(new Rect(box.x + 12f, box.y + 5f, box.width - 24f, 20f),
+                "! SETTLEMENT PENDING - " + MvpPendingReward.ResultLabel, terminalInverseStyle);
+            GUI.Label(new Rect(box.x + 12f, box.y + 26f, box.width - 24f, 20f),
+                "PAYOUT +" + MvpPendingReward.Money + "G   CLAIM TO UNLOCK SUPPLY", terminalInverseStyle);
+            y += 60f;
+        }
 
-        float y = table.y + 48f;
-        DrawOfficeTableHeader(table.x + 14f, y, table.width - 28f);
-        y += 25f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "001", computer != null ? computer.DemoTaskTitle : "失踪的作业本",
-            computer != null ? computer.DemoTaskClient : "家长", GetDemoTaskStatus(computer), "23天后", true);
+        GUI.Label(new Rect(content.x, y, content.width, 20f),
+            "NO.   COMMISSION                       CLIENT         PAY     STATUS", terminalMutedStyle);
+        DrawTerminalLine(new Rect(content.x, y + 22f, content.width, 1f));
         y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "002", "地下室的异响", "宿管", "进行中", "—", false);
-        y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "003", "夜班公交异常", "交通局", "进行中", "—", false);
-        y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "004", "404号房的回声", "学校", "可接受", "17天后", false);
-        y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "005", "废弃工厂的货物", "仓库管理员", "已完成", "—", false);
-        y += 30f;
-        DrawOfficeTaskRow(table.x + 14f, y, table.width - 28f, "006", "医院地下室的钥匙", "医院", "已锁定", "—", false);
-        GUI.Label(new Rect(table.x + table.width * 0.5f - 70f, table.yMax - 28f, 140f, 20f),
-            "第 1 页 / 共 2 页   ◀  ▶", terminalSmallStyle);
 
-        GUI.Box(detail, GUIContent.none, terminalBoxStyle);
-        GUI.Label(new Rect(detail.x + 14f, detail.y + 10f, detail.width - 28f, 22f),
-            "委托详情 / FILE DETAIL [001]", terminalLabelStyle);
-        DrawTerminalLine(new Rect(detail.x + 12f, detail.y + 36f, detail.width - 24f, 1f));
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 48f, "委托名称", computer != null ? computer.DemoTaskTitle : "失踪的作业本", "LOST HOMEWORK");
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 70f, "委托人", computer != null ? computer.DemoTaskClient : "家长", "PARENT");
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 92f, "地点", computer != null ? computer.DemoTaskLocation : "西区小学", "WESTSIDE ELEMENTARY");
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 114f, "报酬", $"{(computer != null ? computer.DemoTaskMoneyReward : 120)}G", null);
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 136f, "预计时长", "10 - 15 MIN", null);
-        DrawTerminalDetailLine(detail.x + 14f, detail.y + 158f, "结局方式", "全部 / 部分 / 失败", "FULL / PARTIAL / FAILED");
-        GUI.Label(new Rect(detail.x + 14f, detail.y + 182f, detail.width - 28f, 38f),
-            "备注: 孩子的作业本在放学后的教室中失踪。\n      家长担心里面记录着重要信息。", terminalSmallStyle);
+        if (computer != null)
+        {
+            GUI.Box(new Rect(content.x, y - 2f, content.width, 26f), GUIContent.none, terminalSelectedButtonStyle);
+            GUI.Label(new Rect(content.x + 8f, y, 48f, 22f), "007", terminalInverseStyle);
+            GUI.Label(new Rect(content.x + 60f, y, content.width * 0.42f, 22f), computer.DemoTaskTitle, terminalInverseStyle);
+            GUI.Label(new Rect(content.x + content.width * 0.50f, y, content.width * 0.18f, 22f), computer.DemoTaskClient, terminalInverseStyle);
+            GUI.Label(new Rect(content.x + content.width * 0.70f, y, 84f, 22f), computer.DemoTaskMoneyReward + "G", terminalInverseStyle);
+            GUI.Label(new Rect(content.x + content.width * 0.82f, y, content.width * 0.18f, 22f), GetDemoTaskStatus(computer), terminalInverseStyle);
+            y += 30f;
+        }
+        else
+        {
+            GUI.Label(new Rect(content.x, y, content.width, 22f),
+                "NO NEW COMMISSIONS THIS CYCLE - AWAITING DISPATCH", terminalMutedStyle);
+            y += 30f;
+        }
 
-        GUI.Box(action, GUIContent.none, terminalBoxStyle);
-        GUI.Label(new Rect(action.x + 14f, action.y + 10f, action.width - 28f, 22f),
-            "操作 / ACTION", terminalLabelStyle);
-        DrawTerminalLine(new Rect(action.x + 12f, action.y + 36f, action.width - 24f, 1f));
+        if (company.CanShowTutorialAcquisition)
+        {
+            GUI.Label(new Rect(content.x + 8f, y, content.width - 16f, 22f),
+                "ACQ   OFFICE ACQUISITION FILE          BC HQ         150G    SPECIAL", terminalTitleStyle);
+            y += 30f;
+        }
 
-        DrawTerminalPrimaryAction(new Rect(action.x + 18f, action.y + 54f, action.width - 36f, 34f),
-            computer, company);
+        DrawTerminalLine(new Rect(content.x, y + 6f, content.width, 1f));
+        y += 18f;
 
-        if (GUI.Button(new Rect(action.x + 18f, action.y + 96f, action.width - 36f, 30f),
-            "查看详情 (VIEW DETAIL)", terminalButtonStyle))
-            SetOfficeMessage("详情已显示在左侧文件栏。");
-        if (GUI.Button(new Rect(action.x + 18f, action.y + 132f, action.width - 36f, 30f),
-            "标记完成 (MARK COMPLETE)", terminalButtonStyle))
-            SetOfficeMessage("任务完成标记将在后续版本开放。");
-        if (GUI.Button(new Rect(action.x + 18f, action.y + 168f, action.width - 36f, 30f),
-            "放弃委托 (ABANDON COMMISSION)", terminalButtonStyle))
-            SetOfficeMessage("当前演示委托不可放弃。");
+        if (computer != null)
+        {
+            GUI.Label(new Rect(content.x, y, content.width, 20f), "DETAIL [007]:  " + computer.DemoTaskTitle, terminalLabelStyle);
+            y += 26f;
+            DrawTerminalDetailLine(content.x, y, "SITE", computer.DemoTaskLocation, null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, "PAY", computer.DemoTaskMoneyReward + "G x seal completeness", null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, "WINDOW", MvpMissionClock.GetScheduleSummary(computer.DemoTask), null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, "OUTCOME", "FULL / PARTIAL / FAILED", null); y += 24f;
+            GUI.Label(new Rect(content.x, y, content.width, 40f), "NOTE: " + computer.DemoTaskDescription, terminalSmallStyle);
+        }
+    }
 
-        DrawTerminalStatusStrip(rect, company, nearShop);
+    // [2] Supply — gear catalog (host only). Frozen until a pending settlement is claimed.
+    void DrawTabSupply(Rect content, bool nearShop)
+    {
+        if (MvpPendingReward.HasPending)
+        {
+            GUI.Box(content, GUIContent.none, terminalBoxStyle);
+            GUI.Label(new Rect(content.x + 20f, content.y + content.height * 0.42f, content.width - 40f, 24f),
+                "! SUPPLY FROZEN - CLAIM PENDING SETTLEMENT FIRST", terminalTitleStyle);
+            return;
+        }
+
+        GUI.Label(new Rect(content.x, content.y, content.width, 20f), "SUPPLY CATALOG   (host only)", terminalMutedStyle);
+        DrawTerminalLine(new Rect(content.x, content.y + 22f, content.width, 1f));
+
+        PlayerHotbar hotbar = FindLocalHotbar();
+        bool canBuy = hotbar != null && nearShop && IsLocalHostOrSolo();
+        float y = content.y + 34f;
+        DrawSupplyRow(new Rect(content.x, y, content.width, 30f), "F1", MvpLocale.T("flashlight"), MvpHotbarItemId.Flashlight, hotbar, canBuy); y += 40f;
+        DrawSupplyRow(new Rect(content.x, y, content.width, 30f), "F2", MvpLocale.T("battery"), MvpHotbarItemId.Battery, hotbar, canBuy); y += 40f;
+
+        bool ownsWatch = hotbar != null && hotbar.HasWristwatchOwned;
+        GUI.Label(new Rect(content.x + 4f, y + 4f, 40f, 22f), "F3", terminalLabelStyle);
+        GUI.Label(new Rect(content.x + 48f, y + 4f, content.width * 0.5f, 22f), "Wristwatch", terminalLabelStyle);
+        GUI.Label(new Rect(content.x + content.width * 0.62f, y + 4f, 90f, 22f), PlayerHotbar.WristwatchCost + "G", terminalLabelStyle);
+        GUI.enabled = canBuy && !ownsWatch;
+        if (GUI.Button(new Rect(content.x + content.width - 120f, y, 112f, 30f), ownsWatch ? "OWNED" : "BUY", terminalButtonStyle))
+            TryBuyWristwatch(hotbar);
+        GUI.enabled = true;
+        y += 44f;
+
+        if (!nearShop)
+            GUI.Label(new Rect(content.x, y, content.width, 20f), "STAND AT THE COMPUTER TO PURCHASE.", terminalMutedStyle);
+        if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
+            GUI.Label(new Rect(content.x, content.yMax - 24f, content.width, 22f), shopMessage,
+                shopMessage.Contains("不足") || shopMessage.Contains("only") ? terminalInverseStyle : terminalLabelStyle);
+    }
+
+    void DrawSupplyRow(Rect rect, string key, string label, MvpHotbarItemId item, PlayerHotbar hotbar, bool canBuy)
+    {
+        GUI.Label(new Rect(rect.x + 4f, rect.y + 4f, 40f, 22f), key, terminalLabelStyle);
+        GUI.Label(new Rect(rect.x + 48f, rect.y + 4f, rect.width * 0.5f, 22f), label, terminalLabelStyle);
+        GUI.Label(new Rect(rect.x + rect.width * 0.62f, rect.y + 4f, 90f, 22f), PlayerHotbar.GetItemCost(item) + "G", terminalLabelStyle);
+        GUI.enabled = canBuy;
+        if (GUI.Button(new Rect(rect.x + rect.width - 120f, rect.y, 112f, rect.height), "BUY", terminalButtonStyle))
+            TryBuy(hotbar, item);
+        GUI.enabled = true;
+    }
+
+    // [3] Ledger — current funds/debt + recent settlements (per-commission history needs
+    // a SaveIO extension; for now this shows current balances + any pending settlement).
+    void DrawTabLedger(Rect content, CompanyState company)
+    {
+        GUI.Label(new Rect(content.x, content.y, content.width, 20f), "COMPANY LEDGER", terminalTitleStyle);
+        DrawTerminalLine(new Rect(content.x, content.y + 24f, content.width, 1f));
+        float y = content.y + 34f;
+        DrawTerminalDetailLine(content.x, y, "CURRENT FUNDS", company.Funds + "G", null); y += 24f;
+        DrawTerminalDetailLine(content.x, y, "OUTSTANDING DEBT", company.Debt + "G", null); y += 34f;
+        GUI.Label(new Rect(content.x, y, content.width, 20f), "RECENT SETTLEMENTS", terminalMutedStyle); y += 26f;
+        if (MvpPendingReward.HasPending)
+            GUI.Label(new Rect(content.x, y, content.width, 22f),
+                "PENDING:  " + MvpPendingReward.ResultLabel + "  +" + MvpPendingReward.Money + "G  (claim at [1] COMMISSIONS)",
+                terminalLabelStyle);
+        else
+            GUI.Label(new Rect(content.x, y, content.width, 22f), "NO ARCHIVED SETTLEMENTS ON FILE YET.", terminalMutedStyle);
+    }
+
+    // Z5: one primary action (priority: claim settlement -> accept -> confirm acquisition)
+    // + key hints, with the transient office message just above it.
+    void DrawTerminalActionBar(Rect rect, OfficeComputer computer, CompanyState company)
+    {
+        if (!string.IsNullOrEmpty(officeMessage) && Time.time < officeMessageUntil)
+            GUI.Label(new Rect(rect.x, rect.y - 22f, rect.width, 20f), officeMessage, terminalLabelStyle);
+        DrawTerminalPrimaryAction(new Rect(rect.x, rect.y, rect.width * 0.58f, rect.height), computer, company);
+        GUI.Label(new Rect(rect.x + rect.width * 0.6f, rect.y, rect.width * 0.4f, rect.height),
+            "[1/2/3] TAB   [E] CONFIRM   [ESC] EXIT", terminalLabelRightStyle);
+    }
+
+    // The [E] path for the single primary action — same priority as the on-screen
+    // button (claim settlement → accept commission → confirm acquisition).
+    void ExecuteTerminalPrimaryAction(OfficeComputer computer)
+    {
+        if (computer == null) return;
+        CompanyState company = CompanyData.Current;
+
+        if (MvpPendingReward.HasPending)
+        {
+            if (IsLocalHostOrSolo())
+            {
+                computer.ExecuteComputerAction(FindLocalPlayer());
+                SetOfficeMessage("Settlement request submitted.");
+            }
+            return;
+        }
+
+        if (company.CanShowTutorialAcquisition)
+        {
+            if (company.CanAffordTutorialAcquisition && IsLocalHostOrSolo())
+            {
+                computer.ExecuteComputerAction(FindLocalPlayer());
+                SetOfficeMessage("Acquisition file submitted.");
+            }
+            return;
+        }
+
+        if (MvpMissionRuntime.HasSelectedTask) return; // already locked
+
+        if (CanAcceptFromTerminal(computer))
+        {
+            if (computer.TryAcceptDemoTask(out string msg))
+                CloseComputer();
+            else if (msg != null)
+                SetOfficeMessage(msg);
+        }
     }
 
     void DrawTerminalPrimaryAction(Rect rect, OfficeComputer computer, CompanyState company)
     {
-        string label = "› 接受委托 (ACCEPT COMMISSION)";
+        string label = "› ACCEPT COMMISSION  [E]";
         bool enabled = CanAcceptFromTerminal(computer);
         System.Action action = () =>
         {
@@ -549,27 +698,27 @@ public class MvpHud : MonoBehaviour
 
         if (MvpPendingReward.HasPending)
         {
-            label = "› 领取结算 (CLAIM SETTLEMENT)";
+            label = "› CLAIM SETTLEMENT  [E]";
             enabled = IsLocalHostOrSolo();
             action = () =>
             {
                 computer?.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("结算申请已提交。");
+                SetOfficeMessage("Settlement request submitted.");
             };
         }
         else if (company.CanShowTutorialAcquisition)
         {
-            label = "› 确认收购 (CONFIRM ACQUISITION)";
+            label = "› CONFIRM ACQUISITION  [E]";
             enabled = company.CanAffordTutorialAcquisition && IsLocalHostOrSolo();
             action = () =>
             {
                 computer?.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("收购文件已提交。");
+                SetOfficeMessage("Acquisition file submitted.");
             };
         }
         else if (MvpMissionRuntime.HasSelectedTask)
         {
-            label = "› 委托已锁定 (COMMISSION LOCKED)";
+            label = "› COMMISSION LOCKED";
             enabled = false;
         }
 
@@ -1218,6 +1367,8 @@ public class MvpHud : MonoBehaviour
         return players.Length > 0 ? players[0] : null;
     }
 
+    static float computerOpenedAt;
+
     public static void OpenComputer(OfficeComputer computer)
     {
         activeMissionVan = null;
@@ -1225,6 +1376,7 @@ public class MvpHud : MonoBehaviour
         activeBestiary = null;
         SettingsOverlay.ForceClose();
         activeComputer = computer;
+        computerOpenedAt = Time.unscaledTime;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
         ComputerCloseupCamera.Enter(computer.transform);
@@ -1390,10 +1542,13 @@ public class MvpHud : MonoBehaviour
         panelTexture = MakeTexture(BlackCommissionUiTheme.ConcreteBlack);
         slotTexture = MakeTexture(BlackCommissionUiTheme.ConcretePanel);
         selectedSlotTexture = MakeTexture(BlackCommissionUiTheme.MilitaryGreen);
-        terminalPaperTexture = MakeTexture(new Color(0.67f, 0.61f, 0.47f, 0.96f));
-        terminalBoxTexture = MakeTexture(new Color(0.53f, 0.49f, 0.38f, 0.18f));
-        terminalSelectedTexture = MakeTexture(new Color(0.42f, 0.37f, 0.27f, 0.28f));
-        terminalLineTexture = MakeTexture(new Color(0.18f, 0.17f, 0.13f, 0.58f));
+        // Monochrome green phosphor CRT (office-computer-terminal.md): the office
+        // computer is an electronic screen, so it speaks CRT green, not paper. Warnings
+        // = inverse-video (green fill on terminalSelectedTexture) + '!', never red.
+        terminalPaperTexture = MakeTexture(new Color(0.024f, 0.055f, 0.031f, 0.99f));   // near-black green glass
+        terminalBoxTexture = MakeTexture(new Color(0.055f, 0.140f, 0.075f, 0.30f));     // faint panel fill
+        terminalSelectedTexture = MakeTexture(new Color(0.424f, 1.000f, 0.373f, 0.92f)); // CRT green (inverse-video)
+        terminalLineTexture = MakeTexture(new Color(0.180f, 0.470f, 0.205f, 0.62f));    // dim green rule
         EnsureIcons();
 
         panelStyle = new GUIStyle(GUI.skin.box)
@@ -1465,7 +1620,7 @@ public class MvpHud : MonoBehaviour
         {
             fontSize = 15,
             fontStyle = FontStyle.Bold,
-            normal = { textColor = new Color(0.10f, 0.095f, 0.075f, 1f) },
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen },
             wordWrap = false
         };
         terminalLabelStyle = new GUIStyle(terminalTitleStyle)
@@ -1476,27 +1631,36 @@ public class MvpHud : MonoBehaviour
         terminalMutedStyle = new GUIStyle(terminalLabelStyle)
         {
             fontSize = 13,
-            normal = { textColor = new Color(0.19f, 0.17f, 0.13f, 0.86f) }
+            normal = { textColor = BlackCommissionUiTheme.CrtGreenDim }
         };
         terminalSmallStyle = new GUIStyle(terminalLabelStyle)
         {
             fontSize = 12,
-            normal = { textColor = new Color(0.12f, 0.11f, 0.085f, 0.96f) },
+            normal = { textColor = BlackCommissionUiTheme.CrtGreen },
             wordWrap = true
         };
         terminalButtonStyle = new GUIStyle(GUI.skin.button)
         {
             fontSize = 12,
             alignment = TextAnchor.MiddleLeft,
-            normal = { background = terminalBoxTexture, textColor = new Color(0.10f, 0.095f, 0.075f, 1f) },
-            hover = { background = terminalSelectedTexture, textColor = new Color(0.05f, 0.045f, 0.035f, 1f) },
-            active = { background = terminalLineTexture, textColor = new Color(0.05f, 0.045f, 0.035f, 1f) },
+            normal = { background = terminalBoxTexture, textColor = BlackCommissionUiTheme.CrtGreen },
+            hover = { background = terminalSelectedTexture, textColor = new Color(0.02f, 0.06f, 0.03f, 1f) },
+            active = { background = terminalSelectedTexture, textColor = new Color(0.02f, 0.06f, 0.03f, 1f) },
             padding = new RectOffset(12, 8, 4, 4)
         };
         terminalSelectedButtonStyle = new GUIStyle(terminalBoxStyle)
         {
             normal = { background = terminalSelectedTexture }
         };
+        terminalInverseStyle = new GUIStyle(terminalLabelStyle)
+        {
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = new Color(0.02f, 0.06f, 0.03f, 1f) }   // dark text on green inverse-video
+        };
+        terminalLabelRightStyle = new GUIStyle(terminalLabelStyle) { alignment = TextAnchor.MiddleRight };
+        // Apply the project font to all terminal styles (3270 + CJK fallback chain).
+        foreach (var s in new[] { terminalTitleStyle, terminalLabelStyle, terminalMutedStyle, terminalSmallStyle, terminalButtonStyle, terminalInverseStyle, terminalLabelRightStyle })
+            MvpFontProvider.ApplyToStyle(s);
 
         EnsureCrtTextures();
 
