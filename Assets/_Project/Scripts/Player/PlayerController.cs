@@ -32,6 +32,10 @@ public class PlayerController : NetworkBehaviour
     [Header("Camera")]
     [SerializeField] Transform cameraRoot;
     [SerializeField] float crouchCameraDrop = 0.55f;
+    // Van bench top sits ~0.29 m above the cabin floor; a seated torso puts the eye
+    // ~1.05 m up, i.e. ~0.6 m below the standing eye. Without this the "seated" player
+    // keeps full standing eye height and reads like they are standing in the van.
+    [SerializeField] float seatedCameraDrop = 0.6f;
     [SerializeField] float cameraCrouchLerpSpeed = 12f;
 
     [Header("Swimming")]
@@ -155,10 +159,28 @@ public class PlayerController : NetworkBehaviour
         velocity = Vector3.zero;
         isSprinting = false;
         isCrouching = false;
+        seatedCameraActive = true;                   // ease the eye down to seated height
     }
+
+    // Owner-local mirror of "seated" for the camera. SeatIndex clears over an RPC, so
+    // right after disembark the networked value can lag a round-trip — driving the eye
+    // height off it would snap the camera to seated height at the van door.
+    bool seatedCameraActive;
+
+    // Set when RestoreControlAt already placed this player (van disembark / scene spawn):
+    // the seat-clear callback must not teleport again to the generic safe position.
+    bool seatExitTeleportHandled;
 
     void ExitSeat()
     {
+        seatedCameraActive = false;
+        if (seatExitTeleportHandled)
+        {
+            seatExitTeleportHandled = false;
+            VanTransitOverlay.HideCabin();
+            return;
+        }
+
         // Drop back onto solid ground in the current scene. For scene transitions the
         // destination's spawn manager repositions again right after load; for a voluntary
         // "leave seat" at HQ this is what gets the player out of the floating cabin instead
@@ -227,6 +249,19 @@ public class PlayerController : NetworkBehaviour
                 return;
             }
         }
+    }
+
+    /// <summary>
+    /// Server seats every connected player that isn't already seated. Used on the return
+    /// settlement: the whole crew (downed included) rides home in the van — boarding-transit
+    /// spec "签发后全队将随车返回事务所".
+    /// </summary>
+    public static void SeatAllConnectedServer()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        if (network == null || !network.IsListening || !network.IsServer) return;
+        foreach (ulong clientId in network.ConnectedClientsIds)
+            AssignSeatForClient(clientId);
     }
 
     /// <summary>Server resets every player's seat (called around departure / scene load).</summary>
@@ -313,7 +348,20 @@ public class PlayerController : NetworkBehaviour
 
     void Update()
     {
-        if (!IsOwner) return;
+        if (!IsOwner)
+        {
+            // Remote players were silent — only the owner ran the footstep code, so
+            // teammates walked the tower like ghosts. Drive their steps locally from
+            // the synced move-speed tier (0 idle / .25 crouch / .5 walk / 1 sprint);
+            // crouching stays near-silent by design (sneak affordance).
+            float netSpeed = NetworkMoveSpeed.Value;
+            if (netSpeed > 0.3f && Time.time >= nextFootstepTime)
+            {
+                nextFootstepTime = Time.time + (netSpeed >= 0.9f ? 0.32f : 0.45f);
+                PlaySurfaceFootstep();
+            }
+            return;
+        }
         if (health != null && health.IsDowned.Value)
         {
             isSprinting = false;
@@ -338,6 +386,7 @@ public class PlayerController : NetworkBehaviour
         {
             isSprinting = false;
             velocity = Vector3.zero;
+            UpdateCrouchCamera(false); // ease the eye down to seated height
             return;
         }
 
@@ -493,7 +542,7 @@ public class PlayerController : NetworkBehaviour
         {
             float interval = isSprinting ? 0.32f : isCrouching ? 0.6f : 0.45f;
             nextFootstepTime = Time.time + interval;
-            AudioManager.Instance?.PlayFootstep(transform.position);
+            PlaySurfaceFootstep();
         }
 
         if (grounded && velocity.y < 0f)
@@ -615,6 +664,24 @@ public class PlayerController : NetworkBehaviour
         return !blocked;
     }
 
+    /// <summary>
+    /// Footstep with surface flavor: a short down-ray decides concrete vs metal
+    /// (stair ramps, scaffold bridge, drop dock — whitebox names are the contract).
+    /// </summary>
+    void PlaySurfaceFootstep()
+    {
+        // Metal = the scaffold bridge deck (stairs are poured concrete in the V8 plan).
+        bool metal = false;
+        if (Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down,
+                out RaycastHit hit, 1.6f, ~0, QueryTriggerInteraction.Ignore))
+            metal = hit.collider.name.StartsWith("Bridge_");
+        if (metal) AudioManager.Instance?.PlayFootstepMetal(transform.position);
+        else AudioManager.Instance?.PlayFootstep(transform.position);
+    }
+
+    /// <summary>Scene-appropriate ground position (PlayerSpawnPoint or per-scene fallback).</summary>
+    public Vector3 SceneSafePosition => GetSceneSafePosition();
+
     Vector3 GetSceneSafePosition()
     {
         GameObject spawn = GameObject.Find("PlayerSpawnPoint");
@@ -642,7 +709,9 @@ public class PlayerController : NetworkBehaviour
         if (cameraRoot == null || !hasCameraStandPosition) return;
 
         Vector3 target = standCameraLocalPosition;
-        if (isCrouching)
+        if (seatedCameraActive)
+            target.y -= seatedCameraDrop;
+        else if (isCrouching)
             target.y -= crouchCameraDrop;
 
         if (instant)
@@ -664,6 +733,8 @@ public class PlayerController : NetworkBehaviour
 
     public void RestoreControlAt(Vector3 position, Quaternion rotation)
     {
+        seatExitTeleportHandled = IsOwner && SeatIndex.Value >= 0;
+        seatedCameraActive = false;
         ClearSeatForSceneSpawn();
 
         bool hadController = cc != null;

@@ -38,4 +38,23 @@ public class OfficeTaskDefinition : ScriptableObject
     public int failureConsolationMoney = 20;
     public int failureReputationPenalty = -2;
     public int failureExperience = 0;
+
+    [Header("Settlement Notes (结算单·客户使用备注)")]
+    [Tooltip("Per result kind; one entry is picked (deterministic across peers). Empty hides the note block. design/ux/settlement.md")]
+    [TextArea] public string[] settlementNotesSuccess;
+    [TextArea] public string[] settlementNotesPartial;
+    [TextArea] public string[] settlementNotesFailure;
+
+    /// <summary>Client usage note for the settlement card; deterministic pick so all peers read the same line.</summary>
+    public string GetSettlementNote(MvpMissionResultKind kind, int seed)
+    {
+        string[] pool = kind switch
+        {
+            MvpMissionResultKind.Success => settlementNotesSuccess,
+            MvpMissionResultKind.Partial => settlementNotesPartial,
+            _ => settlementNotesFailure
+        };
+        if (pool == null || pool.Length == 0) return null;
+        return pool[Mathf.Abs(seed) % pool.Length];
+    }
 }

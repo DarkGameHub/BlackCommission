@@ -3,9 +3,9 @@
   <Project Path="McpUnity.Editor.csproj" />
   <Project Path="BlackCommission.Mission.Core.csproj" />
   <Project Path="BlackCommission.Office.Core.Tests.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="BlackCommission.Mission.Core.Tests.csproj" />
   <Project Path="BlackCommission.Level.Topology.Tests.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="McpUnity.Editor.Tests.csproj" />
   <Project Path="BlackCommission.Office.Core.csproj" />
   <Project Path="BlackCommission.Level.Topology.csproj" />

@@ -58,9 +58,18 @@ public class HQSpawnManager : MonoBehaviour
             if (cc == null) continue;
 
             int offsetIndex = GetLocalSpawnOffsetIndex();
-            player.RestoreControlAt(
-                spawnPoint.position + Vector3.right * (offsetIndex * 1.5f),
-                spawnPoint.rotation);
+            Vector3 spawnPosition = spawnPoint.position + Vector3.right * (offsetIndex * 1.5f);
+
+            // Crew arriving inside the van: the scene loaded underneath the windowless cabin
+            // (boarding-transit spec) and VanTransitOverlay owns the disembark moment — hand
+            // it the spawn instead of yanking the player out of the cabin mid-ritual.
+            if (player.IsSeated && VanTransitOverlay.IsActive)
+            {
+                VanTransitOverlay.RegisterArrivalSpawn(spawnPosition, spawnPoint.rotation);
+                return true;
+            }
+
+            player.RestoreControlAt(spawnPosition, spawnPoint.rotation);
             return true;
         }
 

@@ -1,36 +1,95 @@
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Builds and shows the enclosed, windowless van cabin that players actually sit inside
-/// during transit. Unlike the old passive cutscene, this NO LONGER disables the player
-/// camera or spawns cosmetic dummies — real seated player bodies (with their own cameras,
-/// gestures, held items and nameplates) occupy the cabin. The cabin is shown on the LOCAL
-/// client whenever the local player is seated (PlayerController.EnterSeat/ExitSeat call
-/// EnsureCabin/HideCabin). Geometry/seat math lives in <see cref="VanCabin"/>.
+/// The boarding → 派车单 → transit → arrival surface of the dispatch-van ritual
+/// (design/ux/boarding-transit.md). Builds and shows the enclosed, windowless van cabin
+/// that players actually sit inside during transit — real seated player bodies (cameras,
+/// gestures, held items, nameplates) occupy it; geometry/seat math lives in
+/// <see cref="VanCabin"/>.
+///
+/// The cabin doubles as the loading screen: the destination scene loads UNDERNEATH while
+/// the crew rides (the cabin is DontDestroyOnLoad and has no windows), and the rear door
+/// only opens once the scene is ready AND the minimum transit time has elapsed — no black
+/// screen, no 2D loading page. Three paper surfaces share the civic-paperwork grammar:
+/// the top ticket strip (派遣票据条), the central dispatch card (派车单, pops when the
+/// whole living crew is seated, host signs with Space), and the early-return application
+/// card (提前收工申请单, host holds E for 1.2s to sign, Esc withdraws).
 /// </summary>
 public class VanTransitOverlay : MonoBehaviour
 {
-    public enum Phase { None, Boarding, Transit }
+    public enum Phase { None, Boarding, Transit, Arrived }
+    enum Card { None, Dispatch, DispatchSigned, EarlyReturn }
+
+    const float CardSlideSeconds = 0.25f;   // paper slides in from below (settlement grammar)
+    const float StampSlamSeconds = 0.12f;   // 章砸落 1.3→1.0
+    const float StampBeatSeconds = 0.6f;    // 已签发 → card folds, van pulls out
+    const float SignHoldSeconds = 1.2f;     // hold-E signature (PM-locked)
+    const float SignDecayRate = SignHoldSeconds / 0.3f; // released ink drains in 0.3s
+    const float ProgressCap = 0.92f;        // bar breathes here while the scene still loads
+    const float ArrivalFillSeconds = 0.4f;  // 92% → 100% top-up on arrival
+    const float SquelchAtSeconds = 0.5f;    // engine-off silence, then the radio keys
+    const float DoorCrackAtSeconds = 0.7f;  // 门缝渗光
+    const float DoorOpenAtSeconds = 1.4f;
+    const float DoorOpenSeconds = 1.2f;
 
     static VanTransitOverlay current;
+    static float lastSceneLoadedAt = float.NegativeInfinity;
+    static bool hasArrivalSpawn;
+    static Vector3 arrivalSpawnPos;
+    static Quaternion arrivalSpawnRot;
 
     GameObject interiorRoot;
     bool cabinShown;
     Phase phase;
+    AudioSource radioSource;
+    AudioClip radioSquelchClip;
 
     string taskTitle = "";
     string locationName = "";
-    int boardedCount;
 
-    // Transit progress: set when the drive begins so the HUD can show a moving "arrival progress" bar
-    // that matches the dispatch duration the OfficeComputer / mission manager is counting down.
+    // Boarding counts, cached each Update for OnGUI (client-safe: counts player objects,
+    // never NetworkManager.ConnectedClients which is server-only).
+    int seatedCount;
+    int livingCount;
+    int neededCount;
+    bool allSeated;
+
+    Card card;
+    float cardShownAt;
+    float signedAt;              // dispatch stamp slam start
+    bool drivePending;           // signed → waiting the stamp beat before driving off
+    float pendingDriveDuration;
+    float signHold;              // early-return ink, 0..SignHoldSeconds
+    int estimatedPartialMoney;
+
+    // Transit gate: the ride ends when BOTH the minimum duration elapsed AND a scene
+    // load finished after the signature (the destination loading underneath us).
     float transitDuration;
     float transitStartTime;
+    float driveRequestedAt = float.PositiveInfinity;
+
+    // Arrival sequence (engine off → silence+squelch → door-crack light → full open → E).
+    float arrivalStartedAt;
+    bool squelchPlayed;
+    bool doorFullyOpen;
+    float doorFullyOpenAt;
+    bool disembarked;
+    Transform rearDoor;
+    Vector3 rearDoorClosedPos;
+    GameObject arrivalGlow;
+    Light arrivalLight;
 
     GUIStyle headingStyle;
     GUIStyle smallStyle;
+    GUIStyle cardHeaderStyle;
+    GUIStyle cardRowStyle;
+    GUIStyle cardSublineStyle;
+    GUIStyle cardWarnStyle;
+    GUIStyle stampStyle;
+    GUIStyle stampPendingStyle;
 
     public static bool IsActive => current != null && current.cabinShown;
     public static Phase CurrentPhase => current != null ? current.phase : Phase.None;
@@ -57,30 +116,31 @@ public class VanTransitOverlay : MonoBehaviour
         current.ShowCabin();
     }
 
-    public static void ShowOutbound(string title, string location, float durationSeconds)
+    public static void ShowOutbound(string title, string location, float minTransitSeconds)
     {
         EnsureInstance();
         current.taskTitle = Resolve(title, "commission");
         current.locationName = Resolve(location, "mission_location");
-        current.BeginDrive(durationSeconds);
+        current.BeginSignedDeparture(minTransitSeconds);
     }
 
-    public static void ShowReturn(string title, string location, float durationSeconds)
+    public static void ShowReturn(string title, string location, float minTransitSeconds)
     {
         EnsureInstance();
-        current.taskTitle = Resolve(title, "office");
+        current.taskTitle = Resolve(title, "commission");
         current.locationName = Resolve(location, "office");
-        current.BeginDrive(durationSeconds);
+        current.BeginSignedDeparture(minTransitSeconds);
     }
 
-    public static void StartDeparture(float transitSeconds)
+    /// <summary>
+    /// The destination's spawn manager hands over the spawn instead of teleporting a
+    /// still-riding player out of the cabin; the overlay uses it when the player steps off.
+    /// </summary>
+    public static void RegisterArrivalSpawn(Vector3 position, Quaternion rotation)
     {
-        if (current != null) current.BeginDrive(transitSeconds);
-    }
-
-    public static void NotifyPlayerBoarded(int totalBoarded)
-    {
-        if (current != null) current.boardedCount = totalBoarded;
+        hasArrivalSpawn = true;
+        arrivalSpawnPos = position;
+        arrivalSpawnRot = rotation;
     }
 
     static string Resolve(string value, string fallbackKey)
@@ -92,6 +152,58 @@ public class VanTransitOverlay : MonoBehaviour
         var go = new GameObject("MVP_VanTransitOverlay");
         DontDestroyOnLoad(go);
         current = go.AddComponent<VanTransitOverlay>();
+    }
+
+    void OnEnable() => SceneManager.sceneLoaded += OnSceneLoaded;
+    void OnDisable() => SceneManager.sceneLoaded -= OnSceneLoaded;
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode) => lastSceneLoadedAt = Time.unscaledTime;
+
+    bool DestinationSceneReady => lastSceneLoadedAt > driveRequestedAt;
+
+    // ─── Departure (signed by the host: stamp beat, then the van pulls out) ───
+
+    void BeginSignedDeparture(float minTransitSeconds)
+    {
+        ShowCabin();
+        if (phase == Phase.Transit || phase == Phase.Arrived) return;
+
+        driveRequestedAt = Time.unscaledTime;
+        hasArrivalSpawn = false;
+        pendingDriveDuration = Mathf.Max(0f, minTransitSeconds);
+
+        if (card == Card.Dispatch)
+        {
+            // 「已签发」章砸落 + StampThunk 同帧 → 0.6s 后卡收起，票据条接力。
+            card = Card.DispatchSigned;
+            signedAt = Time.unscaledTime;
+            drivePending = true;
+            AudioManager.Instance?.PlayStamp();
+        }
+        else
+        {
+            // No card up on this peer (failure forced return / straggler): drive straight off.
+            card = Card.None;
+            drivePending = false;
+            BeginDrive(pendingDriveDuration);
+        }
+    }
+
+    void BeginDrive(float durationSeconds)
+    {
+        ShowCabin();
+        if (phase == Phase.Transit || phase == Phase.Arrived) return;
+
+        phase = Phase.Transit;
+        transitDuration = Mathf.Max(0.01f, durationSeconds);
+        transitStartTime = Time.unscaledTime;
+        squelchPlayed = false;
+        doorFullyOpen = false;
+        disembarked = false;
+        AudioManager.Instance?.PlayEngineStart(Vector3.zero);
+        AudioManager.Instance?.PlayEngineIdle();
+        // Dispatch keys the channel as the van pulls out.
+        if (radioSource != null && radioSquelchClip != null)
+            radioSource.PlayOneShot(radioSquelchClip, 0.8f);
     }
 
     // ─── Cabin lifecycle ───
@@ -117,8 +229,24 @@ public class VanTransitOverlay : MonoBehaviour
                 c.enabled = false;
 
             AddTransitInteriorLights();
+            AddDispatchRadio();
         }
         cabinShown = true;
+    }
+
+    // Quiet dispatch-radio bed inside the cabin — static hiss with the occasional
+    // squelch, the office keeping half an ear on its only van.
+    void AddDispatchRadio()
+    {
+        var radioGo = new GameObject("DispatchRadio");
+        radioGo.transform.SetParent(interiorRoot.transform, false);
+        radioSource = radioGo.AddComponent<AudioSource>();
+        radioSource.clip = SynthAudio.RadioStatic("synth_radio_static");
+        radioSource.loop = true;
+        radioSource.spatialBlend = 0f; // cabin is a local room; keep it as a bed
+        radioSource.volume = 0.35f;
+        radioSource.Play();
+        radioSquelchClip = SynthAudio.RadioSquelch("synth_radio_squelch");
     }
 
     // Loads the modeled interior and AUTO-FITS it from measured bounds — scale and offset are
@@ -171,26 +299,6 @@ public class VanTransitOverlay : MonoBehaviour
         return true;
     }
 
-    void BeginDrive(float durationSeconds = 0f)
-    {
-        ShowCabin();
-        if (phase != Phase.Transit)
-        {
-            phase = Phase.Transit;
-            transitDuration = Mathf.Max(0f, durationSeconds);
-            transitStartTime = Time.unscaledTime;
-            AudioManager.Instance?.PlayEngineStart(Vector3.zero);
-            AudioManager.Instance?.PlayEngineIdle();
-        }
-    }
-
-    // 0→1 over the dispatch duration; clamped so a missing/zero duration just reads "arriving".
-    float TransitProgress01()
-    {
-        if (transitDuration <= 0f) return 0f;
-        return Mathf.Clamp01((Time.unscaledTime - transitStartTime) / transitDuration);
-    }
-
     void TeardownCabin()
     {
         AudioManager.Instance?.StopEngineIdle();
@@ -201,37 +309,226 @@ public class VanTransitOverlay : MonoBehaviour
         }
         cabinShown = false;
         phase = Phase.None;
-        boardedCount = 0;
+        card = Card.None;
+        drivePending = false;
+        signHold = 0f;
         transitDuration = 0f;
         transitStartTime = 0f;
+        driveRequestedAt = float.PositiveInfinity;
+        squelchPlayed = false;
+        doorFullyOpen = false;
+        disembarked = false;
+        rearDoor = null;
+        arrivalGlow = null;
+        arrivalLight = null;
+        // The ride is over: the settlement card retires with the cabin (ledger takes over).
+        SettlementCardOverlay.NotifyDisembarked();
     }
 
-    // ─── Depart input (any seated player may request departure) ───
+    // ─── Per-frame state ───
 
     void Update()
     {
         if (!cabinShown) return;
 
         PlayerController local = FindLocalPlayer();
-        if (local == null || !local.IsSeated) return;
+        RefreshSeatedCounts();
+        UpdateCardLifecycle(local);
 
+        if (phase == Phase.Transit) UpdateTransitGate();
+        else if (phase == Phase.Arrived) UpdateArrival();
+
+        HandleInput(local);
+    }
+
+    // Client-safe seat census: every peer has all player objects, and SeatIndex /
+    // IsDowned are Everyone-readable NetworkVariables.
+    void RefreshSeatedCounts()
+    {
+        seatedCount = 0;
+        livingCount = 0;
+        foreach (var pc in FindObjectsByType<PlayerController>(FindObjectsSortMode.None))
+        {
+            if (pc.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
+                continue;
+            livingCount++;
+            if (pc.IsSeated) seatedCount++;
+        }
+        // Never require more seated than the cabin holds (over-capacity lobby can't block).
+        neededCount = Mathf.Max(1, Mathf.Min(livingCount, VanCabin.Count));
+        allSeated = livingCount > 0 && seatedCount >= neededCount;
+    }
+
+    void UpdateCardLifecycle(PlayerController local)
+    {
+        float now = Time.unscaledTime;
+
+        if (drivePending && now - signedAt >= StampBeatSeconds)
+        {
+            drivePending = false;
+            card = Card.None;
+            BeginDrive(pendingDriveDuration);
+            return;
+        }
+
+        if (phase == Phase.Transit || phase == Phase.Arrived || drivePending) return;
+        if (card == Card.EarlyReturn || card == Card.DispatchSigned) return;
+
+        bool localSeated = local != null && local.IsSeated;
+        bool terminal = TowerMissionManager.Instance != null && TowerMissionManager.Instance.IsTerminalState;
+
+        // 全员就位才弹中央派车单 (PM 锁定); the card folds again if someone steps off.
+        if (card == Card.None && allSeated && localSeated && !terminal)
+        {
+            card = Card.Dispatch;
+            cardShownAt = now;
+        }
+        else if (card == Card.Dispatch && (!allSeated || !localSeated || terminal))
+        {
+            card = Card.None;
+        }
+    }
+
+    void UpdateTransitGate()
+    {
+        bool timeDone = Time.unscaledTime - transitStartTime >= transitDuration;
+        if (timeDone && DestinationSceneReady)
+            StartArrival();
+    }
+
+    void StartArrival()
+    {
+        phase = Phase.Arrived;
+        arrivalStartedAt = Time.unscaledTime;
+        // 到站时序 (PM 锁定): 引擎声收束熄火 → 0.5s 静默+squelch → 门缝渗光 → 门全开。
+        AudioManager.Instance?.StopEngineIdle();
+    }
+
+    void UpdateArrival()
+    {
+        float t = Time.unscaledTime - arrivalStartedAt;
+
+        if (!squelchPlayed && t >= SquelchAtSeconds)
+        {
+            squelchPlayed = true;
+            if (radioSource != null && radioSquelchClip != null)
+                radioSource.PlayOneShot(radioSquelchClip, 0.8f);
+        }
+
+        if (t >= DoorCrackAtSeconds)
+        {
+            EnsureArrivalDoorPieces();
+            float crack = Mathf.Clamp01((t - DoorCrackAtSeconds) / 0.3f);
+            float open = Mathf.Clamp01((t - DoorOpenAtSeconds) / DoorOpenSeconds);
+            if (rearDoor != null)
+                rearDoor.localPosition = rearDoorClosedPos + new Vector3(0f, 0f, 0.08f * crack + 1.26f * open);
+            if (arrivalLight != null)
+                arrivalLight.intensity = Mathf.Lerp(0f, 5.5f, Mathf.Max(crack * 0.25f, open));
+            if (open >= 1f && !doorFullyOpen)
+            {
+                doorFullyOpen = true;
+                doorFullyOpenAt = Time.unscaledTime;
+            }
+        }
+
+        // Edge: the local player was never seated (offline oddities) — door's open, nobody
+        // to disembark; retire the cabin so it doesn't linger forever.
+        if (doorFullyOpen && !disembarked)
+        {
+            PlayerController local = FindLocalPlayer();
+            if ((local == null || !local.IsSeated) && Time.unscaledTime - doorFullyOpenAt > 1f)
+                TeardownCabin();
+        }
+    }
+
+    // Door dressing built lazily on arrival: the new scene's light leaks through the gap —
+    // 光色即地点签名 (HQ=钨丝暖 / 塔楼=阴天钢灰 #B8C4CE, spec Transitions).
+    void EnsureArrivalDoorPieces()
+    {
+        if (arrivalGlow != null || interiorRoot == null) return;
+
+        rearDoor = interiorRoot.transform.Find("Interior_WallRear");
+        if (rearDoor != null) rearDoorClosedPos = rearDoor.localPosition;
+
+        bool atOffice = SceneManager.GetActiveScene().name.Contains("HQ");
+        Color glow = atOffice ? new Color(1f, 0.92f, 0.74f) : new Color(0.722f, 0.769f, 0.808f);
+
+        arrivalGlow = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        arrivalGlow.name = "Interior_ArrivalGlow";
+        Destroy(arrivalGlow.GetComponent<Collider>());
+        arrivalGlow.transform.SetParent(interiorRoot.transform, false);
+        arrivalGlow.transform.localPosition = new Vector3(1.52f, 0.92f, 0f);
+        arrivalGlow.transform.localScale = new Vector3(0.012f, 0.56f, 1.36f);
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color"));
+        mat.color = glow;
+        arrivalGlow.GetComponent<Renderer>().material = mat;
+
+        var lightGo = new GameObject("ArrivalDoorLight");
+        lightGo.transform.SetParent(interiorRoot.transform, false);
+        lightGo.transform.localPosition = new Vector3(1.30f, 1.0f, 0f);
+        arrivalLight = lightGo.AddComponent<Light>();
+        arrivalLight.type = LightType.Point;
+        arrivalLight.color = glow;
+        arrivalLight.intensity = 0f;
+        arrivalLight.range = 5f * VanCabin.Scale;
+    }
+
+    // ─── Input ───
+
+    void HandleInput(PlayerController local)
+    {
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
+        bool seated = local != null && local.IsSeated;
 
-        if (keyboard.spaceKey.wasPressedThisFrame)
-            RequestDepart(local);
-        // Leaving the seat is only allowed before the van actually drives off.
-        else if (phase != Phase.Transit && keyboard.xKey.wasPressedThisFrame)
+        if (phase == Phase.Arrived)
+        {
+            // Door fully open → step off. The settlement card eats the first E to fold
+            // itself; the same-frame guard covers either Update() running first.
+            if (doorFullyOpen && !disembarked && seated &&
+                keyboard.eKey.wasPressedThisFrame &&
+                !SettlementCardOverlay.IsCardVisible && !SettlementCardOverlay.ConsumedCloseThisFrame)
+                Disembark(local);
+            return;
+        }
+
+        if (phase == Phase.Transit || drivePending || !seated) return;
+
+        if (card == Card.EarlyReturn)
+        {
+            HandleEarlyReturnInput(keyboard);
+            return;
+        }
+
+        if (card == Card.Dispatch && keyboard.spaceKey.wasPressedThisFrame && IsLocalHost())
+        {
+            HandleHostSignature(local);
+            return;
+        }
+
+        // Leaving the seat is only allowed before the stamp falls.
+        if (keyboard.xKey.wasPressedThisFrame)
             local.RequestLeaveSeat();
     }
 
-    void RequestDepart(PlayerController local)
+    void HandleHostSignature(PlayerController local)
     {
-        // Return trip from a mission site.
-        var missionManager = TowerMissionManager.Instance;
-        if (missionManager != null)
+        var mission = TowerMissionManager.Instance;
+        if (mission != null && !mission.IsTerminalState)
         {
-            missionManager.RequestDepart();
+            if (mission.IsObjectiveAboard)
+            {
+                mission.RequestDepart(); // full delivery — Settle stamps the card via ShowReturn
+            }
+            else
+            {
+                // 未取柱: Space opens the application card instead of departing (防误触).
+                card = Card.EarlyReturn;
+                cardShownAt = Time.unscaledTime;
+                signHold = 0f;
+                estimatedPartialMoney = mission.EstimatePartialMoney();
+                mission.SetFilingEarlyReturn(true);
+            }
             return;
         }
 
@@ -239,6 +536,65 @@ public class VanTransitOverlay : MonoBehaviour
         var computer = Object.FindAnyObjectByType<OfficeComputer>();
         if (computer != null)
             computer.RequestDepart(local);
+    }
+
+    void HandleEarlyReturnInput(Keyboard keyboard)
+    {
+        var mission = TowerMissionManager.Instance;
+
+        if (keyboard.escapeKey.wasPressedThisFrame)
+        {
+            // 撤回: back to the waiting dispatch card; can be re-opened any number of times.
+            card = Card.Dispatch;
+            cardShownAt = Time.unscaledTime;
+            signHold = 0f;
+            mission?.SetFilingEarlyReturn(false);
+            return;
+        }
+
+        if (keyboard.eKey.isPressed)
+            signHold += Time.unscaledDeltaTime;
+        else
+            signHold = Mathf.Max(0f, signHold - Time.unscaledDeltaTime * SignDecayRate);
+
+        if (signHold >= SignHoldSeconds)
+        {
+            signHold = 0f;
+            card = Card.None;
+            AudioManager.Instance?.PlayStamp(); // 落章音 — the signature takes effect
+            mission?.SetFilingEarlyReturn(false);
+            mission?.RequestDepart(confirmedPartial: true);
+        }
+    }
+
+    void Disembark(PlayerController local)
+    {
+        disembarked = true;
+
+        Vector3 position;
+        Quaternion rotation;
+        if (hasArrivalSpawn)
+        {
+            position = arrivalSpawnPos;
+            rotation = arrivalSpawnRot;
+        }
+        else
+        {
+            // No spawn manager in this scene (e.g. the tower): use the scene-safe position,
+            // fanned out by seat so the crew doesn't stack on one point.
+            int seat = Mathf.Max(0, local.SeatIndex.Value);
+            rotation = Quaternion.identity;
+            position = local.SceneSafePosition + Vector3.right * (seat * 1.2f);
+        }
+
+        // RestoreControlAt clears the seat; the suppressed ExitSeat path hides the cabin.
+        local.RestoreControlAt(position, rotation);
+    }
+
+    static bool IsLocalHost()
+    {
+        NetworkManager network = NetworkManager.Singleton;
+        return network == null || !network.IsListening || network.IsHost;
     }
 
     static PlayerController FindLocalPlayer()
@@ -249,18 +605,29 @@ public class VanTransitOverlay : MonoBehaviour
         return null;
     }
 
-    // ─── Minimal boarding/transit HUD (non-blocking strip) ───
+    // ─── Paper surfaces (ticket strip + cards) ───
 
     void OnGUI()
     {
         if (!cabinShown) return;
         EnsureStyles();
+        if (headingStyle == null) return;
 
-        PlayerController local = FindLocalPlayer();
-        bool seated = local != null && local.IsSeated;
+        DrawTicketStrip();
 
-        // 派遣单 ticket: aged-paper slip with a civic-teal rule and a stamp-red seal —
-        // the same civic-paperwork grammar as the tower's identity dressing.
+        switch (card)
+        {
+            case Card.Dispatch: DrawDispatchCard(false); break;
+            case Card.DispatchSigned: DrawDispatchCard(true); break;
+            case Card.EarlyReturn: DrawEarlyReturnCard(); break;
+        }
+    }
+
+    // 派遣票据条: aged-paper slip with a civic-teal rule and a stamp-red seal — the same
+    // civic-paperwork grammar as the tower's identity dressing. Carries the whole journey:
+    // 就位 N/M → 在途里程 → 已抵达.
+    void DrawTicketStrip()
+    {
         float w = 520f;
         var rect = new Rect((Screen.width - w) * 0.5f, 24f, w, 60f);
         var ticket = new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, rect.height + 18f);
@@ -279,49 +646,201 @@ public class VanTransitOverlay : MonoBehaviour
             : $"{taskTitle}  ·  {locationName}";
         GUI.Label(rect, header, headingStyle);
 
+        var statusRect = new Rect(rect.x, rect.y + 30f, w, 22f);
         if (phase == Phase.Transit)
         {
             DrawTransitProgress(rect, w);
         }
-        else if (seated)
+        else if (phase == Phase.Arrived)
         {
-            int total = GetTotalPlayerCount();
-            string status = boardedCount >= total
-                ? MvpLocale.T("all_aboard", boardedCount, total)
-                : MvpLocale.T("waiting_team", boardedCount, total);
-            GUI.Label(new Rect(rect.x, rect.y + 30f, w, 22f),
-                status + "    " + MvpLocale.T("press_space_depart") + "    " + MvpLocale.T("press_x_leave"),
-                smallStyle);
+            string line = doorFullyOpen ? "已抵达    [E] 下车" : "已抵达";
+            GUI.Label(statusRect, line, smallStyle);
+            DrawProgressBar(rect, w,
+                Mathf.Lerp(ProgressCap, 1f, Mathf.Clamp01((Time.unscaledTime - arrivalStartedAt) / ArrivalFillSeconds)));
+        }
+        else
+        {
+            string status = allSeated
+                ? MvpLocale.T("all_aboard", seatedCount, neededCount)
+                : MvpLocale.T("waiting_team", seatedCount, neededCount);
+            GUI.Label(statusRect, status + "    " + MvpLocale.T("press_x_leave"), smallStyle);
+        }
 
+        // 队友同步行: the host is filling the early-return application right now.
+        var mission = TowerMissionManager.Instance;
+        if (mission != null && mission.HostFilingEarlyReturn.Value && card != Card.EarlyReturn)
+        {
+            var subStrip = new Rect(ticket.x + 24f, ticket.yMax + 4f, ticket.width - 48f, 22f);
+            GUI.DrawTexture(subStrip, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
+            GUI.Label(new Rect(subStrip.x, subStrip.y + 2f, subStrip.width, 18f),
+                "房主正在填写提前收工申请…", smallStyle);
         }
     }
 
-    // En-route HUD: a cycling "dispatch in transit..." line plus a fill bar that tracks the dispatch
-    // countdown (or a pulsing indeterminate sweep if no duration was supplied).
+    // En-route ink bar: uniform 0→92% over the minimum transit; if the scene is still
+    // loading past that, the bar breathes at the cap and reads 「即将抵达」 — never "加载".
     void DrawTransitProgress(Rect rect, float w)
     {
-        float progress = TransitProgress01();
+        float now = Time.unscaledTime;
+        float raw = (now - transitStartTime) / transitDuration;
 
-        int dots = 1 + (int)(Time.unscaledTime * 2f) % 3;
-        string line = MvpLocale.T("dispatch_outbound") + new string('.', dots);
-        if (transitDuration > 0f)
+        string line;
+        float displayed;
+        if (raw >= 1f && !DestinationSceneReady)
         {
-            int eta = Mathf.Max(0, Mathf.CeilToInt(transitDuration * (1f - progress)));
-            line += $"    {Mathf.RoundToInt(progress * 100f)}%    ~{eta}s";
+            displayed = ProgressCap + 0.02f * Mathf.Sin(now * 2.4f);
+            line = "即将抵达…";
         }
-        GUI.Label(new Rect(rect.x, rect.y + 24f, w, 20f), line, smallStyle);
+        else
+        {
+            displayed = Mathf.Clamp01(raw) * ProgressCap;
+            int dots = 1 + (int)(now * 2f) % 3;
+            int eta = Mathf.Max(0, Mathf.CeilToInt(transitDuration * (1f - Mathf.Clamp01(raw))));
+            line = MvpLocale.T("dispatch_outbound") + new string('.', dots) +
+                   $"    {Mathf.RoundToInt(displayed * 100f)}%    ~{eta}s";
+        }
 
-        // Progress = a civic-teal fill drawn on the paper slip (ink on a form, not a
-        // glowing bar — CRT green stays on actual screens).
+        GUI.Label(new Rect(rect.x, rect.y + 24f, w, 20f), line, smallStyle);
+        DrawProgressBar(rect, w, displayed);
+    }
+
+    // Progress = a civic-teal fill drawn on the paper slip (ink on a form, not a
+    // glowing bar — CRT green stays on actual screens).
+    void DrawProgressBar(Rect rect, float w, float fill01)
+    {
         float barY = rect.y + 46f;
         var bg = new Rect(rect.x, barY, w, 9f);
         GUI.DrawTexture(bg, BlackCommissionUiTheme.MakeTex(new Color(0.18f, 0.17f, 0.13f, 0.30f)));
-
-        float fillW = transitDuration > 0f
-            ? w * progress
-            : w * (0.42f + 0.30f * Mathf.Sin(Time.unscaledTime * 3f));   // indeterminate sweep
-        GUI.DrawTexture(new Rect(bg.x, bg.y, Mathf.Clamp(fillW, 2f, w), 9f),
+        GUI.DrawTexture(new Rect(bg.x, bg.y, Mathf.Clamp(w * fill01, 2f, w), 9f),
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+    }
+
+    // 派车单: the stamped dispatch card, pops when the whole living crew is aboard.
+    void DrawDispatchCard(bool signed)
+    {
+        float w = 400f, h = 252f;
+        Rect cardRect = SlideCardRect(w, h);
+        DrawCardPaper(cardRect, "黑色委托事务所  ·  派 车 单");
+
+        float y = cardRect.y + 64f;
+        DrawCardRow(cardRect, ref y, "委托事项", taskTitle);
+        DrawCardRow(cardRect, ref y, "目的地", locationName);
+        DrawCardRow(cardRect, ref y, "乘员", allSeated ? $"{seatedCount}/{neededCount}  全员就位" : $"{seatedCount}/{neededCount}");
+
+        // Stamp block, lower right: hollow ink 待签发 → red 已签发 slamming in (1.3→1.0).
+        var stampCenter = new Vector2(cardRect.xMax - 90f, cardRect.yMax - 84f);
+        if (signed)
+        {
+            float slam = Mathf.Clamp01((Time.unscaledTime - signedAt) / StampSlamSeconds);
+            DrawStamp(stampCenter, "已签发", BlackCommissionUiTheme.RustWarning, stampStyle,
+                Mathf.Lerp(1.3f, 1f, slam), Mathf.Lerp(0.4f, 0.92f, slam));
+        }
+        else
+        {
+            DrawStamp(stampCenter, "待签发", new Color(0.19f, 0.17f, 0.13f, 0.55f), stampPendingStyle, 1f, 0.55f);
+        }
+
+        string footer = signed ? "已签发 — 发车"
+            : IsLocalHost() ? "[Space] 签发发车      [X] 离座"
+            : "等待房主签发      [X] 离座";
+        GUI.Label(new Rect(cardRect.x + 18f, cardRect.yMax - 32f, cardRect.width - 36f, 20f), footer, cardSublineStyle);
+    }
+
+    // 提前收工申请单: clause B-2 conversion preview + warnings + hold-E signature line.
+    void DrawEarlyReturnCard()
+    {
+        var mission = TowerMissionManager.Instance;
+        float completeness = mission != null ? mission.SyncedCompleteness.Value : 1f;
+        float rejectAt = mission != null ? mission.RejectThreshold : 0.5f;
+        bool rejectRisk = completeness < rejectAt;
+
+        float w = 420f, h = rejectRisk ? 286f : 264f;
+        Rect cardRect = SlideCardRect(w, h);
+        DrawCardPaper(cardRect, "黑色委托事务所  ·  提前收工申请单");
+
+        float y = cardRect.y + 62f;
+        GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 36f, 20f),
+            "目标未回收。按条款 B-2 折算：", cardRowStyle);
+        y += 26f;
+
+        // 条款式账目行 (settlement grammar): label … amount, clause fine print below.
+        GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 160f, 22f), "提前收工折算", cardRowStyle);
+        GUI.Label(new Rect(cardRect.xMax - 170f, y, 152f, 22f), $"预估实付 {estimatedPartialMoney}G", cardRowStyle);
+        y += 24f;
+        GUI.Label(new Rect(cardRect.x + 32f, y, cardRect.width - 64f, 16f),
+            "· 按委托报酬 22% 折算，不低于慰问金", cardSublineStyle);
+        y += 24f;
+
+        GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 36f, 20f),
+            "⚠ 签发后全队将随车返回事务所", cardWarnStyle);
+        y += 22f;
+        if (rejectRisk)
+        {
+            GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 36f, 20f),
+                $"⚠ 完整度 {completeness:P0} — 低于 {rejectAt:P0} 客户拒收", cardWarnStyle);
+            y += 22f;
+        }
+
+        // 签字栏: hold-E ink fill (1.2s); released ink drains back in 0.3s.
+        y += 8f;
+        GUI.Label(new Rect(cardRect.x + 18f, y, 120f, 22f), "签字栏 [按住 E]", cardRowStyle);
+        var inkBg = new Rect(cardRect.x + 148f, y + 5f, cardRect.width - 184f, 12f);
+        GUI.DrawTexture(inkBg, BlackCommissionUiTheme.MakeTex(new Color(0.18f, 0.17f, 0.13f, 0.30f)));
+        float inkFill = Mathf.Clamp01(signHold / SignHoldSeconds);
+        if (inkFill > 0f)
+            GUI.DrawTexture(new Rect(inkBg.x, inkBg.y, Mathf.Max(2f, inkBg.width * inkFill), inkBg.height),
+                BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+
+        GUI.Label(new Rect(cardRect.x + 18f, cardRect.yMax - 32f, cardRect.width - 36f, 20f),
+            "[Esc] 撤回申请", cardSublineStyle);
+    }
+
+    Rect SlideCardRect(float w, float h)
+    {
+        float age = Time.unscaledTime - cardShownAt;
+        float slide = Mathf.Clamp01(age / CardSlideSeconds);
+        float ease = 1f - (1f - slide) * (1f - slide);
+        float targetY = (Screen.height - h) * 0.45f;
+        return new Rect((Screen.width - w) * 0.5f, Mathf.Lerp(Screen.height, targetY, ease), w, h);
+    }
+
+    // Shared 盖章公文卡 body: shadow, aged paper, civic-teal header band (settlement grammar).
+    void DrawCardPaper(Rect cardRect, string title)
+    {
+        GUI.depth = -90; // above the ticket strip, below the settlement card (-100)
+        GUI.DrawTexture(new Rect(cardRect.x - 3f, cardRect.y - 3f, cardRect.width + 6f, cardRect.height + 6f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
+        GUI.DrawTexture(cardRect, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
+        var headerBand = new Rect(cardRect.x, cardRect.y, cardRect.width, 44f);
+        GUI.DrawTexture(headerBand, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+        GUI.Label(new Rect(cardRect.x + 16f, cardRect.y + 12f, cardRect.width - 32f, 22f), title, cardHeaderStyle);
+    }
+
+    void DrawCardRow(Rect cardRect, ref float y, string label, string value)
+    {
+        GUI.Label(new Rect(cardRect.x + 18f, y, 92f, 22f), $"{label} ……", cardRowStyle);
+        GUI.Label(new Rect(cardRect.x + 112f, y, cardRect.width - 130f, 22f), value, cardRowStyle);
+        y += 28f;
+    }
+
+    void DrawStamp(Vector2 center, string label, Color color, GUIStyle style, float scale, float alpha)
+    {
+        Matrix4x4 prevMatrix = GUI.matrix;
+        Color prevColor = GUI.color;
+        GUIUtility.RotateAroundPivot(-8f, center);
+        GUI.color = new Color(1f, 1f, 1f, alpha);
+
+        float sw = 118f * scale, sh = 44f * scale;
+        var box = new Rect(center.x - sw * 0.5f, center.y - sh * 0.5f, sw, sh);
+        Texture2D frame = BlackCommissionUiTheme.MakeTex(color);
+        GUI.DrawTexture(new Rect(box.x, box.y, box.width, 3f), frame);
+        GUI.DrawTexture(new Rect(box.x, box.yMax - 3f, box.width, 3f), frame);
+        GUI.DrawTexture(new Rect(box.x, box.y, 3f, box.height), frame);
+        GUI.DrawTexture(new Rect(box.xMax - 3f, box.y, 3f, box.height), frame);
+        GUI.Label(box, label, style);
+
+        GUI.color = prevColor;
+        GUI.matrix = prevMatrix;
     }
 
     void EnsureStyles()
@@ -330,29 +849,57 @@ public class VanTransitOverlay : MonoBehaviour
         if (GUI.skin == null || GUI.skin.label == null) return;
 
         // Ink on paper (the ticket background is aged paper, so text is dark ink).
+        Color ink = new Color(0.10f, 0.095f, 0.075f, 1f);
+        Color inkSoft = new Color(0.19f, 0.17f, 0.13f, 0.9f);
+
         headingStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 18,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.10f, 0.095f, 0.075f, 1f) }
+            normal = { textColor = ink }
         };
         smallStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 13,
             alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = new Color(0.19f, 0.17f, 0.13f, 0.9f) }
+            normal = { textColor = inkSoft }
+        };
+        // Sizes match SettlementCardOverlay exactly — all civic cards share one type scale.
+        cardHeaderStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 14,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }
+        };
+        cardRowStyle = new GUIStyle(GUI.skin.label) { fontSize = 14, normal = { textColor = ink } };
+        cardSublineStyle = new GUIStyle(GUI.skin.label) { fontSize = 11, normal = { textColor = inkSoft } };
+        // Warnings carry the ⚠ glyph, not just the red, for color-independent reading.
+        cardWarnStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 13,
+            fontStyle = FontStyle.Bold,
+            normal = { textColor = BlackCommissionUiTheme.RustWarning }
+        };
+        stampStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 18,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = BlackCommissionUiTheme.RustWarning }
+        };
+        stampPendingStyle = new GUIStyle(stampStyle)
+        {
+            normal = { textColor = new Color(0.19f, 0.17f, 0.13f, 0.7f) }
         };
         MvpFontProvider.ApplyToStyle(headingStyle);
         MvpFontProvider.ApplyToStyle(smallStyle);
-    }
-
-    static int GetTotalPlayerCount()
-    {
-        NetworkManager network = NetworkManager.Singleton;
-        if (network != null && network.IsListening)
-            return Mathf.Max(1, network.ConnectedClientsIds.Count);
-        return 1;
+        MvpFontProvider.ApplyToStyle(cardHeaderStyle);
+        MvpFontProvider.ApplyToStyle(cardRowStyle);
+        MvpFontProvider.ApplyToStyle(cardSublineStyle);
+        MvpFontProvider.ApplyToStyle(cardWarnStyle);
+        MvpFontProvider.ApplyToStyle(stampStyle);
+        MvpFontProvider.ApplyToStyle(stampPendingStyle);
     }
 
     // ─── Procedural enclosed cabin (no windows) ───
@@ -376,7 +923,8 @@ public class VanTransitOverlay : MonoBehaviour
         CreateInteriorBox("Ceiling", root.transform, new Vector3(0.45f, 1.44f, 0f), new Vector3(2f, 0.02f, 1.36f), metalMat);
         CreateInteriorBox("WallL", root.transform, new Vector3(0.45f, 0.92f, -0.68f), new Vector3(2f, 0.56f, 0.02f), wallMat);
         CreateInteriorBox("WallR", root.transform, new Vector3(0.45f, 0.92f, 0.68f), new Vector3(2f, 0.56f, 0.02f), wallMat);
-        // Front (cab bulkhead) and rear doors — fully enclosed, no windows.
+        // Front (cab bulkhead) and rear doors — fully enclosed, no windows. The rear wall is
+        // the arrival door: UpdateArrival slides it aside to let the new scene's light in.
         CreateInteriorBox("WallFront", root.transform, new Vector3(-0.55f, 0.92f, 0f), new Vector3(0.02f, 0.56f, 1.36f), wallMat);
         CreateInteriorBox("WallRear", root.transform, new Vector3(1.45f, 0.92f, 0f), new Vector3(0.02f, 0.56f, 1.36f), wallMat);
 

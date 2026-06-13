@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#131C1A"/>
+      <stop offset="0.55" stop-color="#1B2624"/>
+      <stop offset="1" stop-color="#10171A"/>
+    </linearGradient>
+    <radialGradient id="vig" cx="0.42" cy="0.42" r="0.95">
+      <stop offset="0.6" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.45"/>
+    </radialGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#243430" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#243430" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景：市政青暗调渐变，不是纯黑 -->
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+  <!-- 横向暗带，给菜单列一个“桌面”层次 -->
+  <rect x="0" y="300" width="1100" height="620" fill="url(#band)"/>
+  <!-- 细网格肌理（市政图纸感） -->
+  <g stroke="#2A3A36" stroke-width="1" opacity="0.18">
+    <line x1="0" y1="135" x2="1920" y2="135"/><line x1="0" y1="270" x2="1920" y2="270"/>
+    <line x1="0" y1="405" x2="1920" y2="405"/><line x1="0" y1="540" x2="1920" y2="540"/>
+    <line x1="0" y1="675" x2="1920" y2="675"/><line x1="0" y1="810" x2="1920" y2="810"/>
+    <line x1="0" y1="945" x2="1920" y2="945"/>
+    <line x1="240" y1="0" x2="240" y2="1080"/><line x1="480" y1="0" x2="480" y2="1080"/>
+    <line x1="720" y1="0" x2="720" y2="1080"/><line x1="960" y1="0" x2="960" y2="1080"/>
+    <line x1="1200" y1="0" x2="1200" y2="1080"/><line x1="1440" y1="0" x2="1440" y2="1080"/>
+    <line x1="1680" y1="0" x2="1680" y2="1080"/>
+  </g>
+  <rect width="1920" height="1080" fill="url(#vig)"/>
+
+  <!-- 顶部小帽徽行 -->
+  <text x="96" y="96" font-family="KaiTi,FangSong,Microsoft YaHei" font-size="22"
+        fill="#8A9A8E" letter-spacing="4">黑色委托事务所 · 市政外包许可证 BC-2098-007</text>
+  <line x1="96" y1="116" x2="760" y2="116" stroke="#3F5F5C" stroke-width="2"/>
+
+  <!-- 标题：仿宋公文体 + 压角红章 -->
+  <text x="92" y="248" font-family="FangSong,KaiTi,SimSun" font-size="148" font-weight="bold"
+        fill="#D6CCAE" letter-spacing="18">黑色委托</text>
+  <text x="98" y="304" font-family="Consolas,Microsoft YaHei" font-size="26"
+        fill="#5F8F6A" letter-spacing="14">BLACK COMMISSION</text>
+  <!-- 红章压在标题右下 -->
+  <g transform="translate(660,210) rotate(-12)">
+    <rect x="0" y="0" width="148" height="148" fill="none" stroke="#C23A2B" stroke-width="5" opacity="0.85"/>
+    <text x="74" y="62" font-family="KaiTi,FangSong" font-size="44" fill="#C23A2B" opacity="0.85"
+          text-anchor="middle">受理</text>
+    <text x="74" y="116" font-family="KaiTi,FangSong" font-size="44" fill="#C23A2B" opacity="0.85"
+          text-anchor="middle">在案</text>
+  </g>
+
+  <!-- 菜单列（首行为 hover 态示意）-->
+  <g>
+    <rect x="76" y="392" width="560" height="88" fill="#3F5F5C" opacity="0.28"/>
+    <rect x="76" y="392" width="6" height="88" fill="#69D96E"/>
+    <text x="116" y="436" font-family="Microsoft YaHei" font-size="40" font-weight="bold"
+          fill="#9CE89A" letter-spacing="6">继续营业</text>
+    <text x="118" y="468" font-family="Microsoft YaHei" font-size="19" fill="#7FA083">继续上一份账本 · 上次结余 −180G</text>
+
+    <text x="116" y="548" font-family="Microsoft YaHei" font-size="36" fill="#C9C2A8" letter-spacing="6">新事务所</text>
+    <text x="118" y="578" font-family="Microsoft YaHei" font-size="18" fill="#6E7A6C">开一间新的事务所</text>
+
+    <text x="116" y="652" font-family="Microsoft YaHei" font-size="36" fill="#C9C2A8" letter-spacing="6">加入事务所</text>
+    <text x="118" y="682" font-family="Microsoft YaHei" font-size="18" fill="#6E7A6C">输码加入队友的局</text>
+
+    <text x="116" y="756" font-family="Microsoft YaHei" font-size="36" fill="#C9C2A8" letter-spacing="6">设置</text>
+    <text x="118" y="786" font-family="Microsoft YaHei" font-size="18" fill="#6E7A6C">名字 / 语言 / 音量 / 灵敏度</text>
+
+    <text x="116" y="860" font-family="Microsoft YaHei" font-size="36" fill="#C9C2A8" letter-spacing="6">关机</text>
+    <text x="118" y="890" font-family="Microsoft YaHei" font-size="18" fill="#6E7A6C">离岗，关掉这台机器</text>
+  </g>
+
+  <!-- 右下：钉着的委托便签（数据驱动），替代被删的色板 -->
+  <g transform="translate(1430,640) rotate(4)">
+    <rect x="-10" y="-12" width="360" height="290" fill="#C8BD9E"/>
+    <rect x="-10" y="-12" width="360" height="46" fill="#3F5F5C"/>
+    <text x="14" y="20" font-family="Microsoft YaHei" font-size="22" fill="#D6CCAE" letter-spacing="6">新 委 托</text>
+    <circle cx="170" cy="-12" r="9" fill="#5A554A"/>
+    <text x="14" y="86" font-family="KaiTi,FangSong" font-size="30" fill="#26201A" font-weight="bold">「真实海岸」生态柱回收</text>
+    <text x="14" y="130" font-family="Microsoft YaHei" font-size="19" fill="#4A4136">委托人：城东·私人收藏会</text>
+    <text x="14" y="164" font-family="Microsoft YaHei" font-size="19" fill="#4A4136">地点：地球海岸壹号 烂尾楼</text>
+    <text x="14" y="222" font-family="Microsoft YaHei" font-size="30" font-weight="bold" fill="#A03226">报酬 300G</text>
+    <g transform="translate(238,180) rotate(-9)">
+      <rect width="96" height="44" fill="none" stroke="#C23A2B" stroke-width="4" opacity="0.8"/>
+      <text x="48" y="31" font-family="KaiTi" font-size="26" fill="#C23A2B" text-anchor="middle" opacity="0.8">急件</text>
+    </g>
+  </g>
+
+  <!-- 底部状态栏 -->
+  <rect x="0" y="1020" width="1920" height="60" fill="#0E1514" opacity="0.9"/>
+  <text x="96" y="1057" font-family="Consolas" font-size="18" fill="#5F8F6A">ver 0.1 · BC-DOS</text>
+  <text x="320" y="1057" font-family="Microsoft YaHei" font-size="18" fill="#6E7A6C">局域网直连…</text>
+  <text x="1824" y="1057" font-family="Microsoft YaHei" font-size="18" fill="#8A4A40" text-anchor="end">债务状态：催缴中</text>
+</svg>

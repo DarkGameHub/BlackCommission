@@ -103,6 +103,9 @@ public class MainMenuUI : MonoBehaviour
     readonly Image[] lobbySwatches = new Image[4];
     readonly TMP_Text[] lobbyNames = new TMP_Text[4];
     readonly TMP_Text[] lobbyRoles = new TMP_Text[4];
+    // Own-row vest colour cycling (lobby.md: 色板可改+撞色独占, shown on your row only).
+    readonly Button[] lobbyPrevBtns = new Button[4];
+    readonly Button[] lobbyNextBtns = new Button[4];
     Button lobbyEnterBtn;
     TMP_Text lobbyEnterLabel;
     bool wasListening;
@@ -111,6 +114,9 @@ public class MainMenuUI : MonoBehaviour
 
     Image backgroundImage;
     bool usingBakedMenuArt;
+    // World-space CRT carrier (main-menu.md): when present, the screen-space main
+    // panel + baked art stay hidden and the menu rows live on the office CRT.
+    CrtMenuStage crtStage;
     AudioSource menuAudioSource;
     AudioClip menuHoverClip;
     AudioClip menuSelectClip;
@@ -138,6 +144,23 @@ public class MainMenuUI : MonoBehaviour
         BuildHierarchy();
         BindEvents();
         SetState(MenuState.Main);
+
+        // World-space CRT carrier PARKED (PM 2026-06-12: LC-style flat menu instead —
+        // the 3D desk shot read ugly/blurry). Flip to true to revisit the experiment.
+        const bool useCrtWorldStage = false;
+#pragma warning disable CS0162
+        if (useCrtWorldStage)
+        {
+            crtStage = CrtMenuStage.TryCreate(this);
+            if (crtStage != null)
+            {
+                backgroundImage.gameObject.SetActive(false);
+                screenVeil.SetActive(false);
+                mainPanel.SetActive(false);
+                if (versionText != null) versionText.gameObject.SetActive(false);
+            }
+        }
+#pragma warning restore CS0162
     }
 
     void OnEnable()
@@ -210,8 +233,9 @@ public class MainMenuUI : MonoBehaviour
         versionRt.pivot = new Vector2(0.5f, 0f);
         versionRt.anchoredPosition = new Vector2(-902f, 16f);
         versionRt.sizeDelta = new Vector2(0f, 24f);
-        if (usingBakedMenuArt)
-            versionText.gameObject.SetActive(false);
+        // Retired: the mockup-B footer (FooterVersion in BuildTerminalMenu) owns the
+        // version line now.
+        versionText.gameObject.SetActive(false);
     }
 
     void UpdateResponsiveMenuPanels()
@@ -247,20 +271,20 @@ public class MainMenuUI : MonoBehaviour
         var image = go.GetComponent<Image>();
         image.raycastTarget = false;
 
+        // Mockup B (PM-picked 2026-06-12): dark olive vertical gradient, not black.
+        // Screen-space UI stays sharp at any retro render scale by construction.
         usingBakedMenuArt = false;
-        var tex = Resources.Load<Texture2D>("UI/MainMenuBg");
-        if (tex != null)
+        var grad = new Texture2D(1, 2, TextureFormat.RGBA32, false)
         {
-            usingBakedMenuArt = true;
-            image.sprite = Sprite.Create(tex, new Rect(0f, 0f, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-            image.color = Color.white;
-            image.preserveAspect = false;
-            image.type = Image.Type.Simple;
-        }
-        else
-        {
-            image.color = BlackCommissionUiTheme.ConcreteBlack;
-        }
+            filterMode = FilterMode.Bilinear,
+            wrapMode = TextureWrapMode.Clamp,
+        };
+        grad.SetPixel(0, 1, new Color(0.133f, 0.169f, 0.133f, 1f)); // #222B22 top
+        grad.SetPixel(0, 0, new Color(0.094f, 0.122f, 0.094f, 1f)); // #181F18 bottom
+        grad.Apply();
+        image.sprite = Sprite.Create(grad, new Rect(0f, 0f, 1f, 2f), new Vector2(0.5f, 0.5f));
+        image.color = Color.white;
+        image.type = Image.Type.Simple;
         return image;
     }
 
@@ -290,51 +314,43 @@ public class MainMenuUI : MonoBehaviour
         prt.offsetMin = Vector2.zero;
         prt.offsetMax = Vector2.zero;
 
-        if (Resources.Load<Texture2D>("UI/MainMenuBg") != null)
-        {
-            BuildReferenceLeftColumn(panel.transform);
-            BuildReferenceCrtMenu(panel.transform);
-            BuildReferenceJobStrip(panel.transform);
-            BuildCharacterSelector(panel.transform, true);
-
-            statusText = AddText(panel.transform, "StatusBar", "", 16,
-                StampRed, TextAlignmentOptions.Left);
-            var referenceStatusRt = statusText.rectTransform;
-            referenceStatusRt.anchorMin = new Vector2(0f, 0f);
-            referenceStatusRt.anchorMax = new Vector2(0f, 0f);
-            referenceStatusRt.pivot = new Vector2(0f, 0f);
-            referenceStatusRt.anchoredPosition = new Vector2(64f, 45f);
-            referenceStatusRt.sizeDelta = new Vector2(760f, 30f);
-
-            return panel;
-        }
-
-        // ─── Title block (top-left of the screen) ──────────────────────
-        if (!usingBakedMenuArt)
-        {
-        titleText = AddText(panel.transform, "Title", "BLACK COMMISSION", 54,
-            AgedPaper, TextAlignmentOptions.Left);
+        // ─── Title block (mockup B: plain bone heiti + amber underline) ─
+        titleText = AddText(panel.transform, "Title", "黑色委托", 96,
+            new Color(0.847f, 0.824f, 0.737f, 1f), TextAlignmentOptions.Left);
         titleText.fontStyle = FontStyles.Bold;
+        titleText.characterSpacing = 10f;
         var titleRt = titleText.rectTransform;
         titleRt.anchorMin = new Vector2(0f, 1f);
         titleRt.anchorMax = new Vector2(0f, 1f);
         titleRt.pivot = new Vector2(0f, 1f);
-        titleRt.anchoredPosition = new Vector2(48f, -40f);
-        titleRt.sizeDelta = new Vector2(760f, 64f);
+        titleRt.anchoredPosition = new Vector2(120f, -140f);
+        titleRt.sizeDelta = new Vector2(900f, 110f);
 
-        subtitleText = AddText(panel.transform, "Subtitle", MvpLocale.T("subtitle"), 20,
-            DispatchGreen, TextAlignmentOptions.Left);
+        var underline = new GameObject("TitleUnderline", typeof(RectTransform), typeof(Image));
+        underline.transform.SetParent(panel.transform, false);
+        underline.GetComponent<Image>().color = new Color(0.780f, 0.541f, 0.200f, 1f); // #C78A33
+        underline.GetComponent<Image>().raycastTarget = false;
+        var ulRt = underline.GetComponent<RectTransform>();
+        ulRt.anchorMin = new Vector2(0f, 1f);
+        ulRt.anchorMax = new Vector2(0f, 1f);
+        ulRt.pivot = new Vector2(0f, 1f);
+        ulRt.anchoredPosition = new Vector2(124f, -258f);
+        ulRt.sizeDelta = new Vector2(430f, 6f);
+
+        subtitleText = AddText(panel.transform, "Subtitle",
+            "BLACK COMMISSION · " + MvpLocale.T("subtitle"), 24,
+            new Color(0.545f, 0.580f, 0.518f, 1f), TextAlignmentOptions.Left);
+        subtitleText.characterSpacing = 8f;
         var subRt = subtitleText.rectTransform;
         subRt.anchorMin = new Vector2(0f, 1f);
         subRt.anchorMax = new Vector2(0f, 1f);
         subRt.pivot = new Vector2(0f, 1f);
-        subRt.anchoredPosition = new Vector2(50f, -104f);
-        subRt.sizeDelta = new Vector2(760f, 28f);
-        }
+        subRt.anchoredPosition = new Vector2(124f, -280f);
+        subRt.sizeDelta = new Vector2(1000f, 32f);
 
-        // ─── Agent name field (top-left, works in baked + procedural modes) ─
-        BuildNameField(panel.transform);
-        BuildCharacterSelector(panel.transform, false);
+        // Loadout picker DELETED from the main screen (PM 2026-06-12) — vest colour
+        // moves to the lobby roster card (and later the surveillance-room picker).
+        BuildVanSilhouette(panel.transform);
 
         // ─── Central commission terminal menu ──────────────────────────
         BuildTerminalMenu(panel.transform);
@@ -786,7 +802,8 @@ public class MainMenuUI : MonoBehaviour
     }
 
     // Top-left "Agent Name" label + input. Persisted to PlayerProfile and synced at spawn.
-    void BuildNameField(Transform parent)
+    void BuildNameField(Transform parent, Vector2? labelPosOverride = null,
+        Vector2? inputPosOverride = null, float inputWidth = 300f)
     {
         var label = AddText(parent, "NameLabel", MvpLocale.T("player_name"), 16,
             DispatchGreen, TextAlignmentOptions.Left);
@@ -794,7 +811,7 @@ public class MainMenuUI : MonoBehaviour
         lRt.anchorMin = new Vector2(0f, 1f);
         lRt.anchorMax = new Vector2(0f, 1f);
         lRt.pivot = new Vector2(0f, 1f);
-        lRt.anchoredPosition = new Vector2(50f, -150f);
+        lRt.anchoredPosition = labelPosOverride ?? new Vector2(50f, -150f);
         lRt.sizeDelta = new Vector2(320f, 22f);
 
         var go = new GameObject("NameInput",
@@ -805,8 +822,8 @@ public class MainMenuUI : MonoBehaviour
         rt.anchorMin = new Vector2(0f, 1f);
         rt.anchorMax = new Vector2(0f, 1f);
         rt.pivot = new Vector2(0f, 1f);
-        rt.anchoredPosition = new Vector2(50f, -176f);
-        rt.sizeDelta = new Vector2(300f, 44f);
+        rt.anchoredPosition = inputPosOverride ?? new Vector2(50f, -176f);
+        rt.sizeDelta = new Vector2(inputWidth, 44f);
 
         nameInput = go.GetComponent<TMP_InputField>();
         var text = AddText(go.transform, "Text", PlayerProfile.Name, 20,
@@ -824,48 +841,102 @@ public class MainMenuUI : MonoBehaviour
 
     void BuildTerminalMenu(Transform parent)
     {
-        if (usingBakedMenuArt)
+        // Mockup B: quiet flat list — text rows + thin dividers, amber hover arrow,
+        // the row description appears only on the hovered row.
+        bool hasSave = SaveIO.AnySave;
+
+        continueBtn = CreateMenuRow(parent, "ContinueBtn", MvpLocale.T("menu_continue"),
+            hasSave ? "继续上一份账本" : MvpLocale.T("crt_no_save"), -404f, true);
+        continueBtn.interactable = hasSave;
+        if (!hasSave)
         {
-            BuildReferenceMenuHotspots(parent);
-            return;
+            // Interactable was set after the row's initial style pass — re-apply the
+            // muted look so 「（无存档）」 reads as the reason the row is dead.
+            var t = continueBtn.transform.Find("Title")?.GetComponent<TMP_Text>();
+            if (t != null) t.color = MenuRowDisabled;
+            var d = continueBtn.transform.Find("Desc")?.GetComponent<TMP_Text>();
+            if (d != null) { d.color = MenuRowDisabled; d.alpha = 0.6f; }
         }
 
-        var card = CreateMenuPanel(parent);
-        var cardRt = card.GetComponent<RectTransform>();
-        cardRt.anchorMin = new Vector2(0.5f, 0.5f);
-        cardRt.anchorMax = new Vector2(0.5f, 0.5f);
-        cardRt.pivot = new Vector2(0.5f, 0.5f);
-        cardRt.anchoredPosition = new Vector2(0f, 20f);
-        cardRt.sizeDelta = new Vector2(600f, 790f);
+        newOfficeBtn = CreateMenuRow(parent, "NewOfficeBtn", MvpLocale.T("menu_new_office"),
+            "开一间新的事务所", -502f, false);
+        joinBtn = CreateMenuRow(parent, "JoinBtn", MvpLocale.T("join_office"),
+            "输码加入队友的局", -600f, false);
+        settingsBtn = CreateMenuRow(parent, "SettingsBtn", MvpLocale.T("menu_settings"),
+            "名字 / 语言 / 音量 / 灵敏度", -698f, false);
+        quitBtn = CreateMenuRow(parent, "QuitBtn", MvpLocale.T("menu_shutdown"),
+            "离岗，关掉这台机器", -796f, false);
 
-        // Five stacked options, primary (green) first — matches the mockup.
-        continueBtn = CreateMenuRow(card.transform, "ContinueBtn", "CONTINUE SHIFT",
-            "Resume previous shift", -202f, true);
-        newOfficeBtn = CreateMenuRow(card.transform, "NewOfficeBtn", "NEW OFFICE",
-            "Accept a clean commission", -325f, false);
-        joinBtn = CreateMenuRow(card.transform, "JoinBtn", "JOIN OFFICE",
-            "Join another office", -430f, false);
-        settingsBtn = CreateMenuRow(card.transform, "SettingsBtn", "SETTINGS",
-            "Adjust preferences", -535f, false);
-
-        // Small direct-connect (LAN) link at the bottom of the card.
-        directBtn = CreateButton(card.transform, "DirectBtn", "LAN DIRECT", 14,
-            new Color(0.025f, 0.030f, 0.027f, 0.32f),
-            new Color(0.160f, 0.190f, 0.145f, 0.54f),
-            new Color(0.090f, 0.110f, 0.080f, 0.70f));
+        // Footer strip: LAN direct link (bottom-left) + debt flavor (bottom-right).
+        directBtn = CreateButton(parent, "DirectBtn", MvpLocale.T("lan_direct_link"), 16,
+            Color.clear,
+            new Color(0.160f, 0.190f, 0.145f, 0.45f),
+            new Color(0.090f, 0.110f, 0.080f, 0.60f));
         var dRt = directBtn.GetComponent<RectTransform>();
-        dRt.anchorMin = new Vector2(0.5f, 0f);
-        dRt.anchorMax = new Vector2(0.5f, 0f);
-        dRt.pivot = new Vector2(0.5f, 0f);
-        dRt.anchoredPosition = new Vector2(0f, 74f);
-        dRt.sizeDelta = new Vector2(190f, 32f);
+        dRt.anchorMin = new Vector2(0f, 0f);
+        dRt.anchorMax = new Vector2(0f, 0f);
+        dRt.pivot = new Vector2(0f, 0f);
+        dRt.anchoredPosition = new Vector2(216f, 52f);
+        dRt.sizeDelta = new Vector2(220f, 34f);
         var directLabel = directBtn.GetComponentInChildren<TMP_Text>();
         if (directLabel != null)
         {
-            directLabel.color = BlackCommissionUiTheme.PaperDim;
-            directLabel.fontStyle = FontStyles.Bold;
-            directLabel.characterSpacing = 8f;
+            directLabel.color = new Color(0.431f, 0.478f, 0.400f, 1f); // #6E7A66
+            directLabel.alignment = TextAlignmentOptions.Left;
         }
+
+        var verText = AddText(parent, "FooterVersion", "ver 0.1", 16,
+            new Color(0.431f, 0.478f, 0.400f, 1f), TextAlignmentOptions.Left);
+        var vfRt = verText.rectTransform;
+        vfRt.anchorMin = new Vector2(0f, 0f);
+        vfRt.anchorMax = new Vector2(0f, 0f);
+        vfRt.pivot = new Vector2(0f, 0f);
+        vfRt.anchoredPosition = new Vector2(120f, 58f);
+        vfRt.sizeDelta = new Vector2(90f, 24f);
+
+        var debtText = AddText(parent, "FooterDebt", "本季度欠款：1,200G", 16,
+            new Color(0.604f, 0.353f, 0.290f, 1f), TextAlignmentOptions.Right); // #9A5A4A
+        var dbRt = debtText.rectTransform;
+        dbRt.anchorMin = new Vector2(1f, 0f);
+        dbRt.anchorMax = new Vector2(1f, 0f);
+        dbRt.pivot = new Vector2(1f, 0f);
+        dbRt.anchoredPosition = new Vector2(-120f, 58f);
+        dbRt.sizeDelta = new Vector2(320f, 24f);
+    }
+
+    // Low-saturation van + roll-door silhouette, bottom-right (mockup B).
+    void BuildVanSilhouette(Transform parent)
+    {
+        var root = new GameObject("VanSilhouette", typeof(RectTransform));
+        root.transform.SetParent(parent, false);
+        var rt = root.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1f, 0f);
+        rt.anchorMax = new Vector2(1f, 0f);
+        rt.pivot = new Vector2(1f, 0f);
+        rt.anchoredPosition = new Vector2(-120f, 120f);
+        rt.sizeDelta = new Vector2(430f, 240f);
+
+        Color pad = new(0.118f, 0.149f, 0.118f, 0.85f);
+        Color body = new(0.180f, 0.227f, 0.200f, 1f);
+        Color dark = new(0.078f, 0.102f, 0.078f, 1f);
+        Color door = new(0.141f, 0.180f, 0.149f, 1f);
+        Color slat = new(0.102f, 0.133f, 0.110f, 1f);
+
+        AddRect(root.transform, "Pad", new Vector2(0f, 0f), new Vector2(430f, 240f),
+            pad, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(root.transform, "Body", new Vector2(-65f, -45f), new Vector2(240f, 110f),
+            body, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(root.transform, "Cab", new Vector2(-100f, 20f), new Vector2(170f, 56f),
+            body, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(root.transform, "WheelL", new Vector2(-150f, -105f), new Vector2(52f, 52f),
+            dark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(root.transform, "WheelR", new Vector2(-15f, -105f), new Vector2(52f, 52f),
+            dark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(root.transform, "RollDoor", new Vector2(160f, -30f), new Vector2(100f, 180f),
+            door, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        for (int i = 0; i < 4; i++)
+            AddRect(root.transform, $"Slat{i}", new Vector2(160f, 40f - i * 30f), new Vector2(100f, 6f),
+                slat, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
     }
 
     GameObject CreateMenuPanel(Transform parent)
@@ -930,100 +1001,101 @@ public class MainMenuUI : MonoBehaviour
     // A wide menu row: bold title + small description, left-aligned, like the mockup.
     Button CreateMenuRow(Transform parent, string name, string title, string desc, float yFromTop, bool primary)
     {
-        Color bg = new Color(0.025f, 0.030f, 0.027f, 0.18f);
-        Color bgHover = new Color(0.120f, 0.170f, 0.105f, 0.32f);
-        Color bgPressed = new Color(0.070f, 0.110f, 0.060f, 0.48f);
-
-        var btn = CreateButton(parent, name, "", 1, bg, bgHover, bgPressed);
+        // Mockup B row: bare text + thin divider; hover = amber arrow + bold amber
+        // title + the description fading in to the right. No background boxes.
+        var btn = CreateButton(parent, name, "", 1, Color.clear, Color.clear, Color.clear);
         var rt = btn.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(0.5f, 1f);
-        rt.anchorMax = new Vector2(0.5f, 1f);
-        rt.pivot = new Vector2(0.5f, 1f);
-        rt.anchoredPosition = new Vector2(0f, yFromTop);
-        rt.sizeDelta = new Vector2(440f, primary ? 96f : 76f);
+        rt.anchorMin = new Vector2(0f, 1f);
+        rt.anchorMax = new Vector2(0f, 1f);
+        rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(120f, yFromTop);
+        rt.sizeDelta = new Vector2(880f, 84f);
 
-        // Drop the default centred empty label; we add our own title + description.
         var emptyLabel = btn.GetComponentInChildren<TMP_Text>();
         if (emptyLabel != null) Destroy(emptyLabel.gameObject);
 
-        var accent = new GameObject("Accent", typeof(RectTransform), typeof(Image));
-        accent.transform.SetParent(btn.transform, false);
-        var aImg = accent.GetComponent<Image>();
-        aImg.color = new Color(0.424f, 1.000f, 0.373f, 0f);
-        aImg.raycastTarget = false;
-        var aRt = accent.GetComponent<RectTransform>();
-        aRt.anchorMin = new Vector2(0f, 0f);
-        aRt.anchorMax = new Vector2(0f, 1f);
-        aRt.pivot = new Vector2(0f, 0.5f);
-        aRt.anchoredPosition = new Vector2(28f, 0f);
-        aRt.sizeDelta = new Vector2(5f, -14f);
+        var rowArrow = AddText(btn.transform, "Arrow", "▸", 30,
+            MenuAmber, TextAlignmentOptions.Center);
+        rowArrow.raycastTarget = false;
+        rowArrow.alpha = 0f;
+        var aRt = rowArrow.rectTransform;
+        aRt.anchorMin = new Vector2(0f, 0.5f);
+        aRt.anchorMax = new Vector2(0f, 0.5f);
+        aRt.pivot = new Vector2(0.5f, 0.5f);
+        aRt.anchoredPosition = new Vector2(16f, 2f);
+        aRt.sizeDelta = new Vector2(36f, 44f);
 
-        var rowIcon = AddText(btn.transform, "Icon", "-", primary ? 28 : 20,
-            BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Center);
-        rowIcon.fontStyle = FontStyles.Bold;
-        rowIcon.raycastTarget = false;
-        var iRt = rowIcon.rectTransform;
-        iRt.anchorMin = new Vector2(0f, 0.5f);
-        iRt.anchorMax = new Vector2(0f, 0.5f);
-        iRt.pivot = new Vector2(0.5f, 0.5f);
-        iRt.anchoredPosition = new Vector2(54f, primary ? 1f : 0f);
-        iRt.sizeDelta = new Vector2(36f, 40f);
-
-        var rowTitle = AddText(btn.transform, "Title", title, primary ? 30 : 27,
-            BlackCommissionUiTheme.OldPaper, TextAlignmentOptions.Left);
-        rowTitle.fontStyle = FontStyles.Bold;
+        var rowTitle = AddText(btn.transform, "Title", title, 36,
+            MenuRowText, TextAlignmentOptions.Left);
         rowTitle.raycastTarget = false;
+        rowTitle.characterSpacing = 4f;
         var tRt = rowTitle.rectTransform;
-        tRt.anchorMin = new Vector2(0f, 1f);
-        tRt.anchorMax = new Vector2(1f, 1f);
-        tRt.pivot = new Vector2(0.5f, 1f);
-        tRt.anchoredPosition = new Vector2(84f, primary ? -20f : -12f);
-        tRt.sizeDelta = new Vector2(-128f, 34f);
-        rowTitle.characterSpacing = primary ? 5f : 3f;
+        tRt.anchorMin = new Vector2(0f, 0f);
+        tRt.anchorMax = new Vector2(0f, 1f);
+        tRt.pivot = new Vector2(0f, 0.5f);
+        tRt.anchoredPosition = new Vector2(44f, 2f);
+        tRt.sizeDelta = new Vector2(420f, 0f);
 
-        var rowDesc = AddText(btn.transform, "Desc", desc, 14,
-            BlackCommissionUiTheme.MutedText, TextAlignmentOptions.Left);
+        var rowDesc = AddText(btn.transform, "Desc", desc, 20,
+            new Color(0.494f, 0.533f, 0.447f, 1f), TextAlignmentOptions.Left); // #7E8872
         rowDesc.raycastTarget = false;
+        rowDesc.alpha = 0f;
         var dRt = rowDesc.rectTransform;
         dRt.anchorMin = new Vector2(0f, 0f);
-        dRt.anchorMax = new Vector2(1f, 0f);
-        dRt.pivot = new Vector2(0.5f, 0f);
-        dRt.anchoredPosition = new Vector2(84f, primary ? 22f : 12f);
-        dRt.sizeDelta = new Vector2(-128f, 22f);
+        dRt.anchorMax = new Vector2(0f, 1f);
+        dRt.pivot = new Vector2(0f, 0.5f);
+        dRt.anchoredPosition = new Vector2(540f, 0f);
+        dRt.sizeDelta = new Vector2(340f, 0f);
 
-        ConfigureMenuRowHover(btn, rowIcon, rowTitle, rowDesc, aImg, primary);
+        var divider = new GameObject("Divider", typeof(RectTransform), typeof(Image));
+        divider.transform.SetParent(btn.transform, false);
+        var divImg = divider.GetComponent<Image>();
+        divImg.color = new Color(0.227f, 0.271f, 0.227f, 1f); // #3A453A
+        divImg.raycastTarget = false;
+        var dvRt = divider.GetComponent<RectTransform>();
+        dvRt.anchorMin = new Vector2(0f, 0f);
+        dvRt.anchorMax = new Vector2(0f, 0f);
+        dvRt.pivot = new Vector2(0f, 0f);
+        dvRt.anchoredPosition = new Vector2(0f, 0f);
+        dvRt.sizeDelta = new Vector2(520f, 2f);
+
+        ConfigureMenuRowHover(btn, rowArrow, rowTitle, rowDesc);
 
         return btn;
     }
 
-    void ConfigureMenuRowHover(Button btn, TMP_Text icon, TMP_Text title, TMP_Text desc,
-        Image accent, bool primary)
-    {
-        Color normalTitle = BlackCommissionUiTheme.OldPaper;
-        Color normalIcon = BlackCommissionUiTheme.PaperDim;
-        Color normalDesc = BlackCommissionUiTheme.MutedText;
-        Color green = BlackCommissionUiTheme.CrtGreen;
-        Color greenDim = BlackCommissionUiTheme.CrtGreenDim;
+    static readonly Color MenuAmber = new(0.910f, 0.698f, 0.361f, 1f);   // #E8B25C
+    static readonly Color MenuRowText = new(0.749f, 0.769f, 0.682f, 1f); // #BFC4AE
+    static readonly Color MenuRowDisabled = new(0.353f, 0.376f, 0.322f, 1f);
 
+    void ConfigureMenuRowHover(Button btn, TMP_Text arrow, TMP_Text title, TMP_Text desc)
+    {
         void ApplyHover(bool hovered)
         {
-            title.color = hovered ? green : normalTitle;
-            icon.color = hovered ? green : normalIcon;
-            desc.color = hovered ? greenDim : normalDesc;
-            accent.color = hovered
-                ? BlackCommissionUiTheme.CrtGreen
-                : new Color(0.424f, 1.000f, 0.373f, 0f);
-            icon.text = hovered ? ">" : "-";
+            if (!btn.interactable)
+            {
+                title.color = MenuRowDisabled;
+                arrow.alpha = 0f;
+                desc.alpha = 0.6f; // 「（无存档）」 reads as the dim reason, always visible
+                desc.color = MenuRowDisabled;
+                return;
+            }
+            title.color = hovered ? MenuAmber : MenuRowText;
+            title.fontStyle = hovered ? FontStyles.Bold : FontStyles.Normal;
+            arrow.alpha = hovered ? 1f : 0f;
+            desc.alpha = hovered ? 1f : 0f;
         }
 
         var trigger = btn.gameObject.AddComponent<EventTrigger>();
         var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-        enter.callback.AddListener(_ => ApplyHover(true));
+        enter.callback.AddListener(_ => { ApplyHover(true); if (btn.interactable) PlayMenuHover(); });
         trigger.triggers.Add(enter);
 
         var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
         exit.callback.AddListener(_ => ApplyHover(false));
         trigger.triggers.Add(exit);
+
+        ApplyHover(false);
     }
 
     static string MenuIconFor(string title)
@@ -1139,6 +1211,20 @@ public class MainMenuUI : MonoBehaviour
         joinCancelBtn.GetComponent<RectTransform>().anchoredPosition = new Vector2(0f, -130f);
         joinCancelBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(360f, 40f);
 
+        // LAN direct entry — the old main-panel toggle is unreachable when the
+        // world-space CRT stage carries the root menu, so it lives here too.
+        var lanLink = CreateButton(panel.transform, "LanDirectLink",
+            MvpLocale.T("lan_direct_link"), 13,
+            new Color(0f, 0f, 0f, 0f),
+            new Color(0.105f, 0.165f, 0.158f, 0.45f),
+            new Color(0.060f, 0.095f, 0.090f, 0.6f));
+        var lanRt = lanLink.GetComponent<RectTransform>();
+        lanRt.anchoredPosition = new Vector2(0f, -168f);
+        lanRt.sizeDelta = new Vector2(220f, 26f);
+        var lanLabel = lanLink.GetComponentInChildren<TMP_Text>();
+        if (lanLabel != null) lanLabel.color = HintText;
+        lanLink.GetComponent<Button>().onClick.AddListener(ToggleDirectConnect);
+
         return panel;
     }
 
@@ -1214,12 +1300,12 @@ public class MainMenuUI : MonoBehaviour
 
     GameObject BuildSettingsPanel(Transform parent)
     {
-        var panel = CreatePanel(parent, "SettingsPanel", new Vector2(440f, 360f));
+        var panel = CreatePanel(parent, "SettingsPanel", new Vector2(440f, 440f));
         panel.SetActive(false);
 
         AddText(panel.transform, "Header", MvpLocale.T("game"), 22,
             DispatchGreen, TextAlignmentOptions.Left)
-            .rectTransform.anchoredPosition = new Vector2(0f, 140f);
+            .rectTransform.anchoredPosition = new Vector2(0f, 180f);
 
         settingsCloseBtn = CreateButton(panel.transform, "Close", "X", 18,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
@@ -1230,14 +1316,18 @@ public class MainMenuUI : MonoBehaviour
         cbRt.anchoredPosition = new Vector2(-12f, -12f);
         cbRt.sizeDelta = new Vector2(38f, 32f);
 
-        BuildLangSection(panel.transform, new Vector2(0f, 70f));
-        BuildVolumeSection(panel.transform, new Vector2(0f, 0f));
-        BuildSensitivitySection(panel.transform, new Vector2(0f, -90f));
+        // Agent name lives here now — the screen-space main panel (its old home)
+        // stays hidden when the world-space CRT stage carries the menu.
+        BuildNameField(panel.transform, new Vector2(28f, -64f), new Vector2(28f, -90f), 384f);
+
+        BuildLangSection(panel.transform, new Vector2(0f, 35f));
+        BuildVolumeSection(panel.transform, new Vector2(0f, -30f));
+        BuildSensitivitySection(panel.transform, new Vector2(0f, -112f));
 
         settingsQuitBtn = CreateButton(panel.transform, "SettingsQuit", "Quit Game", 18,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
         var quitRt = settingsQuitBtn.GetComponent<RectTransform>();
-        quitRt.anchoredPosition = new Vector2(0f, -150f);
+        quitRt.anchoredPosition = new Vector2(0f, -174f);
         quitRt.sizeDelta = new Vector2(220f, 42f);
 
         return panel;
@@ -1665,6 +1755,10 @@ public class MainMenuUI : MonoBehaviour
             role.rectTransform.anchoredPosition = new Vector2(76f, -13f);
             role.rectTransform.sizeDelta = new Vector2(-90f, 20f);
             lobbyRoles[i] = role;
+
+            // ‹ › vest-colour cycling, visible on the local player's row only.
+            lobbyPrevBtns[i] = BuildLobbySwatchArrow(row.transform, "PrevColor", "‹", -58f, -1);
+            lobbyNextBtns[i] = BuildLobbySwatchArrow(row.transform, "NextColor", "›", -28f, +1);
         }
 
         // Primary action: a stamped dispatch button, not a neon app CTA.
@@ -1849,6 +1943,56 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
+    Button BuildLobbySwatchArrow(Transform row, string name, string glyph, float xFromRight, int dir)
+    {
+        var btn = CreateButton(row, name, glyph, 18,
+            new Color(0.030f, 0.046f, 0.034f, 0.92f),
+            new Color(0.105f, 0.165f, 0.158f, 0.96f),
+            new Color(0.060f, 0.095f, 0.090f, 1f));
+        var rt = btn.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(1f, 0.5f);
+        rt.anchorMax = new Vector2(1f, 0.5f);
+        rt.pivot = new Vector2(1f, 0.5f);
+        rt.anchoredPosition = new Vector2(xFromRight, -13f);
+        rt.sizeDelta = new Vector2(26f, 24f);
+        var label = btn.GetComponentInChildren<TMP_Text>();
+        if (label != null) label.color = DispatchGreen;
+        btn.onClick.AddListener(() => CycleOwnCharacter(dir));
+        btn.gameObject.SetActive(false);
+        return btn;
+    }
+
+    /// <summary>
+    /// Cycles the local player's vest colour, skipping colours other players already
+    /// registered (lobby.md: 撞色独占 — first come, first served; server arbitration
+    /// is a follow-up architecture item, this is the owner-side guard).
+    /// </summary>
+    void CycleOwnCharacter(int dir)
+    {
+        var players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        PlayerController own = null;
+        var taken = new HashSet<int>();
+        foreach (var p in players)
+        {
+            if (p.IsOwner) own = p;
+            else taken.Add(p.CharacterIndex.Value);
+        }
+        if (own == null) return;
+
+        int n = PlayerCharacterPalette.Count;
+        int idx = own.CharacterIndex.Value;
+        for (int step = 1; step <= n; step++)
+        {
+            int cand = ((idx + dir * step) % n + n) % n;
+            if (taken.Contains(cand)) continue;
+            own.CharacterIndex.Value = cand;       // owner-write NV, syncs to every peer
+            PlayerCharacterPalette.SavedIndex = cand; // persists for the next session
+            break;
+        }
+        PlayMenuHover();
+        nextLobbyRefresh = 0f;
+    }
+
     void RefreshLobbyWaiting()
     {
         if (lobbyWaitingPanel == null || !lobbyWaitingPanel.activeSelf) return;
@@ -1894,12 +2038,16 @@ public class MainMenuUI : MonoBehaviour
                 lobbyNames[i].text = name;
                 lobbyRoles[i].text = host ? MvpLocale.T("host") : MvpLocale.T("client");
                 lobbyRoles[i].color = host ? DispatchGreen : HintText;
+                lobbyPrevBtns[i].gameObject.SetActive(player.IsOwner);
+                lobbyNextBtns[i].gameObject.SetActive(player.IsOwner);
             }
             else
             {
                 lobbySwatches[i].color = BlackCommissionUiTheme.MilitaryGreenDim;
                 lobbyNames[i].text = MvpLocale.T("lobby_empty_slot");
                 lobbyRoles[i].text = "";
+                lobbyPrevBtns[i].gameObject.SetActive(false);
+                lobbyNextBtns[i].gameObject.SetActive(false);
             }
         }
     }
@@ -2203,10 +2351,29 @@ public class MainMenuUI : MonoBehaviour
 
     // ─── State + transitions ──────────────────────────────────────────────
 
+    // ─── Seams for the world-space CRT stage ──────────────────────────────
+
+    /// <summary>True when the CRT rows should take input (root menu, no modal card open).</summary>
+    public bool MenuRowsAvailable => state == MenuState.Main && !AnyModalOpen;
+
+    public bool AnyModalOpen =>
+        (joinPanel != null && joinPanel.activeSelf) ||
+        (connectingPanel != null && connectingPanel.activeSelf) ||
+        (settingsPanel != null && settingsPanel.activeSelf) ||
+        (directConnectPanel != null && directConnectPanel.activeSelf) ||
+        (quitConfirmPanel != null && quitConfirmPanel.activeSelf);
+
+    public void UiContinueShift() => StartHost();
+    public void UiOpenJoin() => SetState(MenuState.JoinInput);
+    public void UiOpenSettings() => ShowSettingsPanel();
+    public void UiQuitConfirm() => ShowQuitConfirm();
+    public void UiPlayHover() => PlayMenuHover();
+    public void UiPlaySelect() => PlayMenuSelect();
+
     void SetState(MenuState next)
     {
         state = next;
-        mainPanel.SetActive(state == MenuState.Main);
+        mainPanel.SetActive(state == MenuState.Main && crtStage == null);
         joinPanel.SetActive(state == MenuState.JoinInput);
         connectingPanel.SetActive(state == MenuState.Connecting);
         hostCodePanel.SetActive(state == MenuState.HostWaiting && !string.IsNullOrEmpty(hostJoinCode));
@@ -2323,6 +2490,14 @@ public class MainMenuUI : MonoBehaviour
                 SetState(MenuState.Main);
                 return;
             }
+
+            // At the CRT root, Esc = 关机确认 (spec: Esc 逐级返回; 根屏无上级 → 离岗单).
+            if (crtStage != null && state == MenuState.Main &&
+                NetworkManager.Singleton != null && !NetworkManager.Singleton.IsListening)
+            {
+                ShowQuitConfirm();
+                return;
+            }
         }
 
         bool enterPressed = keyboard.enterKey.wasPressedThisFrame ||
@@ -2347,7 +2522,7 @@ public class MainMenuUI : MonoBehaviour
             return;
         }
 
-        bool menuReady = state == MenuState.Main &&
+        bool menuReady = crtStage == null && state == MenuState.Main &&
             mainPanel != null && mainPanel.activeSelf &&
             settingsPanel != null && !settingsPanel.activeSelf &&
             directConnectPanel != null && !directConnectPanel.activeSelf &&
@@ -2398,6 +2573,8 @@ public class MainMenuUI : MonoBehaviour
         IsGameplayInputBlockedByMenu = false;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        // 确认到岗 → push the desk camera to the player's head and hand off (no cut).
+        crtStage?.BeginPushIn();
     }
 
     void UpdateGameplayInputBlock()
@@ -2416,6 +2593,7 @@ public class MainMenuUI : MonoBehaviour
     void UpdateMenuVisibilityFlag()
     {
         IsMenuVisible =
+            (crtStage != null && crtStage.CameraLive) ||
             (backgroundImage != null && backgroundImage.gameObject.activeSelf) ||
             (mainPanel != null && mainPanel.activeSelf) ||
             (joinPanel != null && joinPanel.activeSelf) ||
@@ -2482,14 +2660,17 @@ public class MainMenuUI : MonoBehaviour
         }
         else
         {
-            if (backgroundImage != null && !backgroundImage.gameObject.activeSelf)
-                backgroundImage.gameObject.SetActive(true);
-            if (!screenVeil.activeSelf) screenVeil.SetActive(true);
-            if (versionText != null && !usingBakedMenuArt && !versionText.gameObject.activeSelf)
-                versionText.gameObject.SetActive(true);
+            // With the world-space CRT stage active, the 3D office IS the backdrop —
+            // never re-show the baked art or the screen-space main panel.
+            if (crtStage == null)
+            {
+                if (backgroundImage != null && !backgroundImage.gameObject.activeSelf)
+                    backgroundImage.gameObject.SetActive(true);
+                if (!screenVeil.activeSelf) screenVeil.SetActive(true);
+                if (state == MenuState.Main && !mainPanel.activeSelf) mainPanel.SetActive(true);
+            }
             lobbyWaitingPanel.SetActive(false);
             connectedStatusPanel.SetActive(false);
-            if (state == MenuState.Main && !mainPanel.activeSelf) mainPanel.SetActive(true);
         }
     }
 

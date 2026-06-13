@@ -721,6 +721,13 @@ public static class TowerV8WhiteboxBuilder
             light.range = range;
             light.intensity = intensity;
             light.shadows = LightShadows.None;
+
+            // Aging-hardware life (light grammar): the duty desk's dying lamp sputters,
+            // the sodium door-spill breathes on unstable power. Everything else is steady.
+            if (id == "LA-DUTY")
+                go.AddComponent<LightFlicker>().Configure(LightFlicker.Character.Sputter, 0.85f, 5f);
+            else if (id == "LA-SODIUM2")
+                go.AddComponent<LightFlicker>().Configure(LightFlicker.Character.Sway, 0.22f, 0.5f);
         }
     }
 
@@ -874,6 +881,7 @@ public static class TowerV8WhiteboxBuilder
         glass.transform.localScale = new Vector3(0.55f, 0.62f, 0.55f); // 1.24 m tall body
         Object.DestroyImmediate(glass.GetComponent<Collider>());
         glass.GetComponent<Renderer>().sharedMaterial = ecoMat;
+        glass.AddComponent<EmissionPulse>(); // the sealed coast breathes faintly
 
         foreach (var (nm, y) in new[] { ("Cap_Top", 0.7f), ("Cap_Base", -0.7f) })
         {
@@ -991,6 +999,67 @@ public static class TowerV8WhiteboxBuilder
         RenderSettings.ambientEquatorColor = new Color(0.125f, 0.141f, 0.157f);
         RenderSettings.ambientGroundColor = new Color(0.071f, 0.078f, 0.086f);
         RenderSettings.ambientIntensity = 1.0f;
+
+        EnsurePostVolume(scene);
+    }
+
+    const string PostProfilePath = "Assets/_Project/Art/Rendering/LcPost_Tower.asset";
+
+    /// <summary>
+    /// LC retro post stack, layer 2 (research report: outline first, then posterized
+    /// vignette/grain/bloom). Idempotent: creates/updates the profile asset and a
+    /// global Volume root in the tower scene. NOTE: cameras must have
+    /// renderPostProcessing on — PlayerCameraController/PreviewWalker enforce that.
+    /// </summary>
+    static void EnsurePostVolume(Scene scene)
+    {
+        var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(PostProfilePath);
+        if (profile == null)
+        {
+            profile = ScriptableObject.CreateInstance<VolumeProfile>();
+            AssetDatabase.CreateAsset(profile, PostProfilePath);
+        }
+
+        T Ensure<T>() where T : VolumeComponent
+        {
+            if (!profile.TryGet(out T comp)) comp = profile.Add<T>(true);
+            return comp;
+        }
+
+        var vignette = Ensure<UnityEngine.Rendering.Universal.Vignette>();
+        vignette.active = true;
+        vignette.intensity.Override(0.32f);
+        vignette.smoothness.Override(0.42f);
+        vignette.color.Override(new Color(0.039f, 0.059f, 0.078f)); // civic blue-black, matches outline
+
+        var grain = Ensure<UnityEngine.Rendering.Universal.FilmGrain>();
+        grain.active = true;
+        grain.type.Override(UnityEngine.Rendering.Universal.FilmGrainLookup.Medium1);
+        grain.intensity.Override(0.22f);
+        grain.response.Override(0.7f);
+
+        var bloom = Ensure<UnityEngine.Rendering.Universal.Bloom>();
+        bloom.active = true;
+        bloom.threshold.Override(1.05f);   // only true emitters bloom: eco glass, lamps, beacon
+        bloom.intensity.Override(0.45f);
+        bloom.scatter.Override(0.6f);
+
+        var color = Ensure<UnityEngine.Rendering.Universal.ColorAdjustments>();
+        color.active = true;
+        color.saturation.Override(-12f);   // municipal gray-down; light anchors stay readable
+        color.contrast.Override(8f);
+
+        EditorUtility.SetDirty(profile);
+
+        GameObject volumeGo = null;
+        foreach (GameObject go in scene.GetRootGameObjects())
+            if (go.name == "LC_PostVolume") { volumeGo = go; break; }
+        if (volumeGo == null) volumeGo = new GameObject("LC_PostVolume");
+        var volume = volumeGo.GetComponent<Volume>();
+        if (volume == null) volume = volumeGo.AddComponent<Volume>();
+        volume.isGlobal = true;
+        volume.priority = 10f; // above any default profile
+        volume.sharedProfile = profile;
     }
 
     static void BuildExterior(Transform parent)

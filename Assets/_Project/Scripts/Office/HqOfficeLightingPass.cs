@@ -62,7 +62,53 @@ public static class HqOfficeLightingPass
         ConfigureExistingLight("HQ_LampDesk_B_Light", WarmTungsten, 0.26f, 1.35f);
         ConfigureExistingLight("HQ_PlaceholderLight", ColdIndustrial, 0.0f, 0.1f);
 
+        // The fluorescent over the tool rack is the office's "we can't afford a new
+        // tube" statement piece — give it the dying-lamp sputter.
+        GameObject sputterLamp = FindSceneObject("HQ_LampFluorescent_ToolRack_Light");
+        if (sputterLamp != null && sputterLamp.GetComponent<LightFlicker>() == null)
+            sputterLamp.AddComponent<LightFlicker>().Configure(LightFlicker.Character.Sputter, 0.7f, 7f);
+
+        if (Application.isPlaying)
+            EnsurePostVolume();
+
         return true;
+    }
+
+    /// <summary>
+    /// Same LC post stack as the tower (vignette/grain/bloom/grade), built in memory
+    /// at runtime — the HQ scene never needs a serialized Volume object. Editor-time
+    /// ApplyIfHq skips this so it doesn't dirty the scene with unsaveable state.
+    /// </summary>
+    static void EnsurePostVolume()
+    {
+        if (Object.FindFirstObjectByType<UnityEngine.Rendering.Volume>() != null) return;
+
+        var profile = ScriptableObject.CreateInstance<UnityEngine.Rendering.VolumeProfile>();
+
+        var vignette = profile.Add<UnityEngine.Rendering.Universal.Vignette>(true);
+        vignette.intensity.Override(0.28f);
+        vignette.smoothness.Override(0.42f);
+        vignette.color.Override(new Color(0.039f, 0.059f, 0.078f));
+
+        var grain = profile.Add<UnityEngine.Rendering.Universal.FilmGrain>(true);
+        grain.type.Override(UnityEngine.Rendering.Universal.FilmGrainLookup.Medium1);
+        grain.intensity.Override(0.20f);
+        grain.response.Override(0.7f);
+
+        var bloom = profile.Add<UnityEngine.Rendering.Universal.Bloom>(true);
+        bloom.threshold.Override(1.05f);
+        bloom.intensity.Override(0.40f);
+        bloom.scatter.Override(0.6f);
+
+        var color = profile.Add<UnityEngine.Rendering.Universal.ColorAdjustments>(true);
+        color.saturation.Override(-10f);
+        color.contrast.Override(7f);
+
+        var go = new GameObject("LC_PostVolume (Runtime)");
+        var volume = go.AddComponent<UnityEngine.Rendering.Volume>();
+        volume.isGlobal = true;
+        volume.priority = 10f;
+        volume.profile = profile;
     }
 
     static void ConfigureRenderSettings()

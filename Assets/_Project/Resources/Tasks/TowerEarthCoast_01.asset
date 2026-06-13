@@ -34,3 +34,12 @@ MonoBehaviour:
   failureConsolationMoney: 20
   failureReputationPenalty: -2
   failureExperience: 0
+  settlementNotesSuccess:
+  - "柱体外缘有指印，已安排除菌。款项照付，下不为例。"
+  - "水封完好。运输用时未计入报酬，属贵所自行安排。"
+  settlementNotesPartial:
+  - "空手而回也是一种结果。折算条款见背面，背面无字。"
+  - "贵所中途收工，物流舱位照常计费。已自动从报酬中代扣。"
+  settlementNotesFailure:
+  - "人员损耗系贵所内部事务。慰问金按下限发放。"
+  - "委托物仍在原址。如贵所恢复运营，欢迎再次报价。"

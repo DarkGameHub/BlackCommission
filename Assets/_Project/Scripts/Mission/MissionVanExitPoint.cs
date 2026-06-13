@@ -1,29 +1,36 @@
 using Unity.Netcode;
 using UnityEngine;
 
+/// <summary>
+/// The mission-site van interactable: board &amp; sit (E), locker hand-outs
+/// (flashlights/batteries), and the return/partial-return decision — ported from the
+/// retired school exit point onto <see cref="TowerMissionManager"/>. Boarding shows the
+/// shared cabin overlay; the return request resolves through the mission manager
+/// (full delivery vs partial settlement by cargo-zone check).
+/// </summary>
 [RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(NetworkObject))]
-public class SchoolExitPoint : NetworkBehaviour, IInteractable
+public class MissionVanExitPoint : NetworkBehaviour, IInteractable
 {
     public const int LockerSlotCount = 4;
 
     [SerializeField] float exitUseRadius = 3.5f;
-    [SerializeField] float returnTransitSeconds = 6f;
 
     public NetworkVariable<int> FlashlightCount = new(1,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<int> BatteryCount = new(2,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    static bool ObjectiveSecured =>
+        TowerMissionManager.Instance != null &&
+        (TowerMissionState)TowerMissionManager.Instance.SyncedState.Value == TowerMissionState.ObjectiveSecured;
+
     public string InteractHint
     {
         get
         {
             if (VanTransitOverlay.IsActive) return "";
-            var manager = LostItemMissionManager.Instance;
-            if (manager != null && manager.LostItemCollected.Value)
-                return "Board van and return";
-            return "Board van";
+            return ObjectiveSecured ? "上车返程" : "上车";
         }
     }
 
@@ -39,17 +46,12 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
             return;
         if (VanTransitOverlay.IsActive) return;
 
-        var manager = LostItemMissionManager.Instance;
-        if (manager == null) return;
-
-        manager.RequestBoardVan();      // reward/return accounting
         if (player != null)
-            player.RequestSeat();        // actually sit the player in the cabin
+            player.RequestSeat();
 
         bool isHost = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsHost;
         string title = MvpMissionRuntime.ActiveTask?.title ?? MvpLocale.T("commission");
         string loc = MvpMissionRuntime.ActiveTask?.locationName ?? MvpLocale.T("mission_location");
-        // E = board & sit; Space while seated = depart
         VanTransitOverlay.ShowBoarding(title, loc, isHost);
     }
 
@@ -77,47 +79,30 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
 
     public string GetReturnSummary()
     {
-        var manager = LostItemMissionManager.Instance;
-        if (manager == null) return "The commission van is parked outside.";
-        string bonus = manager.BonusEvidenceCollected.Value
-            ? "The extra registry has been photographed — settlement will include a bonus."
-            : "There is an overdue registry in the records room; you may photograph it before leaving.";
-        if (manager.WrongHomeworkAttempts.Value > 0)
-            bonus += $" Rifling through similar homework books will deduct {manager.WrongHomeworkMoneyPenalty}G.";
-        return manager.LostItemCollected.Value
-            ? $"The target item has been brought to the van — ready for a full return. {bonus}"
-            : $"Objective not yet completed. The host may return early; the office will settle at partial results. {bonus}";
+        var manager = TowerMissionManager.Instance;
+        if (manager == null) return "委托车已停在前院。";
+        string seal = $"生态柱密封完整度 {manager.SyncedCompleteness.Value:P0}。";
+        if (manager.SyncedCompleteness.Value < 0.5f)
+            seal += " 警告：低于 50% 客户拒收，只能按部分结算。";
+        return ObjectiveSecured
+            ? $"生态柱已到手——放进货舱再发车即可完整结算。{seal}"
+            : $"目标尚未到手，房主可提前返程；事务所只会按部分结果结算。{seal}";
     }
 
-    public string GetReturnButtonLabel()
-    {
-        var manager = LostItemMissionManager.Instance;
-        if (manager != null && manager.LostItemCollected.Value)
-            return "Close door and return - Complete commission";
-        return "Host closes door and returns - Partial settlement";
-    }
+    public string GetReturnButtonLabel() =>
+        ObjectiveSecured ? "关门返程 - 完成委托" : "房主关门返程 - 部分结算";
 
-    public bool IsPartialReturnRequest()
-    {
-        var manager = LostItemMissionManager.Instance;
-        return manager == null || !manager.LostItemCollected.Value;
-    }
+    public bool IsPartialReturnRequest() => !ObjectiveSecured;
 
     public bool CanLocalPlayerRequestReturn()
     {
-        var manager = LostItemMissionManager.Instance;
-        if (manager == null) return true;
-        if (!manager.LostItemCollected.Value) return IsLocalHostOrSolo();
+        if (TowerMissionManager.Instance == null) return true;
+        if (!ObjectiveSecured) return IsLocalHostOrSolo();
         return true;
     }
 
-    public string GetReturnBlockedReason()
-    {
-        var manager = LostItemMissionManager.Instance;
-        if (manager != null && !manager.LostItemCollected.Value)
-            return "Returning early will bring the whole team back to the office — requires host confirmation.";
-        return "";
-    }
+    public string GetReturnBlockedReason() =>
+        !ObjectiveSecured ? "提前返程会拉全队回事务所，需要房主确认。" : "";
 
     public void TryTakeLockerItem(int slotIndex)
     {
@@ -137,24 +122,9 @@ public class SchoolExitPoint : NetworkBehaviour, IInteractable
     {
         if (player != null && player.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
             return;
-
-        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
-        {
-            LostItemMissionManager.Instance?.TryExitMission(0, transform.position, exitUseRadius, returnTransitSeconds);
-            return;
-        }
-
-        RequestExitServerRpc();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    void RequestExitServerRpc(ServerRpcParams rpcParams = default)
-    {
-        LostItemMissionManager.Instance?.TryExitMission(
-            rpcParams.Receive.SenderClientId,
-            transform.position,
-            exitUseRadius,
-            returnTransitSeconds);
+        // This screen already shows the partial-settlement summary + host gate, so it counts
+        // as a confirmed request; the in-cabin path uses the hold-E application card instead.
+        TowerMissionManager.Instance?.RequestDepart(confirmedPartial: true);
     }
 
     [ServerRpc(RequireOwnership = false)]

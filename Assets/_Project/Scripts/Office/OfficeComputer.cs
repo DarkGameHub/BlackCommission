@@ -12,7 +12,13 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     [SerializeField] OfficeTaskDefinition demoTask;
     [SerializeField] string returnOfficeScene = "HQ";
     [SerializeField] bool allowNonNetworkSoloStart = false;
+    // Minimum outbound transit (boarding-transit spec): the ride lasts at least this long
+    // even if the mission scene loads faster; if loading runs longer, the ride stretches.
     [SerializeField] float dispatchTransitSeconds = 8f;
+
+    // 「已签发」章砸落 → 卡片收起的演出节拍; the scene load starts just after it so the
+    // stamp moment never lands on a load hitch frame.
+    const float SignatureBeatSeconds = 0.9f;
 
     static int storedFlashlights;
     static int storedBatteries;
@@ -277,15 +283,14 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
         missionLaunching = true;
         MvpMissionRuntime.BeginMission(task, returnOfficeScene);
-        float duration = Mathf.Max(1.5f, dispatchTransitSeconds);
-        VanTransitOverlay.ShowOutbound(task.title, task.locationName, duration);
-        StartCoroutine(LoadMissionLocalAfterTransit(task.sceneName, duration));
+        VanTransitOverlay.ShowOutbound(task.title, task.locationName, Mathf.Max(1.5f, dispatchTransitSeconds));
+        StartCoroutine(LoadMissionLocalAfterSignature(task.sceneName));
     }
 
-    IEnumerator LoadMissionLocalAfterTransit(string sceneName, float delaySeconds)
+    IEnumerator LoadMissionLocalAfterSignature(string sceneName)
     {
-        yield return new WaitForSecondsRealtime(delaySeconds);
-        SceneManager.LoadScene(sceneName);
+        yield return new WaitForSecondsRealtime(SignatureBeatSeconds);
+        SceneManager.LoadSceneAsync(sceneName);
     }
 
     void StartMissionServerSideWithTransit()
@@ -301,15 +306,16 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             task.title,
             task.locationName,
             Mathf.Max(1.5f, dispatchTransitSeconds));
-        StartCoroutine(LoadMissionAfterTransit(task.sceneName, Mathf.Max(1.5f, dispatchTransitSeconds)));
+        StartCoroutine(LoadMissionAfterSignature(task.sceneName));
     }
 
-    IEnumerator LoadMissionAfterTransit(string sceneName, float delaySeconds)
+    // Sign-and-load (boarding-transit spec): the mission scene starts loading right after the
+    // stamp beat — the crew stays seated in the DontDestroyOnLoad cabin through the swap and
+    // VanTransitOverlay opens the rear door only when the scene is ready AND the minimum
+    // transit (dispatchTransitSeconds) has elapsed. No black screen, no 2D loading page.
+    IEnumerator LoadMissionAfterSignature(string sceneName)
     {
-        yield return new WaitForSecondsRealtime(delaySeconds);
-
-        // Riders un-seat before the scene swaps so they regain movement at the mission spawn.
-        PlayerController.ClearAllSeatsServer();
+        yield return new WaitForSecondsRealtime(SignatureBeatSeconds);
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.SceneManager != null)
             NetworkManager.Singleton.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);

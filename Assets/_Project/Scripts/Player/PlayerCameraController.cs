@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering.Universal;
 
 /// <summary>
 /// Mouse-look for first-person camera. Only active for the local owner.
@@ -242,6 +243,10 @@ public class PlayerCameraController : NetworkBehaviour
     void MakeLocalCameraPrimary()
     {
         if (localCamera == null) return;
+
+        // Post-processing was never switched on, so the LC post volume (vignette /
+        // grain / bloom) silently did nothing. URP default is off; enforce it here.
+        localCamera.GetUniversalAdditionalCameraData().renderPostProcessing = true;
 
         Camera[] cameras = FindObjectsByType<Camera>(FindObjectsSortMode.None);
         foreach (var cam in cameras)

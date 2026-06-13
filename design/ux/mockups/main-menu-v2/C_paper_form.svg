@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15201E"/>
+      <stop offset="1" stop-color="#0E1614"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#CFC4A4"/>
+      <stop offset="1" stop-color="#B8AD8E"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景：暗市政青桌面 -->
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+
+  <!-- 主体：一张受理表单纸，轻微倾斜钉在画面中 -->
+  <g transform="translate(330,40) rotate(-1.2)">
+    <rect x="12" y="14" width="1270" height="1000" fill="#000000" opacity="0.4"/>
+    <rect x="0" y="0" width="1270" height="1000" fill="url(#paper)"/>
+
+    <!-- 页眉市政青带 -->
+    <rect x="0" y="0" width="1270" height="96" fill="#3F5F5C"/>
+    <text x="48" y="62" font-family="FangSong,KaiTi" font-size="44" fill="#D6CCAE"
+          letter-spacing="16" font-weight="bold">黑色委托 · 业务受理终端</text>
+    <text x="1222" y="60" font-family="Consolas" font-size="20" fill="#9DB5AE"
+          text-anchor="end">表 BC-01</text>
+
+    <!-- 标题区 -->
+    <text x="48" y="200" font-family="FangSong,KaiTi" font-size="100" font-weight="bold"
+          fill="#26201A" letter-spacing="12">黑色委托</text>
+    <text x="52" y="244" font-family="Consolas" font-size="22" fill="#5A6B5E"
+          letter-spacing="10">BLACK COMMISSION</text>
+    <g transform="translate(760,120) rotate(-10)">
+      <circle cx="80" cy="80" r="78" fill="none" stroke="#C23A2B" stroke-width="5" opacity="0.8"/>
+      <text x="80" y="70" font-family="KaiTi" font-size="34" fill="#C23A2B" opacity="0.8" text-anchor="middle">市政认可</text>
+      <text x="80" y="112" font-family="KaiTi" font-size="26" fill="#C23A2B" opacity="0.8" text-anchor="middle">2098</text>
+    </g>
+
+    <!-- 表单行：每行 = 一个菜单项，左侧勾选框，hover=印章红勾（首行示意） -->
+    <g font-family="Microsoft YaHei">
+      <line x1="48" y1="300" x2="1222" y2="300" stroke="#8A7F63" stroke-width="3"/>
+
+      <rect x="48" y="340" width="44" height="44" fill="none" stroke="#6B6149" stroke-width="3"/>
+      <text x="62" y="377" font-family="KaiTi" font-size="40" fill="#C23A2B" font-weight="bold">✓</text>
+      <text x="120" y="376" font-size="40" font-weight="bold" fill="#26201A" letter-spacing="8">继续营业</text>
+      <text x="430" y="374" font-size="20" fill="#6B6149">继续上一份账本（结余 −180G）</text>
+      <line x1="48" y1="404" x2="1222" y2="404" stroke="#A2967A" stroke-width="1.5"/>
+
+      <rect x="48" y="444" width="44" height="44" fill="none" stroke="#6B6149" stroke-width="3"/>
+      <text x="120" y="480" font-size="38" fill="#3A3328" letter-spacing="8">新事务所</text>
+      <text x="430" y="478" font-size="20" fill="#6B6149">开一间新的事务所</text>
+      <line x1="48" y1="508" x2="1222" y2="508" stroke="#A2967A" stroke-width="1.5"/>
+
+      <rect x="48" y="548" width="44" height="44" fill="none" stroke="#6B6149" stroke-width="3"/>
+      <text x="120" y="584" font-size="38" fill="#3A3328" letter-spacing="8">加入事务所</text>
+      <text x="430" y="582" font-size="20" fill="#6B6149">输码加入队友的局</text>
+      <line x1="48" y1="612" x2="1222" y2="612" stroke="#A2967A" stroke-width="1.5"/>
+
+      <rect x="48" y="652" width="44" height="44" fill="none" stroke="#6B6149" stroke-width="3"/>
+      <text x="120" y="688" font-size="38" fill="#3A3328" letter-spacing="8">设置</text>
+      <text x="430" y="686" font-size="20" fill="#6B6149">名字 / 语言 / 音量 / 灵敏度</text>
+      <line x1="48" y1="716" x2="1222" y2="716" stroke="#A2967A" stroke-width="1.5"/>
+
+      <rect x="48" y="756" width="44" height="44" fill="none" stroke="#6B6149" stroke-width="3"/>
+      <text x="120" y="792" font-size="38" fill="#3A3328" letter-spacing="8">关机</text>
+      <text x="430" y="790" font-size="20" fill="#6B6149">离岗，关掉这台机器</text>
+      <line x1="48" y1="820" x2="1222" y2="820" stroke="#A2967A" stroke-width="1.5"/>
+    </g>
+
+    <!-- 纸面脚注 -->
+    <text x="48" y="900" font-family="KaiTi" font-size="20" fill="#6B6149"
+          letter-spacing="4">注：办理任意业务即视为接受《外包委托管理办法》全部条款。</text>
+    <text x="48" y="950" font-family="Consolas" font-size="18" fill="#6B6149">ver 0.1 · BC-DOS　　局域网直连…</text>
+    <g transform="translate(1010,860) rotate(-8)">
+      <rect width="180" height="64" fill="none" stroke="#C23A2B" stroke-width="5" opacity="0.75"/>
+      <text x="90" y="44" font-family="KaiTi" font-size="34" fill="#C23A2B" text-anchor="middle" opacity="0.75">逾 期</text>
+    </g>
+  </g>
+
+  <!-- 桌面右下角：一截订书机/图钉杂物剪影，破对称 -->
+  <g opacity="0.45">
+    <rect x="1700" y="950" width="150" height="36" rx="8" fill="#26302B"/>
+    <circle cx="1680" cy="930" r="10" fill="#2E3A33"/>
+  </g>
+</svg>

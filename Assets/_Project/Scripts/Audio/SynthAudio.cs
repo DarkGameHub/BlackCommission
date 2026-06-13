@@ -422,6 +422,95 @@ public static class SynthAudio
         return clip;
     }
 
+    /// <summary>Footstep on sheet metal / scaffold — brighter clank than concrete.</summary>
+    public static AudioClip FootstepMetal(string name, float pitch = 1f)
+    {
+        float duration = 0.14f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = (uint)(pitch * 31337);
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            float thump = Mathf.Sin(2f * Mathf.PI * 75f * pitch * t) * Mathf.Exp(-t * 30f) * 0.22f;
+            // Detuned metallic ring pair — the walkway answering the boot.
+            float ring = (Mathf.Sin(2f * Mathf.PI * 620f * pitch * t)
+                        + Mathf.Sin(2f * Mathf.PI * 933f * pitch * t)) * 0.045f * Mathf.Exp(-t * 16f);
+            data[i] = (thump + ring + noise * 0.05f * Mathf.Exp(-t * 22f));
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Dispatch-radio bed for the van cabin: band-limited hiss with slow drift.</summary>
+    public static AudioClip RadioStatic(string name, float duration = 6f)
+    {
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = 7331;
+        float lp = 0f;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            lp = Mathf.Lerp(lp, noise, 0.22f); // crude low-pass so it hisses, not screams
+            float drift = 0.6f + Mathf.PerlinNoise(t * 0.4f, 7.7f) * 0.4f;
+            float carrier = Mathf.Sin(2f * Mathf.PI * 210f * t) * 0.012f;
+            data[i] = (lp * 0.05f * drift + carrier);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>Radio squelch blip — dispatch keying the channel.</summary>
+    public static AudioClip RadioSquelch(string name)
+    {
+        float duration = 0.25f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        uint seed = 555;
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            seed = seed * 1103515245 + 12345;
+            float noise = ((seed >> 16) & 0x7FFF) / (float)0x7FFF * 2f - 1f;
+            float burst = noise * 0.16f * Mathf.Exp(-t * 14f);
+            float beep = t < 0.05f ? Wave(WaveShape.Square, 1318f, t) * 0.07f : 0f;
+            data[i] = (burst + beep) * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    /// <summary>
+    /// E-07 violation alarm at the eco-column plinth — a cheap municipal buzzer,
+    /// two slow pulses, more bureaucratic dread than action sting.
+    /// </summary>
+    public static AudioClip ObjectiveAlarm(string name)
+    {
+        float duration = 1.6f;
+        int samples = Mathf.CeilToInt(SampleRate * duration);
+        var clip = AudioClip.Create(name, samples, 1, SampleRate, false);
+        float[] data = new float[samples];
+        for (int i = 0; i < samples; i++)
+        {
+            float t = i / (float)SampleRate;
+            // 1.25 Hz on/off gate — buzz... buzz...
+            float gate = (t % 0.8f) < 0.45f ? 1f : 0f;
+            float buzz = Wave(WaveShape.Square, 196f, t) * 0.10f
+                       + Wave(WaveShape.Square, 392f, t) * 0.035f;
+            data[i] = buzz * gate * Envelope(t, duration);
+        }
+        clip.SetData(data, 0);
+        return clip;
+    }
+
     public enum WaveShape { Sine, Square, Saw, Triangle }
 
     static float Wave(WaveShape shape, float freq, float t)

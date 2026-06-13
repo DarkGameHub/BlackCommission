@@ -55,6 +55,9 @@ public class AudioManager : MonoBehaviour
     AudioClip synthGlassThud;
     AudioClip synthLeverClank;
     AudioClip synthStampThunk;
+    AudioClip synthFootstepMetalA;
+    AudioClip synthFootstepMetalB;
+    AudioClip synthObjectiveAlarm;
 
     void Awake()
     {
@@ -133,6 +136,9 @@ public class AudioManager : MonoBehaviour
         synthGlassThud = SynthAudio.GlassThud("synth_glass_thud");
         synthLeverClank = SynthAudio.LeverClank("synth_lever_clank");
         synthStampThunk = SynthAudio.StampThunk("synth_stamp_thunk");
+        synthFootstepMetalA = SynthAudio.FootstepMetal("synth_footstep_metal_a", 1.0f);
+        synthFootstepMetalB = SynthAudio.FootstepMetal("synth_footstep_metal_b", 0.88f);
+        synthObjectiveAlarm = SynthAudio.ObjectiveAlarm("synth_objective_alarm");
     }
 
     // ─── Footsteps ───
@@ -141,6 +147,13 @@ public class AudioManager : MonoBehaviour
     {
         AudioClip clip = Random.value > 0.5f ? synthFootstepA : synthFootstepB;
         AudioSource.PlayClipAtPoint(clip, position, 0.35f);
+    }
+
+    /// <summary>Footstep on metal surfaces (stair ramps / scaffold bridge / drop dock).</summary>
+    public void PlayFootstepMetal(Vector3 position)
+    {
+        AudioClip clip = Random.value > 0.5f ? synthFootstepMetalA : synthFootstepMetalB;
+        AudioSource.PlayClipAtPoint(clip, position, 0.4f);
     }
 
     // ─── Computer ───
@@ -238,6 +251,12 @@ public class AudioManager : MonoBehaviour
     public void PlayStamp()
     {
         if (sfxSource != null) sfxSource.PlayOneShot(synthStampThunk, 0.7f);
+    }
+
+    /// <summary>E-07 violation buzzer at the plinth when the eco column is first lifted.</summary>
+    public void PlayObjectiveAlarm(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(synthObjectiveAlarm, position, 0.8f);
     }
 
     // ─── Monster ───

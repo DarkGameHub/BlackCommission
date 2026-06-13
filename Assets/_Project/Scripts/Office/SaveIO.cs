@@ -11,6 +11,22 @@ public static class SaveIO
 {
     public static string SaveDir => Path.Combine(Application.persistentDataPath, "save");
 
+    /// <summary>True if any progression save file exists (drives 「继续营业」 availability).</summary>
+    public static bool AnySave
+    {
+        get
+        {
+            try
+            {
+                return Directory.Exists(SaveDir) && Directory.GetFiles(SaveDir, "*.json").Length > 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
     public static T ReadJson<T>(string fileName) where T : class
     {
         try

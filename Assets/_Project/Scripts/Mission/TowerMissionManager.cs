@@ -21,6 +21,9 @@ public class TowerMissionManager : NetworkBehaviour
     [SerializeField] EcoColumnCarriable ecoColumn;
     [SerializeField] BoxCollider cargoZone;
     [SerializeField] string officeSceneName = "HQ";
+    // Minimum return transit (boarding-transit spec): the HQ loads underneath the windowless
+    // cabin right after settlement; the rear door opens at load-complete AND this many seconds,
+    // whichever is later. Give the crew time to read the settlement card (spec suggests ≥10s).
     [SerializeField] float returnToOfficeDelaySeconds = 6f;
 
     [Header("Reward Fallbacks (registry: full 300/5/80, partial 60/0/15, failure 20/-2/0)")]
@@ -39,6 +42,13 @@ public class TowerMissionManager : NetworkBehaviour
     public NetworkVariable<float> SyncedCompleteness = new(1f,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    /// <summary>
+    /// True while the host has the early-return application card open — peers render the
+    /// "房主正在填写提前收工申请…" ticket line (boarding-transit spec, 队友同步行).
+    /// </summary>
+    public NetworkVariable<bool> HostFilingEarlyReturn = new(false,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     /// <summary>Future monster-aggro hook: fires once on the authority when the column is first lifted.</summary>
     public static event System.Action OnObjectiveSecured;
 
@@ -47,6 +57,7 @@ public class TowerMissionManager : NetworkBehaviour
 
     TowerMissionLogic logic;
     float downedPollTimer;
+    bool alarmPlayed;
 
     public bool IsTerminalState => (TowerMissionState)SyncedState.Value is TowerMissionState.Delivered
         or TowerMissionState.PartialReturn or TowerMissionState.Failed;
@@ -59,6 +70,7 @@ public class TowerMissionManager : NetworkBehaviour
     void OnEnable()
     {
         Instance = this;
+        SyncedState.OnValueChanged += OnSyncedStateChanged;
         if (ecoColumn == null) return;
         ecoColumn.IsBeingCarried.OnValueChanged += OnCarriedChanged;
         ecoColumn.HardImpact += OnHardImpact;
@@ -67,6 +79,7 @@ public class TowerMissionManager : NetworkBehaviour
     void OnDisable()
     {
         if (Instance == this) Instance = null;
+        SyncedState.OnValueChanged -= OnSyncedStateChanged;
         if (ecoColumn == null) return;
         ecoColumn.IsBeingCarried.OnValueChanged -= OnCarriedChanged;
         ecoColumn.HardImpact -= OnHardImpact;
@@ -79,7 +92,24 @@ public class TowerMissionManager : NetworkBehaviour
         {
             SyncedState.Value = (int)logic.State;
             OnObjectiveSecured?.Invoke();
+            PlayObjectiveAlarmOnce(); // offline path: OnValueChanged may not fire unspawned
         }
+    }
+
+    // Runs on every peer (and the latch keeps the host's double path single-fire):
+    // lifting the column trips the E-07 violation buzzer at the plinth.
+    void OnSyncedStateChanged(int previous, int next)
+    {
+        if ((TowerMissionState)next == TowerMissionState.ObjectiveSecured)
+            PlayObjectiveAlarmOnce();
+    }
+
+    void PlayObjectiveAlarmOnce()
+    {
+        if (alarmPlayed) return;
+        alarmPlayed = true;
+        Vector3 pos = ecoColumn != null ? ecoColumn.transform.position : transform.position;
+        AudioManager.Instance?.PlayObjectiveAlarm(pos);
     }
 
     void OnHardImpact(float impactForce)
@@ -108,23 +138,50 @@ public class TowerMissionManager : NetworkBehaviour
         return true;
     }
 
-    /// <summary>Owner-side intent (depart lever); routed to the authority like LostItemMissionManager.</summary>
-    public void RequestDepart()
+    /// <summary>Aboard = set down inside the cargo zone (carrying it next to the van doesn't count).</summary>
+    public bool IsObjectiveAboard => ecoColumn != null && cargoZone != null &&
+                                     !ecoColumn.IsBeingCarried.Value &&
+                                     cargoZone.bounds.Contains(ecoColumn.transform.position);
+
+    /// <summary>Client-rejection threshold for the application card's warning row.</summary>
+    public float RejectThreshold => rejectThreshold;
+
+    /// <summary>
+    /// Local preview of the clause B-2 early-return payout for the application card —
+    /// the exact calculator path Settle uses, so the estimate never drifts from the bill.
+    /// </summary>
+    public int EstimatePartialMoney() => MissionRewardCalculator.Calculate(
+        null, MvpMissionResultKind.Partial, 0f, false, 0, BuildFallbacks(), new MissionRewardBonus()).Money;
+
+    /// <summary>Host-side: mirrors the application card open/closed state to all peers.</summary>
+    public void SetFilingEarlyReturn(bool filing)
     {
-        if (HasMissionAuthority) { ResolveDepartureOnAuthority(); return; }
-        RequestDepartServerRpc();
+        if (!HasMissionAuthority) return;
+        HostFilingEarlyReturn.Value = filing;
+    }
+
+    /// <summary>
+    /// Owner-side intent (depart lever / dispatch card); routed to the authority.
+    /// Leaving WITHOUT the column requires the host's signed early-return application
+    /// (`confirmedPartial`) — a lever pull can no longer settle partial by accident.
+    /// </summary>
+    public void RequestDepart(bool confirmedPartial = false)
+    {
+        if (HasMissionAuthority) { ResolveDepartureOnAuthority(confirmedPartial, true); return; }
+        RequestDepartServerRpc(confirmedPartial);
     }
 
     [ServerRpc(RequireOwnership = false)]
-    void RequestDepartServerRpc(ServerRpcParams rpcParams = default) => ResolveDepartureOnAuthority();
+    void RequestDepartServerRpc(bool confirmedPartial, ServerRpcParams rpcParams = default) =>
+        ResolveDepartureOnAuthority(confirmedPartial,
+            rpcParams.Receive.SenderClientId == NetworkManager.ServerClientId);
 
-    void ResolveDepartureOnAuthority()
+    void ResolveDepartureOnAuthority(bool confirmedPartial, bool requesterIsHost)
     {
         if (logic.IsTerminal) return;
-        // Aboard = set down inside the cargo zone (carrying it next to the van doesn't count).
-        bool aboard = ecoColumn != null && cargoZone != null &&
-                      !ecoColumn.IsBeingCarried.Value &&
-                      cargoZone.bounds.Contains(ecoColumn.transform.position);
+        bool aboard = IsObjectiveAboard;
+        if (!aboard && (!confirmedPartial || !requesterIsHost)) return; // 提前收工=房主签字专属
+        HostFilingEarlyReturn.Value = false;
         TowerMissionState outcome = logic.ResolveDeparture(aboard);
         Settle(outcome == TowerMissionState.Delivered
             ? MvpMissionResultKind.Success
@@ -138,19 +195,36 @@ public class TowerMissionManager : NetworkBehaviour
 
         MissionRewardResult result = MissionRewardCalculator.Calculate(
             null, kind, 0f, false, 0, BuildFallbacks(), new MissionRewardBonus());
+        int baseMoney = result.Money;
         int money = kind == MvpMissionResultKind.Success
-            ? logic.ScaleDeliveredMoney(result.Money)
-            : result.Money;
+            ? logic.ScaleDeliveredMoney(baseMoney)
+            : baseMoney;
 
+        float minTransit = Mathf.Max(1.5f, returnToOfficeDelaySeconds);
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
-            ApplyResultClientRpc(money, result.Reputation, result.Experience, (int)kind);
+        {
+            ApplyResultClientRpc(money, baseMoney, result.Reputation, result.Experience, (int)kind, logic.Completeness);
+            // 全队随车: seat everyone (downed included), start the return transit on every
+            // peer, then load the HQ behind the windowless cabin (boarding-transit spec).
+            // The short delay lets the seat NetworkVariables land before the scene event.
+            PlayerController.SeatAllConnectedServer();
+            BeginReturnTransitClientRpc(minTransit);
+            Invoke(nameof(ReturnToOffice), 0.75f);
+        }
         else
-            ApplyResultLocally(money, result.Reputation, result.Experience, kind);
+        {
+            ApplyResultLocally(money, baseMoney, result.Reputation, result.Experience, kind, logic.Completeness);
+            VanTransitOverlay.ShowReturn(MvpMissionRuntime.ActiveTask?.title, null, minTransit);
+            Invoke(nameof(ReturnToOffice), minTransit);
+        }
 
         Debug.Log($"[TowerMission] Settled {logic.State}: {money}G / rep {result.Reputation} / " +
                   $"xp {result.Experience} (completeness {logic.Completeness:P0})");
-        Invoke(nameof(ReturnToOffice), returnToOfficeDelaySeconds);
     }
+
+    [ClientRpc]
+    void BeginReturnTransitClientRpc(float minTransitSeconds) =>
+        VanTransitOverlay.ShowReturn(MvpMissionRuntime.ActiveTask?.title, null, minTransitSeconds);
 
     void ReturnToOffice()
     {
@@ -161,16 +235,18 @@ public class TowerMissionManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    void ApplyResultClientRpc(int money, int reputation, int experience, int kind) =>
-        ApplyResultLocally(money, reputation, experience, (MvpMissionResultKind)kind);
+    void ApplyResultClientRpc(int money, int baseMoney, int reputation, int experience, int kind, float completeness) =>
+        ApplyResultLocally(money, baseMoney, reputation, experience, (MvpMissionResultKind)kind, completeness);
 
-    static void ApplyResultLocally(int money, int reputation, int experience, MvpMissionResultKind kind)
+    static void ApplyResultLocally(int money, int baseMoney, int reputation, int experience,
+        MvpMissionResultKind kind, float completeness)
     {
         MvpPendingReward.Set(money, reputation, experience,
             kind == MvpMissionResultKind.Success, 0f,
             kind == MvpMissionResultKind.Success, kind);
-        // 印章落纸 — the settlement becomes official on every peer.
-        AudioManager.Instance?.PlayStamp();
+        // 委托结算单 dealt to this peer in the return van; the stamp sound now fires
+        // on the card's stamp-fall frame (design/ux/settlement.md, Transitions).
+        SettlementCardOverlay.Show(kind, baseMoney, money, completeness);
     }
 
     MissionRewardFallbacks BuildFallbacks() => new MissionRewardFallbacks

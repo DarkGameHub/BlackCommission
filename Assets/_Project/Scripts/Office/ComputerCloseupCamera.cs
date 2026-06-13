@@ -46,8 +46,10 @@ public class ComputerCloseupCamera : MonoBehaviour
         CaptureStartPose();   // grab the player's head pose before the camera is disabled
         DisablePlayerCamera();
 
-        Vector3 screenCenter = new Vector3(computerTransform.position.x, 1.085f, 1.704f);
-        targetPos = screenCenter + new Vector3(0f, 0.10f, -0.68f);
+        // The interactable's transform IS the screen centre (was hardcoded to the
+        // pre-scale pose; the HQ has since been scaled ×1.25 — follow the object).
+        Vector3 screenCenter = computerTransform.position;
+        targetPos = screenCenter + new Vector3(0f, 0.125f, -0.85f);
 
         var camGo = new GameObject("CloseupCam");
         camGo.transform.SetParent(transform);

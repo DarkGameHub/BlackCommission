@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering.Universal;
 
 /// <summary>
 /// Lightweight, NON-networked first-person walker for blockout walkthroughs — drop it in a scene,
@@ -30,6 +31,10 @@ public class PreviewWalker : MonoBehaviour
             var c = GetComponentInChildren<Camera>();
             cam = c != null ? c.transform : (Camera.main != null ? Camera.main.transform : null);
         }
+        // Walkthroughs should preview the real look: URP post is off by default.
+        var camComp = cam != null ? cam.GetComponent<Camera>() : null;
+        if (camComp != null)
+            camComp.GetUniversalAdditionalCameraData().renderPostProcessing = true;
     }
 
     void OnEnable()
