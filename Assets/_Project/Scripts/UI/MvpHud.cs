@@ -63,6 +63,7 @@ public class MvpHud : MonoBehaviour
     Texture2D staminaBarFill;
     Texture2D staminaBarLowFill;
     Texture2D staminaBarFrame;
+    Texture2D hpFillHealthy;   // bone fill for healthy HP in the vitals monitor (low → hpBarFill red)
     Texture2D damageFlashTex;
     float damageFlashUntil;
     float lastKnownHp = 100f;
@@ -265,7 +266,7 @@ public class MvpHud : MonoBehaviour
         DrawDamageFlash();
         DrawCrosshair();
         DrawGestureHint();
-        DrawStaminaBar();
+        DrawVitalsBlock();
         if (showNetworkHint)
             DrawFooterHint();
     }
@@ -1086,7 +1087,10 @@ public class MvpHud : MonoBehaviour
         {
             if (h.IsOwner) return h;
         }
-        return null;
+        // Offline / preview walkthroughs have no network-owned player; fall back to the only one
+        // present so the HP bar still renders — matches FindLocalPlayer / FindLocalHotbar, which
+        // already do this. Without it the HP bar silently vanished while the hotbar stayed up.
+        return all.Length > 0 ? all[0] : null;
     }
 
     void DrawMissionVanPanel()
@@ -1225,87 +1229,52 @@ public class MvpHud : MonoBehaviour
                 DrawFlashlightBar(rect);
         }
 
-        DrawHealthBar(startX, y - 14f, totalWidth);
     }
 
-    void DrawHealthBar(float x, float y, float width)
-    {
-        PlayerHealth localHealth = FindLocalPlayerHealth();
-        if (localHealth == null) return;
-
-        float hp = localHealth.CurrentHP.Value;
-        float maxHp = 100f;
-
-        if (hp < lastKnownHp)
-        {
-            damageFlashUntil = Time.time + 0.35f;
-            lastKnownHp = hp;
-        }
-        else if (hp > lastKnownHp)
-            lastKnownHp = hp;
-
-        float barH = 6f;
-        float fillW = width * Mathf.Clamp01(hp / maxHp);
-        GUI.DrawTexture(new Rect(x, y, width, barH), hpBarBg);
-        GUI.DrawTexture(new Rect(x, y, fillW, barH), hpBarFill);
-    }
-
-    void DrawStaminaBar()
+    // Minimal bottom-left vitals (PM 2026-06-13): no panel box, no numbers — just an "HP"
+    // and "STAMINA" label over a thin bar. Length + colour carry the state (fills go
+    // stamp-red when critical); clean LC-style readout on the dark scene.
+    void DrawVitalsBlock()
     {
         if (IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
 
+        PlayerHealth localHealth = FindLocalPlayerHealth();
         PlayerController localPlayer = FindLocalPlayer();
-        if (localPlayer == null) return;
+        if (localHealth == null && localPlayer == null) return;
 
-        float stamina = localPlayer.Stamina;
-        float maxStamina = localPlayer.MaxStamina;
-        if (maxStamina <= 0f) return;
+        const float pad = 24f, w = 160f;
+        float x = pad;
+        float yTop = Screen.height - pad - 50f;
 
-        float normalized = Mathf.Clamp01(stamina / maxStamina);
-        bool inMission = TowerMissionManager.Instance != null;
-        if (!inMission && normalized >= 0.999f && !localPlayer.IsSprinting && !localPlayer.IsExhausted)
-            return;
-
-        float width;
-        float x;
-        float y;
-        if (inMission)
+        if (localHealth != null)
         {
-            int slotSize = Mathf.Clamp((Screen.width - 56) / PlayerHotbar.SlotCount, 62, 92);
-            int gap = Mathf.Clamp(slotSize / 11, 5, 8);
-            width = PlayerHotbar.SlotCount * slotSize + (PlayerHotbar.SlotCount - 1) * gap;
-            x = (Screen.width - width) * 0.5f;
-            y = Screen.height - 124f;
+            float hp = localHealth.CurrentHP.Value;
+            const float maxHp = 100f;
+            // Damage-flash hook: screen tints on HP loss.
+            if (hp < lastKnownHp) { damageFlashUntil = Time.time + 0.35f; lastKnownHp = hp; }
+            else if (hp > lastKnownHp) lastKnownHp = hp;
+
+            float n = Mathf.Clamp01(hp / maxHp);
+            bool low = n <= 0.25f;
+            DrawVitalRow(x, yTop, w, "HP", n, low ? hpBarFill : hpFillHealthy, low);
         }
-        else
+
+        if (localPlayer != null && localPlayer.MaxStamina > 0f)
         {
-            width = 220f;
-            x = 24f;
-            y = Screen.height - 62f;
+            float n = Mathf.Clamp01(localPlayer.Stamina / localPlayer.MaxStamina);
+            bool low = n <= 0.24f || localPlayer.IsExhausted;
+            DrawVitalRow(x, yTop + 28f, w, "STAMINA", n, low ? staminaBarLowFill : staminaBarFill, low);
         }
-        float height = 9f;
+    }
 
-        bool low = normalized <= 0.24f || localPlayer.IsExhausted;
-        GUIStyle textStyle = low ? warningStyle : mutedStyle;
-        string state = localPlayer.IsExhausted ? "  /  WINDED" : "";
-        GUI.Label(new Rect(x, y - 20f, width * 0.58f, 20f), $"STAMINA{state}", textStyle);
-        GUI.Label(new Rect(x + width * 0.58f, y - 20f, width * 0.42f, 20f),
-            $"{Mathf.CeilToInt(normalized * 100f)}%", textStyle);
-
-        float fillW = width * normalized;
-        Texture2D fillTexture = low ? staminaBarLowFill : staminaBarFill;
-
-        GUI.DrawTexture(new Rect(x - 1f, y - 1f, width + 2f, height + 2f), staminaBarFrame);
-        GUI.DrawTexture(new Rect(x, y, width, height), hpBarBg);
-        GUI.DrawTexture(new Rect(x, y, fillW, height), fillTexture);
-
-        GUI.color = new Color(0f, 0f, 0f, 0.34f);
-        for (int i = 1; i < 4; i++)
-        {
-            float tickX = x + width * (i / 4f);
-            GUI.DrawTexture(new Rect(tickX, y, 1f, height), hpBarBg);
-        }
-        GUI.color = Color.white;
+    // Label over a thin bar, no frame/box. The bar track (hpBarBg) keeps the empty portion
+    // faintly readable on the dark scene without reading as a panel.
+    void DrawVitalRow(float x, float topY, float w, string label, float normalized, Texture2D fill, bool low)
+    {
+        GUI.Label(new Rect(x, topY, w, 15f), label, low ? warningStyle : labelStyle);
+        float by = topY + 15f, bh = 4f;
+        GUI.DrawTexture(new Rect(x, by, w, bh), hpBarBg);
+        GUI.DrawTexture(new Rect(x, by, w * Mathf.Clamp01(normalized), bh), fill);
     }
 
     void DrawFlashlightBar(Rect slotRect)
@@ -1368,9 +1337,15 @@ public class MvpHud : MonoBehaviour
     }
 
     static float computerOpenedAt;
+    static float computerClosedAt;
 
     public static void OpenComputer(OfficeComputer computer)
     {
+        // Debounce the close→reopen race: accepting a commission calls CloseComputer(), but the
+        // player is usually still holding E aimed at the terminal, so PlayerInteraction would
+        // re-fire OnInteractStart next frame and pop it straight back open ("感觉没关上"). Swallow
+        // any open within a short window of a close.
+        if (Time.unscaledTime - computerClosedAt < 0.35f) return;
         activeMissionVan = null;
         activeCabinet = null;
         activeBestiary = null;
@@ -1421,6 +1396,7 @@ public class MvpHud : MonoBehaviour
     {
         ComputerCloseupCamera.Exit();
         activeComputer = null;
+        computerClosedAt = Time.unscaledTime;
         RestoreGameplayCursor();
     }
 
@@ -1664,10 +1640,11 @@ public class MvpHud : MonoBehaviour
 
         EnsureCrtTextures();
 
-        if (hpBarBg == null || hpBarFill == null || staminaBarFill == null || staminaBarLowFill == null || staminaBarFrame == null)
+        if (hpBarBg == null || hpBarFill == null || staminaBarFill == null || staminaBarLowFill == null || staminaBarFrame == null || hpFillHealthy == null)
         {
             hpBarBg = MakeTexture(new Color(0.055f, 0.060f, 0.055f, 0.90f));
             hpBarFill = MakeTexture(BlackCommissionUiTheme.RustWarning);
+            hpFillHealthy = MakeTexture(new Color(0.80f, 0.76f, 0.62f, 0.96f));   // bone — healthy HP
             staminaBarFill = MakeTexture(new Color(0.90f, 0.78f, 0.22f, 0.96f));
             staminaBarLowFill = MakeTexture(new Color(0.92f, 0.34f, 0.18f, 0.96f));
             staminaBarFrame = MakeTexture(new Color(0.58f, 0.53f, 0.39f, 0.78f));

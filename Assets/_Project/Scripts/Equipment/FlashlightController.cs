@@ -35,16 +35,17 @@ public class FlashlightController : NetworkBehaviour
     {
         spotLight = GetComponentInChildren<Light>();
 
-        IsOn.OnValueChanged += (_, on) =>
+        // PM 2026-06-13: NO flashlight on the player for now. The player-attached spotlight cast
+        // real-time shadows that swept across the room as the player moved/looked
+        // ("阴影随人物移动") — and the PM doesn't want the flashlight yet. Disable the light
+        // outright: kills both the flashlight AND that moving shadow. To restore later, bring
+        // back the IsOn → spotLight.enabled hookup and the owner input below.
+        if (spotLight != null)
         {
-            if (spotLight != null) spotLight.enabled = on;
-        };
-
-        if (spotLight != null) spotLight.enabled = IsOn.Value;
-
-        if (!IsOwner) return;
-        inputActions = new PlayerInputActions();
-        inputActions.Enable();
+            spotLight.shadows = LightShadows.None;
+            spotLight.enabled = false;
+            spotLight.gameObject.SetActive(false);
+        }
     }
 
     public override void OnNetworkDespawn()

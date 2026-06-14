@@ -1337,34 +1337,44 @@ public class MainMenuUI : MonoBehaviour
 
     GameObject BuildConnectingPanel(Transform parent)
     {
-        var panel = CreatePanel(parent, "ConnectingPanel", new Vector2(520f, 220f));
+        var panel = CreatePanel(parent, "ConnectingPanel", new Vector2(560f, 248f));
         panel.SetActive(false);
 
-        AddInsetFrame(panel.transform, "RelayFrame", DispatchGreenDark, 7f, 2f);
+        // System-chrome loading screen reworked to mock 02b "OPENING THE OFFICE" (PM 2026-06-13):
+        // tungsten amber + aged paper, NOT CRT green — green is reserved for in-world terminals
+        // per the art bible, so it must not appear in menu-layer chrome.
+        Color amberDim = new Color(SodiumAmber.r, SodiumAmber.g, SodiumAmber.b, 0.55f);
+        AddInsetFrame(panel.transform, "BootFrame", amberDim, 7f, 2f);
 
-        var header = AddText(panel.transform, "Header", "BLACK COMMISSION RELAY", 15,
-            DispatchGreenDark, TextAlignmentOptions.Center);
+        var header = AddText(panel.transform, "Header", "OPENING THE OFFICE", 17,
+            SodiumAmber, TextAlignmentOptions.Center);
         header.fontStyle = FontStyles.Bold;
-        header.characterSpacing = 2f;
-        header.rectTransform.anchoredPosition = new Vector2(0f, 74f);
-        header.rectTransform.sizeDelta = new Vector2(450f, 24f);
+        header.characterSpacing = 3f;
+        header.rectTransform.anchoredPosition = new Vector2(0f, 84f);
+        header.rectTransform.sizeDelta = new Vector2(500f, 24f);
 
-        connectingText = AddText(panel.transform, "ConnText", "", 30,
-            DispatchGreen, TextAlignmentOptions.Center);
+        var sub = AddText(panel.transform, "Sub", "DISPATCH BOOT", 12,
+            HintText, TextAlignmentOptions.Center);
+        sub.characterSpacing = 4f;
+        sub.rectTransform.anchoredPosition = new Vector2(0f, 58f);
+        sub.rectTransform.sizeDelta = new Vector2(420f, 18f);
+
+        connectingText = AddText(panel.transform, "ConnText", "", 28,
+            AgedPaper, TextAlignmentOptions.Center);
         connectingText.fontStyle = FontStyles.Bold;
-        connectingText.characterSpacing = 2f;
-        connectingText.rectTransform.anchoredPosition = new Vector2(0f, 18f);
-        connectingText.rectTransform.sizeDelta = new Vector2(420f, 42f);
+        connectingText.characterSpacing = 1f;
+        connectingText.rectTransform.anchoredPosition = new Vector2(0f, 8f);
+        connectingText.rectTransform.sizeDelta = new Vector2(470f, 40f);
 
         var wait = AddText(panel.transform, "PleaseWait", MvpLocale.T("please_wait"), 14,
             HintText, TextAlignmentOptions.Center);
-        wait.rectTransform.anchoredPosition = new Vector2(0f, -28f);
-        wait.rectTransform.sizeDelta = new Vector2(420f, 22f);
+        wait.rectTransform.anchoredPosition = new Vector2(0f, -34f);
+        wait.rectTransform.sizeDelta = new Vector2(470f, 22f);
 
-        AddRect(panel.transform, "ProgressRail", new Vector2(0f, -66f), new Vector2(360f, 8f),
-            new Color(0.050f, 0.085f, 0.045f, 0.90f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        AddRect(panel.transform, "ProgressFill", new Vector2(-72f, -66f), new Vector2(216f, 8f),
-            new Color(0.310f, 0.950f, 0.250f, 0.78f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(panel.transform, "ProgressRail", new Vector2(0f, -74f), new Vector2(410f, 8f),
+            new Color(0.090f, 0.078f, 0.055f, 0.92f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(panel.transform, "ProgressFill", new Vector2(-82f, -74f), new Vector2(246f, 8f),
+            new Color(SodiumAmber.r, SodiumAmber.g, SodiumAmber.b, 0.88f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
         return panel;
     }

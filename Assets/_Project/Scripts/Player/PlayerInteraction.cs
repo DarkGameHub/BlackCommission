@@ -106,7 +106,10 @@ public class PlayerInteraction : NetworkBehaviour
             return interactable;
         }
 
-        return FindNearbyTarget(origin);
+        // Aim required (PM 2026-06-13): no proximity fallback — the crosshair must be on the
+        // target (aimAssistRadius still gives a small forgiveness). Cabinet / computer / bestiary
+        // no longer trigger just by standing near them. FindNearbyTarget kept for easy re-enable.
+        return null;
     }
 
     IInteractable FindNearbyTarget(Vector3 origin)

@@ -959,10 +959,78 @@ public static class TowerV8WhiteboxBuilder
         exitCol.size = new Vector3(2.5f, 2f, 2.5f);
         exitGo.AddComponent<NetworkObject>();
         exitGo.AddComponent<MissionVanExitPoint>();
-        // HQ-flow entry: PlayerController.GetSceneSafePosition finds this by name.
+        // HQ-flow entry / disembark point: PlayerController.GetSceneSafePosition finds this by
+        // name. Placed just outside the van's OPEN REAR (north/building side, z = van.Z+van.D),
+        // facing the building — you step out the back cargo door, not jammed against the cab
+        // (PM 2026-06-13: "类似囚犯车,后面有门,从车后下车"). Identity rotation faces +z = north.
         var spawn = new GameObject("PlayerSpawnPoint");
         spawn.transform.SetParent(parent);
-        spawn.transform.position = new Vector3(van.CenterX, 0.1f, van.Z + 2f);
+        spawn.transform.position = new Vector3(van.CenterX, 0.1f, van.Z + van.D + 1f);
+
+        // Procedural box-van REMOVED 2026-06-13 (PM: too ugly). The proper van interior will be
+        // rebuilt in-engine toward the locked reference (design/ux/mockups/van-interior/) in the
+        // art pass. BuildMissionVan/AddVisualWheel are left below but UNCALLED (dead) for now.
+    }
+
+    /// <summary>
+    /// Visible commission van parked on the VAN pad, wrapped around the existing gameplay
+    /// anchors so the loop reads spatially: the OPEN cargo bay (north, building side) sits
+    /// over VAN_CargoZone (carry the 生态柱 in and set it DOWN to count as aboard), the cab
+    /// faces the forecourt/spawn, and the west face sits beside VAN_ExitPoint (board) + the
+    /// depart lever. Civic-teal box (the office's own van) on a dark-steel cab, per AGENTS
+    /// identity. Shell is solid (NavMesh bakes it as an obstacle so agents path around it);
+    /// trim and wheels are visual-only. The rear opening and the bay floor carry NO collider,
+    /// so carrying the column in, dropping it, and re-lifting it are never obstructed — and
+    /// Carriable disables a held object's collider, so the column can't snag the bay walls.
+    /// </summary>
+    static void BuildMissionVan(Transform parent)
+    {
+        PlanSlab van = TowerPlanV8.ById["VAN"];
+        float cx = van.CenterX;          // 20: van centre line (east/west)
+        const float boxTop = 2.6f;       // cargo roof height (box-truck headroom)
+        const float halfW = 1.65f;       // interior half-width → 3.3 m clear bay
+        const float wallT = 0.12f;
+        float fullW = 2f * halfW + wallT;
+
+        var body = new GameObject("VAN_Body");
+        body.transform.SetParent(parent);
+
+        // ── Cargo box (rear/north): open toward the building over the cargo zone z[-6..-2] ──
+        AddSlab(body.transform, tealMat, cx - halfW, boxTop * 0.5f, -4.0f, wallT, boxTop, 4.0f, "Van_CargoWall_W");
+        AddSlab(body.transform, tealMat, cx + halfW, boxTop * 0.5f, -4.0f, wallT, boxTop, 4.0f, "Van_CargoWall_E");
+        AddSlab(body.transform, tealMat, cx, boxTop * 0.5f, -6.0f, fullW, boxTop, wallT, "Van_CargoWall_Front");
+        AddSlab(body.transform, tealMat, cx, boxTop, -4.0f, fullW + 0.18f, wallT, 4.1f, "Van_CargoRoof");
+        // Rear lintel frames the open back — visual only, the opening must stay walkable.
+        AddVisualSlab(body.transform, tealMat, cx, boxTop - 0.18f, -2.0f, fullW + 0.18f, 0.36f, wallT, "Van_RearLintel");
+
+        // ── Cab (front/south, lower, dark steel) facing the forecourt; clears the spawn at z-8 ──
+        AddSlab(body.transform, trayMat, cx, 1.0f, -6.5f, 2f * halfW, 2.0f, 1.0f, "Van_Cab");
+        AddVisualSlab(body.transform, trayMat, cx, 1.5f, -7.01f, 2.6f, 0.7f, 0.06f, "Van_Windshield");
+        AddVisualSlab(body.transform, trayMat, cx, 0.35f, -7.05f, 2f * halfW + 0.2f, 0.35f, 0.18f, "Van_Bumper");
+
+        // ── Commission identity: red stamp plate on the west face (matches the depart lever) ──
+        AddVisualSlab(body.transform, stampMat, cx - halfW - 0.07f, 1.5f, -4.0f, 0.05f, 0.8f, 1.3f, "Van_CommissionPlate");
+
+        // ── Wheels (visual cylinders, dark steel) at the two axles ──
+        foreach (var (wx, wz) in new[]
+        {
+            (cx - halfW - 0.05f, -6.4f), (cx + halfW + 0.05f, -6.4f), // front axle
+            (cx - halfW - 0.05f, -3.2f), (cx + halfW + 0.05f, -3.2f), // rear axle
+        })
+            AddVisualWheel(body.transform, wx, 0.45f, wz);
+    }
+
+    static void AddVisualWheel(Transform parent, float cx, float cy, float cz)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        go.name = "Van_Wheel";
+        go.transform.SetParent(parent);
+        go.transform.position = new Vector3(cx, cy, cz);
+        go.transform.rotation = Quaternion.Euler(0f, 0f, 90f);   // axle along X (left↔right)
+        go.transform.localScale = new Vector3(0.9f, 0.22f, 0.9f); // Ø0.9 m, ~0.44 m wide
+        go.GetComponent<Renderer>().sharedMaterial = trayMat;
+        var col = go.GetComponent<Collider>();
+        if (col != null) Object.DestroyImmediate(col);
     }
 
     /// <summary>

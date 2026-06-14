@@ -68,6 +68,13 @@ public static class HqOfficeLightingPass
         if (sputterLamp != null && sputterLamp.GetComponent<LightFlicker>() == null)
             sputterLamp.AddComponent<LightFlicker>().Configure(LightFlicker.Character.Sputter, 0.7f, 7f);
 
+        // DECISIVE shadow kill (PM 2026-06-13): a real-time cast shadow was following the
+        // camera in the office. Turn shadow casting OFF on every light in the HQ so nothing —
+        // player body, prop, or flashlight — can throw it. The office reads by light pools and
+        // baked darkness, not real-time shadows.
+        foreach (Light l in Object.FindObjectsByType<Light>(FindObjectsSortMode.None))
+            l.shadows = LightShadows.None;
+
         if (Application.isPlaying)
             EnsurePostVolume();
 
@@ -85,10 +92,11 @@ public static class HqOfficeLightingPass
 
         var profile = ScriptableObject.CreateInstance<UnityEngine.Rendering.VolumeProfile>();
 
-        var vignette = profile.Add<UnityEngine.Rendering.Universal.Vignette>(true);
-        vignette.intensity.Override(0.28f);
-        vignette.smoothness.Override(0.42f);
-        vignette.color.Override(new Color(0.039f, 0.059f, 0.078f));
+        // Vignette REMOVED 2026-06-13 (PM: the office edge-darkening / "black shadow ring"
+        // was unwanted). NOTE: this whole method short-circuits when ANY Volume already exists
+        // (see EnsurePostVolume guard) — and BrightnessController creates a global Volume at
+        // startup — so the earlier "soften the vignette" edit was dead code and never ran.
+        // No vignette is added here anymore; the office relies on fog + lights for mood.
 
         var grain = profile.Add<UnityEngine.Rendering.Universal.FilmGrain>(true);
         grain.type.Override(UnityEngine.Rendering.Universal.FilmGrainLookup.Medium1);
@@ -116,7 +124,9 @@ public static class HqOfficeLightingPass
         RenderSettings.fog = true;
         RenderSettings.fogMode = FogMode.ExponentialSquared;
         RenderSettings.fogColor = FogConcrete;
-        RenderSettings.fogDensity = 0.0018f;
+        // Thinned 2026-06-13 (PM: dark fog read as a "black shadow following the camera" in
+        // the small office). 0.0018 → 0.0006 keeps faint depth without the closing-in murk.
+        RenderSettings.fogDensity = 0.0006f;
 
         RenderSettings.ambientMode = AmbientMode.Trilight;
         RenderSettings.ambientSkyColor = Rgb(0x4B, 0x4C, 0x48);

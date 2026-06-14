@@ -53,12 +53,15 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         if (IsOwner)
         {
             BuildRig();
-            // Hide own body from own camera
-            if (tpCharacterVisual != null)
-            {
-                foreach (var r in tpCharacterVisual.GetComponentsInChildren<Renderer>())
+            // Hide the WHOLE third-person body from the owner. This MUST cover all three build
+            // paths in BuildThirdPersonVisual — the generated-worker and primitive fallbacks
+            // leave tpCharacterVisual null, so the old tpCharacterVisual-only hide missed them
+            // and the owner's own body kept rendering below the camera AND casting a floor shadow
+            // that followed the player ("阴影随人物移动", PM 2026-06-13). Disabling the renderers
+            // stops both the unseen render and that shadow.
+            if (thirdPersonRoot != null)
+                foreach (var r in thirdPersonRoot.GetComponentsInChildren<Renderer>(true))
                     r.enabled = false;
-            }
         }
         else
             BuildNameplate();
@@ -203,6 +206,12 @@ public class PlayerFirstPersonRig : NetworkBehaviour
 
         flashlightModel = CreateFlashlight(heldItemRoot);
         SetActiveItem(MvpHotbarItemId.None);
+
+        // First-person view models must NOT cast world shadows. The rig is parented to the
+        // camera, so any shadow they throw slides across the room as the player moves/looks —
+        // exactly the "阴影随人物移动" the PM saw (2026-06-13). Kill shadow casting on the rig.
+        foreach (var rend in rigRoot.GetComponentsInChildren<Renderer>(true))
+            rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     }
 
     void BuildThirdPersonVisual()
@@ -344,6 +353,22 @@ static void TintCharacterVisual(GameObject visual, int charIndex)
         {
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             renderer.receiveShadows = true;
+            ApplyWornMaterial(renderer);
+        }
+    }
+
+    // Art-bible: every surface reads as worn public-facility kit — high roughness, no
+    // metallic, no chrome. Pushes the worker model toward the semi-realistic weathered
+    // reference (design/ux/mockups/character) instead of a clean product render.
+    static void ApplyWornMaterial(Renderer renderer)
+    {
+        foreach (Material m in renderer.materials)
+        {
+            if (m == null) continue;
+            if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.12f);
+            if (m.HasProperty("_Glossiness")) m.SetFloat("_Glossiness", 0.12f);
+            if (m.HasProperty("_Metallic")) m.SetFloat("_Metallic", 0f);
+            if (m.HasProperty("_SpecularHighlights")) m.SetFloat("_SpecularHighlights", 0f);
         }
     }
 
