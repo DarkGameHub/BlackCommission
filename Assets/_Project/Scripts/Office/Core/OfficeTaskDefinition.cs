@@ -4,15 +4,15 @@ using UnityEngine;
 public class OfficeTaskDefinition : ScriptableObject
 {
     [Header("Identity")]
-    public string taskId = "lost_homework_01";
-    public string title = "Missing Homework Notebook";
+    public string taskId = "tower_ecocolumn_01";
+    public string title = "「真实海岸」生态柱回收";
     public MvpTaskCategory category = MvpTaskCategory.LostItemRecovery;
 
     [Header("Brief")]
-    [TextArea] public string client = "Worried Parent";
-    [TextArea] public string description = "Recover the homework notebook from the school and get out.";
-    public string locationName = "School";
-    public string sceneName = "School_LostItem_01";
+    [TextArea] public string client = "私人收藏家";
+    [TextArea] public string description = "潜入地球海岸壹号烂尾楼，取回封存的「真实海岸」生态柱并撤离。";
+    public string locationName = "地球海岸壹号·烂尾楼";
+    public string sceneName = "Tower_EarthCoast_01";
     public int recommendedPlayersMin = 1;
     public int recommendedPlayersMax = 4;
 

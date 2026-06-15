@@ -42,22 +42,10 @@ public static class GeneratedArtImporter
             "ASV4_HQ_RundownCommissionOffice",
             new Vector3(0f, 0f, 0f)),
         new AssetSpec(
-            "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_School_Lost_Item_Map.fbx",
-            "ASV4_SchoolLostItemMap",
-            new Vector3(0f, 0f, 9f)),
-        new AssetSpec(
             "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Worker_Cheap_Outsourced_Uniform.fbx",
             "ASV4_WorkerCheapOutsourcedUniform",
             new Vector3(-5f, 0f, -4f),
             Vector3.one * 1.08f),
-        new AssetSpec(
-            "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Monster_Homework_Debt_Collector.fbx",
-            "ASV4_MonsterHomeworkDebtCollector",
-            new Vector3(-3f, 0f, -4f)),
-        new AssetSpec(
-            "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Missing_Homework_Notebook.fbx",
-            "ASV4_MissingHomeworkNotebook",
-            new Vector3(-1f, 0f, -4f)),
         new AssetSpec(
             "Assets/_Project/Art/Generated/OutsourcedCivicCommercial_v4/ASV4_Second_Hand_Dispatch_Van.fbx",
             "ASV4_SecondHandDispatchVan",
