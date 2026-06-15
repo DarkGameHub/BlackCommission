@@ -7,7 +7,7 @@ Current MVP core loop:
 1. Start a solo session or create/join an online room.
 2. Spawn in the run-down agency office.
 3. Accept a job via the office computer.
-4. Enter the mission site (current: **Abandoned Tower — Earth Coast 01**), retrieve the sealed bio-column, restore power if needed, and avoid the site monitor.
+4. Enter the mission site (current: **Abandoned Tower — Earth Coast 01**), retrieve the sealed bio-column, restore power if needed, and avoid the **Echo Mold** (an infected fungal host that stalks the site).
 5. Return to the office, settle rewards (money / reputation / XP), then spend on gear, consumables, office upgrades, or future buyout pressure.
 
 Full MVP design, story background, squad configuration, and Phase 1 implementation plan: [docs/mvp-core-loop.md](docs/mvp-core-loop.md).
@@ -47,6 +47,104 @@ flowchart TD
     O --> R[结局二: 留在地球<br/>拒接晚宴装饰类委托]
     N --> S[隐藏结局: 真相寄送<br/>把证据送上火星网络]
 ```
+
+## For New Artists — Read This First
+
+> New to the project? This is the fast on-ramp: what the game *is*, how it plays, and the
+> visual rules your work must follow. Deeper canon lives in the linked docs at the end.
+
+### The World — Setting & Tone
+
+The year is **2098**. Humanity has colonized Mars, but only the wealthy emigrated — Mars is a
+clean, closed, expensive world. **Earth was left to the underclass**: the indebted, the contract
+workers, the people the system judged as having "low migration value."
+
+When Martian elites briefly returned to Earth, they brought back a Mars-adapted pathogen —
+officially **MRC-7**, known on the street as **the Noble Guest Plague**. It infected people,
+animals, plants, and fungi, turning whole regions into lockdown zones full of abnormal ecology:
+infected humans, spore mists, fleshy plants, and **fungal colonies that mimic sounds**.
+
+Mars won't come back in person — but it still wants Earth's things. Not resources (Mars
+synthesizes those) but **the *real* Earth**: genuine specimens, old-ecosystem remnants, things
+that can't be replicated or legally bought. So Martian clients issue **collection commissions**
+to Earth through gray-market platforms.
+
+**You run a nearly bankrupt Surface Retrieval Agency** — not heroes, a broke company. Half the
+office lights are dead, the computer is a secondhand Mars-cast-off CRT, the van is second-hand,
+the debt is enormous. You take jobs because the bill is due.
+
+**Tone — "Municipal Debt Noir":** light-hearted on the surface, uncomfortable after the laugh.
+The darkness is never delivered by villain speeches — it leaks out of **contracts, deductions,
+and settlement notes**. The signature image: *Earth people risk death to retrieve a thing; a
+Martian client uses it as a dinner-table centerpiece.*
+
+### How It Plays — Mechanics
+
+- **1–4 player co-op, first-person, host-authoritative** (Netcode for GameObjects).
+- **The ritual loop:** broke office HQ → office computer (accept a job / buy gear) → crew boards
+  the **dispatch van** → in-van transit → **mission site** → objective + a **partial-return
+  choice** → van return → **HQ settlement**.
+- **Progression = 5 license stages** (Temporary → Full Retrieval → Orbital Shipping →
+  Special-Specimen / *Black Commissions* → Immigration Review). The only number the player sees is
+  **money**. The moral slope runs through three mission tiers: **Free Salvage → Commissioned Jobs →
+  Black Commissions** — the higher the pay, the darker the cost. The endgame is a **moral choice**
+  (*do you still want to go to Mars?*), not a money threshold.
+- **Proximity voice is a mechanic, not a convenience.** It is **open-mic by default**, and infected
+  things eavesdrop and *replay your voice* to split the team — speaking is a deliberate risk.
+- **Current playable mission — Abandoned Tower, Earth Coast 01:** a derelict pre-sale property
+  tower. Restore power to open the upper floor, then **two-hand-carry a heavy sealed bio-column**
+  (a live coastal-ecosystem display) back to the van.
+- **Monsters — one sense, one counter** (LC-style). The MVP monster is the **Echo Mold**: an
+  infected humanoid fungal host that hears you and replays your teammates' voices from the wrong
+  direction. Contact = HP damage → **Downed**; whole team down = **mission Failure**.
+
+### Visual Identity — Art Brief
+
+**Identity = "Municipal Debt Noir."** The world is neglected public / civic infrastructure run by
+underfunded outsourced contractors. Brand colors: **civic teal, dead-rubber black, aged paper,
+sodium amber, restrained dispatch green, stamp red.**
+
+**Fidelity = lo-fi, PS1-era low-poly** (per `style-lock-v2`): low-poly meshes, **≤256px
+visible-texel textures**, ~2 m world-space tiling, **albedo-only** (no normal / AO / metalness
+maps), **high roughness** (smoothness ≤ 0.3), point filtering. *(The Art Bible's older
+"semi-realistic" fidelity is **superseded** — build lo-fi.)*
+
+> **Lethal Company is a production-method reference ONLY** — strong repeatable rituals, readable
+> low-cost staging, co-op extraction tension, navigable darkness. **Do not copy** LC's assets, UI,
+> monsters, ship, item list, or maps. Our identity is our own.
+
+**Surface palette (material color before light):**
+
+| Family | Hex | Use |
+|---|---|---|
+| Concrete gray | `#5E5E5E` / `#707070` / `#4A4A4A` | Walls, slabs, pillars |
+| Military green | `#55624A` / `#68745C` / `#475040` | Cabinets, van body, lockers, steel furniture |
+| Old wood brown | `#6B5440` / `#7C624A` / `#8A7158` | Desks, crates, floorboards |
+| Rust | `#7B4B2A` / `#8C5937` / `#A36842` | Pipe joints, worn metal edges, bolts |
+
+Every surface carries **20–40% weathering** — scratches, tape, dust, chipped paint, stains are the
+*primary* surface language, not a polish-pass afterthought.
+
+**Accents & signal colors (used sparingly — each one carries meaning):**
+
+| Signal | Hex | Means |
+|---|---|---|
+| Primary accent — warm tungsten amber | `#FFAB40` | Inhabited space / interactable nearby |
+| CRT green — **electronic screens only** | `#6CFF5F` | A powered, processing device (*not* "safe") |
+| Mission objective material | `#D4A020` | The one object in the scene with this warm gold |
+| Threat presence | `#FF6A00` | Amber-orange eye pinpoints in cold light (e.g. the Echo Mold's spore eye) |
+| Hazard edge | `#C8A020`–`#A87E10` | Aged warning yellow at stairs / drops / barriers |
+| Civic identity dressing | teal `#3F5F5C` · paper `#D6CCAE` · stamp red `#C23A2B` | Debt notices, seals, signage — **stamp red on paper/signage only** |
+
+**Lighting grammar (silhouette-driven darkness):** three light families only — **warm tungsten
+3000K** = human habitation (the HQ); **cold industrial 5000K** = mission sites (failing,
+flickering, some dead); **CRT green** = powered devices. Players navigate dark spaces by
+**flashlight + light anchors**, and the **exit path is always lit**. No colored point lights, no
+neon, no chrome, no clean plastic.
+
+**Authoritative art docs:** `design/art/art-bible.md` (fidelity amended by
+`docs/art/black-commission-style-lock-v2.md`) · world canon in `docs/world-background-2098.md` ·
+entity stats in `design/registry/entities.yaml`.
 
 ## Requirements
 
