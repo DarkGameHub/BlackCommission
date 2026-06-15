@@ -120,6 +120,17 @@ public static class MvpLocale
         ["voice_volume"] = new[] { "Voice Volume: {0}", "语音音量：{0}" },
         ["voice_distance"] = new[] { "Voice Range: {0} m", "语音范围：{0} 米" },
         ["reset_defaults"] = new[] { "Reset Defaults", "恢复默认" },
+
+        // ─── Voice: on-air indicator + first-run consent ───
+        ["mic_live"] = new[] { "MIC LIVE", "麦克风开启中" },
+        ["mic_muted"] = new[] { "MIC MUTED", "麦克风已静音" },
+        ["mic_ready"] = new[] { "MIC ON", "麦克风开启" },
+        ["mic_no_device"] = new[] { "NO MIC", "无麦克风" },
+        ["mic_ptt_ready"] = new[] { "PUSH-TO-TALK (V)", "按住 V 说话" },
+        ["voice_consent_title"] = new[] { "Your microphone is live", "你的麦克风已开启" },
+        ["voice_consent_body"] = new[] { "Proximity voice is ON by default — nearby teammates hear you, and infected things in the field can record and replay your voice to deceive the team. Speak with care.", "近距离语音默认开启——附近的队友能听到你，现场的感染体也可能录制并回放你的声音来骗人。请谨慎发声。" },
+        ["voice_consent_keep"] = new[] { "Keep mic on", "保持开启" },
+        ["voice_consent_mute"] = new[] { "Mute me", "先静音我" },
         ["quit_game"] = new[] { "Quit Game", "退出游戏" },
         ["prev"] = new[] { "Prev", "上一个" },
         ["next"] = new[] { "Next", "下一个" },

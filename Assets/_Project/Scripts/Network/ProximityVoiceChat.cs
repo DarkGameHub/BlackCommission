@@ -82,6 +82,17 @@ public class ProximityVoiceChat : MonoBehaviour
         }
     }
 
+    /// <summary>True while the local mic is actively capturing + sending this frame (open-mic:
+    /// hot whenever in a live session and not muted / PTT-released). Drives the on-air indicator
+    /// so players always know their mic is live (Echo Mold tension). Read-only telemetry.</summary>
+    public static bool IsMicHot { get; private set; }
+
+    /// <summary>Smoothed local input level 0..1 for the on-air level meter (fast attack / slow release).</summary>
+    public static float InputLevel { get; private set; }
+
+    /// <summary>Any capture device present.</summary>
+    public static bool MicrophoneAvailable => Microphone.devices != null && Microphone.devices.Length > 0;
+
     AudioClip microphoneClip;
     string microphoneDevice;
     int lastMicPosition;
@@ -114,22 +125,44 @@ public class ProximityVoiceChat : MonoBehaviour
         if (!VoiceEnabled || Muted)
         {
             StopMicrophone();
+            GoCold();
             return;
         }
         // Push-to-talk: only transmit while the talk key is held.
         if (PushToTalk && !PushToTalkHeld())
         {
             StopMicrophone();
+            GoCold();
             return;
         }
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
         {
             StopMicrophone();
+            GoCold();
             return;
         }
 
         EnsureMicrophone();
         CaptureAndSend();
+        IsMicHot = !string.IsNullOrEmpty(microphoneDevice) && Microphone.IsRecording(microphoneDevice);
+        if (!IsMicHot) InputLevel = Mathf.MoveTowards(InputLevel, 0f, Time.unscaledDeltaTime * 3f);
+    }
+
+    // On-air telemetry for the mic indicator: go cold when not transmitting; release the level slowly.
+    static void GoCold()
+    {
+        IsMicHot = false;
+        InputLevel = Mathf.MoveTowards(InputLevel, 0f, Time.unscaledDeltaTime * 4f);
+    }
+
+    static void UpdateInputLevel(float[] samples)
+    {
+        float sum = 0f;
+        for (int i = 0; i < samples.Length; i++) sum += samples[i] * samples[i];
+        float rms = Mathf.Sqrt(sum / samples.Length) * MicGain;
+        float target = Mathf.Clamp01(rms * 4f);
+        // Fast attack so speaking lights the meter instantly; slow release so it reads.
+        InputLevel = target > InputLevel ? target : Mathf.MoveTowards(InputLevel, target, Time.unscaledDeltaTime * 3f);
     }
 
     void OnDestroy()
@@ -241,6 +274,7 @@ public class ProximityVoiceChat : MonoBehaviour
             }
 
             microphoneClip.GetData(sampleBuffer, lastMicPosition);
+            UpdateInputLevel(sampleBuffer);
             EncodeSamples(sampleBuffer, encodedBuffer);
             SendVoicePacket(encodedBuffer, SamplesPerPacket);
 
