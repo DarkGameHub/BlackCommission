@@ -1130,3 +1130,173 @@ then the relevant docs in `docs/`. Files are the memory, not the conversation.
   **待 PM 逐张过目**。v1 旧 PNG（main-menu-v2/ A/B/C + ui-kit 中文版）已被 v2 覆盖。
 - **下一步: PM 看 v2 13 张定方向 → 按批准稿实施（主菜单已大半在代码里, 需把硬编码中文
   改 MvpLocale 英文键 + 背景实景层 + 方块按钮样式对齐 mockup）。**
+
+## Session Extract — /review-all-gdds 2026-06-14
+- Verdict: CONCERNS
+- GDDs reviewed: 3 (level-map-generation, mission-state-machine, office-economy-progression)
+- Flagged for revision: mission-state-machine.md, office-economy-progression.md
+- Blocking issues: none hard. High: C1 economy "as-built" cites deleted LostItemMissionManager.cs;
+  C2 mission-state-machine missing Acceptance Criteria (+3 stub sections); D1 economy has no recurring
+  money sink (the "permanently broke" pillar is mechanically unenforced once competent)
+- Recommended next: author Auditor (核查专员) monster GDD via /design-system — no monster GDD/AI exists
+- Report: design/gdd/gdd-cross-review-2026-06-14.md
+- Same-session doc cleanup: superseded docs/mvp-core-loop.md + docs/design-decisions.md (banners);
+  rewrote design/game-concept.md + design/systems-index.md to current tower state. Also flagged in
+  systems-index: CLAUDE.md/AGENTS.md still cite removed MvpSceneStyleDirector.
+
+## Session Extract — monster design (/design-system) 2026-06-14
+- PM rejected the "Auditor" (核查专员) concept as too bureaucratic for the co-op-streamer core.
+- New monster authored & approved: **Echo Mold (回声菌)** — `design/gdd/monster-echo-mold.md`.
+  Infected fungal humanoid that records+replays crew ProximityVoiceChat to deceive/split them
+  (real VOIP + fallback lines), mobile (NavMesh), contact = HP damage → Downed → all-down = Failure;
+  counter = learn the replay tell + voice discipline. Convert-on-catch deferred (MVP).
+- Done: art-bible §5 amended (PM-approved) to allow MRC-7 infection creatures (signal-color/behavior-first
+  rules retained); registry entity `echo_mold` added; systems-index updated.
+- KEY tech risk (Open Q#1): real VOIP capture/spatial replay spike (laplace) — MEDIUM. Privacy/consent Open Q#5.
+- NEXT (PM request): design a game-spanning escalation/"site awakening" mechanic — infection wakes to
+  living human presence/warmth over a mission; ramps danger; rides existing mission clock; fills the
+  undesigned Hazard/Escalation gap. Launching /design-system for it.
+
+## Session Extract — Monster System (/design-system) 2026-06-14
+- PM reframed (3rd zoom): NOT a global escalation system — build a MONSTER SYSTEM (framework + roster),
+  with "body-heat awakening" as one monster's SENSE, not a global tide.
+- Authored & approved: **Monster System** — design/gdd/monster-system.md.
+  Core law: one monster = one sense + one counter (LC-style). Shared: host-auth NavMesh AI;
+  Roam→Investigate→Hunt→Attack; uniform catch = HP damage→Downed→all-down=Failure.
+  DANGER LEVEL: rises with stay-time + key-action spikes → monsters more active → saturation=forced evac;
+  REPLACES fixed countdown (dynamic, play-paced); shown via spore haze / PlayerOxygen drain / audio (no bar).
+  Bestiary learning loop (OfficeMonsterBestiary).
+- Roster: MVP = Echo Mold (sound) ONLY; planned slots = thermal (body-heat), vibration, sight.
+- Done: systems-index + registry (danger_level formula) updated; Echo Mold GDD given danger-level hook.
+- Resolves cross-review C4 (clock ownership). Open/next: rework mission-state-machine fixed clock →
+  danger_level driven (already Needs Revision); next roster sense = thermal (body-heat) top candidate.
+
+## NEXT TASK (post-restart) — place the mission-site van  [2026-06-14]
+PM wants: at the tower mission site, place a VISIBLE van (REUSE the office van) at the VAN pad so the crew
+can carry the objective onto it. **Carry-onto-van LOGIC ALREADY WORKS — do NOT rebuild it.**
+
+FACTS:
+- The visible mission van was REMOVED 2026-06-13 (PM: procedural box "too ugly"). Only invisible gameplay
+  anchors exist at the VAN pad, built by `Assets/_Project/Editor/TowerV8WhiteboxBuilder.cs`:
+  - `VAN_CargoZone` (BoxCollider trigger; set the EcoColumn DOWN inside = aboard → ObjectiveSecured → full settlement)
+  - `VAN_ExitPoint` (MissionVanExitPoint; board / lockers / return decision)
+  - `VAN_DepartLever` (TowerVanDepartLever); spawn point just outside the van's open rear
+  - DEAD reference: `BuildMissionVan()` / `AddVisualWheel()` (UNCALLED, ~line 986) shows intended layout:
+    OPEN cargo bay (building/north side) over VAN_CargoZone; cab toward forecourt/spawn (south); west face
+    beside VAN_ExitPoint + lever. Rear opening + bay floor carry NO collider (carry path must stay clear).
+- REUSE THIS MODEL: `Resources/GeneratedArt/AS_OfficeVan.prefab` (the office's own van; FBX at
+  `Art/Generated/Office_v1/AS_OfficeVan.fbx`). Interior: `Resources/GeneratedArt/ASV4_VanTransitInterior.prefab`.
+- Cargo wiring: `TowerMissionManager.IsObjectiveAboard` = ecoColumn inside cargoZone.bounds. Works.
+
+METHOD (PM chose: in-editor via MCP, MEASURED not guessed):
+- Use `unity-model-fit`. Via live Unity MCP: measure AS_OfficeVan bounds → place at VAN pad oriented so its
+  OPEN cargo rear sits over VAN_CargoZone and cab faces the spawn → VERIFY (van wraps anchors; column carries
+  in / drops / re-lifts unobstructed; shell = NavMesh obstacle). Then re-bake NavMesh if needed. Decide whether
+  to bake the placement into TowerV8WhiteboxBuilder (replace dead BuildMissionVan) or place via MCP in-scene.
+
+MCP: CoplayDev "UnityMCP" registered (stdio, uvx --from mcpforunityserver==9.7.1). Needs Unity OPEN + bridge
+running (Window > MCP for Unity > Start Bridge). Loads only after a Claude restart. gamelovers mcp-unity also up.
+**To resume: open Unity + start bridge, restart Claude, say "放车" → read this block → measure/place/verify.**
+
+## Session 2026-06-14 (cont.) — 放车: placement MEASURED + LOCKED (gamelovers bridge)
+**Bridge note**: CoplayDev UnityMCP bridge could NOT find the Unity instance this session ("No Unity Editor
+instances found"; PM reports no "Start Bridge" button in the MCP-for-Unity window). Did the whole job on the
+**gamelovers mcp-unity** bridge instead — and crucially, its `get_gameobject` returns the live
+`MeshRenderer.bounds`, so measurement was deterministic WITHOUT execute_code.
+
+**PM decision (load-in fidelity)**: chose **B — 小改模·后舱常开** (open the rear in Blender so the column
+carries INTO a shallow bay; rear permanently OPEN, no animated door). Confirmed via prefab read that
+AS_OfficeVan is a single Meshy-generated closed shell (one mesh / one material, no separable door part), so an
+animated door = real re-model + rig for zero gameplay gain; a permanently-open rear is enough.
+
+**MEASURED facts (AS_OfficeVan, prefab native scale)**:
+- Renderer bounds size = **2.19 (W) × 2.00 (H) × 5.14 (L)** m; pivot ≈ bounds center on XZ; **min.y=0 when
+  root.y=0** (wheels land on the floor with root at y=0). Importer target height 2.0 m (OfficePropImporter,
+  Euler -90,0,0 stand-up fix; HqProportionFixTool ×1.2-about-ground was HQ-only).
+- VAN slab = TowerPlanV8 "VAN" x14 z-10 w12 d8 → CenterX 20, north/building edge z=-2, south/forecourt edge z=-10.
+- Anchors (BuildMissionManager): VAN_CargoZone center(20,1.25,-4) size(8,2.5,4)=z[-6,-2]x[16,24];
+  VAN_ExitPoint(17.5,1,-3.5) size(2.5,2,2.5); VAN_DepartLever(15.2,0,-3); PlayerSpawnPoint(20,0.1,-1).
+
+**LOCKED placement (verified by re-measure)**: scene root `AS_OfficeVan`
+- **position (20, 0, -4.571)  ·  rotation (0, 90, 0)  ·  scale native**
+- → bounds center (20,1.0,-4.571), occupies x[18.90,21.10] y[0,2.0] z[-7.14,-2.0].
+- Rear (open-to-be, NORTH) end at **z=-2.0** = pad north edge = CargoZone north edge. Cab (solid) SOUTH at z=-7.14.
+- Wraps all anchors: CargoZone within z-span; ExitPoint+lever beside the WEST face (x=18.90); Spawn(z=-1) 1m
+  north of the rear opening. PM confirmed cab faces SOUTH (forecourt) in-editor.
+
+**State**: van instance is IN the scene (instanceId -1856 this session) but scene **NOT saved** (AGENTS.md: no
+scene-YAML rewrite without explicit ask) and **no collider yet** (collider waits until after the rear cut so the
+bay stays open). It is the CLOSED placeholder at the locked transform — the FINAL van = the cut variant.
+
+**REMAINING (in order)**:
+1. Blender rear-cut → produce a SEPARATE asset **AS_MissionVan** (do NOT overwrite AS_OfficeVan — the HQ shares
+   it closed). Delete the rear-face polys (end opposite windshield) to open the hollow shell; keep cab solid;
+   opening ≥ 1.6 W × 1.8 H m (eco column ≈ 0.64 W × 1.7 H + carrier), bay depth ≥ 2.5 m; rear stays open (no
+   door geo). Re-export same orientation/scale so the locked transform still holds.
+2. Re-import variant → re-place at the locked transform → add a MeshCollider on the (now open) shell so it is
+   solid + a NavMesh obstacle while the bay/rear opening carry NO collider (carry path clear).
+3. **Bake the placement into TowerV8WhiteboxBuilder** (replace the DEAD BuildMissionVan ~line 986; call it from
+   BuildMissionManager) pointing at AS_MissionVan, so it rebuilds reproducibly. Then delete the manual instance.
+4. Re-bake Tower NavMesh (`... > Tower > Bake Tower NavMesh`) so agents path around the van shell.
+5. Verify: column carries into bay, drops inside CargoZone (= IsObjectiveAboard), re-lifts unobstructed.
+
+## Session 2026-06-14 (cont. 2) — School purge (PM: "把学校有关的都删了")
+PM decision: **delete school-specific only + retheme strings; KEEP the shared `LostItem*` economy
+naming** (CompletedLostItemJobs / CountsTowardLostItemProgress / MvpTaskCategory.LostItemRecovery /
+MissionRewardCalculator — the tower loop uses these; renaming deferred, may touch NGO serialization).
+
+**Reality found**: the school was ALREADY ~90% gone — no school scene (only HQ.unity + Tower_EarthCoast_01.unity),
+no school AI/script (LostItemMissionManager.cs does not exist — the prefab was an orphan w/ missing script),
+no Snow_Lotus assets. HQ already runs the tower mission: `OfficeComputer.DefaultTaskResourcePath =
+"Tasks/TowerEarthCoast_01"` → `Resources/Tasks/TowerEarthCoast_01.asset` (sceneName: Tower_EarthCoast_01) EXISTS.
+
+**Done (filesystem edits, bridge was DOWN — needs Unity recompile/refresh to confirm):**
+- DELETED `Assets/_Project/Prefabs/Mission/LostItemMissionManager.prefab` (+.meta) — orphan; folder now empty.
+- REMOVED its entry (guid 9e06a889…) from `Assets/DefaultNetworkPrefabs.asset` (was the only ref to it).
+- `GeneratedArtImporter.cs`: removed 3 dead school AssetSpecs (ASV4_School_Lost_Item_Map,
+  ASV4_Monster_Homework_Debt_Collector [old campus monster], ASV4_Missing_Homework_Notebook) — all pointed
+  at missing FBX. Array verified well-formed.
+- `OfficeTaskDefinition.cs`: rethemed the school DEFAULTS → tower/生态柱 (taskId tower_ecocolumn_01, title
+  「真实海岸」生态柱回收, client 私人收藏家, locationName 地球海岸壹号·烂尾楼, sceneName Tower_EarthCoast_01).
+  Cosmetic only (live task asset already overrides) but kills the school template + the broken School_LostItem_01 default.
+
+**KEPT (shared, per PM): all LostItem* economy.** Tests: 0 school refs → no breakage.
+**Still school-themed but LEFT (flagged to PM)**: `MvpHud.cs` (homework string — likely objective label) and
+`MonsterBestiaryProgress.cs` (old campus-monster bestiary entry) — retheme when doing HUD / monster work.
+
+## Session 2026-06-14 (cont. 3) — Mic on-air UI/UX (PM ask) — DONE
+PM decision: **open-mic by default** (max Echo Mold tension) → on-air indicator must be prominent + first-run consent.
+Found: `SettingsOverlay.cs` (IMGUI) ALREADY has full mic settings (VoiceEnabled/Muted/PushToTalk/device/MicGain/
+OutputVolume/MaxDistance/Reset). Real gap = NO in-game indicator that the mic is hot + no consent notice.
+- `ProximityVoiceChat.cs`: added `IsMicHot` / `InputLevel` (RMS, fast-attack/slow-release) / `MicrophoneAvailable`
+  telemetry; Update() sets cold on every early-return and hot after a successful capture.
+- NEW `Assets/_Project/Scripts/UI/VoiceMicIndicator.cs`: self-bootstrapping IMGUI overlay (no scene wiring),
+  top-centre badge LIVE/MUTED/MIC ON/PTT/NO MIC with a broadcast blink dot + live level meter; **first-run
+  consent modal** ("voice is open by default; infected things can record + replay it" → Keep on / Mute me),
+  gated by PlayerPrefs `AS.Voice.ConsentShown`. Addresses Echo Mold privacy Open Q#5.
+- `MvpLocale.cs`: added mic_live/muted/ready/no_device/ptt_ready + voice_consent_* (EN + 中文).
+- Mute control stays in Settings (not duplicated). NOT yet compiled (bridge down) — verify on Unity refocus.
+
+## OPEN / NEXT (bridge was DOWN all session — a pile of unverified C# awaits one Unity recompile):
+- **Verify-on-refocus**: school purge edits + mic UX + `MissionVanBuilder.cs` all need Unity to recompile.
+  Focus the Unity window → it compiles; check console for errors.
+- **Van rear-cut**: run menu `Tools > Black Commission > MVP > Tower > Build Mission Van (reuse office van)`
+  once the gamelovers bridge reconnects (dropped on the compile domain-reload; refocus Unity to un-wedge).
+- **Echo Mold AI + placeholder body** (PM chose "我先搭AI+占位体") — pure C#, GDD fully read; NOT started yet.
+  Plan: pure-logic core (attention/state machine/lure-target/danger scaling) + tests, then NetworkBehaviour
+  (NavMesh Roam/Lure/Hunt/Attack, host-auth, PlayerHealth contact dmg→Downed, all-down=Failure), then a
+  placeholder body builder. Voice capture/replay can start on preset `fallbackLines` (GDD-sanctioned) and wire
+  real ProximityVoiceChat sampling after a spike (Open Q#1).
+- **Leftover school-theme strings** (KEPT, retheme later): `MvpHud.cs` homework label; `MonsterBestiaryProgress.cs`
+  campus-monster entry → becomes Echo Mold during the monster work.
+
+## Session 2026-06-14 (cont. 4) — Rigging/animation: project-wide gap, DEFERRED (PM)
+PM probed the monster MODEL then SKELETON. Findings (verified): **the project has NO skeletal animation pipeline
+at all** — 0 `.anim`, 0 AnimatorController, no script references Animator/SkinnedMeshRenderer; even the crew
+`AS_Character_0X` are STATIC meshes (no rig) moved by transform ("sliding"). Meshy exports are static/unrigged too.
+**PM decision: don't build animation yet — just record it.** (See memory: animation-pipeline-deferred.)
+→ When the Echo Mold IS built: sliding body on NavMesh + optional cheap procedural shamble (code bob/sway), NO rig.
+Real skeletal animation = a separate project-wide pass (Mixamo/Meshy auto-rig → shared Humanoid Animator for crew
++ monster), only if PM opens that round. **Monster model** itself = PM's Meshy gen (prompt drafted in chat
+2026-06-14: lo-fi infected humanoid fungal host, mushroom caps/spores, amber #FF6A00 eye); placeholder = reuse a
+tinted/distorted AS_Character worker ("infected host") + amber eye point — zero modeling.
