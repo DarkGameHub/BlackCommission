@@ -523,6 +523,16 @@ Characters receive the lowest asset budget in the game. The environment holds th
 
 ### Monster Design Framework
 
+> **Amendment (2026-06-14, PM-approved):** The framework now **also admits actual
+> infection-ecology creatures** — infected humans, animals, plants, and fungi born of
+> MRC-7 (the "Noble Guest Plague"; see `docs/world-background-2098.md`). Threats are no
+> longer restricted to "abstract institutional pressure made physical," and the register
+> shifts toward **dark-comedy infection horror** (not pure dread). The following rules
+> below STILL bind: amber-orange `#FF6A00` as the only warm signal color; **behavior/audio
+> is the first signal, eye-glow is confirmation**; existing palette only; names from the
+> world/job; site-specific; operate under existing light (no blackout events). First
+> creature designed under this amendment: **the Echo Mold** (`design/gdd/monster-echo-mold.md`).
+
 #### The Formula
 
 > **What ordinary workplace or public-service pressure became physical here?**

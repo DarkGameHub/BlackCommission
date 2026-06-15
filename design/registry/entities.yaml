@@ -48,7 +48,22 @@ last_updated: "2026-06-09"
 # Attribute fields: any key stats that could appear in another GDD
 #   (health, damage, drops, faction, etc.)
 
-entities: []
+entities:
+  - name: echo_mold
+    status: active
+    source: design/gdd/monster-echo-mold.md
+    referenced_by:
+      - design/gdd/monster-echo-mold.md
+    type: monster
+    origin: MRC-7 infection ecology (infected fungal humanoid host)
+    behavior: "voice-mimic stalker — records + replays crew ProximityVoiceChat to deceive/split; mobile (NavMesh)"
+    senses: "voice (primary, w_voice 1.0), movement noise (secondary)"
+    threat_model: "contact damage (dmgPerTick 8 / 0.6s) -> PlayerHealth Downed; all-downed = Mission Failure"
+    counter: "learn the replay tell + voice discipline (no item)"
+    signal_color: "#FF6A00 (amber-orange spore eyes)"
+    notes: "Convert-on-catch deferred (MVP). art-bible §5 amended 2026-06-14 to allow infection creatures."
+    added: 2026-06-14
+    revised: ""
 
 # Example (remove when first real entry is added):
 #
@@ -145,6 +160,24 @@ formulas:
       {outcome, optionalsCollected, elapsedTime}. Applied idempotently (RewardsGranted) on claim.
       As-built partial money = 20% of full; design-decisions.md wants 30-50% (open question)."
     added: 2026-06-09
+    revised: ""
+  - name: danger_level
+    status: active
+    source: design/gdd/monster-system.md
+    referenced_by:
+      - design/gdd/monster-system.md
+      - design/gdd/mission-state-machine.md   # saturation -> forced-evac terminal (Mission clock to be reworked)
+      - design/gdd/monster-echo-mold.md        # monster activity scales with danger_level
+    variables:
+      - t              # seconds in site
+      - base_rate      # per-second baseline rise (tuned to target run length)
+      - action_spike   # one-off bumps from key actions (power gate, taking objective)
+      - SAT            # saturation threshold (def 100) -> forced evac
+    output_range: [0, 100]
+    expression: "danger_level(t) = min(SAT, base_rate*t + sum(action_spike_i)); monster activity = lerp(idle, frenzied, danger_level/SAT); SAT -> forced evac"
+    notes: "Per-mission escalation tide; REPLACES a fixed countdown (dynamic, play-paced). Resolves
+      cross-review C4 (clock ownership). Mission GDD fixed clock to be reworked to this (monster-system OpenQ#3)."
+    added: 2026-06-14
     revised: ""
 
 # Example:

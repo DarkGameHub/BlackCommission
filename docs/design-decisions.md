@@ -1,3 +1,16 @@
+> ⚠️ **SUPERSEDED (2026-06-14).** Written for the old **"AccidentSquad"** identity.
+> **Obsolete here:** the name; the **PS1-era low-poly** art + poly budgets (now
+> **semi-realistic, weathered** — see `design/art/art-bible.md`); the
+> **reputation / office-level / 0–100 pressure** economy (now **money-only + 5 license
+> stages** — see `design/game-pillars.md`); the **school / Homework Debt Collector**
+> mission (now **abandoned tower / Auditor**).
+>
+> **Still valid as principles** (carried into the current design): partial settlement,
+> behavioral-rule monsters, contract-as-satire, office-as-home-base.
+>
+> **Current sources:** `@AGENTS.md` · `design/game-pillars.md` · `design/art/art-bible.md`
+> · `design/gdd/`. Do not rely on the specifics below.
+
 # AccidentSquad Design Decisions
 
 Locked decisions from design review. This document is the single source of truth for high-level creative direction.

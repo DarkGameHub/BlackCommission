@@ -1,3 +1,13 @@
+> ⚠️ **SUPERSEDED (2026-06-14) — do not use for current rules.**
+> This describes the original *school / lost-item* MVP (reputation, office levels 1–8,
+> a 0–100 takeover bar, the Homework Debt Collector). The project has since moved to the
+> **abandoned-tower** build with a **money-only economy + 5 license stages** and
+> **narrative** takeover pressure (letters/visits, no bar). Kept for provenance only.
+>
+> **Current sources:** `@AGENTS.md` · `design/game-pillars.md` ·
+> `design/gdd/{level-map-generation, mission-state-machine, office-economy-progression}.md` ·
+> `design/art/art-bible.md`
+
 # Black Commission MVP Core Loop
 
 ## Status
