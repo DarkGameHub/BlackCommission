@@ -1,6 +1,6 @@
 # Active Session State — Black Commission
 
-**Last updated**: 2026-06-09
+**Last updated**: 2026-06-16
 **Stage**: Production (see `production/stage.txt`)
 
 ## Current Focus
@@ -1106,6 +1106,50 @@ NavMesh → EditMode 预期 144/144（本轮无逻辑改动，音频调用全 nu
   中文"清晨/次日/第3天"→改英文期望。**EditMode 150/150 全绿。**
 - **待 PM Play 验**: 终端（E通/绿磷光/生态柱非作业本）、HQ 比例（人对不对）、菜单实景背景。
 - **剩余队列**: ESC 设置→偏好登记表纸卡; menu 后 4 人等待→lobby.md 官印红褐派工名单卡。
+
+## Session 2026-06-16 — Game Design Overhaul + Modular Room System
+
+### Major design decisions locked this session (all written to docs):
+
+**Mission loop redesigned** (`design/quick-specs/scavenging-item-system-2026-06-16.md`):
+- Core mechanic: scavenging with HIDDEN item values — judge worth from client commission text
+- Van shared weight limit: 12 units (Light=1, Medium=2, Heavy=4)
+- Settlement reveal: each item shows price + satirical "client intended use" note
+- One dispute per settlement (bargaining system)
+- Commissioned target = optional bonus 1.4×, not a failure condition if missed
+
+**Client system** (`docs/world-background-2098.md` — new section):
+- Three client types: Martian Institutions (fixed pay), Martian Individuals (negotiable), Earth-side (post-ending only)
+- Martian individuals split into 3 generations:
+  - 移民一代: real memories, specific requests
+  - 移民二代: Earth as parents' stories — most resonant (parallel to immigrant children in America)
+  - 移民三代+: collector's detachment, no grief
+
+**Map sequence locked** (`design/gdd/map-sequence-and-modular-system.md`):
+- 6 maps total: 烂尾预售楼 → 地下私人会所 → 地铁换乘枢纽 → 市民债务仲裁局 → 区域医疗分诊站 → 轨道货运中转站
+- Mars = hidden ending only. Stay on Earth → dispatched to Mars as worker (playable). Go to Mars → CG cutscene.
+- Modular room system (Route B): Kit A institutional interior shared across maps 1/5/6
+
+**Modular room system** (`Assets/_Project/Editor/ModularRoomBuilder.cs`):
+- 14 shared prefabs: 11 corridor/junction types + 3 room types
+- Hero rooms = fixed anchors (objective always deep, van always at entry)
+- Connectors vary per seed → different routes per run
+- More structural variation than LC (path changes, not just item spawns)
+
+### Immediate next task (pending on new machine):
+
+1. git pull origin main
+2. Unity: Tools > BC > MVP > Tower > Rebuild v8 Whitebox (ensure materials exist)
+3. Unity: Tools > BC > MVP > Modules > Build All Shared Modules
+4. Verify in scene: 4m grid, 3.2m ceiling, 2m door, 2.25m door height, human scale OK
+5. If OK → write RoomDresser.cs (procedural furniture per room type)
+
+See task list in Claude Code session for step-by-step.
+
+### Other design docs written this session:
+- `design/quick-specs/mission-pool-selection-2026-06-16.md` — 3-slot pool, per-run refresh
+- `design/quick-specs/scavenging-item-system-2026-06-16.md` — full item/settlement/bargaining spec
+- `docs/world-background-2098.md` — client types + generational system + ending philosophy
 
 ## Recovery
 
