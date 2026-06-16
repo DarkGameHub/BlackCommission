@@ -20,32 +20,32 @@ Current art direction is locked in the Art Bible: [design/art/art-bible.md](desi
 
 ```mermaid
 flowchart TD
-    A[2098: 火星殖民完成<br/>富人迁往火星] --> B[地球留下负债者、合同工<br/>和低迁移价值人口]
-    B --> C[MRC-7 返航适应体扩散<br/>地球出现感染区和异常生态]
-    C --> D[火星上层不再亲自返航<br/>但仍想购买真实地球]
-    D --> E[地表采回事务所成立<br/>靠许可证接火星委托]
+    A[2098: Mars colonization complete<br/>Wealthy emigrate to Mars] --> B[Earth left with debtors, contract workers,<br/>and low-migration-value population]
+    B --> C[MRC-7 return-pathogen spreads<br/>Earth develops infection zones and abnormal ecology]
+    C --> D[Martian elite no longer returns in person<br/>but still wants authentic Earth goods]
+    D --> E[Surface Retrieval Agency established<br/>takes Martian commissions via license]
 
-    E --> F[开局: 临时采回许可证<br/>破办公室、旧 CRT、二手厢式车、债务]
-    F --> G[接指定委托]
-    G --> H[采购装备 / 组队 / 上车出发]
-    H --> I[进入封锁区<br/>搜索目标、躲避感染体、带回样本]
-    I --> J[返回事务所结算<br/>报酬、扣款、声望、证据、债务压力]
+    E --> F[Start: Temporary Retrieval License<br/>rundown office, old CRT, secondhand van, debt]
+    F --> G[Accept assigned commissions]
+    G --> H[Buy gear / form crew / board and depart]
+    H --> I[Enter the exclusion zone<br/>find target, evade infected, retrieve specimen]
+    I --> J[Return to agency for settlement<br/>pay, deductions, reputation, evidence, debt pressure]
 
-    J --> K{进度推进}
-    K --> L[正式采回许可证<br/>更多火星客户和更怪的目标物]
-    K --> M[轨道运送资格证<br/>解锁自由采集]
-    K --> N[特殊样本转运许可<br/>接触贵客瘟真相]
-    K --> O[移民资格审查<br/>是否前往火星]
+    J --> K{Progress}
+    K --> L[Full Retrieval License<br/>more Martian clients and stranger targets]
+    K --> M[Orbital Shipping Certification<br/>unlocks free salvage]
+    K --> N[Special-Specimen Transfer Permit<br/>exposure to the Black Commission truth]
+    K --> O[Immigration Review<br/>decide whether to go to Mars]
 
-    M --> P[自由采集<br/>捡废料、补资源、修车、维持事务所]
+    M --> P[Free Salvage<br/>scavenge scrap, replenish resources, repair van, maintain agency]
     P --> J
 
     L --> G
     N --> G
 
-    O --> Q[结局一: 前往火星<br/>成为地球遗产采购顾问]
-    O --> R[结局二: 留在地球<br/>拒接晚宴装饰类委托]
-    N --> S[隐藏结局: 真相寄送<br/>把证据送上火星网络]
+    O --> Q[Ending 1: Go to Mars<br/>become Earth Heritage Procurement Advisor]
+    O --> R[Ending 2: Stay on Earth<br/>refuse decorative banquet commissions]
+    N --> S[Hidden Ending: Truth Transmitted<br/>send evidence to the Martian network]
 ```
 
 ## For New Artists — Read This First
