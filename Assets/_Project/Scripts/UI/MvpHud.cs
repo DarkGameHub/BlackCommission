@@ -755,12 +755,8 @@ public class MvpHud : MonoBehaviour
     {
         return id switch
         {
-            "001" => "LOST HOMEWORK",
-            "002" => "BASEMENT NOISE",
-            "003" => "NIGHT BUS ANOMALY",
-            "004" => "ECHO FROM ROOM 404",
-            "005" => "CARGO FROM ABANDONED FACTORY",
-            _ => "KEYS IN THE BASEMENT"
+            "tower_ecocolumn_01" => "ECO-COLUMN RETRIEVAL",
+            _ => id.ToUpper()
         };
     }
 
@@ -822,7 +818,7 @@ public class MvpHud : MonoBehaviour
         DrawLedgerLine("委托人 / 地点", $"{computer.DemoTaskClient} / {computer.DemoTaskLocation}");
         GUILayout.Label(computer.DemoTaskDescription, mutedStyle);
         DrawLedgerLine("报酬 / 声望 / 经验", $"{computer.DemoTaskMoneyReward}G / +{computer.DemoTaskReputationReward} / +{computer.DemoTaskExperienceReward}");
-        DrawLedgerLine("作业窗口", MvpMissionClock.GetScheduleSummary(computer.DemoTask));
+        DrawLedgerLine("TIME WINDOW", MvpMissionClock.GetScheduleSummary(computer.DemoTask));
         GUILayout.Label(MvpMissionClock.GetOvertimeRuleSummary(computer.DemoTask), mutedStyle);
         GUILayout.Space(8);
 
@@ -1005,26 +1001,26 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndHorizontal();
 
         bestiaryScrollPosition = GUILayout.BeginScrollView(bestiaryScrollPosition, false, true);
-        bool unlocked = MonsterBestiaryProgress.IsHomeworkDebtCollectorUnlocked;
-        DrawTerminalSection(unlocked ? "已归档异常 / VERIFIED" : "未解锁档案 / LOCKED");
+        bool unlocked = MonsterBestiaryProgress.IsEchoMoldUnlocked;
+        DrawTerminalSection(unlocked ? "VERIFIED ANOMALY" : "FILE LOCKED");
         GUILayout.BeginVertical(unlocked ? selectedSlotStyle : slotStyle);
-        GUILayout.Label(unlocked ? "作业债务催收员" : "未解锁档案", accentStyle);
+        GUILayout.Label(unlocked ? "ECHO MOLD" : "— UNVERIFIED —", accentStyle);
         if (unlocked)
         {
-            GUILayout.Label("介绍", accentStyle);
-            GUILayout.Label("一种在逾期表格、家长签字和旧教室灯管之间徘徊的异常。它会被错误翻找、噪声和落单玩家吸引，追击时像是在索要一笔永远算不清的账。", labelStyle);
+            GUILayout.Label("DESCRIPTION", accentStyle);
+            GUILayout.Label("An infected fungal humanoid. Records proximity voice and replays it to deceive and split the crew. Mobile and persistent once alerted.", labelStyle);
             GUILayout.Space(8);
-            GUILayout.Label("弱点", accentStyle);
-            GUILayout.Label("强光会让它短暂失去行动节奏；错误作业本和登记簿附近的响动可以把它引开。保持距离、利用储物柜和路线分岔，别在空走廊里硬跑。", labelStyle);
+            GUILayout.Label("COUNTER", accentStyle);
+            GUILayout.Label("Learn the replay tell — it cannot generate new content, only loop what it heard. Voice discipline breaks its lure. Keep radio traffic minimal.", labelStyle);
             GUILayout.Space(8);
-            GUILayout.Label("解锁记录: 已遭遇异常，已采集毛发/踪迹。", mutedStyle);
+            GUILayout.Label("RECORD: Encountered. Trace collected.", mutedStyle);
         }
         else
         {
-            string encounter = MonsterBestiaryProgress.HasEncounteredHomeworkDebtCollector ? "已遭遇" : "未遭遇";
-            string trace = MonsterBestiaryProgress.HasHomeworkDebtCollectorTrace ? "已采集" : "未采集";
-            GUILayout.Label($"解锁条件: 遭遇怪物 + 采集毛发/踪迹。当前: {encounter} / {trace}。", mutedStyle);
-            GUILayout.Label("档案纸页上只有水渍和空白格，等你带回足够可靠的证据。", labelStyle);
+            string encounter = MonsterBestiaryProgress.HasEncounteredEchoMold ? "Encountered" : "Not encountered";
+            string trace = MonsterBestiaryProgress.HasEchoMoldTrace ? "Collected" : "Not collected";
+            GUILayout.Label($"Unlock: encounter anomaly + collect trace sample. Status: {encounter} / {trace}.", mutedStyle);
+            GUILayout.Label("The file pages are blank. Bring back enough reliable evidence.", labelStyle);
         }
         GUILayout.EndVertical();
 

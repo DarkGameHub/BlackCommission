@@ -2,8 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// Per-mission fallback reward values used when no OfficeTaskDefinition is active.
-/// Mirrors the inspector defaults on LostItemMissionManager so designers can still
-/// tune them per-scene; tests use <see cref="Default"/>.
+/// Tests use <see cref="Default"/>.
 /// </summary>
 [System.Serializable]
 public struct MissionRewardFallbacks
@@ -62,28 +61,22 @@ public struct MissionRewardResult
 
 /// <summary>
 /// The single source of truth for mission settlement math
-/// (registry formula: settlement_reward). Pure and EditMode-testable; the
-/// server-authoritative LostItemMissionManager delegates here so the math cannot
-/// drift between the van-departure and exit-point settlement paths.
+/// (registry formula: settlement_reward). Pure and EditMode-testable.
 ///
 /// Order of operations:
 ///   base(resultKind) [+ bonus evidence unless Failed]
 ///   − overtime penalties (all result kinds)
-///   − wrong-homework penalty (unless Failed)
 /// </summary>
 public static class MissionRewardCalculator
 {
     public const float PartialMoneyFraction = 0.22f;
     public const float PartialExperienceFraction = 0.2f;
-    public const int WrongAttemptMoneyPenalty = 30;
-    public const int MaxPenalizedWrongAttempts = 3;
 
     public static MissionRewardResult Calculate(
         OfficeTaskDefinition task,
         MvpMissionResultKind resultKind,
         float missionTimerSeconds,
         bool bonusEvidenceCollected,
-        int wrongHomeworkAttempts,
         MissionRewardFallbacks fallbacks,
         MissionRewardBonus bonus)
     {
@@ -99,14 +92,9 @@ public static class MissionRewardCalculator
 
         result.Money -= result.OvertimeMoneyPenalty;
         result.Reputation -= result.OvertimeReputationPenalty;
-        if (resultKind != MvpMissionResultKind.Failed)
-            result.Money -= GetWrongHomeworkMoneyPenalty(wrongHomeworkAttempts);
 
         return result;
     }
-
-    public static int GetWrongHomeworkMoneyPenalty(int wrongAttempts) =>
-        Mathf.Clamp(wrongAttempts, 0, MaxPenalizedWrongAttempts) * WrongAttemptMoneyPenalty;
 
     static int GetMoneyForResult(OfficeTaskDefinition task, MvpMissionResultKind resultKind,
         bool bonusCollected, MissionRewardFallbacks fallbacks, MissionRewardBonus bonus)

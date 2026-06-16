@@ -5,8 +5,8 @@ namespace BlackCommission.Office.Tests
 {
     /// <summary>
     /// Settlement reward math (registry formula: settlement_reward) for all three
-    /// result kinds, the bonus-evidence gating, the wrong-homework penalty cap, and
-    /// overtime deductions. Uses a ScriptableObject task built in-test (no asset I/O).
+    /// result kinds, bonus-evidence gating, and overtime deductions.
+    /// Uses a ScriptableObject task built in-test (no asset I/O).
     /// </summary>
     public class MissionRewardCalculatorTests
     {
@@ -15,7 +15,7 @@ namespace BlackCommission.Office.Tests
         [SetUp]
         public void CreateStandardTask()
         {
-            // Mirrors the canonical lost-homework job: 300G / +5 rep / +80 XP,
+            // Canonical tower commission values: 300G / +5 rep / +80 XP,
             // 20G consolation, −2 rep on failure, 12h window at 60s per game hour,
             // 30G per overtime hour, 1 rep per 2 overtime hours.
             task = ScriptableObject.CreateInstance<OfficeTaskDefinition>();
@@ -39,18 +39,18 @@ namespace BlackCommission.Office.Tests
         }
 
         MissionRewardResult Calculate(MvpMissionResultKind kind, float timerSeconds = 0f,
-            bool bonus = false, int wrongAttempts = 0)
+            bool bonus = false)
         {
             return MissionRewardCalculator.Calculate(
-                task, kind, timerSeconds, bonus, wrongAttempts,
+                task, kind, timerSeconds, bonus,
                 MissionRewardFallbacks.Default, MissionRewardBonus.Default);
         }
 
         static MissionRewardResult CalculateWithoutTask(MvpMissionResultKind kind,
-            float timerSeconds = 0f, bool bonus = false, int wrongAttempts = 0)
+            float timerSeconds = 0f, bool bonus = false)
         {
             return MissionRewardCalculator.Calculate(
-                null, kind, timerSeconds, bonus, wrongAttempts,
+                null, kind, timerSeconds, bonus,
                 MissionRewardFallbacks.Default, MissionRewardBonus.Default);
         }
 
@@ -129,38 +129,6 @@ namespace BlackCommission.Office.Tests
             Assert.AreEqual(0, r.Experience);
         }
 
-        // ---- Wrong-homework penalty ----
-
-        [Test]
-        public void WrongHomework_DeductsThirtyPerAttempt()
-        {
-            MissionRewardResult r = Calculate(MvpMissionResultKind.Success, wrongAttempts: 2);
-
-            Assert.AreEqual(240, r.Money, "300 − 2 × 30.");
-        }
-
-        [Test]
-        public void WrongHomework_PenaltyCapsAtThreeAttempts()
-        {
-            MissionRewardResult r = Calculate(MvpMissionResultKind.Success, wrongAttempts: 7);
-
-            Assert.AreEqual(210, r.Money, "Cap: 300 − 3 × 30, no matter how many extra attempts.");
-        }
-
-        [Test]
-        public void WrongHomework_NotChargedOnFailure()
-        {
-            MissionRewardResult r = Calculate(MvpMissionResultKind.Failed, wrongAttempts: 3);
-
-            Assert.AreEqual(20, r.Money, "Failure consolation is not reduced by wrong attempts.");
-        }
-
-        [Test]
-        public void WrongHomework_PenaltyHelperClampsNegativeAttempts()
-        {
-            Assert.AreEqual(0, MissionRewardCalculator.GetWrongHomeworkMoneyPenalty(-1));
-        }
-
         // ---- Overtime deductions ----
 
         [Test]
@@ -224,8 +192,7 @@ namespace BlackCommission.Office.Tests
         public void NullTask_Calculate_DoesNotThrow()
         {
             Assert.DoesNotThrow(() =>
-                CalculateWithoutTask(MvpMissionResultKind.Success, timerSeconds: 5000f, bonus: true,
-                    wrongAttempts: 3));
+                CalculateWithoutTask(MvpMissionResultKind.Success, timerSeconds: 5000f, bonus: true));
         }
     }
 }

@@ -8,14 +8,14 @@ using UnityEngine;
 public static class MonsterBestiaryProgress
 {
     const string SaveFileName = "bestiary.json";
-    const string LegacyEncounteredKey = "AS.Bestiary.HomeworkDebtCollector.Encountered";
-    const string LegacyTraceKey = "AS.Bestiary.HomeworkDebtCollector.Trace";
+    const string LegacyEncounteredKey = "AS.Bestiary.EchoMold.Encountered";
+    const string LegacyTraceKey = "AS.Bestiary.EchoMold.Trace";
 
     [System.Serializable]
     class BestiaryData
     {
-        public bool homeworkDebtCollectorEncountered;
-        public bool homeworkDebtCollectorTrace;
+        public bool echoMoldEncountered;
+        public bool echoMoldTrace;
     }
 
     static BestiaryData cached;
@@ -30,13 +30,12 @@ public static class MonsterBestiaryProgress
             if (cached == null)
             {
                 cached = new BestiaryData();
-                // One-time import of the old PlayerPrefs flags.
                 bool enc = PlayerPrefs.GetInt(LegacyEncounteredKey, 0) == 1;
                 bool trace = PlayerPrefs.GetInt(LegacyTraceKey, 0) == 1;
                 if (enc || trace)
                 {
-                    cached.homeworkDebtCollectorEncountered = enc;
-                    cached.homeworkDebtCollectorTrace = trace;
+                    cached.echoMoldEncountered = enc;
+                    cached.echoMoldTrace = trace;
                     PlayerPrefs.DeleteKey(LegacyEncounteredKey);
                     PlayerPrefs.DeleteKey(LegacyTraceKey);
                     PlayerPrefs.Save();
@@ -47,25 +46,24 @@ public static class MonsterBestiaryProgress
         }
     }
 
-    public static bool HasEncounteredHomeworkDebtCollector => Data.homeworkDebtCollectorEncountered;
-    public static bool HasHomeworkDebtCollectorTrace => Data.homeworkDebtCollectorTrace;
-    public static bool IsHomeworkDebtCollectorUnlocked =>
-        HasEncounteredHomeworkDebtCollector && HasHomeworkDebtCollectorTrace;
+    public static bool HasEncounteredEchoMold => Data.echoMoldEncountered;
+    public static bool HasEchoMoldTrace => Data.echoMoldTrace;
+    public static bool IsEchoMoldUnlocked => HasEncounteredEchoMold && HasEchoMoldTrace;
 
-    public static void MarkHomeworkDebtCollectorEncountered()
+    public static void MarkEchoMoldEncountered()
     {
-        if (Data.homeworkDebtCollectorEncountered) return;
-        Data.homeworkDebtCollectorEncountered = true;
+        if (Data.echoMoldEncountered) return;
+        Data.echoMoldEncountered = true;
         SaveIO.WriteJson(SaveFileName, Data);
     }
 
-    public static bool TryCollectHomeworkDebtCollectorTrace()
+    public static bool TryCollectEchoMoldTrace()
     {
-        if (!Data.homeworkDebtCollectorEncountered) return false;
+        if (!Data.echoMoldEncountered) return false;
 
-        if (!Data.homeworkDebtCollectorTrace)
+        if (!Data.echoMoldTrace)
         {
-            Data.homeworkDebtCollectorTrace = true;
+            Data.echoMoldTrace = true;
             SaveIO.WriteJson(SaveFileName, Data);
         }
         return true;

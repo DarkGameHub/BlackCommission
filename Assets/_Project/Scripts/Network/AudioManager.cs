@@ -63,10 +63,7 @@ public class AudioManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        // Persist across scene loads. Without this, the AudioManager living in HQ
-        // gets destroyed when the school scene loads, but the static Instance still
-        // references it — then any AudioSource field access throws MissingReferenceException
-        // (which is exactly what happens during van transit -> PlayEngineIdle).
+        // Persist across scene loads so audio sources survive van transit and scene switches.
         DontDestroyOnLoad(gameObject);
 
         sfxSource = GetComponent<AudioSource>();

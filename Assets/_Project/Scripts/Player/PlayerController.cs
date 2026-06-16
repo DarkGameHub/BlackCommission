@@ -510,7 +510,7 @@ public class PlayerController : NetworkBehaviour
         }
 
         bool hasMoveInput = moveInput.sqrMagnitude > 0.01f;
-        bool emergencySprint = false; // school emergency-sprint rule retired with the school monster
+        bool emergencySprint = false;
 
         if (crouchHeld != isCrouching)
             SetCrouch(crouchHeld);
@@ -625,7 +625,7 @@ public class PlayerController : NetworkBehaviour
 
     void HandleStamina()
     {
-        bool emergencySprint = false; // school emergency-sprint rule retired with the school monster
+        bool emergencySprint = false;
         if (isSprinting && !emergencySprint)
         {
             Stamina = Mathf.Max(0, Stamina - staminaDrainRate * Time.deltaTime);
@@ -691,8 +691,6 @@ public class PlayerController : NetworkBehaviour
         string sceneName = SceneManager.GetActiveScene().name;
         if (sceneName == "HQ")
             return new Vector3(-1.55f, 1.15f, 0.55f);
-        if (sceneName.Contains("School"))
-            return new Vector3(0f, 1.15f, -11.45f);
 
         return new Vector3(0f, 1.15f, 0f);
     }

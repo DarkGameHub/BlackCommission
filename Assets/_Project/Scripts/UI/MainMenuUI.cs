@@ -744,7 +744,7 @@ public class MainMenuUI : MonoBehaviour
         tab.rectTransform.sizeDelta = new Vector2(250f, 22f);
 
         var details = AddText(root.transform, "JobDetails",
-            "Client: Ms. Wang\nRequest: Recover son's homework notebook\nReward: 120G\nNote: Child says something was in the classroom after school.", 15,
+            "Client: Private collector\nRequest: Retrieve sealed eco-column (Earth Coast 01)\nReward: 300G\nNote: Site is under contamination lockdown. Extract before nightfall.", 15,
             Color.black, TextAlignmentOptions.Left);
         details.fontStyle = FontStyles.Bold;
         details.rectTransform.anchorMin = new Vector2(0f, 0f);
@@ -755,7 +755,7 @@ public class MainMenuUI : MonoBehaviour
 
         AddRect(root.transform, "Photo", new Vector2(500f, 16f), new Vector2(245f, 86f),
             new Color(0.11f, 0.19f, 0.18f, 0.95f), new Vector2(0f, 0f), new Vector2(0f, 0f));
-        var photoText = AddText(root.transform, "PhotoText", "SCHOOL HALLWAY PHOTO", 13,
+        var photoText = AddText(root.transform, "PhotoText", "SITE SURVEY PHOTO", 13,
             new Color(0.58f, 0.76f, 0.70f, 0.70f), TextAlignmentOptions.Center);
         photoText.rectTransform.anchorMin = new Vector2(0f, 0f);
         photoText.rectTransform.anchorMax = new Vector2(0f, 0f);

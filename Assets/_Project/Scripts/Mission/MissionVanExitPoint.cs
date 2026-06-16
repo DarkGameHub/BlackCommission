@@ -3,9 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// The mission-site van interactable: board &amp; sit (E), locker hand-outs
-/// (flashlights/batteries), and the return/partial-return decision — ported from the
-/// retired school exit point onto <see cref="TowerMissionManager"/>. Boarding shows the
-/// shared cabin overlay; the return request resolves through the mission manager
+/// (flashlights/batteries), and the return/partial-return decision. Boarding shows the
+/// shared cabin overlay; the return request resolves through <see cref="TowerMissionManager"/>
 /// (full delivery vs partial settlement by cargo-zone check).
 /// </summary>
 [RequireComponent(typeof(Collider))]

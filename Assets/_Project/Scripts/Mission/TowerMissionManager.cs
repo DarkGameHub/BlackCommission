@@ -7,7 +7,6 @@ using UnityEngine;
 /// eco-column pickup/hard-drop events and the van departure into the pure
 /// <see cref="TowerMissionLogic"/>, owns the synced state, and settles through
 /// <see cref="MissionRewardCalculator"/> → <see cref="MvpPendingReward"/> exactly
-/// like LostItemMissionManager (which stays untouched — school missions unaffected).
 /// Works offline too (PreviewWalker walkthroughs) via the same authority fallback.
 /// </summary>
 [RequireComponent(typeof(NetworkObject))]
@@ -151,7 +150,7 @@ public class TowerMissionManager : NetworkBehaviour
     /// the exact calculator path Settle uses, so the estimate never drifts from the bill.
     /// </summary>
     public int EstimatePartialMoney() => MissionRewardCalculator.Calculate(
-        null, MvpMissionResultKind.Partial, 0f, false, 0, BuildFallbacks(), new MissionRewardBonus()).Money;
+        null, MvpMissionResultKind.Partial, 0f, false, BuildFallbacks(), new MissionRewardBonus()).Money;
 
     /// <summary>Host-side: mirrors the application card open/closed state to all peers.</summary>
     public void SetFilingEarlyReturn(bool filing)
@@ -194,7 +193,7 @@ public class TowerMissionManager : NetworkBehaviour
         SyncedCompleteness.Value = logic.Completeness;
 
         MissionRewardResult result = MissionRewardCalculator.Calculate(
-            null, kind, 0f, false, 0, BuildFallbacks(), new MissionRewardBonus());
+            null, kind, 0f, false, BuildFallbacks(), new MissionRewardBonus());
         int baseMoney = result.Money;
         int money = kind == MvpMissionResultKind.Success
             ? logic.ScaleDeliveredMoney(baseMoney)
