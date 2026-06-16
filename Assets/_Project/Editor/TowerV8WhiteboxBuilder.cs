@@ -570,22 +570,10 @@ public static class TowerV8WhiteboxBuilder
 
                 if (d.Type == PlanDoorType.Toggle)
                 {
-                    blocker = new GameObject("Blocker");
-                    blocker.transform.SetParent(conn.transform);
-                    var plug = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    plug.name = "RubblePlug";
-                    plug.transform.SetParent(blocker.transform);
-                    plug.transform.position = axis == 'x'
-                        ? new Vector3(at, y + DoorClearHeight * 0.5f, pos)
-                        : new Vector3(pos, y + DoorClearHeight * 0.5f, at);
-                    plug.transform.localScale = axis == 'x'
-                        ? new Vector3(0.8f, DoorClearHeight, d.WidthM)
-                        : new Vector3(d.WidthM, DoorClearHeight, 0.8f);
-                    plug.GetComponent<Renderer>().sharedMaterial = blockerMat;
-                    var obstacle = plug.AddComponent<UnityEngine.AI.NavMeshObstacle>();
-                    obstacle.carving = true;
-                    obstacle.size = Vector3.one;
-                    blocker.SetActive(false);
+                    // Placeholder door replaces the old rubble plug on Toggle connectors.
+                    // The SimpleDoor component handles E-key interaction and swing animation.
+                    // blocker stays null — SimpleDoor's own BoxCollider is the obstacle.
+                    BuildPlaceholderDoor(conn.transform, axis, at, y, pos, d.WidthM, d.Id);
                 }
             }
 
@@ -596,6 +584,29 @@ public static class TowerV8WhiteboxBuilder
             c.kind = d.Type == PlanDoorType.Junction || d.WidthM >= 2.8f ? EdgeKind.Corridor : EdgeKind.Door;
             SetConnectorRefs(c, geometry, blocker);
         }
+    }
+
+    static void BuildPlaceholderDoor(Transform connParent, char axis, float at, float floorY,
+        float pos, float widthM, string doorId)
+    {
+        // Hinge sits at the "lo" edge of the gap (consistent left-hand convention).
+        // The SimpleDoor pivot is placed here; the panel child offsets by half-width.
+        float hingeX = axis == 'x' ? at : pos;
+        float hingeZ = axis == 'x' ? pos - widthM * 0.5f : at;
+        float pivotY = floorY + DoorClearHeight * 0.5f;
+
+        var doorGO = new GameObject($"Door_{doorId}");
+        doorGO.transform.SetParent(connParent);
+        doorGO.transform.position = new Vector3(hingeX, pivotY, hingeZ);
+
+        var door = doorGO.AddComponent<SimpleDoor>();
+
+        // Dark, slightly worn panel colour — concrete tint rather than pure steel
+        // so it reads as a heavy fire door rather than a metal sheet.
+        var panelMat  = new Material(wallMat)  { color = new Color(0.28f, 0.26f, 0.25f) };
+        var handleMat = new Material(trayMat);
+
+        door.BuildGeometry(axis, hingeX, floorY, hingeZ, widthM, panelMat, handleMat);
     }
 
     static void BuildDescents(Transform parent)
