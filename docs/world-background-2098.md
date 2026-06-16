@@ -116,33 +116,147 @@ The game has two main types of missions.
 
 ### Commissioned Jobs
 
-Commissioned jobs are missions posted by Martian clients. The client has specific needs, the target is well-defined, payment is relatively high, and so is the risk.
+Commissioned jobs are missions posted by Martian clients. Players enter a site and scavenge whatever they can carry back to the van. **Item values are not shown during the mission** — players must read the client's commission text to infer what is likely to be valued, then make judgment calls on the ground.
 
-Examples:
+At settlement, each item's actual price and the client's stated intended use are revealed simultaneously. The punchline lands at settlement, not on the map.
 
-- Retrieve a mutated white-spine snow lotus.
-- Recover infected plant specimens.
-- Obtain a sealed crate from an old quarantine station.
-- Bring back ecological materials that have not fully degraded.
-- Retrieve anomalous minerals, fungal tissue, old medical samples, or Mars return-flight remnants.
-- Capture or scan a specific infected entity.
-- Recover a special item from inside a sealed facility.
+A commission may include one **specific requested item** that earns a bonus if found, but the run is not a failure without it. Everything brought back has value — the question is how much, and whether the client's stated use matches what players thought they were retrieving.
 
-These missions carry the satirical core of the game. Every time players complete a commissioned job, they see the client's stated purpose and feedback. Sometimes the client says it's research, but it looks like collecting. Sometimes the client says it's a memorial, but it feels like showing off. Sometimes the client claims it's in the public interest, but it is clearly a private project.
+**The van has a weight limit.** Players cannot take everything. Decisions about what to carry — made under time pressure, with incomplete information — are the core moment-to-moment gameplay.
+
+Players may file **one dispute per settlement** if they believe an item was undervalued. The client responds in writing, in institutional language. Sometimes the response yields more money. More often it reveals something about the client, the item, or the system that the price tag alone does not.
+
+Item categories found on commissioned runs:
+
+- Personal correspondence (letters, notes, cards)
+- Family photography and home media
+- Children's artifacts (drawings, schoolwork, toys)
+- Medical and pharmaceutical items
+- Civic and administrative documents (permits, debt notices, official stamps)
+- Household technology (broken or obsolete electronics)
+- Native plant specimens and soil samples
+- Religious and ceremonial objects
+- Cultural publications (books, music, print media)
+- Personal clothing and effects
+- Professional tools and equipment
+- Residential furnishings and fixtures
 
 ### Free Salvage
 
 Free salvage is the everyday income method players unlock after obtaining an orbital shipping certification.
 
-Each day, players can choose a map with no fixed commission target and enter an abandoned area to freely scavenge debris. For example: old metals, batteries, filter cores, medical steel, orbital freight wreckage, reactor parts, contaminated zone recyclables, and ordinary sample materials.
+Players enter an open map with no client and scavenge freely. On free salvage runs, a basic market rate is shown for each item category — not precise, but enough to make rough weight-value decisions. There is no settlement reveal, no client note, no satirical punchline. This is the game breathing.
 
-Free salvage has no strong narrative, no fixed client, and no guaranteed satirical ending. Its role is to let players breathe, replenish resources, repair the van, save up money, grind equipment, and experience a relatively relaxed "scavenging on Earth's surface" loop.
+Free salvage exists because not every run should carry moral weight. Sometimes the agency just needs to cover the month's operating costs.
 
-But it is also satirically loaded in terms of the world:
+Its world-level irony requires no emphasis: picking up Earth's debris to sell to the orbital platform requires a Martian-issued permit. Scavenging your own planet is a licensed activity.
 
-Earth belongs to Earth people. Yet if players want to sell Earth's scrap to the orbital platform, they must first obtain a shipping certification approved by Mars.
+## Commission Client Types
 
-Picking up trash on Earth is not illegal. But turning trash into money requires Martian permission first.
+Every client exists on Mars. The agency exists on Earth. This distance — physical and cultural — is the game's central condition.
+
+Clients fall into three categories. Their category shapes what they want, how they write, what they'll pay, and what they do with what you bring them.
+
+### Martian Institutions
+
+Corporations, research institutes, cultural bureaus, acquisition offices, event planning firms. They write in professional language. Their commissions are precise about category, vague about reason. Payment is fixed. They do not explain themselves.
+
+Their settlement notes use the register of catalog entries, import manifests, and institutional acquisition records. The irony is in the gap between the bureaucratic calm of the language and what the objects actually are.
+
+*Example register:* "Lot received. Authentic pre-colony residential ceramic, condition: fair. Accessioned to permanent collection. Thank you for your service."
+
+### Martian Individuals
+
+People with names, ages, and backgrounds. Their commissions are looser — sometimes specific about a memory or a person, rarely specific about the exact object. Payment is negotiable. They write like people, not institutions.
+
+Their relationship to Earth depends entirely on their generation.
+
+---
+
+**First Generation — 移民一代** *(emigrated as adults)*
+
+They remember Earth. They left it, for reasons that made sense at the time. Some have not thought about it in years. Some think about it every day. What they want is specific — not "Earth items," but a particular thing, or a thing that stands in for a particular person or moment.
+
+Their commissions may reference addresses, names, or years. They know what they're asking for, even if they cannot say it plainly.
+
+The bargaining dynamic with first-generation clients is the most uncomfortable in the game. They are spending their own money to retrieve pieces of a life they left behind. The settlement screen shows their response to what you brought. Sometimes what you found is right. Sometimes it is close but not quite. They never explain the difference.
+
+*Example commission:*
+```
+Marcus Sohl, 67
+Ares District D, Dome 14
+Left Earth: 2086, family emigration
+Wife: remained on Earth, last contact 2091
+
+Task: enter a residential block in the coastal lockdown zone,
+      bring back what you think he'd recognize
+Pay:  open to discussion
+```
+
+---
+
+**Second Generation — 移民二代** *(born on Mars or left as children)*
+
+Earth is a story their parents told. It is the smell their mother described. The sound their father said he missed. Old photographs kept in a drawer. Objects brought over in a single allowed bag.
+
+They have never been to Earth. They cannot go — the permits do not exist for return. What they want is the feeling of a place they only know as inheritance: secondhand and idealized and impossible to verify.
+
+Their commissions are sometimes confused about what things actually are or how they work. They may ask for something that no longer exists in the form they imagine, or that never existed except in a parent's retelling.
+
+This is the most resonant client type for players who have grown up between cultures — knowing a homeland only through what was kept and what was said, never through being there.
+
+*Example commission:*
+```
+Yena Voss-Kline, 34
+Ares Research Corridor, Section 9
+Parents emigrated: 2083
+Has never been to Earth
+
+Task: her mother kept talking about the
+      sound of a specific kind of door
+      in old apartment buildings.
+      Heavy. Metal. The click of it.
+      She wants anything that might
+      have made that sound.
+Pay:  fair, she says
+```
+
+---
+
+**Third Generation and Beyond — 移民三代+**
+
+Earth is history. Not personal history — recorded history. They approach it the way a collector approaches any antique: provenance, condition, rarity, cultural context. They are not without feeling. They simply feel for Earth the way someone feels for a Roman coin or a Ming vase.
+
+Their commissions are the cleanest to read and the most chilling to complete. The institutional register and the collector's register converge. There is no grief here — grief requires memory, and memory requires presence.
+
+These clients appear more frequently in Stage 4. By the time they become common, players have already handled first- and second-generation commissions. The contrast is the point.
+
+*Example commission:*
+```
+Client: [name withheld by request]
+Ares City Proper — private residence
+
+Task: pre-colony Earth domestic objects,
+      any region, any category.
+      Prefers intact. Prefers signed or
+      dated if possible. No preference
+      otherwise.
+Pay:  market rate, no negotiation
+```
+
+---
+
+### Earth-Side Clients
+
+These clients do not appear in the commission terminal during normal play.
+
+They appear after the Stage 5 choice, if players elect to stay on Earth. They call the agency directly. They are Earth people, which means they cannot pay much. They are calling because they heard the agency can get into places that are now sealed.
+
+What they want is not collectible. It is not notable. It is just theirs, or someone they knew, and it is inside the lockdown zone, and they cannot get there themselves.
+
+These missions do not have satirical settlement notes. They have thank-you messages. Sometimes they have nothing — the item was not there, or was not what they hoped, and they say so without drama.
+
+These are the missions the agency runs in the final chapter, if it stays.
 
 ## License Progression
 
