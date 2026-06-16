@@ -2,52 +2,58 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Placeholder interactive door — one-way open (E key), swings 90° around hinge.
+/// Placeholder interactive door — E key toggles open/close, swings 90° around hinge.
 /// Replaces the rubble-plug blocker on Toggle connectors until art-pass door assets arrive.
+/// Not networked yet: state is local-only (host and clients each simulate independently).
 /// </summary>
 [RequireComponent(typeof(BoxCollider))]
 public class SimpleDoor : MonoBehaviour, IInteractable
 {
-    [SerializeField] float openDuration = 0.45f;
+    [SerializeField] float swingDuration = 0.45f;
 
     bool isOpen;
     bool isAnimating;
     BoxCollider bodyCollider;
 
-    public string InteractHint => isOpen || isAnimating ? string.Empty : "[E] Open";
+    Quaternion closedRot;
+    Quaternion openRot;
+
+    public string InteractHint => isAnimating ? string.Empty : isOpen ? "[E] Close" : "[E] Open";
 
     void Awake()
     {
         bodyCollider = GetComponent<BoxCollider>();
+        closedRot = transform.localRotation;
+        openRot   = closedRot * Quaternion.Euler(0f, -90f, 0f);
     }
 
     public void OnInteractStart(PlayerController player)
     {
-        if (!isOpen && !isAnimating)
-            StartCoroutine(SwingOpen());
+        if (!isAnimating)
+            StartCoroutine(Swing());
     }
 
     public void OnInteractEnd(PlayerController player) { }
 
-    IEnumerator SwingOpen()
+    IEnumerator Swing()
     {
         isAnimating = true;
         AudioManager.Instance?.PlayDoorCreak(transform.position);
 
-        float elapsed = 0f;
         Quaternion start = transform.localRotation;
-        Quaternion end   = start * Quaternion.Euler(0f, -90f, 0f);
+        Quaternion end   = isOpen ? closedRot : openRot;
+        float elapsed    = 0f;
 
-        while (elapsed < openDuration)
+        while (elapsed < swingDuration)
         {
             elapsed += Time.deltaTime;
-            transform.localRotation = Quaternion.Slerp(start, end, elapsed / openDuration);
+            transform.localRotation = Quaternion.Slerp(start, end, elapsed / swingDuration);
             yield return null;
         }
 
         transform.localRotation = end;
-        bodyCollider.enabled = false;
-        isOpen = true;
+        isOpen = !isOpen;
+        bodyCollider.enabled = !isOpen;
         isAnimating = false;
     }
 
