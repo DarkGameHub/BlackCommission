@@ -377,7 +377,31 @@ Players pick up the van keys. The game ends.
 
 This ending is not a heroic victory. Players did not save Earth, did not overthrow Martian capital. But players made a choice: not treating leaving Earth as the only form of success, and no longer unconditionally shipping Earth's contents to Mars.
 
-It is a bittersweet ending.
+#### The Final Chapter (post-decision tone)
+
+After the choice is made, the game does not end immediately. There is a final chapter — no dramatic countdown, no cutscene. The agency keeps running. The phone keeps ringing.
+
+But the caller is different now.
+
+The jobs are smaller: helping a family relocate from a newly sealed district before the quarantine expands; recovering medical supplies from a lockdown-zone clinic; finding a specific person's belongings from an evacuated block before the infection takes the building.
+
+These missions do not pay as well as Martian commissions. There is no client usage note, no satirical settlement text. The settlement screen simply reads:
+
+```text
+Recipient: local
+Payment: what they had
+Client feedback: thank you
+```
+
+The infection zones are still expanding. The safety equipment — air filtration systems, contamination suits, anti-pathogen filters — costs money every month, and that cost keeps rising as Earth deteriorates. Players still need to take occasional paid commissions to cover operational costs. But the jobs they choose, and the jobs they decline, are different now.
+
+The approaching infection is not shown as a timer or a health bar. It is ambient: a neighbourhood the players knew becomes unreachable. A client stops calling. The van's air filter needs replacing more often. A faint reading on the contamination monitor that wasn't there before.
+
+Players know what "staying" means. They chose it knowing.
+
+The final image: the CRT terminal, still on. The van keys on the desk. The debt notice still pinned to the wall — but underneath it, a handwritten note from a local caller, thanking the agency for getting in.
+
+It is a bittersweet ending. The darkness is real. So is the reason for staying.
 
 ### Ending 3: Send the Truth
 
@@ -405,6 +429,35 @@ We saw it.
 ```
 
 This is not a complete victory. But a crack has appeared.
+
+### Ending Design Philosophy
+
+**Both choices must be real choices — not right vs. wrong.**
+
+The most common failure mode for moral endings is making one option obviously correct. If "Stay on Earth" is heroic and "Go to Mars" is a betrayal, the player is not choosing — they are being graded. The game should avoid this.
+
+The design principle:
+
+- **Go to Mars is easier.** It removes the escalating pressure, the infection risk, the rising operational costs. It is the rational exit. The irony — that you become part of the system that caused the problem — only lands if the escape was genuinely tempting.
+- **Stay on Earth is harder.** The infection keeps spreading. The safety equipment bills keep rising. The work pays less. There is no triumphant reversal. You are choosing difficulty and proximity over comfort and distance. That choice only has weight if going to Mars was a real option you could have taken.
+
+Neither ending should feel like punishment or reward. Both should feel like the consequence of who the players became over the course of the game.
+
+**The short-term pressure that makes the choice meaningful:**
+
+Throughout the game, the agency runs on thin margins. Part of those operational costs is **environmental safety infrastructure** — air filtration systems, contamination suits, pathogen screening equipment, seal maintenance on the van. These are not dramatic — they are line items on the monthly expenses, the same as the rent and the license renewal fee.
+
+As Earth's infection zones expand, these costs rise. The safety equipment that cost 40G a month in Stage 1 costs 120G in Stage 4. Players feel Earth deteriorating not through narration but through the budget.
+
+This is the per-run pressure. Not "Earth will kill you in 10 days" but "Earth is getting more expensive to live on, and the gap between what you earn and what safety costs is narrowing." It is quieter than a countdown timer, and more honest to the world.
+
+Going to Mars eliminates that cost entirely. This is part of why it is tempting. Staying means you will keep paying — and the bill will keep growing. You chose this. The final chapter missions are what you chose it for.
+
+**Why both endings land:**
+
+The player who goes to Mars sees the snow lotus at the dinner table and knows what it cost. The player who stays on Earth watches a neighbourhood get sealed off and knows what they gave up. Both feel the weight of their choice in the same mechanic — the settlement screen, the monthly costs, the phone calls — reframed by the decision they made.
+
+The game does not need to tell players which choice was right. The contracts will tell them. The deductions will tell them. The callers will tell them. And the fact that they had to choose will tell them too.
 
 ## Design Notes
 

@@ -35,6 +35,7 @@ Design test: name the job title first, then what broke. See art-bible.md Section
 - **Not a numerical pressure meter** — hostile takeover threat is expressed as narrative events (letters, visits), never as a 0–100 UI bar.
 - **Not a moral judge** — the game presents facts; the settlement screen does the talking.
 - **Not a Lethal Company clone** — LC is a production-method reference only (ritual, co-op tension, readable staging). No copied assets, UI, quota fiction, or map layouts.
+- **Not a clear right-vs-wrong ending** — both endings (Go to Mars / Stay on Earth) must be genuinely tempting. "Stay" is the harder choice; "Go" is the easier one. Neither is a verdict. See `docs/world-background-2098.md` Ending Design Philosophy.
 
 ## Design Priorities
 
