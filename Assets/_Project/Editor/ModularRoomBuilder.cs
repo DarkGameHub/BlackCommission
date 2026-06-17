@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using BlackCommission.Level;
 
 /// <summary>
 /// Generates shared room module prefabs for the modular map system (Route B).

@@ -1,6 +1,6 @@
 # Active Session State — Black Commission
 
-**Last updated**: 2026-06-16
+**Last updated**: 2026-06-17
 **Stage**: Production (see `production/stage.txt`)
 
 ## Current Focus
@@ -1151,6 +1151,43 @@ See task list in Claude Code session for step-by-step.
 - `design/quick-specs/scavenging-item-system-2026-06-16.md` — full item/settlement/bargaining spec
 - `docs/world-background-2098.md` — client types + generational system + ending philosophy
 
+## Session 2026-06-16/17 — Pull/merge + modular dressing pipeline (the 5-step list above = DONE)
+
+The "Immediate next task" 5-step list above is **complete**:
+1. **git pull** ✓ — fast-forwarded 10 commits (29d44c0→c665ea3), no conflicts; this file
+   auto-merged (remote 2026-06-16 block + local Echo Mold notes both kept).
+2. **Rebuild v8 Whitebox — SKIPPED as redundant.** Its purpose ("ensure materials exist")
+   was already satisfied: the 3 materials ModularRoomBuilder needs are committed on disk,
+   and ModularRoomBuilder only `LoadAssetAtPath`s them — it does NOT depend on the tower
+   scene rebuild. Scene left clean (isDirty:false). If the tower whitebox scene itself is
+   ever wanted, run that menu manually (it's heavy + crashes the Node bridge).
+3. **Build All Shared Modules** ✓ — 14/14 module prefabs in `Art/Maps/Shared/Modules/`, 0 console errors.
+4. **Scale verify** ✓ — measured from prefab YAML: 4m grid, 3.2m ceiling, 2.0m door width,
+   2.25m door clear height all confirmed. (Human-scale eyeball is the PM's only manual check.)
+5. **RoomDresser** ✓ — spec `design/quick-specs/room-dresser-set-dressing-2026-06-16.md`;
+   implemented 4 files: `Scripts/Level/{LootAnchor,RoomDressingSet}.cs`,
+   `Editor/{WhiteboxFurnitureBuilder,RoomDresser}.cs`. Generated 10 whitebox furniture
+   prefabs (`Art/Maps/Shared/Furniture/`), 3 `RoomDressingSet` assets (`…/Shared/Dressing/`),
+   and dressed all 3 room modules (Dressing group + furniture + LootAnchors). Verified on disk:
+   Office 7 furniture/3 anchors, Utility 5/2, Large 8/5 — matches the spec's default sets.
+
+**Bug fixed during pull:** new `ModularRoomBuilder.cs` referenced `RoomSlot`/`RoomSlotRole`
+(namespace `BlackCommission.Level`) but lacked `using BlackCommission.Level;` → would CS0246
+and disable ALL custom menus. Added the using; recompile is 0 errors / 0 warnings.
+
+**Tooling gotchas this session:** (a) the mcp-unity Node bridge crashes on heavy menu ops →
+used `tools/ws-unity-call.cjs` direct to Unity's 8091 listener for everything after.
+(b) Freshly-added `[MenuItem]`s are NOT found by `ExecuteMenuItem` after a *scripted* recompile
+until the editor gains focus/rebuilds its menu → PM ran "Build Whitebox Furniture" +
+"Dress Room Modules" manually from the menu bar.
+
+**UNCOMMITTED:** all of the above is untracked working-tree state (4 scripts + furniture /
+dressing / module prefabs + this file). Not committed per project rules.
+
+**Next (not started):** loot-spawn system consuming `LootAnchor`s (scavenging owns it);
+optional — add RoomDresser to `design/systems-index.md`; bidirectional dependency backlinks
+in scavenging spec + map GDD; Play-mode validation of nav (interior walkable) + dresser idempotency.
+
 ## Recovery
 
 After compaction or a new session: read this file, then `design/systems-index.md`,
@@ -1344,3 +1381,36 @@ Real skeletal animation = a separate project-wide pass (Mixamo/Meshy auto-rig �
 + monster), only if PM opens that round. **Monster model** itself = PM's Meshy gen (prompt drafted in chat
 2026-06-14: lo-fi infected humanoid fungal host, mushroom caps/spores, amber #FF6A00 eye); placeholder = reuse a
 tinted/distorted AS_Character worker ("infected host") + amber eye point — zero modeling.
+
+## Session 2026-06-15 — UX spec: Echo Mold encounter-feedback HUD layer (/ux-design)
+- **Task**: authoring `design/ux/mission-encounter-hud.md` — the Echo Mold *encounter layer* of the HUD
+  (PM scope decision: extends `hud.md`, NOT a new screen; NO 0–100 threat meter per GDD anti-pillar; reuses F1).
+- **File**: `design/ux/mission-encounter-hud.md` — skeleton created (15 sections, all `[To be designed]`).
+- **Status**: Section 1 (Purpose & Player Need) WRITTEN + legibility dial = "Diegetic-minimal"
+  (HUD mirrors player's own action only, never the Mold's knowledge). Paused at Section 2
+  (Relationship to Base HUD) — PM asked mid-session for a game-mechanics/numbers overview; resume Section 2 after.
+- **Binding inputs**: `monster-echo-mold.md` §UI Requirements (lines 149–153: no dedicated screen, no threat
+  meter, behavior/audio-first, optional one-time voice-monitoring consent notice); `hud.md` Open Q#4 (reserve
+  pursuit-alert grammar = A3 notification row + stamp-red + independent audio channel; "Hidden/Audio-primary"
+  category question) + F1 downed/revive already specced; `mission-state-machine.md` (Downed→Failure).
+- **Genuinely-new surfaces**: (1) voice on-air / "being sampled" lure-risk indicator, (2) pursuit/contact alert
+  in A3 work-order grammar, (3) the `tell` (real vs replayed voice — audio-first, likely no HUD), (4) one-time
+  voice-monitoring consent notice. Downed/all-down = reference hud.md F1, don't redefine.
+- **Gaps to note in Open Questions**: no `player-journey.md`; no `accessibility-requirements.md` (inherit hud.md
+  baseline). No `design/gdd/game-concept.md` (AGENTS.md is vision of record).
+
+## Session 2026-06-15 (cont.) — Echo Mold: scene placement + NavMesh validation
+- **Done:** PM flagged the Mold shouldn't sit in the 生态柱/objective room. Purged **3 stale decoy
+  "EchoMold" objects** (raw-FBX drops, Animator-only — were shadowing every `Find`/`get_gameobject`).
+  Re-added ONE clean prefab instance at world **(22, 4.3, 14)** = upper-level atrium→objective approach,
+  ~16 m from `TARGET_EcoColumnPlinth`. Verified via real C#: full stack (Animator/NavMeshAgent/
+  CapsuleCollider/NetworkObject/EchoMold all ✓, 11-mesh rig) and **ON MESH** (Δ=0.02 m).
+- **NavMesh:** new editor tool `Assets/_Project/Editor/TowerNavBaker.cs`
+  (`Tools ▸ Black Commission ▸ Map ▸ Bake Tower NavMesh`) — session-only in-memory `NavMeshSurface`
+  bake from PhysicsColliders (**842 walkable tris**, bounds 56.5×7.6×62.5) + on-mesh/component logging.
+  Deliberately does NOT touch the project's separate `Tower_EarthCoast_01_NavMesh.asset` or scene YAML.
+- **UNSAVED — all of the above is live in the open editor session only.** Awaiting PM: hit Play to test
+  the Mold animating/hunting, then decide whether to save the scene + persist navmesh via the project's
+  separate-asset path. Runtime Play test still blocked from the bridge (no play toggle; CoplayDev not attached).
+- **Note for PM:** earlier tower monster concept = "核查专员/Auditor" (`TowerAuditorLogic`, tested). Echo Mold
+  is the newer PM-approved mushroom (2026-06-14/15). Whether they coexist or supersede is a PM design call.

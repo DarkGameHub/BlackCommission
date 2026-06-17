@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe7bd7b1f42797947b4e9895a5c8e089, type: 3}
+  m_Name: Dressing_Room_Office_4x8
+  m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDressingSet
+  targetModule: Room_Office_4x8
+  lootAnchorsEnabled: 1
+  placements:
+  - label: Desk
+    prefab: {fileID: 4906108560266217493, guid: 616ca0f4da1cc914dbb192a6776f1166, type: 3}
+    localPosition: {x: 2, y: 0, z: 7.2}
+    localEuler: {x: 0, y: 180, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+    spawnProbability: 1
+    centralBlocker: 0
+    lootAnchor: 0
+    lootSurface: 0
+  - label: Chair
+    prefab: {fileID: 6702064457149876597, guid: 5140edf5dda85be4ea6a5a4fbc6917be, type: 3}
+    localPosition: {x: 2, y: 0, z: 6.4}
+    localEuler: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+    spawnProbability: 1
+    centralBlocker: 0
+    lootAnchor: 0
+    lootSurface: 0
+  - label: CRT
+    prefab: {fileID: 6080393826302328476, guid: 6d4bebe9fab22724f8e100fee1199f68, type: 3}
+    localPosition: {x: 1.6, y: 0.77, z: 7.2}
+    localEuler: {x: 0, y: 180, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+    spawnProbability: 1
+    centralBlocker: 0
+    lootAnchor: 1
+    lootSurface: 1
+  - label: Cabinet
+    prefab: {fileID: 1934360184756948583, guid: 1af800d1a44afa64181376dc7b0f7b10, type: 3}
+    localPosition: {x: 0.4, y: 0, z: 6}
+    localEuler: {x: 0, y: 90, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+    spawnProbability: 1
+    centralBlocker: 0
+    lootAnchor: 1
+    lootSurface: 3
+  - label: Shelving
+    prefab: {fileID: 4937262629263891359, guid: 80b2b6dbf7e3dc143abf4784e89231fb, type: 3}
+    localPosition: {x: 0.3, y: 0, z: 3}
+    localEuler: {x: 0, y: 90, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+    spawnProbability: 1
+    centralBlocker: 0
+    lootAnchor: 0
+    lootSurface: 0
+  - label: NoticeBoard
+    prefab: {fileID: 8000607001072480098, guid: c61182348c6e5784f842b97c37d2ad20, type: 3}
+    localPosition: {x: 2, y: 1.5, z: 7.85}
+    localEuler: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+    spawnProbability: 1
+    centralBlocker: 0
+    lootAnchor: 0
+    lootSurface: 0
+  - label: Crate
+    prefab: {fileID: 5231631749727913751, guid: 9ee171f789e90734b9666171c41b0fa9, type: 3}
+    localPosition: {x: 0.5, y: 0, z: 7.4}
+    localEuler: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+    spawnProbability: 1
+    centralBlocker: 0
+    lootAnchor: 1
+    lootSurface: 4
