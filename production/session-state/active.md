@@ -5,6 +5,19 @@
 
 ## Current Focus
 
+**Scavenging system (2026-06-17) — RESUME HERE.** Logic + data + spawn runtime built & verified
+(headless EditMode + compile; 34/34 scavenging logic tests green; 3 loot prefabs auto-registered in
+DefaultNetworkPrefabs). **NEXT on the new device:**
+1. **P1b sub-block 4 — van weight gate** at a cargo zone (enforce `VanWeightLedger` on deposit).
+2. **Live play-test of P1b 1-3** — needs a test bed: `Module_Showcase` has loot anchors (add a
+   `LootSpawner` + host → watch loot spawn + pick it up) but has NO van; the full deposit/weight loop
+   needs a mission scene assembling modular rooms + a van (not built yet).
+3. Deferred (PM-owned): real 12-item economy values; P2 settlement reveal UI; P3 commission text; P4 dispute.
+Full P1a / P2a / B / P1b detail = the dated session logs below. Note untracked orphans:
+`_Project/Content/Scavenge/Items` (superseded by Resources copies).
+
+_Prior focus (superseded, kept for history):_
+
 **Floor-2 v5 redesign** of the abandoned tower (Tower EarthCoast 01) is now written
 into `TowerTopologyV3.cs` and `TowerV3WhiteboxBuilder`: the critical route crosses
 EDGE/BRIDGE before SALES/VIP/TARGET, A-stair is the fast two-hand carry return, and
@@ -1187,6 +1200,103 @@ dressing / module prefabs + this file). Not committed per project rules.
 **Next (not started):** loot-spawn system consuming `LootAnchor`s (scavenging owns it);
 optional — add RoomDresser to `design/systems-index.md`; bidirectional dependency backlinks
 in scavenging spec + map GDD; Play-mode validation of nav (interior walkable) + dresser idempotency.
+
+## Session 2026-06-17 — Module showcase scene (view/walk the dressed rooms)
+PM asked how to *see* the rooms built last session → chose "build a walkable showcase scene".
+- **NEW `Assets/_Project/Editor/ModuleShowcaseBuilder.cs`** — menu `Tools > Black Commission >
+  MVP > Modules > Build Module Showcase`. Creates a throwaway scene
+  `Assets/_Project/Scenes/Module_Showcase.unity` (never touches HQ/Tower): the 3 dressed rooms
+  (Office_4x8 @x0 / Utility_4x4 @x8 / Large_8x8 @x16) in a row on a ground slab, directional +
+  per-room point lights, TextMesh name plates, and a `PreviewWalker` rig (CharacterController +
+  child MainCamera) spawned at (10,0.2,-5) facing the row. Idempotent (NewScene EmptyScene → rebuild).
+- Compiles against predefined assemblies (Editor + PreviewWalker both no-asmdef); ground reuses
+  V8_Concrete_Poured.mat (falls back to primitive default if absent).
+- **RAN + verified (2026-06-17, via `tools/ws-unity-call.cjs` → 8091):** 0 compile errors; menu
+  executed cleanly; build log printed; scene saved. `get_scene_info` confirms active scene =
+  `Module_Showcase`, rootCount 12 (3 rooms + 3 point lights + 3 labels + ground + directional +
+  PreviewWalker), isDirty false. Awaiting PM eyeball (human scale / furniture density / label
+  facing / interior brightness). Next real feature: loot-spawn system the rooms' LootAnchors serve.
+
+## Session 2026-06-17 (cont.) — Scavenging P1a: pure logic core + tests
+PM approved the scavenging system → chose the "logic core + tests first" slice. Built **NEW asmdef
+`BlackCommission.Scavenge.Core`** (`noEngineReferences`, mirrors the Mission.Core pattern) + 4 scripts under
+`Assets/_Project/Scripts/Scavenge/Core/`:
+- `ScavengeTypes.cs` — `WeightClass` (Light/Medium/Heavy = 1/2/4, enum value = unit cost), `LootSurface`
+  (mirrors `BlackCommission.Level.DressingSurface` value-for-value so the runtime layer maps by cast),
+  `LootAnchorSlot`/`LootPlacement` structs, `WeightClassExtensions.Units()`.
+- `ScavengeItemSpec.cs` — id + weight + allowed surfaces (empty = anywhere), `AllowsSurface()`.
+- `VanWeightLedger.cs` — host-auth shared van capacity tally (`CanFit`/`TryAdd`/`Remove`/`Reset`, clamps; spec cap 12).
+- `LootSpawnPlanner.cs` — deterministic seed-driven planner (anchors sorted by Id + candidates by Id ⇒
+  order-independent; Fisher–Yates; surface-filtered; skips unmatchable anchors; no anchor reused; null/empty-safe; min>max clamp).
+- Tests in `Assets/_Project/Tests/EditMode/Scavenge/` (asmdef + `VanWeightLedgerTests` 13, `LootSpawnPlannerTests` 10 = 23).
+- **VERIFIED GREEN via headless batch** (`Unity.exe -runTests -batchmode -nographics`, 2026-06-17): the mcp-unity
+  bridge wedged on the post-compile domain reload (documented "recompile kills the pump" — 3 timeouts), so after the
+  PM CLOSED Unity (freeing the project lock; force-kill was correctly blocked by the safety classifier) the suite ran
+  headless. **Scavenge.Core compiled clean (0 CS errors); both fixtures PASS — VanWeightLedgerTests 12/12,
+  LootSpawnPlannerTests 10/10 = 22/22.** Suite-wide 161/168: the 7 failures are ALL
+  `McpUnity.Tests.BatchExecuteToolTests` (gamelovers MCP package self-tests that NRE in headless batch — environment
+  only, NOT scavenging, NOT a regression; they pass in the interactive editor). NUnit XML landed at
+  `%LOCALLOW%/DefaultCompany/Black Commission/TestResults.xml`, NOT the `-testResults` path (the embedded MCP test
+  callback `TestRunnerNoThrottle` overrides the destination). Editor relaunched for PM afterward.
+- Style red line restated to PM: this system is code+data; visuals = whitebox placeholders only; real models deferred
+  to PM's Meshy pipeline under `style-lock-v2`.
+- **NEXT after tests confirm green:** P1b runtime — `LootSpawner` (NetworkBehaviour: find LootAnchors → planner →
+  host-spawn synced items), `ScavengeItem` pickup (reuse Carriable/PlayerHotbar), van weight enforce at
+  VAN_CargoZone; + `WhiteboxLootBuilder` placeholder prefabs per category. UNCOMMITTED (project rule).
+
+## Session 2026-06-17 (cont.) — Scavenging P2a: settlement value logic + tests
+PM deferred the whitebox visuals (P1b) → redirected next step to the settlement math. PM also restated a working
+rule: **ask before key design/tradeoff decisions** (saved to memory `ask-pm-on-key-decisions`). Asked + PM locked the
+one open design point: **condition tiers = Good ×1.0 / Worn ×0.7 / Damaged ×0.4** (per-item, tunable knobs). Added to
+`Scavenge.Core`:
+- `SettlementTypes.cs` — `ItemCondition` enum + `SettlementItem` (input) + `SettlementLine` (output).
+- `ScavengeSettlementCalculator.cs` — `Settle(items)` → `SettlementResult` (per-item lines + total + commissionedDelivered).
+  Per item `payout = round(base × conditionMult ×(commissioned?1.4:1))` away-from-zero; `total = Σ line payouts`.
+  Multipliers injected (DI knobs); negative base clamped; null/empty safe. Does NOT touch tower `MissionRewardCalculator`.
+- `ScavengeSettlementCalculatorTests` (12). **Scavenge logic now 34 tests** (22 P1a + 12 P2a).
+- Stated-not-flagged-key assumptions: commissioned bonus = ×mult on the commissioned item, stacks with condition;
+  round away from zero (matches tower); dispute + free-salvage mode deferred (P2 later / P4).
+- **VERIFIED GREEN via headless batch** (2026-06-17): `ScavengeSettlementCalculatorTests` 12/12 Passed; suite 180
+  total / 173 passed / 7 failed — the 7 are the SAME `McpUnity.Tests.BatchExecuteToolTests` (headless noise), no new
+  failures = zero regression. Scavenging logic now **34/34** (P1a 22 + P2a 12). Editor still CLOSED. UNCOMMITTED.
+
+## Session 2026-06-17 (cont.) — Scavenging B: item-definition data layer (structure only)
+PM chose "structure + config only, real item values deferred". Added (Assembly-CSharp; reaches Scavenge.Core via
+auto-reference, same as PowerGateBreaker→Mission.Core):
+- `Scripts/Scavenge/ScavengeCategory.cs` — 12-category content enum (spec roster).
+- `Scripts/Scavenge/ScavengeItemDefinition.cs` — SO (id/displayName/category/weight/allowedSurfaces/baseValue/prefab;
+  `baseValue` PLACEHOLDER; `ToSpec()` → Core `ScavengeItemSpec`).
+- `Scripts/Scavenge/ScavengingConfig.cs` — SO of spec-locked knobs (cap 12, items 10–14, bonus 1.4, condition
+  1.0/0.7/0.4, pocket 2); `CreateSettlementCalculator()` / `CreateVanLedger()` wire knobs → Core objects.
+- `Editor/ScavengeContentBuilder.cs` — menu `… > Scavenge > Build Config + Sample Items`.
+- **VERIFIED**: batch #3 → 0 `error CS`, Assembly-CSharp(+Editor) compiled, only the 7 MCP failures (zero regression).
+  Assets generated **headless via `-executeMethod ScavengeContentBuilder.Build -quit`** (exit 0): confirmed on disk —
+  `Assets/Resources/Config/ScavengingConfig.asset` + 2 PLACEHOLDER samples under `Assets/_Project/Content/Scavenge/Items/`.
+- DEFERRED (PM-owned): real 12-item roster + balanced base values = a later economy/balance pass.
+- **TOOLING WIN**: headless asset/tool execution via `-executeMethod` (no GUI, no bridge) — see memory.
+- UNCOMMITTED. Scavenging so far: P1a logic ✓ + P2a settlement logic ✓ + B data layer ✓. Still open: P1b runtime
+  (LootSpawner/ScavengeItem/van-weight-enforce — needs the deferred whitebox visuals), economy values pass, P2 reveal UI.
+
+## Session 2026-06-17 (cont.) — Scavenging P1b sub-blocks 1-3 (item + visuals + spawner)
+PM chose P1b (runtime) + minimal whitebox (3 props by weight). **KEY FINDING from reading code**: `PlayerHotbar` is
+gear-only (Flashlight/Battery enum) — loot does NOT fit it. Loot reuses **Carriable + CarrySystem** (like the eco
+column); weightClass drives van units, separate from isHeavy (carry style). Built:
+- `Scripts/Scavenge/ScavengeItem.cs` — Carriable subclass + IInteractable (mirrors EcoColumnCarriable);
+  OnInteractStart→CarrySystem.TryPickUp; itemId/weight/category/hidden baseValue + `ConfigureServer()`.
+- `Editor/WhiteboxLootBuilder.cs` — menu `…>Scavenge>Build Whitebox Loot Props`; 3 prefabs (Light/Medium/Heavy) at
+  `Resources/Loot/`, each Cube+Rigidbody+NetworkObject+ScavengeItem (weightClass + isHeavy set via SerializedObject).
+- `Scripts/Scavenge/LootSpawner.cs` — NetworkBehaviour; host-only OnNetworkSpawn: Resources.LoadAll defs +
+  ScavengingConfig + find LootAnchors (sorted by world pos) → `LootSpawnPlanner.Plan` → server Instantiate+`Spawn(true)`
+  (TowerLayout pattern) → `ConfigureServer`. Clients receive items via replication.
+- Moved `ScavengeContentBuilder` output → `Resources/Scavenge/Items` (runtime-loadable).
+- **VERIFIED headless** (`-executeMethod`, exit 0): project compiles **0 CS errors**; 3 loot prefabs generated and
+  **auto-registered in DefaultNetworkPrefabs** (GUIDs confirmed present at lines 33/38/43); 2 item defs + ScavengingConfig
+  in Resources. Full spawn data chain wired.
+- ORPHANS (harmless): old samples still under `_Project/Content/Scavenge/Items` (superseded by the Resources copies) — clean up later.
+- **REMAINING**: (4) van weight gate at a cargo zone; a live PLAY-TEST. Both need a test bed — `Module_Showcase` has
+  anchors (can test spawn+carry by adding a LootSpawner + hosting) but NO van; the tower has a van but NO modular anchors.
+  The full deposit/weight loop needs a mission scene assembling modular rooms + a van (separate integration; doesn't exist yet).
+- UNCOMMITTED.
 
 ## Recovery
 
