@@ -1,10 +1,12 @@
 # Quick Design Spec: Scavenging Item System
 
 **Type**: New Small System
-**Scope**: Core mission loop — item pickup, hidden value, van weight limit,
-settlement reveal, and one-dispute bargaining. Does NOT define item art,
-map spawn placement, or individual client content (those are authored separately).
-**Date**: 2026-06-16
+**Scope**: Core mission loop — item pickup, hidden value, item condition,
+van weight limit, settlement reveal, and one-dispute bargaining. Does NOT
+define item art, map spawn placement, or individual client content (those
+are authored separately).
+**Date**: 2026-06-16 (updated 2026-06-18: item condition system, revised
+negotiation, A镜 upgrade)
 **Estimated Implementation**: 1–2 weeks (phased)
 
 ## Overview
@@ -23,8 +25,9 @@ This loop creates three distinct decision moments:
 ## Core Rules
 
 ### 1. Items Have No Visible Value During Missions
-Items show only: name, weight class (light / medium / heavy), and visual
-category (document, specimen, personal effect, technology, etc.).
+Items show only: name, weight class (light / medium / heavy), condition
+(完好 / 一般 / 受损 / 污染), and visual category (document, specimen,
+personal effect, technology, etc.).
 No price tag, no scanner value, no indication of client preference matching.
 
 ### 2. Commission Text Is the Only Signal
@@ -68,19 +71,72 @@ run settles on whatever was brought back. The bonus is 1.3–1.5× the item's
 base value, never more. Finding the commissioned target should feel like a
 good run, not finding it should not feel like failure.
 
-### 6. One Dispute Per Settlement
-After the full settlement reveal, players may file one dispute on any single
-item they believe was undervalued. The client responds in writing (authored).
-Possible outcomes:
-- **Concede**: price adjusts upward (+15–30% of that item's value)
-- **Reject with clause**: price unchanged, response cites contract language
-- **Counter-reduce**: client invokes a previously unmentioned condition,
-  reducing the price further
+### 6. Item Condition
 
-The outcome is not random — it is authored per item type and client type.
-Players who dispute strategically (items with strong emotional or cultural
-value to that specific client) fare better. Players who dispute reflexively
-learn the system's limits.
+Every item has a condition state shown on pickup alongside weight class:
+
+| State | Display | Meaning |
+|---|---|---|
+| 完好 | Intact | Sealed, clean, undamaged |
+| 一般 | Worn | Light dust, age, minor wear |
+| 受损 | Damaged | Physical damage, water damage, structural compromise |
+| 污染 | Contaminated | MRC-7 residue; may appeal to certain clients, penalised by others |
+
+**Initial condition is determined by environment:**
+- Sealed storage rooms, high shelves → 完好
+- Open corridors, standard rooms → 一般
+- Flooded/damaged areas → 受损
+- Near monster nests, deep infection zones → 污染
+
+**Condition degrades through player behaviour:**
+- Dropping a heavy item from height → downgrades one step
+- Player Infection Exposure > 70 when picking up item in deep zone → downgrades
+  one step (see `danger-infection-system-2026-06-18.md`)
+- Being struck by a monster while carrying an item → downgrades one step
+
+Condition affects the base price the client offers at settlement and the
+outcome of disputes (see Rule 7).
+
+**A镜 upgrade (late-game shop item):**
+By default, condition is shown as one of the four labels only (完好/一般/受损/污染).
+Players can purchase an **A镜 (Analysis Lens)** from the HQ shop in later
+license stages. When equipped, item condition shows as a **precise percentage
+(0–100%)** within its bracket, giving more granular negotiation information.
+Example: without A镜 → `状态：受损`; with A镜 → `状态：受损 (34%)`.
+This is a meaningful late-game upgrade that rewards experienced players who
+know how to use the extra precision in disputes.
+
+### 7. One Dispute Per Settlement (revised 2026-06-18)
+
+After the full settlement reveal, players may file **one dispute** on any
+single item. The outcome is determined by item condition and commission match —
+not random. The result is **locked**: once the client responds, the new price
+(higher or lower) is final. Players cannot revert to the original offer.
+
+**Outcome table:**
+
+| Item condition | Commission match | Client response |
+|---|---|---|
+| 完好 or 一般 | High match | Concede: +15–30% |
+| 完好 or 一般 | Low match | Reject (price unchanged) |
+| 受损 | Any | Counter-reduce: −15–25% (locked) |
+| 污染 | Matched client type | Concede or reject |
+| 污染 | Mismatched client | Counter-reduce: −20–30% (locked) |
+
+The counter-reduce is never random — the client always provides an authored
+reason that is polite, institutional, and morally bankrupt. Example:
+
+> `估价修订：120G → 85G`
+> `理由：样品表面附有地表污染残留，影响展示价值。清洁成本已从价款中预扣。`
+> `——地球遗产征集事务所 · 自动估价系统`
+
+This expresses Martian client power: they always find a legitimate-sounding
+excuse to pay less. The satire is in the tone, not the number.
+
+**Co-op dispute protocol:** all players see the item list simultaneously.
+The team discusses which item to dispute before anyone presses. One press
+commits the whole team. This makes the dispute a genuine collective decision,
+not an individual reflex.
 
 The dispute response is always written in the client's register (institutional
 or personal). The tone is the content.

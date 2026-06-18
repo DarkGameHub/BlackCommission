@@ -32,7 +32,7 @@ Design test: name the job title first, then what broke. See art-bible.md Section
 ## Anti-Pillars (what this game is NOT)
 
 - **Not a hero narrative** — players are bottom-rung contractors; the invoice is the motivation, not a cause.
-- **Not a numerical pressure meter** — hostile takeover threat is expressed as narrative events (letters, visits), never as a 0–100 UI bar.
+- **Not a numerical pressure meter** — license revocation threat is expressed as narrative events (letters, office condition, clients going cold), never as a 0–100 UI bar.
 - **Not a moral judge** — the game presents facts; the settlement screen does the talking.
 - **Not a Lethal Company clone** — LC is a production-method reference only (ritual, co-op tension, readable staging). No copied assets, UI, quota fiction, or map layouts.
 - **Not a clear right-vs-wrong ending** — both endings (Go to Mars / Stay on Earth) must be genuinely tempting. "Stay" is the harder choice; "Go" is the easier one. Neither is a verdict. See `docs/world-background-2098.md` Ending Design Philosophy.
@@ -43,14 +43,19 @@ Design test: name the job title first, then what broke. See art-bible.md Section
 - Server-authoritative multiplayer state (host-authored) for all mission-critical state.
 - Unity + Netcode for GameObjects; no custom backend (Steam/Relay later as transport).
 
-## Progression Backbone (locked 2026-06-09)
+## Progression Backbone (updated 2026-06-18)
 
-Five license stages drive all progress — not office levels, not a reputation bar:
+Four license stages drive all progress. Two independent tracks run simultaneously:
+- **License Stage** (1–4): gates job access, advances through story mission completions
+- **Earth Deterioration Level** (1–5): drives safety infrastructure cost, advances with total missions elapsed regardless of license stage
 
-| Stage | License | Unlock | Emotional register |
+| Stage | License | Job access | Emotional register |
 |---|---|---|---|
-| 1 | Temporary Recovery Permit | Basic commissioned jobs | Just trying to pay the debt |
-| 2 | Formal Recovery Permit | Weirder clients, satirical reveals sharpen | These people are consuming Earth |
-| 3 | Orbital Transport Qualification | Free Collection (junk collection) unlocks | I'm surviving on Earth's ruins |
-| 4 | Special Sample Transfer Permit | **Black Commission** formally appears — high pay, dark cost | These jobs are getting darker |
-| 5 | Immigration Qualification Review | Unlocked after all story missions complete | Do you still want to go to Mars? |
+| 1 | 临时采回许可 | Basic commissioned jobs | Just trying to pay the debt |
+| 2 | 正式采回许可 | Weirder clients; free salvage unlocks | These people are consuming Earth |
+| 3 | 特殊样本转运许可 | **Black Commission** available — high pay, dark cost | These jobs are getting darker |
+| 4 | 移民资格审查 | Ending-choice gate: Go to Mars or Stay on Earth | Do you still want to go? |
+
+**License revocation = game over.** Mars-capital revokes the license when the office cannot sustain safety standards (mid-game) or when a Stay-on-Earth player can no longer operate (ending). No competitor takeover — the license was always theirs to withdraw.
+
+**Stay-on-Earth path:** Mars clients stop commissioning work after Stage 4. Free salvage remains. Earth Deterioration continues. Safety costs outpace free salvage income — the office fades out rather than ending suddenly.
