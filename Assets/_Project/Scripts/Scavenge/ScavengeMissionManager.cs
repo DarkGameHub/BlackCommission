@@ -88,7 +88,7 @@ public class ScavengeMissionManager : NetworkBehaviour
         if (cargoZone == null) cargoZone = ScavengeCargoZone.Instance;
         SettlementResult result = cargoZone != null
             ? cargoZone.SettleCargo()
-            : new SettlementResult(System.Array.Empty<SettlementLine>(), 0, false);
+            : new SettlementResult(System.Array.Empty<SettlementLine>(), 0);
 
         int money = result.Total;
         SyncedState.Value = (int)logic.State;

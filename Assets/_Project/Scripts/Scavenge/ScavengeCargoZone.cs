@@ -156,7 +156,7 @@ public class ScavengeCargoZone : NetworkBehaviour
     public SettlementResult SettleCargo()
     {
         if (manifest == null)
-            return new SettlementResult(System.Array.Empty<SettlementLine>(), 0, false);
+            return new SettlementResult(System.Array.Empty<SettlementLine>(), 0);
         var config = Resources.Load<ScavengingConfig>("Config/ScavengingConfig");
         var calculator = config != null
             ? config.CreateSettlementCalculator()

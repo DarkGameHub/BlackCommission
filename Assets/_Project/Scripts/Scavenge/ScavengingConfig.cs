@@ -7,7 +7,7 @@ namespace BlackCommission.Scavenge
     /// defaults. Authored at <c>Assets/Resources/Config/ScavengingConfig.asset</c> so the
     /// runtime can <c>Resources.Load</c> it. Feeds <see cref="VanWeightLedger"/> (capacity),
     /// <see cref="LootSpawnPlanner"/> (item count) and <see cref="ScavengeSettlementCalculator"/>
-    /// (condition + commissioned multipliers).
+    /// (condition + client-preference multipliers).
     /// </summary>
     [CreateAssetMenu(menuName = "Black Commission/Scavenging Config", fileName = "ScavengingConfig")]
     public class ScavengingConfig : ScriptableObject
@@ -23,7 +23,8 @@ namespace BlackCommission.Scavenge
         public int lightItemPocketSlots = 2;
 
         [Header("Settlement")]
-        public float commissionedBonusMultiplier = 1.4f;
+        [Tooltip("Favoured-category multiplier on Commissioned/Black runs (PM 2026-06-18, default 1.3).")]
+        public float clientPreferenceMultiplier = 1.3f;
         [Tooltip("Condition value multipliers (PM 2026-06-17).")]
         public float conditionGood = 1.0f;
         public float conditionWorn = 0.7f;
@@ -31,7 +32,7 @@ namespace BlackCommission.Scavenge
 
         /// <summary>Build a settlement calculator wired to these knobs.</summary>
         public ScavengeSettlementCalculator CreateSettlementCalculator()
-            => new ScavengeSettlementCalculator(conditionGood, conditionWorn, conditionDamaged, commissionedBonusMultiplier);
+            => new ScavengeSettlementCalculator(conditionGood, conditionWorn, conditionDamaged, clientPreferenceMultiplier);
 
         /// <summary>Build a fresh van weight ledger from the configured capacity.</summary>
         public VanWeightLedger CreateVanLedger() => new VanWeightLedger(vanWeightCapacity);

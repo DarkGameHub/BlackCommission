@@ -3,16 +3,16 @@ using NUnit.Framework;
 using BlackCommission.Scavenge;
 
 /// <summary>
-/// EditMode coverage for ScavengeSettlementCalculator (scavenging quick-spec §4/§5):
-/// per-item condition multipliers (PM-locked 1.0/0.7/0.4), commissioned bonus (1.4×),
-/// sum-of-lines total, round-away-from-zero, and data-driven knobs.
+/// EditMode coverage for ScavengeSettlementCalculator (scavenging-core-loop §4):
+/// per-item condition multipliers (PM-locked 1.0/0.7/0.4), the client-preference multiplier
+/// (1.3× for favoured-category items), sum-of-lines total, round-away-from-zero, data-driven knobs.
 /// </summary>
 public class ScavengeSettlementCalculatorTests
 {
     static ScavengeSettlementCalculator NewCalc() => new ScavengeSettlementCalculator();
 
-    static List<SettlementItem> One(string id, int baseValue, ItemCondition cond, bool commissioned = false)
-        => new List<SettlementItem> { new SettlementItem(id, baseValue, cond, commissioned) };
+    static List<SettlementItem> One(string id, int baseValue, ItemCondition cond, bool favoured = false)
+        => new List<SettlementItem> { new SettlementItem(id, baseValue, cond, favoured) };
 
     [Test]
     public void test_empty_delivery_settles_to_zero()
@@ -20,7 +20,6 @@ public class ScavengeSettlementCalculatorTests
         var r = NewCalc().Settle(new List<SettlementItem>());
         Assert.AreEqual(0, r.Total);
         Assert.AreEqual(0, r.Lines.Count);
-        Assert.IsFalse(r.CommissionedTargetDelivered);
     }
 
     [Test]
@@ -64,27 +63,28 @@ public class ScavengeSettlementCalculatorTests
     }
 
     [Test]
-    public void test_commissioned_target_gets_bonus()
+    public void test_favoured_item_gets_preference_multiplier()
     {
-        var r = NewCalc().Settle(One("relic", 100, ItemCondition.Good, commissioned: true));
-        Assert.AreEqual(140, r.Lines[0].Payout); // 100 × 1.0 × 1.4
-        Assert.IsTrue(r.Lines[0].CommissionedBonusApplied);
-        Assert.IsTrue(r.CommissionedTargetDelivered);
+        // 100 × 1.0 (Good) × 1.3 (favoured category) = 130.
+        var r = NewCalc().Settle(One("effects", 100, ItemCondition.Good, favoured: true));
+        Assert.AreEqual(130, r.Lines[0].Payout);
+        Assert.IsTrue(r.Lines[0].PreferenceApplied);
     }
 
     [Test]
-    public void test_commissioned_bonus_stacks_with_condition()
+    public void test_preference_stacks_with_condition()
     {
-        var r = NewCalc().Settle(One("relic", 100, ItemCondition.Worn, commissioned: true));
-        Assert.AreEqual(98, r.Lines[0].Payout); // 100 × 0.7 × 1.4 = 98
+        // 100 × 0.7 (Worn) × 1.3 (favoured) = 91.
+        var r = NewCalc().Settle(One("effects", 100, ItemCondition.Worn, favoured: true));
+        Assert.AreEqual(91, r.Lines[0].Payout);
     }
 
     [Test]
-    public void test_no_commissioned_target_no_bonus_flag()
+    public void test_non_favoured_item_pays_market_rate_no_flag()
     {
         var r = NewCalc().Settle(One("doc", 100, ItemCondition.Good));
-        Assert.IsFalse(r.CommissionedTargetDelivered);
-        Assert.IsFalse(r.Lines[0].CommissionedBonusApplied);
+        Assert.IsFalse(r.Lines[0].PreferenceApplied);
+        Assert.AreEqual(100, r.Lines[0].Payout); // market rate, no multiplier
     }
 
     [Test]
@@ -106,9 +106,9 @@ public class ScavengeSettlementCalculatorTests
     [Test]
     public void test_custom_knobs_are_respected()
     {
-        // Injected: Worn = 0.5, commissioned bonus = 2.0 → 100 × 0.5 × 2.0 = 100.
-        var calc = new ScavengeSettlementCalculator(conditionWorn: 0.5f, commissionedBonusMultiplier: 2.0f);
-        Assert.AreEqual(100, calc.Settle(One("relic", 100, ItemCondition.Worn, commissioned: true)).Total);
+        // Injected: Worn = 0.5, client preference = 2.0 → 100 × 0.5 × 2.0 = 100.
+        var calc = new ScavengeSettlementCalculator(conditionWorn: 0.5f, clientPreferenceMultiplier: 2.0f);
+        Assert.AreEqual(100, calc.Settle(One("effects", 100, ItemCondition.Worn, favoured: true)).Total);
     }
 
     [Test]
