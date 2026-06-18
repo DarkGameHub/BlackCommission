@@ -3,6 +3,113 @@
 **Last updated**: 2026-06-18
 **Stage**: Production (see `production/stage.txt`)
 
+## Session 2026-06-18 (cont. 4) — settlement-reveal build, slice 1 (calculator → B model)
+
+- PM approved starting dev on the **per-item settlement reveal** (the 4-agent-unanimous moat).
+- **Finding:** per-item DATA already exists (`SettlementResult.Lines`); the "total-only card" is a UI gap, not a
+  data gap. But the calculator was still on the OLD commissioned-target model (1.4×) — B (category preference)
+  was a doc-only change, not in code.
+- **Slice 1 DONE (code, see commits):** reconciled the pure logic core to B — `SettlementItem.IsFavoured`,
+  `SettlementLine.PreferenceApplied`, `SettlementResult` drops `CommissionedTargetDelivered`, calculator uses
+  `clientPreferenceMultiplier` (1.3; `ScavengingConfig` knob renamed 1.4→1.3); 13 EditMode tests rewritten; 2
+  caller one-liners. 6 files, +60/−55. No dangling old-API refs.
+- **VERIFIED GREEN** (headless EditMode, 2026-06-18): total 181 / passed 174 / failed 7 — the 7 are ALL
+  `McpUnity.Tests.BatchExecuteToolTests` (known bridge-package noise, not game code). All 12 calculator
+  tests pass; the 174 include every game EditMode test, so the `SettlementResult`/`SettlementItem`
+  signature change broke nothing project-wide. Slice 1 done + committed (branch `scavenge-settlement-reveal`).
+### ▶ NEXT — Slice 2 (runtime wiring) STARTING BRIEF (read this first after /clear; the conversation context is gone)
+
+**On branch `scavenge-settlement-reveal`.** Goal of the whole build: the **per-item settlement reveal** (the
+4-agent-unanimous moat). Slice 1 (calculator → B model) is DONE + verified green + committed.
+
+**Key fact that shapes everything:** the per-item DATA already exists —
+`ScavengeSettlementCalculator.Settle()` returns `SettlementResult.Lines` (per item:
+ItemId / BaseValue / Condition / PreferenceApplied / Payout) + Total. The "total-only card" is a UI/wiring gap,
+NOT a data gap. So slice 2-4 = feed the right inputs in, and surface the lines out.
+
+- **Task A — feed real data into the deposit path.** `ScavengeCargoZone.TryStow` (~line 128) hardcodes
+  `new SettlementItem(item.ItemId, item.BaseValue, ItemCondition.Good)` → IsFavoured defaults false, condition
+  always Good. Wire the item's real `Condition` + compute `IsFavoured` = (item.Category ∈ the run client's
+  favoured categories). FIRST READ: `Assets/_Project/Scripts/Scavenge/ScavengeItem.cs` (does it carry
+  Category/Condition?), `ScavengeItemDefinition.cs`, `LootSpawner.cs` (stamp condition+category at spawn?),
+  `ScavengeCategory.cs` (12 categories). NOTE: pure-logic `Scavenge.Core` must NOT depend on `ScavengeCategory`
+  (content layer) — that is why `SettlementItem.IsFavoured` is a caller-precomputed bool.
+- **Task B — where do favoured categories live?** The mission/client must declare 1–2 favoured categories.
+  Check `OfficeTaskDefinition` + the tower mission setup; pick the home (likely the task/client definition).
+- **Task C — flow `Lines` to the UI.** `Assets/_Project/Scripts/Office/MvpPendingReward.cs` currently carries
+  Total only; the reveal needs the per-item lines. READ: `MvpPendingReward.cs`, `UI/SettlementCardOverlay.cs`,
+  `UI/SettlementUIController.cs`. Then slice 3 (author the tower client's per-item usage notes) + slice 4
+  (per-item reveal overlay: item | condition | price | note, emotional-weight order, last item lands hardest).
+- ⚠️ **UX spec caveat:** `design/ux/settlement.md` is the OLD tower card (flat reward + completeness +
+  single mission note) — do NOT build to it. The per-item reveal is specced in
+  `design/quick-specs/scavenging-item-system-2026-06-16.md` §4/§6 + `design/gdd/scavenging-core-loop.md` §3.7.
+- **Verify** new logic with EditMode tests (TDD). Headless run (editor closed): find Unity at
+  `C:\Program Files\Unity\Hub\Editor\6000.4.7f1\Editor\Unity.exe`, then
+  `Unity.exe -runTests -batchmode -nographics -projectPath D:/BlackCommission -testPlatform EditMode -testResults <out>.xml -logFile <out>.log`
+  — clear `Temp/UnityLockfile` first; **7 `McpUnity.Tests.BatchExecuteToolTests` failures = ignorable noise**;
+  revert any `ProjectSettings/*.asset` the run auto-touches. Slice-1 baseline was 174 passed / 7 noise.
+
+## Session 2026-06-18 (cont. 3) — gap reconcile («先合»)
+
+- **Item condition locked at 3 states (污染 cut, PM).** Reconciled `scavenging-item-system` + `danger-infection`
+  spec to 3 states (完好/一般/受损; GDD §4 was already 3-state). **New mechanic:** a valuable item
+  (baseValue ≥ `valuableConditionThreshold`) degrades 1 step on a "hard" release outside the van —
+  downed / knocked from hands / from height / thrown; van-deposit + gentle set-downs are safe.
+- **OfficeLevel / XP / per-level category-unlock = CUT** (PM): all item categories always present; license
+  gates jobs, client preference differentiates value.
+- **`office-economy-progression.md` fully reconciled to money-only:** removed Partial + XP + OfficeLevel/
+  leveling; reward MODEL realigned to `gross = Σ payout_i` (scavenge salvage), Failure = `salvage ×
+  failurePayoutRate`; tuning knobs + AC + edge cases cleaned; Open Q1 reframed (thin-haul, not partial).
+- **Mechanical sweeps:** "5 license stages → 4 / Stage 5 → Stage 4" across scavenging-core-loop / map-sequence /
+  game-concept / item-system. **`mission-state-machine.md` got a SUPERSEDED banner** → scavenge loop.
+- **Deferred (PM «其余之后»):** `entities.yaml`, UX docs (settlement/boarding/hud/office-computer),
+  monster-system.md (2 forcedTimeoutOutcome refs), mission-pool-selection, docs/mvp-core-loop.md, + a full
+  rewrite of mission-state-machine.md. None block building.
+
+## Session 2026-06-18 (cont. 2) — Lethal Company differentiation review (4-agent)
+
+- Ran a 4-specialist parallel review (creative-director / game-designer / level-designer / narrative-director)
+  on PM Q "too similar to Lethal Company?". **Verdict: unanimous MEDIUM** — loop skeleton is LC-shaped
+  (genre-inherent), identity is genuinely BC but lives downstream and is **mostly not in the runtime yet**
+  (~80/20 fiction/mechanics carry the "not-LC", inverse of the current build).
+- **Unanimous #1 finding:** build the **per-item settlement reveal** (authored client usage notes) — all four
+  independently crowned it the moat; flagged Core/blocking but still a total-only card. Synthesis written to
+  `design/lethal-company-differentiation-2026-06-18.md`.
+- **Open tension flagged:** creative-director's "add one environmental danger accelerator" conflicts with the
+  C2 "pure time, no action spikes" lock — PM call, left open.
+
+## Session 2026-06-18 (cont.) — pulled remote + locked open design Q «B»
+
+- **Pulled `origin/main`** (6c3e941→adefee3, clean ff): economy gutted to money-only in CODE,
+  scavenging-core GDD landed, 2026-06-18 economy/danger/item-condition design overhaul.
+- **Locked open design question B (Free Salvage vs Commissioned)** → **R1: no target item.**
+  A Commissioned/Black job differs from Free Salvage by (1) client **category preference**
+  (favoured 1–2 categories settle `× clientPreferenceMultiplier`, default **1.3**) and (2) per-item
+  settlement satire. No designated target, no guaranteed spawn, **no `Partial` outcome** (Success/
+  Failure only). This resolved a live self-contradiction (§0 D-A vs §3.4 body).
+- **Reconciled the docs** (PM-approved full clean): `scavenging-core-loop.md` (§0 new D-G, §1, §3.4,
+  §3.5, §3.6, §4, §5, §6, §7, §8, §9) + `scavenging-item-system-2026-06-16.md` (§5, knobs, affected
+  systems, AC). `git diff --check` clean; ~93 ins / 85 del. **UNCOMMITTED** (per project rule).
+  Bonus: R1 SIMPLIFIES the code roadmap — drops the "guaranteed-target placement" + "emit Partial"
+  net-new features; remaining work = add a per-item `category` stamp + apply the preference multiplier.
+- **Locked A (license advance gates):** advance = complete that stage's **story mission**, which appears
+  after `license_story_gate[stage]` total missions (**4 / 10 / 18**, balance-pass TBD); no auto-advance,
+  but rising EarthDet cost makes camping a low stage unsustainable. Written to `office-economy-progression.md`
+  (rule 8, new License-advancement subsection, Open Q2 resolved, 3 tuning knobs).
+- **Locked C (danger formula + monster per-phase):** hybrid — `danger_level` continuous & **pure time**
+  (no action spikes, PM-locked); the danger spec's 4 phases (Survey/Active/**Pursuit**/Saturation @
+  0/8/18/28 min) are discrete markers, monster activity lerps within. Renamed phase Hunt→**Pursuit** to
+  un-collide with AI state `Hunt`. Reconciled `monster-system.md` (4 edits, dropped old 3-phase %/action_spike
+  model) + `danger-infection-system-2026-06-18.md` (8 edits).
+- **D direction RESOLVED (R-B):** man-made sites in biomes (not pure wilderness, not sealed interiors); existing
+  Entry/Mid/Deep hero-anchor framework kept. **DONE:** formalized the framework + biome-approach layer + B/A/C
+  integration + tower worked-template, written into `map-sequence-and-modular-system.md` (+ a Biome column on the
+  map table). **Remaining:** per-map hero-room fill (3 anchors + client favoured-categories) for maps 2–6 = a
+  later level-design pass.
+- **Flagged, NOT in B's scope:** item condition is 3-state in the GDD (§4 {1.0/0.7/0.4}) but 4-state
+  in the 2026-06-18 design (完好/一般/受损/污染); "five license stages" refs in §9/safety-cost are stale
+  (now 4). Separate reconciliations.
+
 ## Session 2026-06-18 — Economy & Map Design Overhaul
 
 ### Locked design decisions (PM Yan Dai)
@@ -53,7 +160,7 @@
 - Updated spec: `design/quick-specs/scavenging-item-system-2026-06-16.md`
 
 **Outdoor environments:**
-- All 6 maps use natural environments (not themed man-made areas)
+- ~~All 6 maps use natural environments (not themed man-made areas)~~ → **refined to R-B (2026-06-18 cont.):** 6 **man-made sites, each set in / approached through a natural biome** (outdoor approach + indoor core). `map-sequence-and-modular-system.md`'s named sites + narrative arc + Entry/Mid/Deep hero framework all KEPT.
 - Coastal / Forest / Urban meadow / Open plain / Suburban grassland / Industrial wasteland
 - Consistent with world: Earth reclaimed by infection, nature reasserting
 
@@ -64,10 +171,10 @@
   cleanup (flagged, not yet done — low priority vs implementation work)
 
 ### Pending design decisions (Open)
-- Map 2-6 hero rooms: completely undefined (high priority before level design sprint)
-- License stage advance gates: what triggers 1→2→3→4? Story missions? Mission count? Both?
-- Free Salvage vs Commissioned mechanical difference: not yet defined
-- Danger Level precise formula + monster behaviour per phase: needs monster system GDD update
+- Map 2-6 hero rooms: ⏳ direction RESOLVED 2026-06-18 (R-B: man-made sites in biomes); framework + tower template = next; per-map fill later
+- ~~License stage advance gates~~ ✅ RESOLVED 2026-06-18 (story mission + min-count gate 4/10/18; no auto-advance) — see cont. entry at top
+- ~~Free Salvage vs Commissioned mechanical difference~~ ✅ RESOLVED 2026-06-18 (R1: no target item; client category preference ×1.3) — see cont. entry at top
+- ~~Danger Level precise formula + monster behaviour per phase~~ ✅ RESOLVED 2026-06-18 (hybrid: continuous pure-time danger_level + 4 discrete phases; Hunt phase→Pursuit; monster-system.md reconciled) — see cont. entry at top
 - Map content (themes, missions, enemies): discussion started, not documented yet
 
 ## Current Focus
