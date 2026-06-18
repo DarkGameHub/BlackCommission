@@ -64,41 +64,45 @@ Client feedback: [authored text, optional]
 Items are displayed in emotional weight order (authored per run, not sorted by
 price). The last item revealed should be the one that lands hardest.
 
-### 5. Commissioned Target (Optional Overlay)
-A commission may designate one specific item for bonus pay. If found and
-extracted, bonus is applied at settlement. If not found, no penalty — the
-run settles on whatever was brought back. The bonus is 1.3–1.5× the item's
-base value, never more. Finding the commissioned target should feel like a
-good run, not finding it should not feel like failure.
+### 5. Client Category Preference (Commissioned / Black Jobs)
+A Commissioned or Black Commission client favours 1–2 item **categories**,
+hinted at — never named — in the commission text. Items of a favoured category
+settle at `× clientPreferenceMultiplier` (default 1.3); every other item, and
+all Free Salvage, settles at market rate. There is **no designated target
+item** and nothing gates completion (per `scavenging-core-loop.md` §0 D-G).
+Reading the commission well and hauling the favoured categories should feel
+like a good run; ignoring it just means market rate.
 
-### 6. Item Condition
+### 6. Item Condition (3 states — PM locked 2026-06-18, no 污染)
 
-Every item has a condition state shown on pickup alongside weight class:
+Every item has a condition state shown on pickup alongside weight class. There are **three**
+states (the earlier 污染/Contaminated state was cut 2026-06-18 — degradation bottoms out at 受损):
 
-| State | Display | Meaning |
-|---|---|---|
-| 完好 | Intact | Sealed, clean, undamaged |
-| 一般 | Worn | Light dust, age, minor wear |
-| 受损 | Damaged | Physical damage, water damage, structural compromise |
-| 污染 | Contaminated | MRC-7 residue; may appeal to certain clients, penalised by others |
+| State | Display | Settlement ×mult | Meaning |
+|---|---|---|---|
+| 完好 | Intact | ×1.0 | Sealed, clean, undamaged |
+| 一般 | Worn | ×0.7 | Light dust, age, minor wear |
+| 受损 | Damaged | ×0.4 | Physical/water damage, structural compromise — the worst state |
 
 **Initial condition is determined by environment:**
 - Sealed storage rooms, high shelves → 完好
 - Open corridors, standard rooms → 一般
-- Flooded/damaged areas → 受损
-- Near monster nests, deep infection zones → 污染
+- Flooded/damaged areas, and deep infection zones near monster nests → 受损
 
-**Condition degrades through player behaviour:**
-- Dropping a heavy item from height → downgrades one step
-- Player Infection Exposure > 70 when picking up item in deep zone → downgrades
-  one step (see `danger-infection-system-2026-06-18.md`)
-- Being struck by a monster while carrying an item → downgrades one step
+**Condition degrades one step through player behaviour (受损 is the floor):**
+- **A valuable item (baseValue ≥ `valuableConditionThreshold`) released "hard" outside the van**
+  — dropped while **downed**, **knocked out of your hands by a monster hit**, dropped **from
+  height**, or **thrown** to a teammate. Depositing into the van cargo zone, and gentle deliberate
+  set-downs, do **not** degrade. (PM 2026-06-18 — only the van is a safe place to let go of a
+  valuable in a panic; cheap items are unaffected.)
+- Player **Infection Exposure > 70** when picking up an item in the deep zone → −1 step
+  (see `danger-infection-system-2026-06-18.md`).
 
-Condition affects the base price the client offers at settlement and the
-outcome of disputes (see Rule 7).
+Condition multiplies the base price at settlement (`cond_i` in `scavenging-core-loop.md` §4:
+完好 ×1.0 / 一般 ×0.7 / 受损 ×0.4) and shifts dispute outcomes (Rule 7).
 
 **A镜 upgrade (late-game shop item):**
-By default, condition is shown as one of the four labels only (完好/一般/受损/污染).
+By default, condition is shown as one of the three labels only (完好/一般/受损).
 Players can purchase an **A镜 (Analysis Lens)** from the HQ shop in later
 license stages. When equipped, item condition shows as a **precise percentage
 (0–100%)** within its bracket, giving more granular negotiation information.
@@ -181,10 +185,11 @@ Each category has:
 | Knob | Default | Range | Notes |
 |------|---------|-------|-------|
 | `vanWeightCapacity` | 12 units | 8–20 | Per team, not per player |
-| `commissionedBonusMultiplier` | 1.4× | 1.2–1.8 | Applied to commissioned item only |
+| `clientPreferenceMultiplier` | 1.3× | 1.1–1.6 | Applied to favoured-category items on Commissioned/Black runs |
 | `disputeConcedeRate` | ~40% | 30–60% | Authored per item/client combo, not random |
 | `itemsPerMapInstance` | 10–14 | 8–18 | Spawned items per run |
 | `lightItemPocketSlots` | 2 | 1–3 | Per player pocket capacity |
+| `valuableConditionThreshold` | baseValue ≥ 80 | 40–150 | "Valuable" cutoff for hard-drop condition loss (Rule 6) |
 
 All values in `Assets/Resources/Config/ScavengingConfig.asset`.
 
@@ -198,7 +203,7 @@ Three display states (see also: `design/ux/settlement.md`):
 secondary line showing which room the item was found in. The room name is
 the map's authored name, not a generated label.
 
-**Terminal** (Stage 5 final run only): item | what it was | what it became.
+**Terminal** (Stage 4 final run only): item | what it was | what it became.
 Client usage notes are replaced with a brief factual statement of the object's
 original context. No editorial. No client voice. Just the object and its
 trajectory.
@@ -208,7 +213,7 @@ trajectory.
 | System | Impact | Action Required |
 |--------|--------|----------------|
 | `OfficeComputer.cs` | Commission display must show client profile + text | Show client type, background, and commission text |
-| `MissionRewardCalculator.cs` | Replace binary success/partial with per-item sum | New formula: Σ(item base values) × condition modifier + commissioned bonus |
+| `MissionRewardCalculator.cs` | Replace binary success/partial with per-item sum | New formula: Σ(baseValue × condition × clientPreferenceMultiplier) — see `scavenging-core-loop.md` §4 |
 | `OfficeTaskDefinition` | Add: item category hints, client type, generational data | Extend ScriptableObject |
 | `VanTransitOverlay.cs` | Add weight display to van overlay (ticket strip) | Show remaining capacity |
 | `CarrySystem.cs` | Enforce van weight limit on load | Check capacity before allowing cargo-zone deposit |
@@ -220,7 +225,7 @@ trajectory.
 - [ ] Items show name, weight class, and category only — no price during mission
 - [ ] Van weight display shows remaining capacity; full van rejects new items
 - [ ] Settlement reveals each item's price and client note in authored sequence
-- [ ] Commissioned target bonus applies if found; no penalty if not found
+- [ ] Favoured-category items pay `× clientPreferenceMultiplier` on Commissioned/Black runs; Free Salvage pays market rate
 - [ ] Dispute button appears after full reveal; one use per settlement
 - [ ] Dispute response is authored (not random), written in client register
 - [ ] Free Salvage runs show approximate market rate per category (not per item)

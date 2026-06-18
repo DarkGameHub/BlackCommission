@@ -32,8 +32,16 @@ settlement value and negotiation leverage).
 |---|---|---|---|
 | Survey 勘查 | Entry | Fixed patrol routes, narrow detection | Quiet, distant sounds |
 | Active 活跃 | 8 min elapsed | Patrols widen, faster reaction | Frequent monster audio, unstable lights |
-| Hunt 追猎 | 18 min elapsed | Active searching, multiple spawn points live | Close sounds, building pressure audio |
+| Pursuit 追猎 | 18 min elapsed | Active searching, multiple spawn points live | Close sounds, building pressure audio |
 | Saturation 饱和 | 28 min elapsed | Full building hostile | Van evacuation signal (horn + lights flash) |
+
+> **Model (hybrid, locked 2026-06-18):** `danger_level` is a **continuous** time-based value
+> (0→100 over ~28 min, pure time — no player-action spikes). The 4 phases above are **discrete
+> markers** on that curve (they gate spawn activation, environmental signals, the infection
+> `danger_multiplier`, and evac). Monster *activity* (move speed, sensor range, attack frequency)
+> ramps **smoothly** within phases via `monster_activity = lerp(idle, frenzied, danger_level)` —
+> see `design/gdd/monster-system.md`. Phase name **Pursuit** (not "Hunt") avoids colliding with the
+> monster AI state `Hunt`.
 
 Saturation triggers a **forced evacuation countdown** (60 seconds) — the only
 hard deadline in the game. Players either reach the van or the run ends as Failure.
@@ -42,12 +50,12 @@ hard deadline in the game. Players either reach the van or the run ends as Failu
 
 Each time players re-enter the building after returning to the van, the Danger
 Level phase advances by one. A team that makes a second trip enters at Active,
-not Survey. Third trip enters at Hunt.
+not Survey. Third trip enters at Pursuit.
 
 ```
-Trip 1: Survey → Active → Hunt → Saturation
-Trip 2: Active → Hunt → Saturation (compressed window)
-Trip 3: Hunt → Saturation (very short window)
+Trip 1: Survey → Active → Pursuit → Saturation
+Trip 2: Active → Pursuit → Saturation (compressed window)
+Trip 3: Pursuit → Saturation (very short window)
 ```
 
 This makes multi-trip runs a high-risk strategy, not a default optimal path.
@@ -58,7 +66,7 @@ This makes multi-trip runs a high-risk strategy, not a default optimal path.
 |---|---|---|---|
 | `surveyDuration` | 8 min | 5–12 min | First safe exploration window |
 | `activeDuration` | 10 min | 6–15 min | Middle tension phase |
-| `huntDuration` | 10 min | 5–15 min | High-pressure phase |
+| `pursuitDuration` | 10 min | 5–15 min | High-pressure phase (was huntDuration) |
 | `saturationCountdown` | 60 s | 30–90 s | Hard evac window |
 | `multiTripPhaseAdvance` | 1 phase | 0–2 | How much phase advances per re-entry |
 
@@ -75,7 +83,7 @@ exposure_per_minute = base_rate × danger_multiplier[phase] × zone_factor[zone]
 | `base_rate` | 3 / min | Baseline just for being inside |
 | `danger_multiplier[Survey]` | ×1.0 | — |
 | `danger_multiplier[Active]` | ×1.5 | — |
-| `danger_multiplier[Hunt]` | ×2.5 | — |
+| `danger_multiplier[Pursuit]` | ×2.5 | — |
 | `danger_multiplier[Saturation]` | ×4.0 | — |
 | `zone_factor[Entry/Corridor]` | ×1.0 | Standard areas |
 | `zone_factor[Mid zone]` | ×1.3 | Deeper areas |
@@ -84,7 +92,7 @@ exposure_per_minute = base_rate × danger_multiplier[phase] × zone_factor[zone]
 **Example calculations:**
 
 - 5 min in corridor, Survey phase: `3 × 1.0 × 1.0 × 5 = 15 exposure`
-- 5 min in deep zone, Hunt phase: `3 × 2.5 × 2.0 × 5 = 75 exposure`
+- 5 min in deep zone, Pursuit phase: `3 × 2.5 × 2.0 × 5 = 75 exposure`
 - Second trip (starts at Active), 5 min in mid zone: `3 × 1.5 × 1.3 × 5 = 29 exposure`
 
 Exposure is **per player**, not shared. A player who stays at the entry while
@@ -110,13 +118,13 @@ Shown as a line item on the settlement screen:
 
 This is **added to** the safety infrastructure monthly cost, not the same line.
 
-### Item contamination interaction
+### Item condition interaction
 
-Items picked up in high-exposure areas or by high-exposure players have their
-condition degraded toward **污染 (Contaminated)**. Specifically:
+Items picked up by high-exposure players in the deep zone have their condition
+degraded one step. Specifically:
 
 - Player exposure > 70 AND item picked up in deep zone → item condition downgrades
-  one step (完好→一般, 一般→受损, 受损→污染)
+  one step (完好→一般→受损; **受损 is the floor** — the 污染 state was cut 2026-06-18)
 - This connects the personal exposure cost to settlement value loss: staying
   long in the deep zone makes you pay more in decontamination AND makes
   your items worth less to the client.
@@ -149,8 +157,10 @@ through the world.
 
 ## Dependencies
 
-- `design/gdd/monster-system.md` — Danger Level feeds into monster AI state
-  (Active/Hunt phases map to monster AI `Investigate`/`Hunt` states)
+- `design/gdd/monster-system.md` — Danger Level drives monster activity: the continuous
+  `danger_level` feeds `monster_activity = lerp(idle, frenzied, danger_level)`, and phase
+  boundaries gate spawn activation. (Phases are environmental escalation, distinct from the
+  monster AI states `Roam`/`Investigate`/`Hunt`/`Attack`.)
 - `design/gdd/office-economy-progression.md` — settlement deduction appended
   to `SettlementData` alongside safety infrastructure cost
 - `design/quick-specs/scavenging-item-system-2026-06-18.md` — item condition

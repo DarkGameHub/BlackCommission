@@ -12,16 +12,20 @@ The final 1–2 maps are reserved for the hidden ending path (see Ending Design)
 
 ## Map Sequence
 
-| # | Map | Stage | Mission Types | Narrative Function |
-|---|-----|-------|--------------|-------------------|
-| 1 | 地球海岸壹号·烂尾预售楼 | Stage 1 | Commissioned | Dream of home that never was |
-| 2 | 地下私人会所 | Stage 2 | Commissioned + Free Salvage | Where Earth's wealthy entertained themselves while others suffered |
-| 3 | 地铁换乘枢纽 | Stage 2–3 | Commissioned + Free Salvage | Last trains before lockdown — everyone left something behind |
-| 4 | 市民债务仲裁局 | Stage 3 | Commissioned + Black Commission | The bureaucracy that processed people's ruin |
-| 5 | 区域医疗分诊站 | Stage 3–4 | Commissioned + Free Salvage + Black Commission | Human cost of MRC-7; truth fragments begin |
-| 6 | 轨道货运中转站 | Stage 4 | Commissioned + Black Commission | Where Earth's things were packaged and sent — the finale |
+| # | Map | Biome (approach) | Stage | Mission Types | Narrative Function |
+|---|-----|------------------|-------|--------------|-------------------|
+| 1 | 地球海岸壹号·烂尾预售楼 | Coastal 海岸 | Stage 1 | Commissioned | Dream of home that never was |
+| 2 | 地下私人会所 | Suburban grassland 郊区草地 | Stage 2 | Commissioned + Free Salvage | Where Earth's wealthy entertained themselves while others suffered |
+| 3 | 地铁换乘枢纽 | Urban meadow 城市草甸 | Stage 2–3 | Commissioned + Free Salvage | Last trains before lockdown — everyone left something behind |
+| 4 | 市民债务仲裁局 | Open plain 开阔平原 | Stage 3 | Commissioned + Black Commission | The bureaucracy that processed people's ruin |
+| 5 | 区域医疗分诊站 | Forest 森林 | Stage 3–4 | Commissioned + Free Salvage + Black Commission | Human cost of MRC-7; truth fragments begin |
+| 6 | 轨道货运中转站 | Industrial wasteland 工业废土 | Stage 4 | Commissioned + Black Commission | Where Earth's things were packaged and sent — the finale |
 
-**Hidden ending map (Mars)**: Triggered only by the Stage 5 "Stay on Earth" path
+> **Biomes are proposals (2026-06-18, R-B) — adjust freely.** Map 1 = Coastal is locked (literally
+> 地球海岸 / "Earth Coast"). Each map is a man-made site **set in** its biome (outdoor approach + indoor
+> core), not pure wilderness — see §Hero Room Framework → Biome Approach Layer.
+
+**Hidden ending map (Mars)**: Triggered only by the Stage 4 "Stay on Earth" choice
 if enough truth fragments are collected. Not a regular mission map.
 Players who choose "Go to Mars" see a CG cutscene — no playable Mars level.
 
@@ -107,6 +111,71 @@ The van is always near the entry anchor. The objective is always in the
 deep anchor zone. Players learn the narrative structure of each map across
 runs even as the specific routes change.
 
+### Hero Room Framework (formal — 2026-06-18)
+
+A **hero room** is a hand-authored, fixed **narrative + gameplay anchor**. Each map has exactly
+three (Entry / Mid / Deep); connectors, toggle doors, and item/monster spawns vary per seed, but the
+three anchors keep fixed relative positions so players learn each site across runs. Every hero room
+must do four jobs:
+
+1. **Identity** — a memorable, readable silhouette/space that says which site you are in.
+2. **Loot tier** — it holds a defined loot tier (escalating Entry → Mid → Deep, see Systems Integration).
+3. **Encounter beat** — a danger/decision moment (a chokepoint, a power gate, a deep-zone push).
+4. **Environmental story** — it carries the map's slice of the Municipal Debt Noir / infected-Earth fiction.
+
+Filler rooms and corridors carry none of these four; only hero rooms do. A map with fewer than three
+working anchors is not ready for the level sprint.
+
+### Biome Approach Layer (R-B, 2026-06-18)
+
+Each map is a **man-made site set in a natural biome** (PM decision R-B): the team disembarks the van
+in an **outdoor biome approach** (each map's biome column in §Map Sequence) and moves into the man-made
+core that holds the loot and danger. The biome is the map's outdoor identity and first impression; the
+interior anchors are the loot/danger core. Earth is being reclaimed by infection, so the biome
+encroaches at the site's edges (overgrowth, water ingress, root-broken concrete at the approach).
+
+```
+[Van — biome approach]  →  [Entry anchor]  →  [Mid anchor]  →  [Deep anchor / objective zone]
+   outdoor, low danger          man-made core, escalating danger  →→→
+```
+
+### Systems Integration — B / A / C
+
+The hero-room structure is where the locked economy / danger / monster systems land on the map:
+
+- **Danger zones (C) ↔ anchors.** The danger spec's zones map onto the three anchors:
+  Entry = `zone_factor ×1.0`, Mid = `×1.3`, Deep = `×2.0` (infection core). The Deep anchor is where
+  the `Pursuit`/`Saturation` phases bite hardest — pushing deep for the top loot tier is the core
+  greed/risk lever.
+- **Loot tiers escalate by anchor (B).** Entry = Light/Medium effects; Mid = mixed + 1–2 Heavy;
+  Deep = highest-value items + Heavy fixtures (two-hand carry). No designated target item exists.
+- **Client category preference (B).** Each Commissioned/Black client favours 1–2 item categories
+  thematically tied to that site, paying `× clientPreferenceMultiplier` (1.3) at settlement; per-item
+  usage notes carry the satire.
+- **Monster (C).** One Echo Mold per map roams the interior; `danger_level` (pure time, 4 phases:
+  Survey/Active/Pursuit/Saturation) drives its activity via `monster_activity` lerp. The Deep anchor
+  is its highest-pressure ground.
+- **License access (A).** Which maps/clients are available is gated by license stage (story missions at
+  4 / 10 / 18 completed missions); the map's Stage column is its earliest access.
+
+### Tower Hero-Room Template (worked example — copy this structure for maps 2–6)
+
+Map 1 (地球海岸壹号·烂尾预售楼) is the reference prototype. Every other map fills the same slots:
+
+| Slot | Tower instance | Loot tier | Danger / encounter beat |
+|---|---|---|---|
+| **Approach** | Coastal shore + parking apron, van drop | sparse outdoor scatter | Survey phase; quiet, distant sound |
+| **Entry anchor** | Sales lobby (售楼大堂) | Light/Medium worker & sales effects | first interior; narrow monster detection |
+| **Mid anchor** | Power gate room (电闸房) | mixed + 1–2 Heavy | the power gate to the deep loot floor; Active phase |
+| **Deep anchor** | Show flat + deep loot (样板间+深区) | highest value + Heavy residential fixtures | Pursuit/Saturation bite; the "do we leave?" decision |
+
+- **Client:** a Mars family commission — favours residential fixtures / personal effects / civic
+  documents (×1.3). No 沙盘, no designated target (per `scavenging-core-loop.md` D-B / D-G).
+- **Monster:** one Echo Mold roams the interior, escalating with `danger_level`.
+- **To author a new map:** assign its biome (§Map Sequence), name its three anchors, pick the client's
+  favoured categories, and place its loot tiers + Echo Mold spawn points. The four-slot structure
+  (Approach → Entry → Mid → Deep) is invariant.
+
 ### What Varies Per Seed
 
 - Corridor connection topology (how shared modules are linked)
@@ -150,7 +219,7 @@ no seed produces a dead-end that blocks the objective.
 
 ## Ending Map (Mars) — Design Stub
 
-Triggered by: Stage 5 choice = Stay on Earth + sufficient truth fragments
+Triggered by: Stage 4 choice = Stay on Earth + sufficient truth fragments
 collected across Maps 5 and 6.
 
 The player is dispatched to Mars as a contract worker (not an immigrant)

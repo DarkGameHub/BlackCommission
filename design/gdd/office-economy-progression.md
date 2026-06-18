@@ -38,7 +38,23 @@ Going to Mars eliminates the safety cost entirely. That is part of why it is tem
 | 3 | 特殊样本转运许可 | Black Commission formally available | These jobs are getting darker |
 | 4 | 移民资格审查 | Ending-choice gate — Go to Mars or Stay | Do you still want to go? |
 
-Stage 4 is not a gameplay tier with new map content — it is the gate that presents the final choice. License advance is driven by story mission completions (exact gate TBD in Open Questions).
+Stage 4 is not a gameplay tier with new map content — it is the gate that presents the final choice.
+
+**License advancement (locked 2026-06-18).** Each stage advance requires completing that stage's
+**story mission** — an authored commissioned job, flagged in the pool, that becomes available in the
+office-computer job list only after the player has completed a minimum number of total missions
+(`license_story_gate[stage]`). Completing the story mission advances the license; ignoring it leaves
+the player at the current stage. There is **no auto-advance** — but the rising safety cost (Earth
+Deterioration) makes camping a low stage unsustainable: a low stage's job access cannot out-earn the
+growing deduction, so the economy itself pushes the player toward the next story mission. Default
+gates (tuning, balance-pass TBD) keep the license roughly aligned with — and a touch ahead of — Earth
+Deterioration, so better-paying access unlocks just before each cost spike:
+
+| Advance | Story mission available after | EarthDet ticks at | Result |
+|---|---|---|---|
+| Stage 1 → 2 | 4 completed missions | ~5 | 正式采回许可; free salvage unlocks |
+| Stage 2 → 3 | 10 completed missions | ~12 | 特殊样本转运许可; Black Commission available |
+| Stage 3 → 4 | 18 completed missions | ~20 | 移民资格审查 — presents the ending choice |
 
 **License revocation = game over.** Mars revokes the license when the office can no longer meet safety standards (mid-game failure path) or when a player who chose to stay on Earth eventually cannot sustain operations (ending path). In both cases the revocation authority is Mars-capital — the license was always theirs to withdraw.
 
@@ -62,15 +78,15 @@ The player never sees "Earth Deterioration Level 3." They see `Safety infrastruc
 2. **One company, persisted host-side.** `CompanyState` serialized to schema-versioned JSON (`company.json`) via `SaveIO`, host-only. Guests never overwrite their own save during another player's session.
 3. **Money is the only player-facing currency.** `Funds` (int, may go negative). `Debt` is a static backdrop (the "you owe this" mood). No reputation number, no deterioration bar, no pressure bar shown on any surface.
 4. **Settlement applied exactly once.** Mission State Machine hands terminal outcome + payload via `MvpPendingReward`; office computer applies on claim. Re-triggering is idempotent (`RewardsGranted`).
-5. **Three reward outcomes**: FullSuccess / PartialReturn / Failure, each with money and XP magnitudes plus an additive Bonus evidence payload (stacks onto success/partial, forfeit on failure).
+5. **Two reward outcomes (money only)**: **Success** / **Failure**. Gross money = the run's scavenged salvage sum (`scavenging-core-loop.md` §4, `Σ payout_i`); Failure pays `round(salvage × failurePayoutRate)` (0.5). No XP. An optional **Bonus evidence** money payload may stack on Success, forfeit on Failure.
 6. **Safety cost deducted every settlement.** The current Earth Deterioration Level determines the deduction. Shown as a line item on the settlement screen. Net earnings = gross − safety cost − other penalties.
 7. **Underpayment tracking.** If net funds after safety cost deduction go negative (or were already negative and the deduction worsens them), a `ConsecutiveUnderpayments` counter increments. A settlement that leaves funds positive resets it to 0. At threshold the office is deemed unsafe and Mars revokes the license (see Rule 10).
-8. **License stage is the player-facing progression surface.** Advances through story mission gates (see Open Questions). Internal `OfficeLevel` (1–8) is the dev-facing content-unlock driver beneath it; `UnlockedCategoryCount = clamp(OfficeLevel, 1, 8)`.
+8. **License stage is the player-facing progression surface.** Each stage advance requires completing that stage's **story mission** — a flagged commissioned job that only appears in the office-computer job list after a minimum cumulative mission count (`license_story_gate[stage]` = 4 / 10 / 18; see Tuning Knobs and §License Stages → License advancement). Completing it advances the stage; there is **no auto-advance**. There is **no** internal office level or per-level category unlock (removed 2026-06-18, money-only) — all item categories are always present in the world; license stage gates which *jobs* appear, and the client's category preference differentiates value.
 9. **Earth Deterioration advances with missions elapsed.** Every N completed missions (host-counter), `EarthDeteriorationLevel` increments (max 5). This is independent of license stage — Earth does not wait for you.
 10. **License revocation = end of run (game over for standard path).** When `ConsecutiveUnderpayments ≥ threshold`, Mars issues a revocation notice (narrative letter/visitor first, then final revocation). Play ends; the player restarts. This is not a soft restructure — there is no coming back from a revoked license.
 11. **Stay-on-Earth path exception.** After choosing Stay on Earth at Stage 4: commissioned jobs disappear (Mars clients stop calling), free salvage remains available indefinitely. Earth Deterioration continues advancing. The player can keep playing until the safety cost outpaces free salvage income and ConsecutiveUnderpayments triggers revocation — experienced as a slow fade, not a sudden cut. The revocation notice in this path reads differently ("insufficient operational capacity" rather than "safety failure") but the mechanism is the same.
 12. **The shop deducts money, with readable refusal.** Gear purchased at office computer only when no pending reward is waiting and funds are sufficient. Insufficient funds: readable feedback, no state change.
-13. **Experience and leveling are success-only.** Successful jobs grant XP; failures grant none. Level-ups: `while OfficeLevel < 8 ∧ Experience ≥ max(100, OfficeLevel × 300): level up`. Drives UnlockedCategoryCount.
+13. **No XP, no office levels, no per-level category unlock** (removed 2026-06-18, money-only). There is no `Experience`, `OfficeLevel`, or `UnlockedCategoryCount`. Progression is carried entirely by `funds`, `license` stage (Rule 8), and `EarthDeteriorationLevel`.
 14. **Settlement breakdown is display-only.** `SettlementData` (gross income, safety cost line, other deductions, net, time) produced for Settlement UI; does not itself mutate the ledger.
 
 ### States and Transitions
@@ -99,7 +115,7 @@ Transitions:
 | **Networking** (ADR-0001) | intent RPCs (claim, purchase) | `CompanyState` server-only writes; `ApplySnapshot` to clients | Networking; this system is sole writer |
 | **Save / Persistence** | load on boot | schema-versioned JSON, host-only write | SaveIO owns disk; this system owns values |
 | **Scene Flow** | HQ-load, return-from-mission | pending reward, office safety state | Scene Flow sequences; this system holds persistent state |
-| **Mission State Machine** | terminal outcome + payload, once | money/XP magnitudes applied | Mission emits; this system owns formula |
+| **Mission State Machine** | terminal outcome + payload, once | money magnitude applied | Mission emits; this system owns formula |
 | **Office Computer / HUD UI** | purchase/claim intents | funds, license stage, pending reward, shop availability, safety-state flags | UI sends intents; this system validates |
 | **Settlement UI** | — | `SettlementData` with safety cost line item | this system produces |
 | **Shop** | purchase request | funds deduction or refusal | Shop owns catalog; this system owns wallet |
@@ -109,32 +125,34 @@ Transitions:
 
 > Code: `Assets/_Project/Scripts/Office/CompanyData.cs`, `CompanyState.cs`, `MissionRewardCalculator.cs`. Verify before any tuning pass.
 
-**1. `settlement_reward`** — applied on claim.
+**1. `settlement_reward`** — applied on claim. Money only — no XP.
 
-| Outcome | money (gross) | XP |
-|---|---|---|
-| FullSuccess | +300 | +80 |
-| PartialReturn | +60 | +15 |
-| Failure | +20 | 0 |
-| Bonus evidence (additive) | +90 | +20 |
+**Gross** money is the run's **scavenged salvage sum**, computed per `scavenging-core-loop.md` §4
+(`gross = Σ payout_i`, each `payout_i = round(baseValue_i × cond_i × pref_i)`). There is no flat
+per-outcome reward table — the haul is the reward.
+
+| Outcome | gross money |
+|---|---|
+| **Success** (voluntary departure, any haul) | `salvage` |
+| **Failure** (whole crew downed) | `round(salvage × failurePayoutRate)` (failurePayoutRate = 0.5) |
+
+An optional **Bonus evidence** money payload (`bonus_money`, default 90G) may stack on a Success.
 
 ```
-net_money = base_money + bonus_money − safety_cost[EarthDeteriorationLevel] − overtime_penalty
+net_money = gross_money + bonus_money − safety_cost[EarthDeteriorationLevel] − overtime_penalty
 Funds += net_money
-Experience += (outcome == Failure ? 0 : base_xp + bonus_xp)
 if Funds < 0: ConsecutiveUnderpayments += 1
 else:         ConsecutiveUnderpayments  = 0
 ```
 
-`overtime_penalty` owned by `MvpMissionClock`. Net money can be negative.
+`overtime_penalty` owned by `MvpMissionClock`. Net money can be negative — that is the squeeze.
 
-**Example (Stage 1 / EarthDet 1, full success + bonus, no overtime):**
-`300 + 90 − 40 = +350G net`, `80 + 20 = 100 XP`, ConsecutiveUnderpayments reset to 0.
+**Example (Stage 1 / EarthDet 1, a 227G haul + bonus, no overtime):**
+`227 + 90 − 40 = +277G net`, ConsecutiveUnderpayments reset to 0.
 
-**Example (EarthDet 3, partial return, no bonus):**
-`60 − 90 = −30G net`, ConsecutiveUnderpayments += 1.
-
-> ⚠️ **Balance note:** partial at 60G is 20% of full (300G). At EarthDet 3+, partial return nets negative — it becomes a pure survival move with no financial benefit. Consider raising to 90–120G. See Open Questions.
+**Example (EarthDet 3, a thin 60G haul, no bonus):**
+`60 − 90 = −30G net`, ConsecutiveUnderpayments += 1 — a thin haul at high EarthDet nets negative; the
+squeeze is real. (Tuning lever: safety cost vs typical haul size — see Open Questions / balance pass.)
 
 **2. `earth_deterioration_advance`** — advances every N missions.
 
@@ -152,11 +170,7 @@ if MissionsCompleted % deterioration_interval == 0:
 | 4 | 120G | 20 |
 | 5 | 150G | 30 |
 
-**3. `xp_to_next_level`** — internal office leveling.
-
-`xp_to_next_level(L) = max(100, L × 300)`. Loop: `while L < 8 ∧ XP ≥ threshold: XP −= threshold; L += 1`.
-
-**4. `underpayment_resolution`** — evaluated every settlement.
+**3. `underpayment_resolution`** — evaluated every settlement.
 
 ```
 if ConsecutiveUnderpayments == 0:              → Operating (normal)
@@ -174,13 +188,12 @@ Default thresholds: `warning_threshold = 3`, `revoke_threshold = 5`. A single su
 - **Guest sends unauthorized intent**: server rejects, no state change.
 - **Insufficient funds for purchase**: readable refusal, no hotbar change, funds untouched.
 - **Safety cost exceeds gross income on success**: net goes negative, `ConsecutiveUnderpayments += 1`. Allowed — this is the intended late-game squeeze.
-- **Bonus evidence collected but run ends in Failure**: bonus forfeit; failure pays base only, XP zeroed.
+- **Bonus evidence collected but run ends in Failure**: bonus forfeit; failure pays `round(salvage × failurePayoutRate)` only.
 - **EarthDeteriorationLevel at max (5) when Stay-on-Earth is chosen**: deterioration stops advancing (already at maximum); safety cost stays at 150G but free salvage income (~40–60G/run) cannot cover it, so revocation is inevitable within a few missions. Intended — the ending has a fixed horizon.
 - **ConsecutiveUnderpayments resets mid-warning**: one good run clears the counter but not narrative consequences already delivered (the letter stays on the desk).
 - **RevokedNotice issued, then player pays in full next settlement**: `NoticeIssued` flag remains set; the notice was real even if temporarily staved off. A second underpayment after recovery triggers `LicenseRevoked` immediately (no second notice). Tuning knob available to reset notice on sustained recovery.
 - **Host disconnects mid-mission**: host migration out of MVP scope. Session ends; save reflects last committed HQ state only.
-- **Save missing or corrupt**: fall back to `NewState` (−300G / 300 debt / EarthDet 1 / OfficeLevel 1).
-- **Experience accrues past OfficeLevel 8**: level-up loop stops; excess XP accumulates harmlessly.
+- **Save missing or corrupt**: fall back to `NewState` (−300G / 300 debt / EarthDet 1).
 
 ## Dependencies
 
@@ -208,12 +221,8 @@ Default thresholds: `warning_threshold = 3`, `revoke_threshold = 5`. A single su
 |---|---|---|---|
 | `start_funds` | −300 | −500…0 | Opening debt feel |
 | `start_debt` | 300 | 0…1000 | Backdrop mood |
-| `full_money_reward` | 300 | 100…600 | Anchor for all income math |
-| `partial_money_reward` | 60 | 60…150 | ⚠️ See balance note above |
-| `failure_money` | 20 | 0…50 | Failure should still sting |
-| `bonus_money` | 90 | 30…150 | Optional objective incentive |
-| `full_xp_reward` | 80 | 20…200 | — |
-| `partial_xp_reward` | 15 | 0…40 | — |
+| `bonus_money` | 90 | 30…150 | Optional bonus-evidence side payment (money) |
+| `failurePayoutRate` | 0.5 | 0…1 | Failure pays this fraction of banked salvage (lives in `ScavengingConfig`) |
 | `safety_cost_det_1` | 40G | 20…80 | Stage 1 feel — should be survivable easily |
 | `safety_cost_det_2` | 60G | 40…100 | First real squeeze |
 | `safety_cost_det_3` | 90G | 60…130 | Partial return starts hurting |
@@ -223,8 +232,9 @@ Default thresholds: `warning_threshold = 3`, `revoke_threshold = 5`. A single su
 | `warning_threshold` | 3 | 2…5 | Underpayments before narrative signal |
 | `revoke_threshold` | 5 | 3…7 | Underpayments before notice issued |
 | `allow_negative_purchase` | false | bool | Prevents buying into deeper debt |
-| `xp_curve_multiplier` | 300 | 150…500 | `max(100, L × 300)` |
-| `level_cap` | 8 | 4…12 | Internal content unlock cap |
+| `license_story_gate[1→2]` | 4 missions | 2…8 | Min total missions before the Stage 1→2 story job appears |
+| `license_story_gate[2→3]` | 10 missions | 6…14 | Min total missions before the Stage 2→3 story job appears |
+| `license_story_gate[3→4]` | 18 missions | 12…24 | Min total missions before the Stage 3→4 story job appears |
 
 ## Visual / Audio Requirements
 
@@ -237,17 +247,17 @@ Default thresholds: `warning_threshold = 3`, `revoke_threshold = 5`. A single su
 
 ## UI Requirements
 
-- **Office computer terminal**: always shows funds (negative = red), license stage, pending reward block, job availability, shop commands. Never shows EarthDeteriorationLevel, OfficeLevel, or underpayment count.
+- **Office computer terminal**: always shows funds (negative = red), license stage, pending reward block, job availability, shop commands. Never shows EarthDeteriorationLevel or underpayment count.
 - **Settlement screen**: gross income, safety infrastructure deduction (line item), other deductions, net, outcome. Client usage notes deliver the satire.
 - **Narrative events**: warning and revocation delivered as physical objects/visitors in HQ, not UI overlays.
 
 ## Acceptance Criteria
 
 **Settlement**
-- GIVEN FullSuccess at EarthDet 1, WHEN claimed, THEN `Funds += 300 − 40 − overtime` (net), `Experience += 80`, exactly once.
-- GIVEN PartialReturn at EarthDet 3, WHEN claimed, THEN `Funds += 60 − 90 = −30` (net negative), `ConsecutiveUnderpayments` increments.
-- GIVEN Failure, WHEN claimed, THEN `Funds += 20 − safety_cost`, `Experience` unchanged.
-- GIVEN bonus evidence on success, WHEN claimed, THEN `+90G / +20 XP` stacks onto base.
+- GIVEN Success at EarthDet 1 with a 227G haul, WHEN claimed, THEN `Funds += 227 − 40 − overtime` (net), exactly once. No XP.
+- GIVEN a thin 60G haul at EarthDet 3, WHEN claimed, THEN `Funds += 60 − 90 = −30` (net negative), `ConsecutiveUnderpayments` increments.
+- GIVEN Failure, WHEN claimed, THEN `Funds += round(salvage × failurePayoutRate) − safety_cost`. No XP.
+- GIVEN bonus evidence on success, WHEN claimed, THEN `+bonus_money` (90G) stacks onto the haul. No XP.
 - GIVEN reward already claimed, WHEN E pressed again, THEN no state change.
 
 **Safety cost line item**
@@ -272,19 +282,16 @@ Default thresholds: `warning_threshold = 3`, `revoke_threshold = 5`. A single su
 - GIVEN sufficient funds and no pending reward, WHEN purchase, THEN Funds decreases and item in hotbar.
 - GIVEN insufficient funds, WHEN purchase attempted, THEN readable refusal, no state change.
 
-**Leveling**
-- GIVEN OfficeLevel 1 with Experience ≥ 300 after settlement, THEN OfficeLevel becomes 2, Experience carries remainder, never exceeds cap 8.
-
 **Persistence**
 - GIVEN saved company, WHEN host relaunches, THEN loaded CompanyState matches last committed state including EarthDeteriorationLevel and ConsecutiveUnderpayments.
-- GIVEN missing/corrupt save, WHEN game loads, THEN falls back to NewState (−300G / 300 debt / EarthDet 1 / OfficeLevel 1).
+- GIVEN missing/corrupt save, WHEN game loads, THEN falls back to NewState (−300G / 300 debt / EarthDet 1).
 
 ## Open Questions
 
 | # | Question | Owner | Target |
 |---|---|---|---|
-| 1 | **Partial pay**: 60G nets negative at EarthDet 3+. Raise to 90–120G? | PM Yan Dai | balance pass |
-| 2 | **License advance gates**: what exactly triggers Stage 1→2→3→4? Specific story missions? Mission count? Both? | PM + zeno | pre-production |
+| 1 | **Thin-haul viability**: a ~60G haul nets negative at EarthDet 3+ (60−90). Intended (survival-only runs) or retune safety cost / haul sizing? | PM Yan Dai | balance pass |
+| 2 | ✅ **RESOLVED 2026-06-18** — advance = complete that stage's **story mission**, which appears after `license_story_gate[stage]` total missions (**4 / 10 / 18**). Both: authored story mission + min-count availability gate; no auto-advance. | PM Yan Dai | done |
 | 3 | **Deterioration interval tuning**: 5 missions/level feels right for a ~30 mission full game. Confirm with playtesting. | PM + QA | first playtest |
 | 4 | **RevokedNotice recovery**: should one paying settlement after notice clear the notice flag, or is the notice permanent once issued? | PM | balance pass |
 | 5 | **Stay-on-Earth revocation narrative**: the letter/visitor event needs a different authored text from mid-game safety failure. Two distinct GDD events. | narrative-director | when narrative system is designed |

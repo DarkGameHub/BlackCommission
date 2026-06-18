@@ -47,13 +47,16 @@
 | `Hunt` | committed 追近 | → `Attack`(进攻击距)· → `Investigate`(目标用破解法甩开)· → `Roam`(彻底丢失) |
 | `Attack` | 接触,周期掉血 | → `Hunt`(目标逃)· →(目标 Downed)`Roam` |
 
-**危险等级相位**(站点级,独立于单怪状态):
+**危险等级相位**(站点级,独立于单怪状态)。**相位定义权威 = `design/quick-specs/danger-infection-system-2026-06-18.md`**;本表只描述对怪物行为的映射。4 个相位由**进站时间**驱动(纯时间、无动作脉冲 — PM 锁 2026-06-18),re-entry 每次起始相位 +1:
 
-| 相位 | 阈值 | 表现 |
+| 相位 | 时间触发 | 对怪物行为的映射 |
 |---|---|---|
-| `Survey` 勘查 | 低 | 怪少动、感官弱;给搜索窗口 |
-| `Active` 活跃 | 中 | 怪明显更活跃、感官更广 |
-| `Saturation` 饱和 | 满 | 强制撤离触发(Mission 终局) |
+| `Survey` 勘查 | 进站(0–8 min) | 固定巡逻、感官窄;给搜索窗口 |
+| `Active` 活跃 | 8 min | 巡逻范围扩大、反应更快、感官更广 |
+| `Pursuit` 追猎 | 18 min | 主动搜索、多 spawn 点激活(相位名用 Pursuit,避开 AI 状态 `Hunt`) |
+| `Saturation` 饱和 | 28 min | 全站点敌对;触发强制撤离终局(60s) |
+
+相位是 `danger_level` 连续值上的**离散标记**(管 spawn 激活 / 环境信号 / 感染倍率 / 撤离);怪物活跃度在相位内仍由 `monster_activity` 连续插值(Formula 2)平滑变化。
 
 ### Interactions with Other Systems
 
@@ -72,18 +75,17 @@
 
 > Lean:初值待 `systems-designer` 调参。
 
-**1. `danger_level`(站点升级)**
+**1. `danger_level`(站点升级,纯时间 — PM 锁 2026-06-18)**
 
-`danger_level(t) = min(SAT, base_rate·t + Σ action_spike_i)`
+`danger_level(t) = min(SAT, base_rate·t)`   // 无动作脉冲;玩家关键动作不再顶高 danger
 
 | 变量 | 类型 | 范围 | 说明 |
 |---|---|---|---|
-| `t` | float(s) | 0+ | 进站点后经过的时间 |
-| `base_rate` | float | def **依目标局长** | 每秒基线上涨(调到典型局在目标时长附近饱和) |
-| `action_spike` | float | def 电闸/取物各一档 | 关键动作的一次性加成 |
+| `t` | float(s) | 0+ | 进站点后经过的时间(re-entry 按相位 +1 折算起点) |
+| `base_rate` | float | 调到 ~28 min 自然饱和 | 每秒基线上涨;相位边界 8/18/28 min 见 danger spec |
 | `SAT` | float | def **100** | 饱和阈值 → 强制撤离 |
 
-**输出**:0→100;到 `SAT` 触发 Mission 强制撤离终局。*例*:典型局约 12–15 分钟自然逼近饱和;提前拿目标物会把它顶上去。
+**输出**:0→100,随时间单调上涨到 `SAT` 触发 Mission 强制撤离终局。相位边界(Survey/Active/Pursuit/Saturation @ 0/8/18/28 min)是这条连续曲线上的离散标记。
 
 **2. `monster_activity`**:`activity = lerp(idleProfile, frenziedProfile, danger_level/SAT)`——把每只怪的移速/感官范围/出手频率在"平静→狂暴"间插值。
 
@@ -112,10 +114,9 @@
 
 | 旋钮 | 默认 | 安全范围 | 过低→ | 过高→ | 交互 |
 |---|---|---|---|---|---|
-| `base_rate`(危险/秒) | 调到目标局长饱和 | — | 永远不饱和,无撤离压力 | 没时间搜就被赶走 | 局时长、动作尖峰 |
-| `action_spike`(电闸/取物) | 各一档 | — | 关键动作无代价 | 拿了目标几乎立即被赶 | base_rate |
+| `base_rate`(危险/秒) | 调到 ~28 min 饱和 | — | 永远不饱和,无撤离压力 | 没时间搜就被赶走 | 局时长;相位边界 8/18/28 见 danger spec |
 | `SAT` 饱和阈 | 100 | — | — | — | 强制撤离触发 |
-| 相位阈(Survey/Active) | 33/66 | — | 太早变凶 | 太晚没张力 | monster_activity |
+| 相位时长(Survey/Active/Pursuit) | 8/10/10 min | 见 danger spec | 太早变凶 | 太晚没张力 | 相位边界;权威值在 danger-infection spec |
 | `activity` 插值曲线 | 线性 | — | 升级无感 | 突然爆难 | 每怪 profile |
 | 每图怪数 | 1(MVP) | 1–N | — | 过载 | 危险等级共享 |
 | `catch_damage` | 见回声菌 | — | 不痛 | 秒人 | **PlayerHealth(引用不重定义)** |

@@ -19,7 +19,7 @@ HQ settlement`
 
 - **Vision & rules**: `@AGENTS.md` — PM Yan Dai, design pillars, long-term constraints
 - **Pillars & progression backbone**: `design/game-pillars.md` (locked 2026-06-09 —
-  5 license stages, money-only economy, the moral slope)
+  4 license stages, money-only economy, the moral slope)
 - **System GDDs**: `design/gdd/`
   - `level-map-generation.md` — map / topology generation
   - `mission-state-machine.md` — mission flow: completion / partial-return / failure

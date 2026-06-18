@@ -16,7 +16,7 @@
 >
 > **Related docs**:
 > - `design/quick-specs/scavenging-item-system-2026-06-16.md` — item pickup, weight classes,
->   commissioned target overlay, one-dispute mechanics (authoritative for those sub-specs)
+>   commission-text hints, item condition, one-dispute mechanics (authoritative for those sub-specs)
 > - `design/gdd/mission-state-machine.md` — the run state machine (REVISED by this doc)
 > - `design/levels/abandoned-tower-earth-coast-01.md` — tower map (reframed by this doc)
 > - `docs/world-background-2098.md` — lore, ending design, monthly safety cost context
@@ -46,6 +46,13 @@
   (40G→120G), surfaced as a deduction LINE ITEM on the settlement/expense ledger (Pillar 3 grammar) —
   never a month-counter or pressure bar.**
 - **D-F — Eco-column prop: repurpose as a Heavy residential-fixture scavenge item (not deleted).**
+- **D-G — (R1, locked 2026-06-18) Commissioned/Black Jobs designate NO item at all.** The Free Salvage
+  vs Commissioned distinction is exactly two things: (1) the client favours 1–2 item **categories** whose
+  items settle at `× clientPreferenceMultiplier` (default **1.3**), and (2) the per-item settlement satire
+  (the client's authored usage notes). The optional-bonus-target overlay (old §3.4), the
+  `IsCommissionedTarget` flag, the guaranteed-target spawn, and the `Partial` outcome kind are all
+  **removed** from the body below. Outcomes are **Success** (any voluntary departure, any haul) and
+  **Failure** (whole crew downed) only.
 
 ## 1. Overview
 
@@ -58,9 +65,11 @@ verdict** — and the tension is continuous, not gated by grabbing one mandatory
 This document unifies two implementations that had drifted apart: the scavenging system
 (multi-item pickup, hidden value, van weight limit, per-item settlement) and the old
 single-objective mission (the eco-column, binary full/partial settlement). It resolves them
-into **one loop**: scavenging is the substrate of every mission; a **commissioned target** is an
-optional high-value bonus item layered on top for some jobs, and it never gates completion.
-The eco-column designated objective is cut. The mechanics it originally justified — the power
+into **one loop**: scavenging is the substrate of every mission. A **Commissioned Job** differs
+from **Free Salvage** only by its *client*: the client favours certain item categories (whose items
+pay a settlement preference multiplier) and the client's per-item usage notes carry the satire.
+There is **no designated target item**, and nothing gates completion but the team's own choice to
+leave. The eco-column designated objective is cut. The mechanics it originally justified — the power
 gate, heavy two-hand carry, the Infected Site Inspector — are retained because they serve the
 scavenging tension directly.
 
@@ -131,8 +140,8 @@ mission site → scavenge + deposit into the van → depart (voluntary) → van 
 settlement → debt ledger updates.`
 
 This ritual is the same shape for Free Salvage, Commissioned Job, and Black Commission. The
-mission type changes the client, the satire register, and whether a bonus target exists — not
-the loop structure.
+mission type changes the client, the satire register, and which item categories the client pays a
+preference multiplier for — not the loop structure.
 
 ### 3.2 Scavenging Baseline (every mission type)
 
@@ -158,34 +167,36 @@ There is **no mandatory objective item** and **no "objective pickup" flip** that
 mission state. The search-to-extract transition is produced by weight filling and threat rising,
 not by grabbing one object. This revises `mission-state-machine.md` rules 3–6 (see §9).
 
-### 3.4 Commissioned Target — Optional Bonus Overlay
+### 3.4 Commissioned Job — Client Preference Model (no target item)
 
-A job *may* designate **one** specific item as a commissioned target:
+Per §0 D-G (R1, locked 2026-06-18): a Commissioned/Black Commission job designates **no item**.
+It differs from Free Salvage in exactly two ways:
 
-- If found and deposited in the van: **bonus pay** at settlement
-  (`payout_t = round(baseValue_t × cond_t × commissionedBonusMultiplier)` where default
-  multiplier = 1.4). `SettlementResult.CommissionedTargetDelivered == true`.
-- If not found or not deposited: **no penalty to the salvage** — the run settles on whatever
-  was hauled. Finding the commissioned target should feel like a good run; not finding it should
-  not feel like failure.
-- The commissioned target **never gates completion**. It is the seat of the client satire:
-  the Mars client's "intended use" is revealed at settlement for this item above all others
-  (Pillar 3 — the contract speaks).
-- `LootSpawnPlanner` **must guarantee** the commissioned target spawns in every Commissioned
-  Job and Black Commission run — players cannot deliver something that wasn't on the map. The
-  guarantee is: if mission type is `Commissioned` or `BlackCommission`, the target item is
-  always placed in a reachable location before run start.
+- **Client category preference (money).** Each Commissioned/Black client favours **1–2 item
+  categories**, hinted at — never named outright — in the commission text. Items of a favoured
+  category settle at `× clientPreferenceMultiplier` (default **1.3**, see §7). Every other item,
+  and *all* Free Salvage, settles at market rate (`pref_i = 1.0`).
+- **Settlement satire (Pillar 3).** On a Commissioned/Black run, each item's settlement reveal
+  carries the **client's authored usage note** (the "intended use"). Free Salvage shows neutral
+  per-category market estimates with no client voice.
+
+No item is guaranteed to spawn for any reason, and no item gates completion — greed under the
+weight and threat levers is the only "objective." The moral slope (§3.5) is carried entirely by
+*which categories the client wants and what they say they will do with them*, not by a special
+object. There is no `IsCommissionedTarget` flag and no guaranteed-target placement.
 
 ### 3.5 Mission Taxonomy (Pillar 5 — The Moral Slope)
 
 Pay and moral darkness move together. Every tier is the same scavenging loop; only the client
 register and bonus structure change.
 
-| Type | Chinese | Commissioned Target | Settlement Framing | Moral Register |
+| Type | Chinese | Client Preference (money) | Settlement Framing | Moral Register |
 |---|---|---|---|---|
-| **Free Salvage** | 自由采集 | None | Every voluntary return = Success. Market-rate estimates shown per category (not per item). | Neutral — just paying the bills |
-| **Commissioned Job** | 指定委托 | One bonus item | Delivered target = Success; departed without target = Partial; all downed = Failure | Satirical — the client's stated use lands at settlement |
-| **Black Commission** | 黑色委托 | One morally-loaded target | Same mechanics as Commissioned Job | Dark — the client identity or intended use implicates something larger |
+| **Free Salvage** | 自由采集 | None — all items at market rate | Any voluntary return = Success (any haul). Market-rate estimates shown per category (not per item). | Neutral — just paying the bills |
+| **Commissioned Job** | 指定委托 | 1–2 favoured categories × `clientPreferenceMultiplier` | Any voluntary return = Success. Per-item client usage notes land the satire at settlement. | Satirical — the client's stated use lands at settlement |
+| **Black Commission** | 黑色委托 | Same as Commissioned Job | Same mechanics; the client's note implicates something larger | Dark — the client identity or intended use implicates something larger |
+
+**All three types:** any voluntary departure = `Success` (any haul, including an empty van); whole crew downed = `Failure`. There is **no `Partial`** outcome.
 
 **Falsifiability test (Pillar 5 design test):** if you can remove the mission type label and
 the player cannot tell Free Salvage from Black Commission by reading the commission text and
@@ -204,10 +215,10 @@ InProgress → Failed    (whole crew downed — ScavengeMissionManager.AllPlayer
 Terminal once it leaves `InProgress`. Single-fire — `ScavengeMissionLogic.IsTerminal` blocks
 any second call to `ResolveDeparture()` or `NotifyAllDowned()`.
 
-**Voluntary depart** → state `Settled`. `OutcomeKind` is computed at settlement time:
-- `OutcomeKind.Partial` if `missionType ∈ {Commissioned, BlackCommission}` and
-  `SettlementResult.CommissionedTargetDelivered == false`
-- `OutcomeKind.Success` otherwise (including all Free Salvage departures)
+**Voluntary depart** → state `Settled` → `OutcomeKind.Success` for **all** mission types and any
+haul (including an empty van). There is no `Partial` outcome — it was dropped with the designated
+target (§0 D-G). This matches `ScavengeMissionLogic.cs`, which only transitions
+`InProgress → Settled | Failed`.
 
 **Whole crew downed** → state `Failed`. `OutcomeKind.Failure`. The banked cargo settles at
 `failurePayoutRate` (see §4); items being carried at the moment of failure are lost.
@@ -242,23 +253,23 @@ All math as implemented in `ScavengeSettlementCalculator.cs`. All values live in
 | `n` | int | `VanCargoManifest.Count` | 0 to itemsPerMapInstance | Number of items banked in the van |
 | `baseValue_i` | int | `ScavengeItemDefinition.baseValue` | 1–500 | Hidden during run; revealed at settlement |
 | `cond_i` | float | `ItemCondition` enum | {1.0, 0.7, 0.4} | Good = 1.0, Worn = 0.7, Damaged = 0.4 (locked PM 2026-06-17) |
-| `bonus_i` | float | `item.IsCommissionedTarget` | 1.0 or `commissionedBonusMultiplier` | 1.0 for all items; `commissionedBonusMultiplier` for the commissioned target |
-| `commissionedBonusMultiplier` | float | `ScavengingConfig` | 1.2–1.8 (default 1.4) | Applied only to the commissioned target item |
+| `pref_i` | float | `item.category ∈ client.favouredCategories` | 1.0 or `clientPreferenceMultiplier` | 1.0 for all Free Salvage items and non-favoured items; `clientPreferenceMultiplier` for favoured-category items on Commissioned/Black runs |
+| `clientPreferenceMultiplier` | float | `ScavengingConfig` | 1.1–1.6 (default 1.3) | Applied to favoured-category items on Commissioned/Black Commission runs |
 | `failurePayoutRate` | float | `ScavengingConfig` | 0.0–1.0 (default 0.5, PM pending) | Fraction of banked cargo value paid out on all-downed failure |
 
 ### Per-Item Payout
 
 ```
-payout_i = round( baseValue_i × cond_i × bonus_i )
+payout_i = round( baseValue_i × cond_i × pref_i )
 ```
 
 Rounding is `MidpointRounding.AwayFromZero` (matching `ScavengeSettlementCalculator` line 84).
 Negative `baseValue` is clamped to 0 before multiplication.
 
-**Note on commissioned bonus decomposition**: the bonus is applied as a full multiplier to the
-item's `baseValue × condition` product, not as a separate additive delta. The settlement UI
-may optionally display the incremental bonus as a separate line
-(`bonus_delta = payout_i - round(baseValue_i × cond_i)`) to make the commission's value
+**Note on client-preference decomposition**: the preference multiplier is applied as a full
+multiplier to the item's `baseValue × condition` product, not as a separate additive delta. The
+settlement UI may optionally display the incremental amount as a separate line
+(`pref_delta = payout_i - round(baseValue_i × cond_i)`) to make the client's category preference
 legible during the reveal sequence — but the arithmetic is identical either way.
 
 ### Salvage Sum
@@ -270,31 +281,29 @@ salvage = Σ payout_i    for i in 1..n
 ### Final Money by Outcome Kind
 
 ```
-OutcomeKind.Success  (Free Salvage or commissioned target delivered)  : money = salvage
-OutcomeKind.Partial  (commissioned target not delivered)              : money = salvage
-OutcomeKind.Failure  (all downed)                                     : money = round( salvage × failurePayoutRate )
+OutcomeKind.Success  (any voluntary departure, any mission type)      : money = salvage
+OutcomeKind.Failure  (whole crew downed)                              : money = round( salvage × failurePayoutRate )
 ```
 
-**Note — Partial vs Success money**: Partial is not penalized beyond the missed commissioned
-bonus. A Partial haul pays the full salvage sum. "Less" for Partial means the bonus was not
-earned (the client's specific request was not fulfilled), not that existing cargo is deducted.
-This preserves Pillar 4 without requiring a reputation cost: the partial choice is an economic
-trade-off, not a punishment.
+**Note — Pillar 4 (less vs more)**: there is no `Partial` outcome. "Less vs more" is the
+continuous haul size the team chooses under the weight and threat levers — bank a small safe haul
+and leave early, or push deeper for more and risk an all-downed `Failure` (which pays only
+`failurePayoutRate` of the banked cargo). The trade-off is economic, never a reputation penalty.
 
-### Worked Example — Commissioned Job, Target Delivered
+### Worked Example — Commissioned Job, Favoured Category
 
-Items in `VanCargoManifest`:
-- Personal correspondence (baseValue 60, Worn): `round(60 × 0.7 × 1.0)` = 42G
-- Family photograph (baseValue 40, Good): `round(40 × 1.0 × 1.0)` = 40G
-- Sales scale model, commissioned target (baseValue 120, Good): `round(120 × 1.0 × 1.4)` = 168G
+Client favours the **personal effects** category. Items in `VanCargoManifest`:
+- Personal correspondence (baseValue 60, Worn, personal effects ✓): `round(60 × 0.7 × 1.3)` = 55G
+- Family photograph (baseValue 40, Good, personal effects ✓): `round(40 × 1.0 × 1.3)` = 52G
+- Residential fixture (baseValue 120, Good, not favoured): `round(120 × 1.0 × 1.0)` = 120G
 
-`salvage` = 42 + 40 + 168 = 250G. State = Settled. Target delivered. → `money` = **250G**.
+`salvage` = 55 + 52 + 120 = 227G. State = Settled. Outcome = Success. → `money` = **227G**.
 
 ### Worked Example — Same Run, All Downed Before Van
 
-Banked at moment of failure: correspondence (42G) + photograph (40G) = 82G salvage.
-Scale model was in hand, not banked → lost.
-`failurePayoutRate` = 0.5 → `money` = `round(82 × 0.5)` = **41G**.
+Banked at moment of failure: correspondence (55G) + photograph (52G) = 107G salvage.
+The residential fixture was in hand, not banked → lost.
+`failurePayoutRate` = 0.5 → `money` = `round(107 × 0.5)` = **54G**.
 
 ### Monthly Safety Cost Sink (Narrative Economy Context)
 
@@ -305,17 +314,15 @@ recurring **sink** on `CompanyState.funds` that creates the low-margin pressure 
 office depends on (Pillar 1). The sink's formula and timing are owned by the economy system;
 this loop produces the **faucet** (the `money` value per run) that must cover it. If the
 economy GDD is authored separately, it must reference this formula and the sink-faucet
-balance across the five license stages. See Open Questions #3.
+balance across the four license stages. See Open Questions #3.
 
 ## 5. Edge Cases
 
 | Scenario | Exact Behavior |
 |---|---|
-| **Empty van on departure** | `salvage = 0`, `money = 0`. State = Settled. Outcome = Success (Free Salvage) or Partial (Commissioned, target not banked). A wasted run is a valid outcome. The debt still bites next month. |
+| **Empty van on departure** | `salvage = 0`, `money = 0`. State = Settled. Outcome = Success (any mission type — there is no Partial). A wasted run is a valid outcome. The debt still bites next month. |
 | **Full van (12/12), team wants to bank one more item** | `ScavengeCargoZone.ScanForDeposits()` early-exits because `manifest.IsFull == true`. New item remains on the floor. Team must `VanCargoManifest.TryUnload(index)` to remove an existing item, creating floor space. No partial loading of a single item. |
 | **Carrying an item when all downed** | `CarrySystem` drops the item at the carrier's location. It is never stowed. Banked items in `VanCargoManifest` at the moment `ScavengeMissionLogic.NotifyAllDowned()` fires are already safe; dropped items are lost. |
-| **Commissioned target deposited, van then fills with other items** | Target is banked. `CommissionedTargetDelivered = true`. Remaining salvage simply did not fit. Bonus applies. |
-| **Commissioned target not spawned on the map** | `LootSpawnPlanner` must guarantee the target spawns on every Commissioned/Black Commission run. If for any reason it fails (spawner bug), the run settles as Partial. This is a bug state, not a valid authored outcome — add a `Debug.LogError` in `LootSpawnPlanner` if the target slot is unfilled on mission type Commissioned or BlackCommission. |
 | **Two players simultaneously set down items in a full-ish van** | `ScavengeCargoZone.ScanForDeposits()` runs on host at 0.25s intervals. Items are processed in the order `FindObjectsByType` returns them. First item that fits is stowed; if loading it fills the van (`manifest.IsFull`), the scan loop breaks and the second item is not stowed that tick. The second item remains on the floor for the next scan (0.25s later); if the van is now full, it stays on the floor. No corruption of manifest state. |
 | **Settlement triggered twice (mashing depart / network retry)** | `ScavengeMissionLogic.IsTerminal` is `true` after first resolution. Both `ResolveDeparture()` and `NotifyAllDowned()` return `false` and are no-ops. `MvpPendingReward.Set()` is called only once. No double-credit. |
 | **Solo offline (PreviewWalker / no NetworkManager)** | `HasAuthority` returns `true` via offline fallback in both `ScavengeCargoZone` and `ScavengeMissionManager`. Settlement runs locally. Math is identical. |
@@ -325,7 +332,6 @@ balance across the five license stages. See Open Questions #3.
 | **`failurePayoutRate` set to 0.0** | Banked cargo pays nothing on failure. Valid as an authored difficulty mode, but must not be the default — players who banked items must feel the system acknowledged that choice. |
 | **`failurePayoutRate` set to 1.0** | Failure pays full banked cargo value. Failure has no monetary sting for banked items. Acceptable as a difficulty-down option; not recommended as default. |
 | **All players downed simultaneously on same tick as a valid departure attempt** | `ResolveDeparture()` is called first (depart trigger is player-driven, evaluated before the `AllPlayersDowned()` poll in `ScavengeMissionManager.Update()`). If the depart RPC arrived on the host in the same frame: first-writer wins. The 1-second `downedPollTimer` interval means simultaneous departure and downed is resolved in favor of departure (the lever was pulled). |
-| **Commissioned target is a Heavy item, carrier is downed mid-carry** | Item drops at carrier's location (existing `CarrySystem` behavior). Any alive teammate can pick it up. If a teammate banks it before the run fails, `CommissionedTargetDelivered = true` and bonus applies. If no one banks it and the run fails, it is lost — not counted as delivered. |
 
 ## 6. Dependencies
 
@@ -339,7 +345,7 @@ balance across the five license stages. See Open Questions #3.
 | `ScavengeMissionManager` (built) | **Hard** | Networked wrapper: host-authoritative settle, `AllPlayersDowned()` poll, RPC routing, `MvpPendingReward.Set()`. |
 | `PlayerHealth` + `CarrySystem` | **Hard** | `IsDowned.Value` for failure detection; drop-on-down for carried item loss. |
 | Networking (ADR-0001, NGO) | **Hard** | Host-authoritative state via `NetworkVariable`; intent via `ServerRpc`. |
-| `LootSpawnPlanner` / `LootSpawner` | **Hard** | Supplies items to the map (including the commissioned target on Commissioned/Black Commission runs). Must guarantee target spawns. |
+| `LootSpawnPlanner` / `LootSpawner` | **Hard** | Supplies items to the map. Stamps each item's category (used by the client-preference multiplier at settlement). No guaranteed-target placement. |
 | `ScavengingConfig.asset` | **Hard** | All tuning knobs. Loaded via `Resources.Load<ScavengingConfig>`. |
 
 ### Downstream (these depend on this system)
@@ -368,7 +374,7 @@ gameplay code. Programmers: never embed these as magic numbers.
 | Knob | Category | Default | Safe Range | Effect if Too Low | Effect if Too High | Rationale |
 |---|---|---|---|---|---|---|
 | `vanWeightCapacity` | Gate | 12 units | 8–20 | Too few items banked; run feels short; displacement decisions never occur | Van never fills; no displacement decisions; weight tension evaporates | Primary tension lever. 12 allows 3 Heavy or 12 Light; displacement moment typically hits at 8–10u with mixed item weights |
-| `commissionedBonusMultiplier` | Feel | 1.4× | 1.2–1.8 | Commissioned target not worth prioritising; players treat all items identically | Players skip all other loot to hunt only the target; loop becomes a single-objective run in disguise | 1.4 means target earns 40% more than a same-baseValue non-target item of the same condition |
+| `clientPreferenceMultiplier` | Feel | 1.3× | 1.1–1.6 | Client preference barely matters; players ignore the commission text | Favoured categories dominate so hard that non-favoured loot feels worthless; loop narrows toward "grab one category" | 1.3 means a favoured-category item earns 30% more than the same item on a Free Salvage run — enough to reward reading the commission, not enough to make other loot junk |
 | `failurePayoutRate` | Gate | 0.5 (PM pending — see Open Questions) | 0.0–1.0 | At 0.0: banking cargo has no failure-recovery value; reduces tactical discipline | At 1.0: failure is nearly free; removes the cost of being downed | 0.5 makes failure sting while rewarding banking discipline; the break-even is "half of what I banked is better than nothing" |
 | `conditionGood` | Curve | 1.0 | — (locked) | — | — | Locked PM 2026-06-17; do not retune without PM |
 | `conditionWorn` | Curve | 0.7 | — (locked) | — | — | Same lock |
@@ -384,11 +390,12 @@ gameplay code. Programmers: never embed these as magic numbers.
       scavenge → deposit → depart → settle loop. No mandatory objective exists in any type.
 - [ ] Settlement money equals the §4 formula output for the run's `OutcomeKind`. No reputation
       delta, XP delta, or takeover-pressure counter is incremented at any point in the path.
-- [ ] A Commissioned Job departed without its target settles as Partial (salvage only, no
-      penalty deduction, no failure label) and is not identical to Failure.
-- [ ] Commissioned target delivered: bonus multiplier applies to that item's payout exactly
-      once. `SettlementResult.CommissionedTargetDelivered == true`.
-- [ ] Commissioned target absent from manifest: no bonus, no penalty, zero deduction.
+- [ ] Any voluntary departure of any mission type settles as `Success` (any haul). There is no
+      `Partial` outcome anywhere in the path.
+- [ ] On a Commissioned/Black run, items whose category is in the client's favoured list pay
+      `× clientPreferenceMultiplier` exactly once; all other items and all Free Salvage items pay
+      `× 1.0`.
+- [ ] Free Salvage runs apply no preference multiplier and surface category-level market estimates.
 - [ ] All-downed failure: `money = round(salvage × failurePayoutRate)`. Items carried (not
       banked) at moment of failure are lost. Banked items are settled at the reduced rate.
 - [ ] No reference to a mandatory eco-column or single-objective remains in the runtime mission
@@ -397,9 +404,8 @@ gameplay code. Programmers: never embed these as magic numbers.
       A client cannot trigger settlement or alter the manifest.
 - [ ] Settlement is idempotent: mashing the depart trigger or network retrying applies the
       payout exactly once.
-- [ ] `LootSpawnPlanner` guarantees the commissioned target spawns on every Commissioned Job
-      and Black Commission run. If it fails, `Debug.LogError` fires and the run settles as
-      Partial (not a crash).
+- [ ] `LootSpawnPlanner` stamps each spawned item with a category so the settlement preference
+      multiplier can be applied. No item is designated or guaranteed.
 - [ ] Van weight display (cargo ticket-strip) shows correct `LoadUnits / Capacity` on all
       clients. Late joiners see the correct count within one replication cycle.
 - [ ] `vanWeightCapacity <= 0` triggers a `Debug.LogError` in `ScavengeCargoZone.EnsureManifest()`
@@ -441,7 +447,7 @@ gameplay code. Programmers: never embed these as magic numbers.
   takeover-pressure FSM. These systems are **removed** (PM decision 2026-06-17).
 - The settlement formula section must be replaced with the §4 money-only formula from this doc.
 - The economy document's remaining valid content: the monthly safety cost sink (40G→120G
-  across stages), the five license stages, and the solvency/debt narrative. Everything
+  across stages), the four license stages, and the solvency/debt narrative. Everything
   else is superseded.
 - This GDD revision is a blocker for any new economy-related implementation stories.
 
@@ -449,9 +455,9 @@ gameplay code. Programmers: never embed these as magic numbers.
 - Reframe as a **salvage map**: the abandoned pre-sale tower contains three overlapping loot
   layers (residents' staged belongings, construction workers' personal effects, the sales
   company's own materials). All are valid scavenge targets.
-- **Remove**: the eco-column as mandatory objective. The scale model (沙盘) is demoted to one
-  Heavy scavenge item in the deep zone — optionally designated as a commissioned target for
-  Commissioned Job runs, never mandatory.
+- **Remove**: the eco-column as mandatory objective — repurpose the eco-column prop as a Heavy
+  residential-fixture scavenge item in the deep zone (D-F). The sales scale model (沙盘) is **cut
+  entirely** (D-B), not even a bonus item.
 - **Retain**: the power gate (gate to richer Floor 2 loot), Heavy two-hand carry (for
   high-value fixtures in the deep zone), the Infected Site Inspector (threat escalation lever),
   the evidence item in the worker dorm (optional bonus side payment).
@@ -460,24 +466,24 @@ gameplay code. Programmers: never embed these as magic numbers.
   team is carrying. Greed is punished cumulatively, not at a single dramatic flip.
 - **Item distribution**: Floor 1 arrival zone → 4–5 Light/Medium worker effects; Floor 1 deep
   (pre-power gate) → mixed loot including 1–2 Heavy items; Floor 2 (gate-locked) → highest-
-  value items including Heavy show-flat fixtures and the commissioned target if designated.
-- If the tower ships as pure Free Salvage first (PM decision pending — Open Questions #2), the
-  map functions identically with `IsCommissionedTarget = false` on all item spawns.
+  value items including Heavy show-flat fixtures.
+- The tower ships as a **Commissioned Job** (D-B): its Mars client favours residents' personal
+  effects / civic documents / residential fixtures, which settle at `× clientPreferenceMultiplier`.
+  No item is designated or guaranteed; the category preference is the only commissioned mechanic.
 
 ### Code Changes Required (Awaiting PM Approval)
 
 | Change | Priority | Detail |
 |---|---|---|
 | **Gut `CompanyState` / `MvpPendingReward` / `OfficeComputer` of the removed systems** | **Blocking (load-bearing)** | `CompanyState.ApplyMissionResult()` must mutate `Funds` (and debt) ONLY — delete `Reputation`, `Experience`/`OfficeLevel`/`TryApplyLevelUps()`, and `HostileTakeoverPressure`/`TryApplyHostileTakeover()` (the FSM). Sequence this BEFORE/WITH the tower rebuild. Note it touches **mission-access gating**: `OfficeComputer` currently gates which tasks appear on `OfficeLevel`/`Reputation` — replace that gating with license-stage/story gating (§Progression). This is the change that makes "money-only" true instead of aspirational. |
-| **Wire item condition + commissioned-target into the deposit path** | **Blocking** | The §4 condition (Good/Worn/Damaged) and 1.4× bonus math is implemented in `ScavengeSettlementCalculator` but NEVER FED: `ScavengeCargoZone.TryStow()` hardcodes `ItemCondition.Good` and `IsCommissionedTarget=false`, and `ScavengeItem` has no such fields. Add `ItemCondition` + `IsCommissionedTarget` to `ScavengeItem` + `ConfigureServer()`; have `TryStow()` read them; have `LootSpawner` stamp condition + the target flag at spawn. Until done, §4's condition/bonus curves are "specified, not wired." |
-| **Emit `OutcomeKind.Partial` in `ScavengeMissionManager.Settle()`** | **Blocking** | Today `Settle()` computes kind as only `Failed`-or-`Success` and never reads `SettlementResult.CommissionedTargetDelivered`. Add: when mission type ∈ {Commissioned, BlackCommission} and the target was not delivered → `MvpMissionResultKind.Partial`. `Partial` already exists and `SettlementCardOverlay` already renders it — only the kind selection is missing. |
+| **Wire item condition + category into the deposit path** | **Blocking** | The §4 condition (Good/Worn/Damaged) math is implemented in `ScavengeSettlementCalculator` but NEVER FED: `ScavengeCargoZone.TryStow()` hardcodes `ItemCondition.Good`, and `ScavengeItem` has no condition or category field. Add `ItemCondition` + `category` to `ScavengeItem` + `ConfigureServer()`; have `TryStow()` read them; have `LootSpawner` stamp condition + category at spawn; have `ScavengeSettlementCalculator` apply `clientPreferenceMultiplier` to favoured-category items on Commissioned/Black runs. Until done, §4's condition/preference curves are "specified, not wired." |
 | **Retire `TowerMissionManager`** | Blocking | The binary 300G full / 60G partial table is gone. `ScavengeMissionManager` becomes the sole mission manager for the tower scene. |
 | **Remove eco-column objective wiring** | Blocking | `EcoColumnCarriable` and its connections removed (the prop may be repurposed as a Heavy scavenge item or deleted — Open Questions #3). |
 | **Apply `failurePayoutRate` in `ScavengeMissionManager.Settle()`** | Blocking | Current code uses `MvpMissionResultKind.Failed` but does not apply the rate multiplier to `money`. The rate must be applied before `MvpPendingReward.Set()`. |
 | **Tower scene rebuild** | High | Add `LootSpawner` + `ScavengeCargoZone` + `ScavengeMissionManager` + depart trigger. Remove eco-column/cargo-zone objective wiring. |
 | **`IMissionAuthority` interface** | Medium | Unify `VanTransitOverlay` / `MissionVanExitPoint` so they reference `IMissionAuthority` (implemented by `ScavengeMissionManager`) rather than hard-binding to `TowerMissionManager`. |
 | **`failurePayoutRate` knob in `ScavengingConfig`** | High | Add the field and expose in the inspector. Default 0.5 pending PM decision. |
-| **`LootSpawnPlanner` guaranteed-target placement** | High | NET-NEW FEATURE, not a guard: today the planner is pure `(seed, anchors, pool, min, max) → random subset` with NO mission-type or target input. Extend it with a guaranteed-placement input (mission type + required target item id + a reserved reachable anchor) that runs BEFORE the random fill, preserving the deterministic-seed contract; `Debug.LogError` if no eligible anchor exists. |
+| **`LootSpawner` category stamping** | Medium | Today the planner is pure `(seed, anchors, pool, min, max) → random subset`. Add a per-item category stamp at spawn so `ScavengeSettlementCalculator` can apply `clientPreferenceMultiplier` to favoured categories. No mission-type/target input or guaranteed placement is needed. |
 | **Per-item settlement reveal** | Next milestone | `SettlementCardOverlay` expanded to show per-item lines + client note + condition + dispute button. Current build shows total only. |
 
 ---

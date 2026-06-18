@@ -1,5 +1,12 @@
 # Mission State Machine
 
+> ⚠️ **SUPERSEDED (2026-06-18) — do not implement as written.** This doc describes the OLD
+> single-objective model (`ObjectiveHeld`/`ReturnArmed`/`FullSuccess`/`PartialReturn`). The scavenging
+> core loop replaced it: the run state machine is now **`InProgress → Settled | Failed`** (Success/
+> Failure only, **no Partial**), money-only, no designated objective. **Authoritative:**
+> `design/gdd/scavenging-core-loop.md` (§3.6 + §0 D-A/D-G) and its `ScavengeMissionLogic.cs`. A full
+> rewrite of this doc to the scavenge model is a pending cleanup pass; treat the body below as historical.
+
 > **Status**: In Design
 > **Author**: Yan Dai (PM) + Claude (zeno/laplace lens)
 > **Last Updated**: 2026-06-08
