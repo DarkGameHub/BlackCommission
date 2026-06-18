@@ -40,7 +40,6 @@ public class HQController : MonoBehaviour
         GUILayout.BeginArea(new Rect(x, y, w, 122));
         GUILayout.Label("BLACK COMMISSION", headerStyle);
         GUILayout.Label($"Funds: ¥{CompanyData.Current.Funds}", labelStyle);
-        GUILayout.Label($"Reputation: {CompanyData.Current.Reputation}", labelStyle);
         GUILayout.Space(4);
         GUILayout.Label("Use the office terminal to browse commissions", labelStyle);
         GUILayout.Label("Use the gear rack to restock mission equipment", labelStyle);

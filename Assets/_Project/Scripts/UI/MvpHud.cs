@@ -772,7 +772,7 @@ public class MvpHud : MonoBehaviour
     {
         string message = !string.IsNullOrEmpty(officeMessage) && Time.time < officeMessageUntil
             ? officeMessage
-            : $"资金 {company.Funds}G   债务 {company.Debt}G   声望 {company.Reputation}   电脑连接 {(nearShop ? "稳定" : "本地")}";
+            : $"资金 {company.Funds}G   债务 {company.Debt}G   电脑连接 {(nearShop ? "稳定" : "本地")}";
         GUI.Label(new Rect(rect.x + 28f, rect.yMax - 30f, rect.width - 56f, 22f), message,
             message.Contains("失败") || message.Contains("不足") || message.Contains("只有") ? warningStyle : terminalSmallStyle);
     }
@@ -817,7 +817,7 @@ public class MvpHud : MonoBehaviour
         GUILayout.Label(computer.DemoTaskTitle, titleStyle);
         DrawLedgerLine("委托人 / 地点", $"{computer.DemoTaskClient} / {computer.DemoTaskLocation}");
         GUILayout.Label(computer.DemoTaskDescription, mutedStyle);
-        DrawLedgerLine("报酬 / 声望 / 经验", $"{computer.DemoTaskMoneyReward}G / +{computer.DemoTaskReputationReward} / +{computer.DemoTaskExperienceReward}");
+        DrawLedgerLine("报酬 / REWARD", $"{computer.DemoTaskMoneyReward}G");
         DrawLedgerLine("TIME WINDOW", MvpMissionClock.GetScheduleSummary(computer.DemoTask));
         GUILayout.Label(MvpMissionClock.GetOvertimeRuleSummary(computer.DemoTask), mutedStyle);
         GUILayout.Space(8);

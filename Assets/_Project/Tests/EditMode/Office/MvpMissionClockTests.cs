@@ -20,8 +20,6 @@ namespace BlackCommission.Office.Tests
             task.contractWindowGameHours = 12f;
             task.realSecondsPerGameHour = 60f;
             task.overtimeMoneyPenaltyPerGameHour = 30;
-            task.overtimeReputationPenaltyBlockGameHours = 2f;
-            task.overtimeReputationPenaltyPerBlock = 1;
         }
 
         [TearDown]
@@ -70,7 +68,6 @@ namespace BlackCommission.Office.Tests
         {
             Assert.AreEqual(0f, MvpMissionClock.GetOvertimeGameHours(task, 720f));
             Assert.AreEqual(0, MvpMissionClock.GetOvertimeMoneyPenalty(task, 720f));
-            Assert.AreEqual(0, MvpMissionClock.GetOvertimeReputationPenalty(task, 720f));
         }
 
         [Test]
@@ -80,16 +77,6 @@ namespace BlackCommission.Office.Tests
             Assert.AreEqual(30, MvpMissionClock.GetOvertimeMoneyPenalty(task, 750f));
         }
 
-        [Test]
-        public void Overtime_ReputationPenaltyFloorsByTwoHourBlocks()
-        {
-            Assert.AreEqual(0, MvpMissionClock.GetOvertimeReputationPenalty(task, 810f),
-                "1.5h overtime has not completed a 2h block.");
-            Assert.AreEqual(1, MvpMissionClock.GetOvertimeReputationPenalty(task, 840f),
-                "2h overtime completes exactly one block.");
-            Assert.AreEqual(2, MvpMissionClock.GetOvertimeReputationPenalty(task, 960f),
-                "4h overtime completes two blocks.");
-        }
 
         // ---- Null-task defaults ----
 

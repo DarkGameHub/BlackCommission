@@ -8,27 +8,15 @@ using UnityEngine;
 public struct MissionRewardFallbacks
 {
     public int moneyReward;
-    public int reputationReward;
-    public int experienceReward;
     public int partialMoneyReward;
-    public int partialReputationReward;
-    public int partialExperienceReward;
     public int failureMoney;
-    public int failureReputation;
-    public int failureExperience;
 
     /// <summary>Registry constants: full_job_reward 300G / partial 60G / failure 20G.</summary>
     public static MissionRewardFallbacks Default => new MissionRewardFallbacks
     {
         moneyReward = 300,
-        reputationReward = 5,
-        experienceReward = 80,
         partialMoneyReward = 60,
-        partialReputationReward = 0,
-        partialExperienceReward = 15,
-        failureMoney = 20,
-        failureReputation = -2,
-        failureExperience = 0
+        failureMoney = 20
     };
 }
 
@@ -37,14 +25,10 @@ public struct MissionRewardFallbacks
 public struct MissionRewardBonus
 {
     public int money;
-    public int reputation;
-    public int experience;
 
     public static MissionRewardBonus Default => new MissionRewardBonus
     {
-        money = 90,
-        reputation = 1,
-        experience = 20
+        money = 90
     };
 }
 
@@ -52,11 +36,8 @@ public struct MissionRewardBonus
 public struct MissionRewardResult
 {
     public int Money;
-    public int Reputation;
-    public int Experience;
     public float OvertimeGameHours;
     public int OvertimeMoneyPenalty;
-    public int OvertimeReputationPenalty;
 }
 
 /// <summary>
@@ -64,13 +45,12 @@ public struct MissionRewardResult
 /// (registry formula: settlement_reward). Pure and EditMode-testable.
 ///
 /// Order of operations:
-///   base(resultKind) [+ bonus evidence unless Failed]
-///   − overtime penalties (all result kinds)
+///   base(resultKind) [+ bonus money unless Failed]
+///   − overtime money penalty (all result kinds)
 /// </summary>
 public static class MissionRewardCalculator
 {
     public const float PartialMoneyFraction = 0.22f;
-    public const float PartialExperienceFraction = 0.2f;
 
     public static MissionRewardResult Calculate(
         OfficeTaskDefinition task,
@@ -83,15 +63,11 @@ public static class MissionRewardCalculator
         var result = new MissionRewardResult
         {
             Money = GetMoneyForResult(task, resultKind, bonusEvidenceCollected, fallbacks, bonus),
-            Reputation = GetReputationForResult(task, resultKind, bonusEvidenceCollected, fallbacks, bonus),
-            Experience = GetExperienceForResult(task, resultKind, bonusEvidenceCollected, fallbacks, bonus),
             OvertimeGameHours = MvpMissionClock.GetOvertimeGameHours(task, missionTimerSeconds),
-            OvertimeMoneyPenalty = MvpMissionClock.GetOvertimeMoneyPenalty(task, missionTimerSeconds),
-            OvertimeReputationPenalty = MvpMissionClock.GetOvertimeReputationPenalty(task, missionTimerSeconds)
+            OvertimeMoneyPenalty = MvpMissionClock.GetOvertimeMoneyPenalty(task, missionTimerSeconds)
         };
 
         result.Money -= result.OvertimeMoneyPenalty;
-        result.Reputation -= result.OvertimeReputationPenalty;
 
         return result;
     }
@@ -107,40 +83,6 @@ public static class MissionRewardCalculator
                 return GetPartialMoney(task, fallbacks) + GetBonusMoney(resultKind, bonusCollected, bonus);
             default:
                 return task != null ? task.failureConsolationMoney : fallbacks.failureMoney;
-        }
-    }
-
-    static int GetReputationForResult(OfficeTaskDefinition task, MvpMissionResultKind resultKind,
-        bool bonusCollected, MissionRewardFallbacks fallbacks, MissionRewardBonus bonus)
-    {
-        switch (resultKind)
-        {
-            case MvpMissionResultKind.Success:
-                return (task != null ? task.reputationReward : fallbacks.reputationReward)
-                    + (bonusCollected ? bonus.reputation : 0);
-            case MvpMissionResultKind.Partial:
-                // Partial returns never grant task reputation; only the no-task fallback applies.
-                return task != null ? 0 : fallbacks.partialReputationReward;
-            default:
-                return task != null ? task.failureReputationPenalty : fallbacks.failureReputation;
-        }
-    }
-
-    static int GetExperienceForResult(OfficeTaskDefinition task, MvpMissionResultKind resultKind,
-        bool bonusCollected, MissionRewardFallbacks fallbacks, MissionRewardBonus bonus)
-    {
-        switch (resultKind)
-        {
-            case MvpMissionResultKind.Success:
-                return (task != null ? task.experienceReward : fallbacks.experienceReward)
-                    + (bonusCollected ? bonus.experience : 0);
-            case MvpMissionResultKind.Partial:
-                int partial = task != null
-                    ? Mathf.Max(0, Mathf.RoundToInt(task.experienceReward * PartialExperienceFraction))
-                    : fallbacks.partialExperienceReward;
-                return partial + (bonusCollected ? bonus.experience : 0);
-            default:
-                return task != null ? task.failureExperience : fallbacks.failureExperience;
         }
     }
 

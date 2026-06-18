@@ -6,8 +6,6 @@ public static class MvpMissionClock
     public const float DefaultContractWindowGameHours = 12f;
     public const float DefaultRealSecondsPerGameHour = 60f;
     public const int DefaultOvertimeMoneyPenaltyPerGameHour = 30;
-    public const float DefaultOvertimeReputationPenaltyBlockGameHours = 2f;
-    public const int DefaultOvertimeReputationPenaltyPerBlock = 1;
 
     public static float GetStartClockHour(OfficeTaskDefinition task) =>
         task != null ? task.missionStartClockHour : DefaultMissionStartClockHour;
@@ -42,21 +40,6 @@ public static class MvpMissionClock
             ? Mathf.Max(0, task.overtimeMoneyPenaltyPerGameHour)
             : DefaultOvertimeMoneyPenaltyPerGameHour;
         return Mathf.CeilToInt(overtime) * rate;
-    }
-
-    public static int GetOvertimeReputationPenalty(OfficeTaskDefinition task, float elapsedRealSeconds)
-    {
-        float overtime = GetOvertimeGameHours(task, elapsedRealSeconds);
-        if (overtime <= 0f) return 0;
-
-        float blockHours = task != null
-            ? Mathf.Max(0.25f, task.overtimeReputationPenaltyBlockGameHours)
-            : DefaultOvertimeReputationPenaltyBlockGameHours;
-        int penalty = task != null
-            ? Mathf.Max(0, task.overtimeReputationPenaltyPerBlock)
-            : DefaultOvertimeReputationPenaltyPerBlock;
-
-        return Mathf.FloorToInt(overtime / blockHours) * penalty;
     }
 
     public static string FormatClock(float absoluteHour)
@@ -109,14 +92,8 @@ public static class MvpMissionClock
         int money = task != null
             ? Mathf.Max(0, task.overtimeMoneyPenaltyPerGameHour)
             : DefaultOvertimeMoneyPenaltyPerGameHour;
-        float repBlock = task != null
-            ? Mathf.Max(0.25f, task.overtimeReputationPenaltyBlockGameHours)
-            : DefaultOvertimeReputationPenaltyBlockGameHours;
-        int rep = task != null
-            ? Mathf.Max(0, task.overtimeReputationPenaltyPerBlock)
-            : DefaultOvertimeReputationPenaltyPerBlock;
 
-        return $"Overtime: -{money}G per overtime task hour, -{rep} reputation every {FormatGameHours(repBlock)}";
+        return $"Overtime: -{money}G per overtime task hour";
     }
 
     public static string GetDaylightLabel(float absoluteClockHour)

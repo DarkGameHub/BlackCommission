@@ -20,10 +20,14 @@ public class SettlementData
 /// only the server writes to disk, so a client joining someone else's game never overwrites
 /// its own save (clients receive the host's state via ApplySnapshot for display).
 /// Device-local settings (volume, name, sensitivity, voice) stay in PlayerPrefs by design.
+///
+/// Schema v2 (2026-06-17): Reputation, OfficeLevel, Experience, HostileTakeoverPressure and
+/// the hostile-takeover FSM booleans have been removed. Old v1 saves load safely — the
+/// removed fields are simply ignored by JsonUtility (extra JSON keys are silently skipped).
 /// </summary>
 public static class CompanyData
 {
-    const int SchemaVersion = 1;
+    const int SchemaVersion = 2;
     const string SaveFileName = "company.json";
     const string LegacyPrefsKey = "AS.CompanyData.v1"; // pre-file saves; imported once
 
@@ -52,7 +56,7 @@ public static class CompanyData
     }
 
     static CompanyState NewState() =>
-        new CompanyState { Funds = -300, Reputation = 0, OfficeLevel = 1, Experience = 0, Debt = 300 };
+        new CompanyState { Funds = -300, Debt = 300 };
 
     static CompanyState Load()
     {
@@ -89,7 +93,15 @@ public static class CompanyData
 
     static CompanyState Migrate(int fromVersion, CompanyState state)
     {
-        // Future schema bumps handle field changes here; v1 needs no migration.
+        // v1 saves had Reputation/OfficeLevel/Experience/HostileTakeoverPressure fields.
+        // JsonUtility ignores unknown JSON keys when deserialising into the new CompanyState,
+        // so old saves load cleanly — no explicit field clearing needed. The only action here
+        // is bumping to v2 so future loads skip this path.
+        if (fromVersion < 2)
+        {
+            // No data mutation required; removed fields were simply not populated.
+            // Re-saving at v2 schema ensures the file stays clean going forward.
+        }
         return state;
     }
 
@@ -103,33 +115,19 @@ public static class CompanyData
     // This wrapper owns only persistence + host-authority + snapshot sync.
     public static void ApplySnapshot(
         int funds,
-        int reputation,
-        int officeLevel,
-        int experience,
         int debt,
         int completedLostItemJobs,
         int failedJobs,
-        int hostileTakeoverPressure,
         bool hasAcquiredTutorialOffice,
         bool lastMissionSucceeded,
-        bool wasRecentlyHostileAcquired,
-        bool hasHostileTakeoverUltimatum,
-        bool wasRecentlyIssuedTakeoverUltimatum,
         float lastMissionTimeSeconds)
     {
         Current.Funds = funds;
-        Current.Reputation = reputation;
-        Current.OfficeLevel = officeLevel;
-        Current.Experience = experience;
         Current.Debt = debt;
         Current.CompletedLostItemJobs = completedLostItemJobs;
         Current.FailedJobs = failedJobs;
-        Current.HostileTakeoverPressure = hostileTakeoverPressure;
         Current.HasAcquiredTutorialOffice = hasAcquiredTutorialOffice;
         Current.LastMissionSucceeded = lastMissionSucceeded;
-        Current.WasRecentlyHostileAcquired = wasRecentlyHostileAcquired;
-        Current.HasHostileTakeoverUltimatum = hasHostileTakeoverUltimatum;
-        Current.WasRecentlyIssuedTakeoverUltimatum = wasRecentlyIssuedTakeoverUltimatum;
         Current.LastMissionTimeSeconds = lastMissionTimeSeconds;
     }
 }

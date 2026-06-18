@@ -16,9 +16,7 @@ public class OfficeTaskDefinition : ScriptableObject
     public int recommendedPlayersMin = 1;
     public int recommendedPlayersMax = 4;
 
-    [Header("Requirements")]
-    public int requiredOfficeLevel = 1;
-    public int minimumReputation = -100;
+    // TODO: gate by license stage (game-pillars.md) — requiredOfficeLevel and minimumReputation removed 2026-06-17.
 
     [Header("Schedule")]
     [Tooltip("Game clock hour when the crew clocks in. 8 = 08:00.")]
@@ -28,16 +26,10 @@ public class OfficeTaskDefinition : ScriptableObject
     [Tooltip("Real seconds per in-game hour. 60 means 12 real minutes equals 12 in-game hours.")]
     public float realSecondsPerGameHour = 60f;
     public int overtimeMoneyPenaltyPerGameHour = 30;
-    public float overtimeReputationPenaltyBlockGameHours = 2f;
-    public int overtimeReputationPenaltyPerBlock = 1;
 
     [Header("Rewards")]
     public int moneyReward = 300;
-    public int reputationReward = 5;
-    public int experienceReward = 80;
     public int failureConsolationMoney = 20;
-    public int failureReputationPenalty = -2;
-    public int failureExperience = 0;
 
     [Header("Settlement Notes (结算单·客户使用备注)")]
     [Tooltip("Per result kind; one entry is picked (deterministic across peers). Empty hides the note block. design/ux/settlement.md")]

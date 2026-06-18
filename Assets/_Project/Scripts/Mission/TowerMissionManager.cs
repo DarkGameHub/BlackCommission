@@ -25,16 +25,10 @@ public class TowerMissionManager : NetworkBehaviour
     // whichever is later. Give the crew time to read the settlement card (spec suggests ≥10s).
     [SerializeField] float returnToOfficeDelaySeconds = 6f;
 
-    [Header("Reward Fallbacks (registry: full 300/5/80, partial 60/0/15, failure 20/-2/0)")]
+    [Header("Reward Fallbacks (registry: full 300 / partial 60 / failure 20 — money only)")]
     [SerializeField] int fullMoney = 300;
-    [SerializeField] int fullReputation = 5;
-    [SerializeField] int fullExperience = 80;
     [SerializeField] int partialMoney = 60;
-    [SerializeField] int partialReputation = 0;
-    [SerializeField] int partialExperience = 15;
     [SerializeField] int failureMoney = 20;
-    [SerializeField] int failureReputation = -2;
-    [SerializeField] int failureExperience = 0;
 
     public NetworkVariable<int> SyncedState = new((int)TowerMissionState.InProgress,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
@@ -202,7 +196,7 @@ public class TowerMissionManager : NetworkBehaviour
         float minTransit = Mathf.Max(1.5f, returnToOfficeDelaySeconds);
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
-            ApplyResultClientRpc(money, baseMoney, result.Reputation, result.Experience, (int)kind, logic.Completeness);
+            ApplyResultClientRpc(money, baseMoney, (int)kind, logic.Completeness);
             // 全队随车: seat everyone (downed included), start the return transit on every
             // peer, then load the HQ behind the windowless cabin (boarding-transit spec).
             // The short delay lets the seat NetworkVariables land before the scene event.
@@ -212,13 +206,12 @@ public class TowerMissionManager : NetworkBehaviour
         }
         else
         {
-            ApplyResultLocally(money, baseMoney, result.Reputation, result.Experience, kind, logic.Completeness);
+            ApplyResultLocally(money, baseMoney, kind, logic.Completeness);
             VanTransitOverlay.ShowReturn(MvpMissionRuntime.ActiveTask?.title, null, minTransit);
             Invoke(nameof(ReturnToOffice), minTransit);
         }
 
-        Debug.Log($"[TowerMission] Settled {logic.State}: {money}G / rep {result.Reputation} / " +
-                  $"xp {result.Experience} (completeness {logic.Completeness:P0})");
+        Debug.Log($"[TowerMission] Settled {logic.State}: {money}G (completeness {logic.Completeness:P0})");
     }
 
     [ClientRpc]
@@ -234,14 +227,12 @@ public class TowerMissionManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    void ApplyResultClientRpc(int money, int baseMoney, int reputation, int experience, int kind, float completeness) =>
-        ApplyResultLocally(money, baseMoney, reputation, experience, (MvpMissionResultKind)kind, completeness);
+    void ApplyResultClientRpc(int money, int baseMoney, int kind, float completeness) =>
+        ApplyResultLocally(money, baseMoney, (MvpMissionResultKind)kind, completeness);
 
-    static void ApplyResultLocally(int money, int baseMoney, int reputation, int experience,
-        MvpMissionResultKind kind, float completeness)
+    static void ApplyResultLocally(int money, int baseMoney, MvpMissionResultKind kind, float completeness)
     {
-        MvpPendingReward.Set(money, reputation, experience,
-            kind == MvpMissionResultKind.Success, 0f,
+        MvpPendingReward.Set(money, kind == MvpMissionResultKind.Success, 0f,
             kind == MvpMissionResultKind.Success, kind);
         // 委托结算单 dealt to this peer in the return van; the stamp sound now fires
         // on the card's stamp-fall frame (design/ux/settlement.md, Transitions).
@@ -251,13 +242,7 @@ public class TowerMissionManager : NetworkBehaviour
     MissionRewardFallbacks BuildFallbacks() => new MissionRewardFallbacks
     {
         moneyReward = fullMoney,
-        reputationReward = fullReputation,
-        experienceReward = fullExperience,
         partialMoneyReward = partialMoney,
-        partialReputationReward = partialReputation,
-        partialExperienceReward = partialExperience,
-        failureMoney = failureMoney,
-        failureReputation = failureReputation,
-        failureExperience = failureExperience
+        failureMoney = failureMoney
     };
 }

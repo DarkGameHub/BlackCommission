@@ -36,8 +36,6 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     public string DemoTaskDescription => ResolveDemoTask()?.description ?? "No commission is available right now.";
     public string DemoTaskLocation => ResolveDemoTask()?.locationName ?? "Unknown site";
     public int DemoTaskMoneyReward => ResolveDemoTask()?.moneyReward ?? 0;
-    public int DemoTaskReputationReward => ResolveDemoTask()?.reputationReward ?? 0;
-    public int DemoTaskExperienceReward => ResolveDemoTask()?.experienceReward ?? 0;
 
     OfficeTaskDefinition ResolveDemoTask()
     {
@@ -351,16 +349,8 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             reason = "No commission configured for this terminal.";
             return false;
         }
-        if (CompanyData.Current.OfficeLevel < demoTask.requiredOfficeLevel)
-        {
-            reason = $"Office level too low: requires LV.{demoTask.requiredOfficeLevel}.";
-            return false;
-        }
-        if (CompanyData.Current.Reputation < demoTask.minimumReputation)
-        {
-            reason = $"Insufficient reputation: requires {demoTask.minimumReputation}.";
-            return false;
-        }
+        // TODO: gate by license stage (game-pillars.md, 5 stages). OfficeLevel/Reputation gating
+        // removed 2026-06-17 (money-only economy) — all configured jobs are available for now.
         reason = "";
         return true;
     }
@@ -392,18 +382,11 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         CompanyState c = CompanyData.Current;
         SyncCompanyStateClientRpc(
             c.Funds,
-            c.Reputation,
-            c.OfficeLevel,
-            c.Experience,
             c.Debt,
             c.CompletedLostItemJobs,
             c.FailedJobs,
-            c.HostileTakeoverPressure,
             c.HasAcquiredTutorialOffice,
             c.LastMissionSucceeded,
-            c.WasRecentlyHostileAcquired,
-            c.HasHostileTakeoverUltimatum,
-            c.WasRecentlyIssuedTakeoverUltimatum,
             c.LastMissionTimeSeconds,
             clearPendingReward);
     }
@@ -411,35 +394,21 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     [ClientRpc]
     void SyncCompanyStateClientRpc(
         int funds,
-        int reputation,
-        int officeLevel,
-        int experience,
         int debt,
         int completedLostItemJobs,
         int failedJobs,
-        int hostileTakeoverPressure,
         bool hasAcquiredTutorialOffice,
         bool lastMissionSucceeded,
-        bool wasRecentlyHostileAcquired,
-        bool hasHostileTakeoverUltimatum,
-        bool wasRecentlyIssuedTakeoverUltimatum,
         float lastMissionTimeSeconds,
         bool clearPendingReward)
     {
         CompanyData.ApplySnapshot(
             funds,
-            reputation,
-            officeLevel,
-            experience,
             debt,
             completedLostItemJobs,
             failedJobs,
-            hostileTakeoverPressure,
             hasAcquiredTutorialOffice,
             lastMissionSucceeded,
-            wasRecentlyHostileAcquired,
-            hasHostileTakeoverUltimatum,
-            wasRecentlyIssuedTakeoverUltimatum,
             lastMissionTimeSeconds);
         if (clearPendingReward)
             MvpPendingReward.Clear();
