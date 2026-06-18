@@ -28,11 +28,10 @@ popups, no forced interrupts.
 
 | Stage | Slot 1 | Slot 2 | Slot 3 |
 |-------|--------|--------|--------|
-| 1 — Temporary Permit | Commissioned | Commissioned | Commissioned |
-| 2 — Full Permit | Commissioned | Commissioned | Commissioned |
-| 3 — Orbital Cert | Free Salvage | Commissioned | Commissioned |
-| 4 — Special Sample | Free Salvage | Commissioned | Black Commission |
-| 5 — Immigration Review | Free Salvage | Commissioned / Black | Black Commission |
+| 1 — 临时采回许可 | Commissioned | Commissioned | Commissioned |
+| 2 — 正式采回许可 | Commissioned | Commissioned | Commissioned |
+| 3 — 特殊样本转运许可 | Free Salvage | Commissioned | Black Commission |
+| 4 — 移民资格审查 | Free Salvage | Commissioned | Black Commission |
 
 Rules:
 - **No pool ever shows two Black Commission slots simultaneously.** One is
@@ -78,12 +77,13 @@ Rules:
 
 ### Client Variety (Commissioned Tier)
 12. Within the Commissioned tier, client identity and commission strangeness
-    are drawn from a sub-pool filtered by **internal `Reputation`** (not by
-    license stage directly). Low reputation → standard clients, mundane
-    targets. Higher reputation → weirder clients, more satirical contracts.
-    This requires no player-visible unlock — clients simply start calling.
+    are drawn from a sub-pool filtered by **license stage and missions
+    completed** (not by reputation — reputation system removed 2026-06-18).
+    Earlier stages → standard clients, mundane targets. Later stages →
+    weirder clients, more satirical contracts. Clients simply start calling
+    as the office advances — no player-visible unlock needed.
 13. Black Commission clients are always drawn from a separate pool gated
-    by Stage 4 (`SpecialSamplePermit`), regardless of reputation.
+    by Stage 3 (`特殊样本转运许可`), regardless of other factors.
 
 ## Tuning Knobs
 
@@ -92,8 +92,7 @@ Rules:
 | `poolSize` | 3 | 2–5 | feel | 3 matches co-op group discussion dynamics and CRT layout |
 | `carryoverPayPenalty` | 0.20 | 0.10–0.40 | curve | soft pressure without punishing team pacing |
 | `carryoverExpireAfter` | 2 | 1–3 | gate | 2 skips = one full session grace before expiry |
-| `repThresholdWeirdClient` | 15 | 5–30 | gate | internal reputation value where stranger clients begin appearing |
-| `repThresholdBlackClient` | — | N/A | — | Black Commission gated by Stage 4 only, not reputation |
+| `weirdClientUnlockStage` | 2 | 1–3 | gate | license stage at which stranger clients start appearing |
 
 All values live in a data asset (`Assets/Resources/Config/MissionPoolConfig.asset`
 or equivalent), never hardcoded.
@@ -104,7 +103,7 @@ or equivalent), never hardcoded.
 |--------|--------|-----------------|
 | `OfficeComputer.cs` | Pool draw + display replaces single `DemoTask` | Implement pool draw, slot rendering |
 | `OfficeTaskDefinition` | Add `isStoryMission`, `storyTriggerStage`, `storyTriggerJobCount`, `carryoverCount` fields | Extend ScriptableObject |
-| `CompanyState` | Pool reads `LicenseStage` and `Reputation` | Read-only; no new writes |
+| `CompanyState` | Pool reads `LicenseStage` and `MissionsCompleted` | Read-only; no new writes |
 | `MvpPendingReward` | Claim event triggers pool refresh | Add pool-refresh hook on claim |
 | `MvpLocale` | New terminal strings for pool rows and `[★]` glyph | Add locale keys |
 | `design/gdd/office-economy-progression.md` | Section on "job availability" is currently undefined | Update after spec is implemented |

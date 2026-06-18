@@ -1,7 +1,74 @@
 # Active Session State — Black Commission
 
-**Last updated**: 2026-06-17
+**Last updated**: 2026-06-18
 **Stage**: Production (see `production/stage.txt`)
+
+## Session 2026-06-18 — Economy & Map Design Overhaul
+
+### Locked design decisions (PM Yan Dai)
+
+**Economy model (replaces prior GDD):**
+- Reputation system: **removed entirely** from all docs and code
+- Hostile takeover / competitor restructure: **removed**
+- License revocation by Mars authority = game over (mid-game failure OR Stay-on-Earth ending)
+- Two independent tracks: License Stage (job access) + Earth Deterioration Level (safety cost)
+- Safety costs driven by EarthDet level, not license stage: Stage 1=40G, 2=60G, 3=90G, 4=120G, 5=150G
+- EarthDet advances every ~5 missions regardless of player choices
+- Stay-on-Earth ending: Mars clients stop commissioning, free salvage only, EarthDet still rises → inevitable fade-out
+- 4 license stages (not 5): 临时采回 / 正式采回 / 特殊样本转运 / 移民资格审查
+- Updated GDD: `design/gdd/office-economy-progression.md`
+- Updated pillars: `design/game-pillars.md`
+
+**Time pressure replacement (mission clock removed):**
+- No hard time limit. Two-track continuous pressure replaces timer:
+- Track A — Danger Level: rises over time (Survey→Active→Hunt→Saturation), expressed through
+  monster behaviour and audio only, never shown as a number. Saturation = 60s forced evac.
+- Track B — Infection Exposure: per-player, visible on HUD as suit fill indicator.
+  Formula: `base_rate(3/min) × danger_multiplier × zone_factor`. Converts to `去污处理费`
+  deduction at settlement (1G per exposure unit).
+- Multi-trip: each re-entry advances Danger Level phase by 1 (trip 2 starts at Active, etc.)
+- New spec: `design/quick-specs/danger-infection-system-2026-06-18.md`
+
+**Item condition system (new):**
+- 4 states: 完好 / 一般 / 受损 / 污染
+- Shown on pickup alongside weight class
+- Determined by: spawn environment + player behaviour (drops, exposure, monster hits)
+- High-exposure players picking up items in deep zone degrade condition by 1 step
+- Updated spec: `design/quick-specs/scavenging-item-system-2026-06-16.md`
+
+**A镜 (Analysis Lens) — late-game shop item:**
+- Default: condition shown as label only (完好/一般/受损/污染)
+- A镜 equipped: shows precise % within bracket (e.g. `受损 34%`)
+- Purchased at HQ shop in later license stages
+- Gives experienced players more granular negotiation data
+
+**Negotiation mechanic (revised):**
+- Players can dispute ONE item per settlement
+- Outcome is LOCKED — cannot revert to original price
+- Outcome depends on item condition + commission match (not random)
+- 完好/一般 + high match → client concedes (+15-30%)
+- 受损 or mismatch → client counter-reduces (−15-30%, locked), with authored reason
+- Counter-reduce reason is always polite, institutional, morally bankrupt (satire)
+- Co-op: all players discuss before pressing; one press commits the team
+- Updated spec: `design/quick-specs/scavenging-item-system-2026-06-16.md`
+
+**Outdoor environments:**
+- All 6 maps use natural environments (not themed man-made areas)
+- Coastal / Forest / Urban meadow / Open plain / Suburban grassland / Industrial wasteland
+- Consistent with world: Earth reclaimed by infection, nature reasserting
+
+**Stale docs fixed:**
+- `mission-pool-selection-2026-06-16.md`: removed Stage 5 row, reputation references → replaced
+  with license-stage + missions-completed based client variety
+- `map-sequence-and-modular-system.md`: Stage 5 / Mars playable map / Reputation refs still need
+  cleanup (flagged, not yet done — low priority vs implementation work)
+
+### Pending design decisions (Open)
+- Map 2-6 hero rooms: completely undefined (high priority before level design sprint)
+- License stage advance gates: what triggers 1→2→3→4? Story missions? Mission count? Both?
+- Free Salvage vs Commissioned mechanical difference: not yet defined
+- Danger Level precise formula + monster behaviour per phase: needs monster system GDD update
+- Map content (themes, missions, enemies): discussion started, not documented yet
 
 ## Current Focus
 
