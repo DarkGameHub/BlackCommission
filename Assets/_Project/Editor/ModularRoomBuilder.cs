@@ -51,13 +51,20 @@ public static class ModularRoomBuilder
         Save(Module("Junction_T_NEW", G, G, "NEW"));
         Save(Module("Junction_4Way",  G, G, "NSEW"));
 
+        // ── Dead-end caps: 1 opening + 3 solid walls. Fixes the hole the instantiator left when a
+        //    1-link cell was mapped to a 2-opening corridor (open side faced empty space). ──
+        Save(Module("Corridor_N", G, G, "N"));
+        Save(Module("Corridor_S", G, G, "S"));
+        Save(Module("Corridor_E", G, G, "E"));
+        Save(Module("Corridor_W", G, G, "W"));
+
         // ── Rooms (wall material, functional spaces) ──────────────────────
         Save(Module("Room_Utility_4x4",  G,     G,     "S",  isRoom: true));
         Save(Module("Room_Office_4x8",   G,     G*2f,  "SE", isRoom: true));
         Save(Module("Room_Large_8x8",    G*2f,  G*2f,  "SW", isRoom: true));
 
         AssetDatabase.Refresh();
-        Debug.Log($"[ModularRoomBuilder] 14 modules built → {OutDir}/");
+        Debug.Log($"[ModularRoomBuilder] 18 modules built → {OutDir}/");
     }
 
     // ── Module builder ────────────────────────────────────────────────────────

@@ -9,3 +9,38 @@ Deferred work, not in the active sprint. Pull into a sprint when prioritized.
   - **Scope**: run the full `/team-audio` pipeline — `audio-director` (sonic identity + palette) → `sound-designer` (per-event SFX specs, mix groups, ducking) → `technical-artist` (bus structure, budgets) → `gameplay-programmer` (re-implement `AudioManager`/`SynthAudio` or move to real assets). Produces `design/audio/…` then implementation.
   - **PM intent**: "我肯定是做 B" — committed, just deferred until after the current UI pass.
   - **Note**: a quick stop-gap (synth warmth + mix pass, or master SFX mute) was offered and declined in favor of doing B properly later.
+
+## Procedural maps (ADR-0003)
+
+- **Multiplayer 4-peer determinism smoke** — *deferred 2026-06-19 by PM ("先不管多端一致了").*
+  `GridMapNetworkBuilder` is already written + compiles (server rolls seed → `NetworkVariable<int>` → every
+  peer rebuilds the layout locally). What's left is the Play-mode proof: open Multiplayer Play Mode (2+
+  instances) on the map-2 scene and confirm all peers build a **byte-identical** layout from the one synced
+  seed. The generator determinism underneath is already proven headless (`GridMapReachabilityHarnessTests`:
+  1000-seed byte-identical, 0 unreachable), so this is a wiring/Play smoke, not a logic risk.
+
+- **Indoor double-wall z-fighting (old module path)** — the per-cell module instantiator
+  (`GridLayoutInstantiator`) placed two coplanar walls at every shared edge. Superseded for map 2 by the
+  **edge-based `MapSiteBuilder`** (each edge built exactly once → no doubles, no holes, real front door). If
+  `MapSiteBuilder` fully replaces the corridor path, retire the module-based instantiator + `Corridor_*`/
+  `Junction_*` prefabs (keep `Room_*` for anchor rooms if used).
+
+- **Outdoor art pass** — the outdoor approach is whitebox (ground + seeded primitive scatter for
+  trees/rocks/bushes) because no nature/terrain assets exist yet. Swap to real foliage/terrain when a nature
+  pack lands; the seeded `OutdoorScatterGenerator` placement logic stays.
+
+- **Runtime navmesh for the big map (NavMeshSurface, tiled)** — *2026-06-19.* On the revised map 2 (28×24
+  interior + ~2000-tree forest, ~3500 objects), a single `NavMeshBuilder.BuildNavMeshData` call over the whole
+  site **fragments** (DROP-OFF→DEEP came back `PathPartial` — a deep island), so the headless test now verifies
+  indoor traversal by pure-logic reachability + the outdoor approach by a scoped bake. This is a bake-method
+  limit, NOT a geometry block (players walk by physics; the generator guarantees ENTRY→DEEP). When the monster
+  is wired onto this map, bake the runtime navmesh with **`NavMeshSurface` (auto-tiled)**, which handles large
+  areas — and verify the full DROP-OFF→DEEP path then.
+
+- **Map 2 perf pass** — the whitebox site spawns ~3500 primitives on load (≈2000 forest + ≈1500 interior),
+  a one-time hitch at generation. Fine for whitebox/playtest; later: combine meshes / pool / cull / reduce
+  forest density (`OutdoorScatterGenerator` fill) once the feel is locked.
+
+- **Map 2 → 20-min loop content** — the SPACE is now big + winding + getting-lost, but a true 20-min level
+  also needs objectives, searchable loot (van-weight gate), locked-area/key progression, and monster pressure
+  layered onto this map. Space done; gameplay-pacing is the next design+impl pass.

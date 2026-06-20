@@ -30,7 +30,7 @@
 #   Superseded entries:     Grep pattern="status: superseded"
 
 version: 1
-last_updated: "2026-06-07"
+last_updated: "2026-06-18"
 
 # ─── STATE OWNERSHIP ─────────────────────────────────────────────────────────
 # Who is the authoritative owner of each piece of shared game state.
@@ -53,6 +53,7 @@ state_ownership:
     referenced_by:
       - docs/architecture/ADR-0001-host-authoritative-networking.md
       - docs/architecture/ADR-0002-relay-transport-connection-approval.md
+      - docs/architecture/ADR-0003-indoor-procedural-map-generation.md   # layout seed is host-owned shared state
     added: 2026-06-07
     revised: ""
 
@@ -94,6 +95,18 @@ interfaces:
     referenced_by:
       - docs/architecture/ADR-0001-host-authoritative-networking.md
     added: 2026-06-07
+    revised: ""
+  - contract: procedural_layout_sync
+    status: active
+    pattern: shared_resource
+    producer: host-server
+    consumers:
+      - all-peers          # each peer rebuilds the identical layout locally from the seed
+    adr: docs/architecture/ADR-0003-indoor-procedural-map-generation.md
+    signal_signature: "NetworkVariable<int> netSeed (write: Server, read: Everyone); peers run the grid generator deterministically from the seed — only the seed crosses the wire, never the layout."
+    referenced_by:
+      - docs/architecture/ADR-0003-indoor-procedural-map-generation.md
+    added: 2026-06-18
     revised: ""
 
 # Example:
@@ -182,6 +195,16 @@ api_decisions:
       - docs/architecture/ADR-0002-relay-transport-connection-approval.md
     added: 2026-06-07
     revised: ""
+  - purpose: indoor_map_generation
+    status: active
+    api: "Custom in-house grid-based tile-stitching generator (constrained: fixed Entry/Mid/Deep hero anchors + seeded tile stitch on a cell grid); server seed replicated via NetworkVariable<int>, every peer rebuilds deterministically."
+    not: "DunGen (paid asset); full free-form procedural; Lethal-Company-style fully-procedural maps (@AGENTS.md: do not copy LC layouts)."
+    adr: docs/architecture/ADR-0003-indoor-procedural-map-generation.md
+    reason: "Per-run route+content variation while preserving 'memorable place identity'; host-deterministic for co-op; no third-party dependency; grid makes overlap trivial."
+    referenced_by:
+      - docs/architecture/ADR-0003-indoor-procedural-map-generation.md
+    added: 2026-06-18
+    revised: ""
 
 # Example:
 #
@@ -236,6 +259,16 @@ forbidden_patterns:
       1–4 player co-op MVP."
     adr: docs/architecture/ADR-0001-host-authoritative-networking.md
     added: 2026-06-07
+  - pattern: nondeterministic_generation_input
+    status: active
+    description: "Procedural generation (map layout, room/loot/monster placement) must derive
+      ALL randomness from a single System.Random seeded by the replicated seed, and must iterate
+      in a stable, explicit order. Never use unsynced RNG, UnityEngine.Random, Time/frame data,
+      GetHashCode-based ordering, or hash-set/dictionary iteration order in generation logic."
+    why: "Host and every client rebuild the layout locally from one int seed (ADR-0003, ADR-0001).
+      Any nondeterministic input produces a different layout per peer = desync."
+    adr: docs/architecture/ADR-0003-indoor-procedural-map-generation.md
+    added: 2026-06-18
 
 # Example:
 #

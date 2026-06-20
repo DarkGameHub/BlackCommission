@@ -67,6 +67,11 @@ namespace BlackCommission.Level
             // This runs even before any TowerRoomCatalog exists, so the whitebox can be walked/verified.
             ApplyTopology(netSeed.Value);
 
+            // Fallback: if no catalog was wired in the scene, load the authored pool from Resources
+            // (mirrors ScavengingConfig at Resources/Config/...). A scene-assigned catalog still wins.
+            if (catalog == null)
+                catalog = Resources.Load<TowerRoomCatalog>("Config/TowerRoomCatalog_v1");
+
             var slots = FindSlots();
             if (catalog != null && slots.Count > 0)
             {

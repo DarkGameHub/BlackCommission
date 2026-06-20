@@ -3,6 +3,7 @@
     "rootNamespace": "BlackCommission.Level.Tests",
     "references": [
         "BlackCommission.Level.Topology",
+        "BlackCommission.Level.Generation",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8203bd93c541d64297c92473de99c23, type: 3}
+  m_Name: TowerRoomCatalog_v1
+  m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.TowerRoomCatalog
+  rooms:
+  - {fileID: 11400000, guid: b2b74c725001632438fd7a3cef2c4c18, type: 2}
+  - {fileID: 11400000, guid: 392455b3812a10c468fabf2625a3611d, type: 2}
+  - {fileID: 11400000, guid: ffef4a66877637c44bed38fb59c168bc, type: 2}
+  - {fileID: 11400000, guid: 07ad641c832e8f646bd3e84cb84feb7e, type: 2}
+  - {fileID: 11400000, guid: f7b5d3ac34e00ae4a837092a277205f9, type: 2}
+  - {fileID: 11400000, guid: f03bf099925305e41914809c3fc274c6, type: 2}
+  - {fileID: 11400000, guid: 38abe3d7ce321b54a8b8e32518d93296, type: 2}
+  - {fileID: 11400000, guid: 6fd51b42045d5314d850c170196cefff, type: 2}
+  - {fileID: 11400000, guid: 9dc01e40e387d07429773f6a8593a764, type: 2}
+  - {fileID: 11400000, guid: 046b0638e353f5c48bc0e0ac001e3890, type: 2}

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f6adab58498cfa459f3421876ca7f27, type: 3}
+  m_Name: SAMPLE_civic_notice
+  m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Scavenge.ScavengeItemDefinition
+  id: SAMPLE_civic_notice
+  displayName: "\u50AC\u7F34\u901A\u77E5\uFF08\u5360\u4F4D\uFF09"
+  category: 4
+  weight: 1
+  allowedSurfaces: 010000000200000003000000
+  baseValue: 30
+  prefab: {fileID: 0}

@@ -188,8 +188,28 @@ Map 1 (地球海岸壹号·烂尾预售楼) is the reference prototype. Every ot
 - Hero room positions relative to each other
 - Objective location zone
 - Van extraction point
-- Map 1 (tower): remains a fully hand-crafted fixed layout, serving as the
-  reference prototype for all shared module specifications
+- Map 1 (tower): the **geometry shell** (rooms, corridors, stairs) is hand-authored and fixed —
+  the reference prototype for the shared module specs. NOTE: the *shell* is fixed, but Map 1 **does**
+  run `TowerLayoutGenerator`, which varies **connector (door/passage) open-closed state per seed**, so
+  the route through the fixed rooms changes per run. See §Implementation Status.
+
+### Implementation Status (verified against code + scene, 2026-06-18)
+
+The variation **machinery** is built and wired into Map 1; the **content** that machinery consumes is
+only partly authored. Verified against `TowerLayoutGenerator.cs`, `Tower_EarthCoast_01.unity`, and the
+asset tree:
+
+| Layer | Status | Detail |
+|-------|--------|--------|
+| Connector topology (routes) | ✅ Live | `TowerLayoutGenerator.ApplyTopology` toggles each scene `Connector` open/closed per replicated seed, validated solvable (fallback = all-open). The route through the fixed rooms varies per run. |
+| Room-slot scaffold | ✅ Built | 25 `RoomSlot`s in the tower: **13 Random** + 12 fixed (1 Objective `TARGET`, 1 PowerGate `POWER`, 1 `VAN`, 4 Stair, 5 Fixed hero rooms `LOBBY`/`HALL`/`SALES`/`SHOWFLAT`/`BALCONY`). |
+| Room-content fill | ⚠️ Dormant | The generator fills slots only `if (catalog != null)`. The scene's `catalog` ref is **null** and **zero `RoomDef` / `TowerRoomCatalog` assets exist** — so the 13 Random slots receive no per-seed content today (cleanly skipped, no error). |
+| Scavenge loot re-roll | ❌ Not in Map 1 | `LootSpawner` / `LootAnchor` are **absent from the tower scene** (they live in `Scavenge_Testbed`). The tower is the objective-retrieval mission (`TARGET` + `POWER` gate + `VAN`), not the free-scavenge loot loop. Only 2 placeholder `ScavengeItemDefinition`s exist. |
+| Monster start position | ❓ Unverified | Not checked this pass. |
+
+**Net:** Map 1's only *live* per-run variation today is **which doors are open** (route variation). To make
+rooms vary, author a `RoomDef` pool + a `TowerRoomCatalog` and assign it to the generator. Wiring the
+scavenge loot loop into the tower (vs. keeping it in `Scavenge_Testbed`) is a separate, unmade decision.
 
 ## Build Order
 

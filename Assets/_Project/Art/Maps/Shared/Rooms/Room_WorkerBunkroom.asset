@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae5ae365ae9c8e743b9025358717ccc0, type: 3}
+  m_Name: Room_WorkerBunkroom
+  m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
+  roomName: "\u5DE5\u4EBA\u5BBF\u820D Worker Bunkroom (\u5360\u5C4B)"
+  size: 1
+  contentPrefab: {fileID: 6196764913122455160, guid: 33a0ed63e28eed6419b55ff9285e9a31, type: 3}
+  roleFilter: 0
+  floor1Only: 0
+  floor2Only: 0
+  weight: 2
+  allowDuplicates: 0
