@@ -24,18 +24,25 @@ public static class Map2SceneBuilder
         var lightGo = new GameObject("Directional Light");
         var light = lightGo.AddComponent<Light>();
         light.type = LightType.Directional;
-        light.intensity = 0.28f;                       // moonlit-dark (LC-style night)
-        light.color = new Color(0.6f, 0.7f, 0.95f);    // cold moonlight
+        light.intensity = 0.32f;                       // moonlit-dark (LC-style night)
+        light.color = new Color(0.62f, 0.68f, 0.82f);  // cold moonlight, less saturated blue (noir, not movie-blue)
         light.shadows = LightShadows.Soft;
         lightGo.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
 
         // Dark + foggy so the building is NOT visible from the far drop-off — you navigate the woods to find it.
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.05f, 0.06f, 0.09f);
+        RenderSettings.ambientLight = new Color(0.06f, 0.065f, 0.075f); // dim, near-neutral cold (desaturated)
         RenderSettings.fog = true;
-        RenderSettings.fogColor = new Color(0.03f, 0.04f, 0.06f);
+        RenderSettings.fogColor = new Color(0.045f, 0.05f, 0.06f);      // dark concrete-gray haze, still cold
         RenderSettings.fogMode = FogMode.ExponentialSquared;
-        RenderSettings.fogDensity = 0.018f;
+        RenderSettings.fogDensity = 0.018f;                            // keeps the building hidden until found
+
+        // Reuse the project's owned Tirgames industrial NIGHT skybox (no Asset Store import). Set editor-side so
+        // it serialises into the scene's RenderSettings — the runtime MapSiteRuntime build never touches assets.
+        var sky = AssetDatabase.LoadAssetAtPath<Material>(
+            "Assets/TirgamesAssets/Factory/Environment/SkyBoxes/Materials/SkyBoxIndustrial01Night.mat");
+        if (sky != null) RenderSettings.skybox = sky;
+        else Debug.LogWarning("[Map2Scene] night skybox material not found — leaving default skybox.");
 
         var camGo = new GameObject("Overview Camera");
         var cam = camGo.AddComponent<Camera>();

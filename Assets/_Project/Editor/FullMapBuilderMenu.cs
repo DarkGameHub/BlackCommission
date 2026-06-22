@@ -26,7 +26,7 @@ public static class FullMapBuilderMenu
         int seed = (int)(System.DateTime.Now.Ticks & 0x7fffffff);
         MapSiteBuilder.Result res = MapSiteBuilder.Build(root.transform, seed);
         Debug.Log($"[FullMap2] seed {seed}: indoor {res.Floors} floors / {res.Walls} walls; outdoor {res.Scatter} " +
-                  $"scatter. dropoff={res.Dropoff} frontDoor={res.FrontDoor} entry={res.Entry} deep={res.Deep}");
+                  $"scatter. dropoff={res.Dropoff} frontDoor={res.FrontDoor} fireExit={res.FireExit} entry={res.Entry} deep={res.Deep}");
 
         BakeAndVerify(root, res);
 
@@ -54,6 +54,7 @@ public static class FullMapBuilderMenu
 
         VerifyPath("DROP-OFF → ENTRY", res.Dropoff, res.Entry);
         VerifyPath("DROP-OFF → DEEP", res.Dropoff, res.Deep);
+        VerifyPath("DEEP → FIRE-EXIT", res.Deep, res.FireExit); // the new back-escape route from the objective
     }
 
     static void VerifyPath(string label, Vector3 a, Vector3 b)

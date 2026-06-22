@@ -95,26 +95,46 @@ namespace BlackCommission.Tests.Level
         [Test]
         public void Rooms_are_open_and_reachable()
         {
-            // Each waypoint expands into an OPEN room: Room-kind cells owned by the anchor, interior linked
-            // (so the builder leaves it open), still reachable from ENTRY.
+            // Each waypoint expands into an OPEN room whose footprint is one of the 3 LOCKED size classes
+            // (S 1×1 / M 2×2 / L 3×2 cells = 4×4 / 8×8 / 12×8 m — matches TowerPlanV8). Room-kind cells owned by
+            // the anchor, interior open (linked), sizes restricted to those 3 classes, still reachable from ENTRY.
             var anchors = Map2Anchors();
             var layout = GridMapGenerator.Generate(28, 24, anchors, 12345, 40, 24, 1);
+            int totalRoomCells = 0;
             foreach (var a in anchors)
             {
                 Assert.AreEqual(CellKind.Room, layout.Kind(a.Cell), $"{a.Id}: anchor cell is not part of a room");
                 Assert.AreEqual(a.Id, layout.Owner(a.Cell), $"{a.Id}: room owner wrong");
-                bool openInterior = false;
+
+                // Gather this room's cells → count + bounding box (orientation-agnostic footprint).
+                int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue, cells = 0;
+                for (int x = 0; x < layout.Width; x++)
+                    for (int y = 0; y < layout.Height; y++)
+                        if (layout.Owner(new GridCoord(x, y)) == a.Id)
+                        {
+                            cells++;
+                            if (x < minX) minX = x;
+                            if (x > maxX) maxX = x;
+                            if (y < minY) minY = y;
+                            if (y > maxY) maxY = y;
+                        }
+                totalRoomCells += cells;
+
+                // Footprint MUST be one of the 3 locked classes: S 1×1, M 2×2, L 3×2 (either orientation).
+                int lng = System.Math.Max(maxX - minX + 1, maxY - minY + 1);
+                int shrt = System.Math.Min(maxX - minX + 1, maxY - minY + 1);
+                bool locked = (lng == 1 && shrt == 1) || (lng == 2 && shrt == 2) || (lng == 3 && shrt == 2);
+                Assert.IsTrue(locked, $"{a.Id}: room footprint {maxX - minX + 1}×{maxY - minY + 1} is not one of the 3 locked classes (S/M/L)");
+
+                // Rooms are OPEN: any same-owner neighbour must be linked (no walls inside a room).
                 foreach (var d in new[] { new GridCoord(1, 0), new GridCoord(-1, 0), new GridCoord(0, 1), new GridCoord(0, -1) })
                 {
                     var n = a.Cell + d;
                     if (layout.InBounds(n) && layout.Owner(n) == a.Id)
-                    {
                         Assert.IsTrue(layout.Linked(a.Cell, n), $"{a.Id}: room interior edge not open (unlinked)");
-                        openInterior = true;
-                    }
                 }
-                Assert.IsTrue(openInterior, $"{a.Id}: room has no open interior neighbour");
             }
+            Assert.Greater(totalRoomCells, anchors.Count, "no rooms expanded beyond their anchor cells (M/L missing)");
             Assert.IsTrue(GridMapGenerator.AllAnchorsReachable(layout, anchors), "rooms broke ENTRY…DEEP reachability");
         }
 

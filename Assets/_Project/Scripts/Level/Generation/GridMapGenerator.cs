@@ -212,28 +212,50 @@ namespace BlackCommission.Level.Generation
             }
         }
 
-        // Expand each anchor into an OPEN room: a (2r+1)² block of Room cells sharing the anchor's owner, with
-        // all internal adjacencies linked (open interior — the builder skips walls between same-owner cells)
-        // and every perimeter cell linked to any adjacent corridor (entrances). Per-room size is seeded for
-        // variety. The anchor cell stays the room's nav point/marker; its prior corridor links persist.
+        // The three LOCKED room-size classes — identical to the tower system (TowerPlanV8 / PlanSize):
+        // S = 4×4 m, M = 8×8 m, L = 12×8 m. On the 4 m grid that is 1×1, 2×2 and 3×2 cells. Rooms are placed
+        // ONLY at these footprints (PM rule 2026-06-20: room sizes = these 3 classes only — no free-form blocks).
+        static readonly (int W, int H)[] RoomFootprints = { (1, 1), (2, 2), (3, 2) }; // S, M, L (cells)
+
+        // Expand each anchor into an OPEN room whose footprint is one of the 3 LOCKED size classes (hero anchors —
+        // first = ENTRY, last = DEEP/objective — are always L; the rest pick a seeded class + orientation). All
+        // internal adjacencies are linked (open interior — the builder skips walls between same-owner cells) and
+        // every perimeter cell links to any adjacent corridor (a door). The anchor cell is guaranteed to belong to
+        // its own room and another anchor's room is never overwritten. <paramref name="radius"/> is unused — the
+        // caller's roomRadius only gates rooms on/off (in Generate); the footprints are fixed.
         static void ExpandRooms(GridLayout layout, IReadOnlyList<AnchorSpec> anchors, System.Random rng, int radius)
         {
-            foreach (var a in anchors)
+            for (int ai = 0; ai < anchors.Count; ai++)
             {
+                var a = anchors[ai];
                 if (!layout.InBounds(a.Cell)) continue;
-                int r = radius + rng.Next(2); // r..r+1 → varied room sizes
 
-                for (int dx = -r; dx <= r; dx++)
-                    for (int dy = -r; dy <= r; dy++)
+                bool hero = ai == 0 || ai == anchors.Count - 1;        // ENTRY / DEEP → always Large
+                var fp = hero ? RoomFootprints[2] : RoomFootprints[rng.Next(RoomFootprints.Length)];
+                int sw = fp.W, sh = fp.H;
+                if (rng.Next(2) == 0) { int t = sw; sw = sh; sh = t; } // seeded orientation (matters for L: 3×2/2×3)
+
+                layout.Set(a.Cell, CellKind.Room, a.Id);               // anchor cell always belongs to its own room
+                if (sw > layout.Width || sh > layout.Height) continue; // footprint can't fit (degenerate grid)
+
+                // Place so the anchor sits inside the footprint; clamp so the block stays fully on the grid.
+                int minX = Clamp(a.Cell.X - sw / 2, 0, layout.Width - sw);
+                int minY = Clamp(a.Cell.Y - sh / 2, 0, layout.Height - sh);
+
+                for (int x = minX; x < minX + sw; x++)
+                    for (int y = minY; y < minY + sh; y++)
                     {
-                        var c = new GridCoord(a.Cell.X + dx, a.Cell.Y + dy);
-                        if (layout.InBounds(c)) layout.Set(c, CellKind.Room, a.Id);
+                        var c = new GridCoord(x, y);
+                        if (!layout.InBounds(c)) continue;
+                        var owner = layout.Owner(c);
+                        if (owner != null && owner != a.Id) continue;  // never steal another anchor's room cell
+                        layout.Set(c, CellKind.Room, a.Id);
                     }
 
-                for (int dx = -r; dx <= r; dx++)
-                    for (int dy = -r; dy <= r; dy++)
+                for (int x = minX; x < minX + sw; x++)
+                    for (int y = minY; y < minY + sh; y++)
                     {
-                        var c = new GridCoord(a.Cell.X + dx, a.Cell.Y + dy);
+                        var c = new GridCoord(x, y);
                         if (!layout.InBounds(c) || layout.Owner(c) != a.Id) continue;
                         foreach (var d in Dirs)
                         {
@@ -245,6 +267,8 @@ namespace BlackCommission.Level.Generation
                     }
             }
         }
+
+        static int Clamp(int v, int lo, int hi) => v < lo ? lo : (v > hi ? hi : v);
 
         static int CountKind(GridLayout layout, CellKind kind)
         {
