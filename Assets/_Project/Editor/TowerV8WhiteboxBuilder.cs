@@ -751,9 +751,6 @@ public static class TowerV8WhiteboxBuilder
             go.transform.SetParent(parent);
             go.transform.position = new Vector3(x, Floor2Y, z);
         }
-        // Target plinth (生态柱 display base) inside the objective room.
-        AddSlab(parent, blockerMat, 38f, Floor2Y + 0.5f, 12f, 2f, 1.0f, 2f, "TARGET_EcoColumnPlinth");
-        BuildEcoColumn(parent);
         // SALES: sand-table set dressing, centred to block the D32->D33 sightline (anti-enfilade prop).
         AddSlab(parent, woodMat, 28f, Floor2Y + 0.55f, 20f, 3.2f, 1.1f, 2.2f, "SALES_SandTable_Dressing");
     }
@@ -874,90 +871,52 @@ public static class TowerV8WhiteboxBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 
-    /// <summary>
-    /// 「真实海岸」生态柱 — the carriable mission objective (heavy two-hand carry,
-    /// design/levels/abandoned-tower-earth-coast-01.md). Sealed glass column on the
-    /// TARGET plinth; dropping it costs completeness (Carriable.dropDamageThreshold).
-    /// </summary>
-    static void BuildEcoColumn(Transform parent)
-    {
-        var col = new GameObject("EcoColumn_Objective");
-        col.transform.SetParent(parent);
-        // Plinth top is Floor2Y+1.0; capsule half-height 0.85 + resting epsilon.
-        col.transform.position = new Vector3(38f, Floor2Y + 1.0f + 0.86f, 12f);
-
-        var glass = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        glass.name = "Glass";
-        glass.transform.SetParent(col.transform, false);
-        glass.transform.localScale = new Vector3(0.55f, 0.62f, 0.55f); // 1.24 m tall body
-        Object.DestroyImmediate(glass.GetComponent<Collider>());
-        glass.GetComponent<Renderer>().sharedMaterial = ecoMat;
-        glass.AddComponent<EmissionPulse>(); // the sealed coast breathes faintly
-
-        foreach (var (nm, y) in new[] { ("Cap_Top", 0.7f), ("Cap_Base", -0.7f) })
-        {
-            var cap = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            cap.name = nm;
-            cap.transform.SetParent(col.transform, false);
-            cap.transform.localPosition = new Vector3(0f, y, 0f);
-            cap.transform.localScale = new Vector3(0.62f, 0.08f, 0.62f);
-            Object.DestroyImmediate(cap.GetComponent<Collider>());
-            cap.GetComponent<Renderer>().sharedMaterial = trayMat;
-        }
-
-        var capsule = col.AddComponent<CapsuleCollider>();
-        capsule.height = 1.7f;
-        capsule.radius = 0.32f;
-
-        var rb = col.AddComponent<Rigidbody>();
-        rb.mass = 45f; // heavy two-hand carry weight class
-
-        col.AddComponent<NetworkObject>();
-        var carriable = col.AddComponent<EcoColumnCarriable>(); // forwards hard impacts to the mission manager
-        var so = new SerializedObject(carriable);
-        so.FindProperty("isHeavy").boolValue = true;
-        so.FindProperty("dropDamageThreshold").floatValue = 3.5f; // fragile: drops cost completeness
-        so.ApplyModifiedPropertiesWithoutUndo();
-    }
+    // (BuildEcoColumn removed — scavenge loot replaces the single eco-column objective)
 
     /// <summary>
-    /// Tower mission wiring (design/quick-specs/tower-mission-manager-2026-06-10.md):
-    /// host-authoritative manager + van cargo zone (set the column DOWN inside to count
-    /// as aboard) + depart lever at the van. References wired via SerializedObject.
+    /// Scavenge mission wiring (replaces the eco-column tower mission): a host loot spawner that
+    /// fills the dressed rooms' LootAnchors, the van cargo-bay deposit gate, the run manager, and
+    /// the depart trigger. Components auto-resolve via their scene singletons; the cargo-zone and
+    /// manager refs are also wired explicitly via SerializedObject for determinism.
     /// </summary>
     static void BuildMissionManager(Transform parent)
     {
         PlanSlab van = TowerPlanV8.ById["VAN"];
 
-        // Cargo zone: rear half of the van pad, building side.
+        // Loot spawner: on host start it fills every LootAnchor in the loaded scene with a
+        // networked ScavengeItem. Anchors come from the dressed Room prefabs TowerLayoutGenerator
+        // drops into the RoomSlots, so the spawner defers a frame for the fill (see LootSpawner).
+        var spawnerGo = new GameObject("LootSpawner");
+        spawnerGo.transform.SetParent(parent);
+        spawnerGo.AddComponent<NetworkObject>();
+        spawnerGo.AddComponent<LootSpawner>();
+
+        // Cargo zone: rear half of the van pad, building side — set an item DOWN inside to stow it.
         var zoneGo = new GameObject("VAN_CargoZone");
         zoneGo.transform.SetParent(parent);
         zoneGo.transform.position = new Vector3(van.CenterX, 1.25f, van.Z + van.D - 2f);
         var zone = zoneGo.AddComponent<BoxCollider>();
         zone.isTrigger = true;
         zone.size = new Vector3(8f, 2.5f, 4f);
+        zoneGo.AddComponent<NetworkObject>();
+        var cargoZone = zoneGo.AddComponent<ScavengeCargoZone>();
 
-        // Depart lever post beside the cargo zone (civic teal, child collider for interact).
+        // Depart trigger post beside the cargo zone (civic teal, child collider for interact).
         var leverGo = new GameObject("VAN_DepartLever");
         leverGo.transform.SetParent(parent);
         leverGo.transform.position = new Vector3(van.X + 1.2f, 0f, van.Z + van.D - 1f);
         AddSlab(leverGo.transform, tealMat, van.X + 1.2f, 0.6f, van.Z + van.D - 1f, 0.3f, 1.2f, 0.3f, "Lever_Post");
         AddVisualSlab(leverGo.transform, stampMat, van.X + 1.2f, 1.28f, van.Z + van.D - 1f, 0.12f, 0.35f, 0.12f, "Lever_Handle");
 
-        var managerGo = new GameObject("TowerMissionManager");
+        var managerGo = new GameObject("ScavengeMissionManager");
         managerGo.transform.SetParent(parent);
         managerGo.AddComponent<NetworkObject>();
-        var manager = managerGo.AddComponent<TowerMissionManager>();
-
-        var eco = Object.FindFirstObjectByType<EcoColumnCarriable>(FindObjectsInactive.Include);
+        var manager = managerGo.AddComponent<ScavengeMissionManager>();
         var so = new SerializedObject(manager);
-        so.FindProperty("ecoColumn").objectReferenceValue = eco;
-        so.FindProperty("cargoZone").objectReferenceValue = zone;
+        so.FindProperty("cargoZone").objectReferenceValue = cargoZone;
         so.ApplyModifiedPropertiesWithoutUndo();
-        if (eco == null)
-            Debug.LogWarning("[TowerV8] Mission manager built but no EcoColumnCarriable found to wire.");
 
-        var lever = leverGo.AddComponent<TowerVanDepartLever>();
+        var lever = leverGo.AddComponent<ScavengeVanDepartTrigger>();
         var leverSo = new SerializedObject(lever);
         leverSo.FindProperty("manager").objectReferenceValue = manager;
         leverSo.ApplyModifiedPropertiesWithoutUndo();
@@ -972,15 +931,10 @@ public static class TowerV8WhiteboxBuilder
         exitGo.AddComponent<MissionVanExitPoint>();
         // HQ-flow entry / disembark point: PlayerController.GetSceneSafePosition finds this by
         // name. Placed just outside the van's OPEN REAR (north/building side, z = van.Z+van.D),
-        // facing the building — you step out the back cargo door, not jammed against the cab
-        // (PM 2026-06-13: "类似囚犯车,后面有门,从车后下车"). Identity rotation faces +z = north.
+        // facing the building — you step out the back cargo door, not jammed against the cab.
         var spawn = new GameObject("PlayerSpawnPoint");
         spawn.transform.SetParent(parent);
         spawn.transform.position = new Vector3(van.CenterX, 0.1f, van.Z + van.D + 1f);
-
-        // Procedural box-van REMOVED 2026-06-13 (PM: too ugly). The proper van interior will be
-        // rebuilt in-engine toward the locked reference (design/ux/mockups/van-interior/) in the
-        // art pass. BuildMissionVan/AddVisualWheel are left below but UNCALLED (dead) for now.
     }
 
     /// <summary>

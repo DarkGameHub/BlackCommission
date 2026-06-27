@@ -6,7 +6,7 @@ van weight limit, settlement reveal, and one-dispute bargaining. Does NOT
 define item art, map spawn placement, or individual client content (those
 are authored separately).
 **Date**: 2026-06-16 (updated 2026-06-18: item condition system, revised
-negotiation, A镜 upgrade)
+negotiation, A镜 upgrade; **updated 2026-06-26: 双层架构 Salvage/Relic + 客户偏好→大类**, see `scavenging-two-tier-revision-2026-06-26.md`)
 **Estimated Implementation**: 1–2 weeks (phased)
 
 ## Overview
@@ -64,14 +64,15 @@ Client feedback: [authored text, optional]
 Items are displayed in emotional weight order (authored per run, not sorted by
 price). The last item revealed should be the one that lands hardest.
 
-### 5. Client Category Preference (Commissioned / Black Jobs)
-A Commissioned or Black Commission client favours 1–2 item **categories**,
-hinted at — never named — in the commission text. Items of a favoured category
-settle at `× clientPreferenceMultiplier` (default 1.3); every other item, and
-all Free Salvage, settles at market rate. There is **no designated target
-item** and nothing gates completion (per `scavenging-core-loop.md` §0 D-G).
-Reading the commission well and hauling the favoured categories should feel
-like a good run; ignoring it just means market rate.
+### 5. Client Preference Model — Two-Tier（双层，修订 2026-06-26 PM-locked；详见 `scavenging-two-tier-revision-2026-06-26.md`）
+
+可捡拾物分**两层**，客户偏好对两层作用不同（取代旧的"偏好 1–2 个具体类目"）：
+
+**层一 · 搜刮经济主体（Salvage）** — 视觉化物件（器物 / 家电 / 工具 / 衣物 / 医药 / 宗教器物 / 酒 / 标本 / 家具），看模型可判断价值，扛"重量 vs 价值"取舍。客户偏好作用于 **4 个大类（Material Class）**：**家居烟火 / 劳作器械 / 自然遗存 / 文化信仰**。Commissioned/Black 客户偏好 1–2 个大类（委托文本暗示、不点名），其下物件结算 `× materialClassPreferenceMultiplier`（默认 1.3）；其余物件与 *所有* Free Salvage = 市场价。
+
+**层二 · 情感锚点（Relic）** — 私人遗物（信 / 照片 / 儿童画 / 日记 / 公文），**不走大类偏好**。每图手工 3–6 件，对应"谁的命运"。对**匹配的个人客户**（怀旧移民一代 / 二代）`× relicEmotionalMultiplier`（1.5–3.0，高方差）+ 特殊结算文本；对**不匹配的机构 / 三代客户** `× relicMismatchMultiplier`（≈0.8）+ 归档冷淡腔。**反差即讽刺**：同一封信，对怀念地球的一代是无价，对收藏地球的三代只是一个编号。
+
+仍**无指定目标物**（`scavenging-core-loop.md` §0 D-G 不变）：层二遗物不是"必须找到否则失败"的目标，是高情感稀有点缀。检视系统（举起看痕迹，见 Task #2）是其主要呈现，**不改价值**。读懂委托、专挑偏好大类 + 偶遇匹配遗物 = 打得好。
 
 ### 6. Item Condition (3 states — PM locked 2026-06-18, no 污染)
 
@@ -124,8 +125,6 @@ not random. The result is **locked**: once the client responds, the new price
 | 完好 or 一般 | High match | Concede: +15–30% |
 | 完好 or 一般 | Low match | Reject (price unchanged) |
 | 受损 | Any | Counter-reduce: −15–25% (locked) |
-| 污染 | Matched client type | Concede or reject |
-| 污染 | Mismatched client | Counter-reduce: −20–30% (locked) |
 
 The counter-reduce is never random — the client always provides an authored
 reason that is polite, institutional, and morally bankrupt. Example:
@@ -156,38 +155,46 @@ or personal). The tone is the content.
 Heavy items require two-hand carry (existing mechanic). Medium items occupy
 one hand. Light items can be pocketed (up to 2 in one inventory slot).
 
-## Item Categories (12 minimum for launch)
+## Item Categories — Two-Tier（双层归属，修订 2026-06-26）
 
-Each category has:
-- A visual silhouette readable at 4m in the lo-fi art style
-- A color accent matching the BC palette (no price-coded colors — all items
-  use the same neutral aged-earth palette; color is not a value signal)
-- A weight class default (individual items may vary within category)
-- A pool of authored settlement notes per client type
+每个类目仍有：4m 可读剪影 / 统一陈旧大地色（颜色不作价值信号）/ 默认载重 / 每客户类型的结算文本池。**新增**：每个类目归入**层一（Salvage）或层二（Relic）**；层一类目再归入一个**大类（Material Class）**。
 
-| Category | Default Weight | Notes |
-|----------|---------------|-------|
-| Personal correspondence | Light | Letters, postcards, handwritten notes |
-| Family photography | Light | Photos, printed images, home media |
-| Children's artifacts | Light | Drawings, schoolwork, small toys |
-| Medical / pharmaceutical | Light–Medium | Prescription bottles, files, equipment |
-| Civic documents | Light | Debt notices, permits, official stamps |
-| Cultural publications | Light–Medium | Books, music, printed media |
-| Personal clothing / effects | Light–Medium | Clothing, bags, accessories, ID cards |
-| Household technology | Medium | Broken electronics, appliances, terminals |
-| Professional tools | Medium | Work equipment, instruments |
-| Native plant specimens | Medium | Contained flora, soil cores |
-| Religious / ceremonial | Light–Medium | Household altars, ritual objects |
-| Residential fixtures | Heavy | Furniture sections, fittings, signage |
+**层一 · 搜刮经济主体（走大类偏好 ×`materialClassPreferenceMultiplier`）**
+
+| Category | Material Class 大类 | Default Weight | Notes |
+|---|---|---|---|
+| 器物 / 摆件 Decorative objects | 家居烟火 Domestic | Medium | 陶瓷、钟表、乐器、装饰件 |
+| 家用科技 Household technology | 家居烟火 Domestic | Medium | 坏电器、家电、终端 |
+| 个人衣物 / 随身物 Personal clothing/effects | 家居烟火 Domestic | Light–Medium | 衣物、包、配饰、证件 |
+| 住宅家具 / 固定件 Residential fixtures | 家居烟火 Domestic | Heavy | 家具段、灯具、招牌 |
+| 医药 Medical / pharmaceutical | 家居烟火 Domestic | Light–Medium | 处方瓶、器械（家庭药箱）【D3：归家居】 |
+| 专业工具 Professional tools | 劳作器械 Labour | Medium | 工作器械、仪器 |
+| 本土植物标本 Native plant specimens | 自然遗存 Natural | Medium | 容器装植物、土芯、污染样本 |
+| 宗教 / 礼仪器物 Religious/ceremonial | 文化信仰 Culture | Light–Medium | 家用神龛、仪式物 |
+| 文化出版物 Cultural publications | 文化信仰 Culture | Light–Medium | 书、唱片、印刷品（题字本 / 家庭录像 → 特例可作层二） |
+| 酒 / 奢侈消费品 Liquor / luxury goods | 文化信仰 Culture | Medium | 酒瓶、奢侈品（会所图） |
+
+**层二 · 情感锚点（不走大类；匹配客户 ×`relicEmotionalMultiplier`，否则 ×`relicMismatchMultiplier`）**
+
+| Category | Default Weight | Notes（含检视细节） |
+|---|---|---|
+| 私人信件 Personal correspondence | Light | 信、明信片、手写便条（信封收件人名字 = 检视细节） |
+| 家庭照片 Family photography | Light | 照片、相册（照片里模糊的脸） |
+| 儿童物品 Children's artifacts | Light | 蜡笔画、作业本、磨损的玩具 |
+| 日记 / 家庭影像 Diaries / home media | Light | 翻开停在某一页 |
+| 公文 / 制度物 Civic documents | Light | 欠债通知、公章、委托表（也是 BC 身份注入 art-bible §6） |
 
 ## Tuning Knobs
 
 | Knob | Default | Range | Notes |
 |------|---------|-------|-------|
 | `vanWeightCapacity` | 12 units | 8–20 | Per team, not per player |
-| `clientPreferenceMultiplier` | 1.3× | 1.1–1.6 | Applied to favoured-category items on Commissioned/Black runs |
+| `materialClassPreferenceMultiplier`（原 `clientPreferenceMultiplier`） | 1.3× | 1.1–1.6 | 层一物件命中客户偏好**大类**时（2026-06-26 改：作用于大类，非具体类目） |
+| `relicEmotionalMultiplier`（新 2026-06-26） | 2.0× | 1.5–3.0 | 层二遗物对**匹配个人客户**的情感加价（高方差） |
+| `relicMismatchMultiplier`（新 2026-06-26） | 0.8× | 0.6–1.0 | 层二遗物对**不匹配机构 / 三代客户**的冷淡折价 |
+| `relicsPerMap`（新 2026-06-26） | 4 | 3–6 | 每图手工层二遗物数量 |
 | `disputeConcedeRate` | ~40% | 30–60% | Authored per item/client combo, not random |
-| `itemsPerMapInstance` | 10–14 | 8–18 | Spawned items per run |
+| `itemsPerMapInstance` | 10–14 | 8–18 | 层一物件每局生成数（层二另由 `relicsPerMap` 控制） |
 | `lightItemPocketSlots` | 2 | 1–3 | Per player pocket capacity |
 | `valuableConditionThreshold` | baseValue ≥ 80 | 40–150 | "Valuable" cutoff for hard-drop condition loss (Rule 6) |
 
@@ -213,8 +220,10 @@ trajectory.
 | System | Impact | Action Required |
 |--------|--------|----------------|
 | `OfficeComputer.cs` | Commission display must show client profile + text | Show client type, background, and commission text |
-| `MissionRewardCalculator.cs` | Replace binary success/partial with per-item sum | New formula: Σ(baseValue × condition × clientPreferenceMultiplier) — see `scavenging-core-loop.md` §4 |
-| `OfficeTaskDefinition` | Add: item category hints, client type, generational data | Extend ScriptableObject |
+| `MissionRewardCalculator.cs` / `ScavengeSettlementCalculator.cs` | 双层求和（2026-06-26） | `Σ层一(base×cond×大类倍率) + Σ层二(base×cond×情感倍率)` — 详见 `scavenging-two-tier-revision-2026-06-26.md` §7 |
+| `ScavengeItemDefinition` | 双层数据（2026-06-26） | 加 `tier`(Salvage/Relic)；层一加 `materialClass`；层二加 `targetPersonId` + 可选 `inspectDetail` |
+| `OfficeTaskDefinition` | 客户偏好改大类（2026-06-26） | `favouredCategories` → `favouredMaterialClasses`(1–2) + 个人客户 relic 情感匹配；client type / generational data |
+| `InspectController`（新，Task #2） | 举起检视 = 层二主要呈现 | 第一人称举起旋转 + 联机同步；不改价值 |
 | `VanTransitOverlay.cs` | Add weight display to van overlay (ticket strip) | Show remaining capacity |
 | `CarrySystem.cs` | Enforce van weight limit on load | Check capacity before allowing cargo-zone deposit |
 | `SettlementCardOverlay.cs` | Per-item reveal sequence, dispute button | Major UI update |
@@ -225,7 +234,9 @@ trajectory.
 - [ ] Items show name, weight class, and category only — no price during mission
 - [ ] Van weight display shows remaining capacity; full van rejects new items
 - [ ] Settlement reveals each item's price and client note in authored sequence
-- [ ] Favoured-category items pay `× clientPreferenceMultiplier` on Commissioned/Black runs; Free Salvage pays market rate
+- [ ] 层一物件命中客户偏好**大类**时 `× materialClassPreferenceMultiplier`；其余物件与 Free Salvage = 市场价
+- [ ] 层二遗物：匹配个人客户 `× relicEmotionalMultiplier` + 特殊文本；不匹配机构 / 三代 `× relicMismatchMultiplier` + 归档冷淡腔
+- [ ] 检视：捡起可举起旋转看细节（信封名字 / 照片的脸 / 玩具磨损），不改价值
 - [ ] Dispute button appears after full reveal; one use per settlement
 - [ ] Dispute response is authored (not random), written in client register
 - [ ] Free Salvage runs show approximate market rate per category (not per item)

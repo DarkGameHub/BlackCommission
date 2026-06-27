@@ -5,7 +5,7 @@
 > reputation / XP / takeover-pressure from the stale `office-economy-progression.md`.
 > Becomes canon once PM approves and the code + doc migration tasks below are executed.
 >
-> **Author**: Yan Dai (PM, all final decisions) + Claude (synthesis of game-designer,
+> **Author**: David (PM, all final decisions) + Claude (synthesis of game-designer,
 > level-designer, creative-director proposals, 2026-06-17)
 >
 > **Implements Pillars**: 1 (the broke office) · 2 (the dispatch van ritual) ·
@@ -184,6 +184,8 @@ No item is guaranteed to spawn for any reason, and no item gates completion — 
 weight and threat levers is the only "objective." The moral slope (§3.5) is carried entirely by
 *which categories the client wants and what they say they will do with them*, not by a special
 object. There is no `IsCommissionedTarget` flag and no guaranteed-target placement.
+
+> **双层修订（2026-06-26，PM-locked）**：可捡拾物拆为**层一物件（走大类偏好）+ 层二私人遗物（走情感匹配）**。客户偏好从"具体类目"改为作用于 **4 个 Material Class（家居烟火 / 劳作器械 / 自然遗存 / 文化信仰）**；层二遗物对匹配个人客户情感加价、对机构 / 三代冷淡折价。完整设计见 `design/quick-specs/scavenging-two-tier-revision-2026-06-26.md` 与 `scavenging-item-system-2026-06-16.md` §5。**下方 §4 公式仍是 as-implemented 旧单层模型——双层新公式（`Σ层一 + Σ层二`）待代码实现后再更新 §4。**
 
 ### 3.5 Mission Taxonomy (Pillar 5 — The Moral Slope)
 
@@ -485,6 +487,7 @@ gameplay code. Programmers: never embed these as magic numbers.
 | **`failurePayoutRate` knob in `ScavengingConfig`** | High | Add the field and expose in the inspector. Default 0.5 pending PM decision. |
 | **`LootSpawner` category stamping** | Medium | Today the planner is pure `(seed, anchors, pool, min, max) → random subset`. Add a per-item category stamp at spawn so `ScavengeSettlementCalculator` can apply `clientPreferenceMultiplier` to favoured categories. No mission-type/target input or guaranteed placement is needed. |
 | **Per-item settlement reveal** | Next milestone | `SettlementCardOverlay` expanded to show per-item lines + client note + condition + dispute button. Current build shows total only. |
+| **双层 loot（Salvage/Relic）+ 大类偏好 + 检视**（2026-06-26 批准） | High | `ScavengeItemDefinition` 加 `tier`/`materialClass`/`targetPersonId`；`OfficeTaskDefinition` `favouredCategories`→`favouredMaterialClasses`；`ScavengeSettlementCalculator` 改双层公式 `Σ层一(base×cond×大类倍率)+Σ层二(base×cond×情感倍率)`；新增 `InspectController`（举起检视，Task #2）。详见 `scavenging-two-tier-revision-2026-06-26.md`。 |
 
 ---
 

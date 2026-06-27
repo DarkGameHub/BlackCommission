@@ -173,7 +173,7 @@ public class PlayerHotbar : NetworkBehaviour
     {
         if (!IsOwner) return false;
         if (HasWristwatchOwned) return false;
-        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
+        if (ScavengeMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
         if (!IsNearOfficeComputer()) return false;
         if (CompanyData.Current.Funds < WristwatchCost) return false;
 
@@ -440,7 +440,7 @@ public class PlayerHotbar : NetworkBehaviour
     void PurchaseItemServerRpc(MvpHotbarItemId itemId)
     {
         EnsureSlots();
-        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return;
+        if (ScavengeMissionManager.Instance != null || MvpPendingReward.HasPending) return;
         if (!IsNearOfficeComputer()) return;
 
         int cost = GetItemCost(itemId);
@@ -463,7 +463,7 @@ public class PlayerHotbar : NetworkBehaviour
     void PurchaseWristwatchServerRpc()
     {
         if (HasWristwatch.Value) return;
-        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return;
+        if (ScavengeMissionManager.Instance != null || MvpPendingReward.HasPending) return;
         if (!IsNearOfficeComputer()) return;
         if (CompanyData.Current.Funds < WristwatchCost) return;
 
@@ -539,7 +539,7 @@ public class PlayerHotbar : NetworkBehaviour
 
     bool TryPurchaseLocal(MvpHotbarItemId itemId)
     {
-        if (TowerMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
+        if (ScavengeMissionManager.Instance != null || MvpPendingReward.HasPending) return false;
         if (!IsNearOfficeComputer()) return false;
 
         int cost = GetItemCost(itemId);

@@ -1,7 +1,7 @@
 # UX Spec: Mission Monster-Encounter Feedback (Echo Mold HUD Layer)
 
 > **Status**: In Design
-> **Author**: Yan Dai (PM) + ux-designer
+> **Author**: David (PM) + ux-designer
 > **Last Updated**: 2026-06-15
 > **Journey Phase(s)**: Mission-site — encounter & extraction
 > **Extends**: `design/ux/hud.md` (Approved 2026-06-11) — this is the encounter

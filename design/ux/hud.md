@@ -1,7 +1,7 @@
 # HUD Design — Black Commission
 
 > **Status**: Approved（PM 终审通过 2026-06-11）
-> **Author**: Yan Dai + ux-designer
+> **Author**: David + ux-designer
 > **Last Updated**: 2026-06-11
 > **Template**: HUD Design
 > **统一语言定位**: 三类表面之「现场工单」（CRT 终端绿=世界内屏幕 / 盖章公文卡=一切模态 / 现场工单=HUD）

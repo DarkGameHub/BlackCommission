@@ -1,6 +1,6 @@
 # Black Commission Agent Rules
 
-Yan Dai is the PM and final design decision maker.
+David is the PM and final design decision maker.
 
 Black Commission is a 1-4 player co-op commission-running game about a nearly bankrupt commission office taking strange outsourced jobs. The current signature loop is:
 

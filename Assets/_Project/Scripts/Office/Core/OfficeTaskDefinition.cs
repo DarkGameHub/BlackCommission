@@ -1,5 +1,13 @@
 using UnityEngine;
 
+/// <summary>
+/// Commission tier (scavenging-core-loop §3.5). Free Salvage pays market rate for everything;
+/// Commissioned / Black favour 1-2 item categories that settle at the client-preference
+/// multiplier and carry the per-item settlement satire. Black differs from Commissioned in
+/// narrative register only, not mechanics.
+/// </summary>
+public enum CommissionClientType { FreeSalvage, Commissioned, BlackCommission }
+
 [CreateAssetMenu(menuName = "Black Commission/Office Task Definition")]
 public class OfficeTaskDefinition : ScriptableObject
 {
@@ -15,6 +23,14 @@ public class OfficeTaskDefinition : ScriptableObject
     public string sceneName = "Tower_EarthCoast_01";
     public int recommendedPlayersMin = 1;
     public int recommendedPlayersMax = 4;
+
+    [Header("Client Preference (scavenging — scavenging-core-loop §3.4)")]
+    [Tooltip("Free Salvage pays market rate for everything; Commissioned/Black favour the categories below.")]
+    public CommissionClientType clientType = CommissionClientType.FreeSalvage;
+    [Tooltip("Item-category IDs (cast from ScavengeCategory) this client favours — set by the commission builder. " +
+             "Items in these categories settle at ScavengingConfig.clientPreferenceMultiplier on Commissioned/Black runs; " +
+             "empty = market rate. Stored as int (not ScavengeCategory[]) so Office.Core need not reference the Scavenge assembly.")]
+    public int[] favouredCategoryIds;
 
     // TODO: gate by license stage (game-pillars.md) — requiredOfficeLevel and minimumReputation removed 2026-06-17.
 
@@ -48,5 +64,15 @@ public class OfficeTaskDefinition : ScriptableObject
         };
         if (pool == null || pool.Length == 0) return null;
         return pool[Mathf.Abs(seed) % pool.Length];
+    }
+
+    /// <summary>True when an item category (cast to int from ScavengeCategory) earns the
+    /// client-preference multiplier this run. Free Salvage favours nothing.</summary>
+    public bool FavoursCategoryId(int categoryId)
+    {
+        if (clientType == CommissionClientType.FreeSalvage || favouredCategoryIds == null) return false;
+        for (int i = 0; i < favouredCategoryIds.Length; i++)
+            if (favouredCategoryIds[i] == categoryId) return true;
+        return false;
     }
 }

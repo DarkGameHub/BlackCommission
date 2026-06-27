@@ -1,7 +1,7 @@
 # Black Commission Art Bible: Low-Cost Outsourced Horror Style
 
 Owner: Banach, Art Direction Agent  
-PM: Yan Dai  
+PM: David  
 Document scope: MVP visual direction for the rundown office, the school lost-item map, and future maps.  
 Current target: 1-4 player MVP loop, `HQ -> School_LostItem_01 -> HQ`, primitive geometry, URP Lit/Simple Lit materials, OnGUI HUD.
 

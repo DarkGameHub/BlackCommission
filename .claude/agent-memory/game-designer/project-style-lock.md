@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Black Commission 画风：**低保真合作工业恐怖**（2026-06-10 PM Yan Dai 拍板，style-lock-v2）。
+Black Commission 画风：**低保真合作工业恐怖**（2026-06-10 PM David 拍板，style-lock-v2）。
 
 关键约束：
 - 贴图分辨率上限 256px；可见纹素是特征不是缺陷

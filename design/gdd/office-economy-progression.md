@@ -1,7 +1,7 @@
 # Office / HQ Economy & Progression
 
 > **Status**: In Design
-> **Author**: Yan Dai (PM) + Claude (zeno/hilbert lens)
+> **Author**: David (PM) + Claude (zeno/hilbert lens)
 > **Last Updated**: 2026-06-18
 > **Implements Pillar**: 1 (the broke office) · 4 (partial settlement choices) · 5 (the moral slope)
 > **Priority / Layer**: MVP / Core
@@ -290,8 +290,8 @@ Default thresholds: `warning_threshold = 3`, `revoke_threshold = 5`. A single su
 
 | # | Question | Owner | Target |
 |---|---|---|---|
-| 1 | **Thin-haul viability**: a ~60G haul nets negative at EarthDet 3+ (60−90). Intended (survival-only runs) or retune safety cost / haul sizing? | PM Yan Dai | balance pass |
-| 2 | ✅ **RESOLVED 2026-06-18** — advance = complete that stage's **story mission**, which appears after `license_story_gate[stage]` total missions (**4 / 10 / 18**). Both: authored story mission + min-count availability gate; no auto-advance. | PM Yan Dai | done |
+| 1 | **Thin-haul viability**: a ~60G haul nets negative at EarthDet 3+ (60−90). Intended (survival-only runs) or retune safety cost / haul sizing? | PM David | balance pass |
+| 2 | ✅ **RESOLVED 2026-06-18** — advance = complete that stage's **story mission**, which appears after `license_story_gate[stage]` total missions (**4 / 10 / 18**). Both: authored story mission + min-count availability gate; no auto-advance. | PM David | done |
 | 3 | **Deterioration interval tuning**: 5 missions/level feels right for a ~30 mission full game. Confirm with playtesting. | PM + QA | first playtest |
 | 4 | **RevokedNotice recovery**: should one paying settlement after notice clear the notice flag, or is the notice permanent once issued? | PM | balance pass |
 | 5 | **Stay-on-Earth revocation narrative**: the letter/visitor event needs a different authored text from mid-game safety failure. Two distinct GDD events. | narrative-director | when narrative system is designed |

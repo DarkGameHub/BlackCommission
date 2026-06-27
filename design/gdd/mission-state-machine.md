@@ -8,7 +8,7 @@
 > rewrite of this doc to the scavenge model is a pending cleanup pass; treat the body below as historical.
 
 > **Status**: In Design
-> **Author**: Yan Dai (PM) + Claude (zeno/laplace lens)
+> **Author**: David (PM) + Claude (zeno/laplace lens)
 > **Last Updated**: 2026-06-08
 > **Implements Pillar**: partial settlement choices; co-op extraction tension
 > **Priority / Layer**: MVP / Core

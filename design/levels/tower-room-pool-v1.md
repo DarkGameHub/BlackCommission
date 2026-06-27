@@ -2,7 +2,7 @@
 
 **Status**: Draft for PM review (NOT built)
 **Date**: 2026-06-18
-**PM**: Yan Dai
+**PM**: David
 **Map**: 地球海岸壹号·烂尾预售楼 (Map 1)
 **Related**: `design/gdd/map-sequence-and-modular-system.md` (§Modular Room System, §Implementation Status),
 `Assets/_Project/Scripts/Level/RoomDef.cs`, `RoomSlot.cs`, `TowerRoomCatalog.cs`

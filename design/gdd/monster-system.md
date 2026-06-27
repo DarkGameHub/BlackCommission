@@ -1,7 +1,7 @@
 # Monster System (怪物系统)
 
 > **Status**: In Design
-> **Author**: Yan Dai (PM) + Claude (zeno/laplace/banach lens)
+> **Author**: David (PM) + Claude (zeno/laplace/banach lens)
 > **Last Updated**: 2026-06-14
 > **Implements Pillar**: Threat Design(MRC-7 感染生态)· co-op extraction tension · 支柱4「要不要现在走」
 > **Priority / Layer**: MVP / Core(框架)

@@ -25,9 +25,12 @@ Deferred work, not in the active sprint. Pull into a sprint when prioritized.
   `MapSiteBuilder` fully replaces the corridor path, retire the module-based instantiator + `Corridor_*`/
   `Junction_*` prefabs (keep `Room_*` for anchor rooms if used).
 
-- **Outdoor art pass** — the outdoor approach is whitebox (ground + seeded primitive scatter for
-  trees/rocks/bushes) because no nature/terrain assets exist yet. Swap to real foliage/terrain when a nature
-  pack lands; the seeded `OutdoorScatterGenerator` placement logic stays.
+- **Outdoor art pass** — *noir whitebox pass DONE 2026-06-20 (hybrid direction, zero-import): locked-palette
+  recolor + dead-tree silhouettes + derelict industrial-yard dressing + Tirgames night skybox; verified green,
+  awaiting PM visual sign-off.* **Remaining (deferred):** swap the procedural industrial dressing for real
+  Tirgames/Sat prefabs (needs Resources wiring or a serialized ref array on `MapSiteRuntime` to stay
+  runtime-safe), and/or import a stylized dead-foliage/terrain pack re-mapped to the palette. The seeded
+  `OutdoorScatterGenerator` placement + `BuildYardDressing` seams stay; only the meshes/materials swap.
 
 - **Runtime navmesh for the big map (NavMeshSurface, tiled)** — *2026-06-19.* On the revised map 2 (28×24
   interior + ~2000-tree forest, ~3500 objects), a single `NavMeshBuilder.BuildNavMeshData` call over the whole
@@ -44,3 +47,12 @@ Deferred work, not in the active sprint. Pull into a sprint when prioritized.
 - **Map 2 → 20-min loop content** — the SPACE is now big + winding + getting-lost, but a true 20-min level
   also needs objectives, searchable loot (van-weight gate), locked-area/key progression, and monster pressure
   layered onto this map. Space done; gameplay-pacing is the next design+impl pass.
+
+- **Map 2 multiplayer layout determinism (ADR-0003 seed-sync)** — *IMPLEMENTED 2026-06-26 (pending compile + 2-4p playtest verify).*
+  `MapSiteRuntime` is now a `NetworkBehaviour`: the server rolls one seed → `NetworkVariable<int>` → every peer
+  rebuilds the identical layout from it (`MapSiteBuilder.Build` is seed-deterministic — generator scan confirmed
+  all RNG is `System.Random(seed)`, no unseeded/Time/hash-set order). Offline keeps a local-seed fallback so the
+  solo walk-test still works. `Map2SceneBuilder` bakes a NetworkObject on MapSite. The host-authoritative
+  `LootSpawner` fills the now-identical anchors + replicates the items, so loot lands correctly on every peer.
+  Mirrors `GridMapNetworkBuilder` / `TowerLayoutGenerator` seed-sync. **Verify:** 2-4p PlayMode — host + clients
+  build byte-identical layouts + see the same loot at the same spots.

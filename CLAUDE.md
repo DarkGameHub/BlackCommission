@@ -4,7 +4,7 @@ Indie Unity co-op game developed with the Claude Code Game Studios framework:
 49 coordinated subagents and 70+ workflow skills, each owning a specific domain.
 
 > **Project rules of record:** `@AGENTS.md` is authoritative for game vision,
-> design pillars, scope, and long-term constraints. Yan Dai is PM and final
+> design pillars, scope, and long-term constraints. David is PM and final
 > decision maker. Read it before any design or implementation work.
 
 ## Technology Stack

@@ -54,3 +54,15 @@ crashlytics-build.properties
 # CCGS framework runtime artifacts (per-machine; not committed)
 production/session-logs/
 .claude/settings.local.json
+
+# --- Large third-party asset packs (re-import from Asset Store or move to Git LFS; not committed raw) ---
+Assets/Foliage Free/
+Assets/Foliage Free.meta
+Assets/TreePackVol.1/
+Assets/TreePackVol.1.meta
+Assets/_TerrainAutoUpgrade/
+Assets/_TerrainAutoUpgrade.meta
+
+# --- Test output & Python caches ---
+TestResults*.xml
+**/__pycache__/

@@ -1,7 +1,7 @@
 # Level / Map Generation & Topology
 
 > **Status**: In Design
-> **Author**: Yan Dai (PM) + Claude (zeno/laplace lens)
+> **Author**: David (PM) + Claude (zeno/laplace lens)
 > **Last Updated**: 2026-06-08
 > **Implements Pillar**: production-method — low-cost readable staging, co-op extraction tension, replayability
 > **Priority / Layer**: MVP / Feature

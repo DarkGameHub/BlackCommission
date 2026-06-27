@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f6adab58498cfa459f3421876ca7f27, type: 3}
+  m_Name: Item_relig_home_altar
+  m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Scavenge.ScavengeItemDefinition
+  id: relig_home_altar
+  displayName: "\u5BB6\u7528\u795E\u9F9B"
+  category: 10
+  weight: 2
+  allowedSurfaces: 
+  baseValue: 65
+  prefab: {fileID: 0}

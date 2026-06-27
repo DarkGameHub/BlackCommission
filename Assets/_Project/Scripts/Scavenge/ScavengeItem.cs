@@ -9,7 +9,7 @@ using BlackCommission.Scavenge;
 /// base value the host reads only at settlement (never shown mid-mission). Heavy items use
 /// two-hand carry (<c>Carriable.isHeavy</c> baked on the prefab); light/medium are single-hand.
 /// Weight class (van capacity units) is intentionally separate from isHeavy (carry style).
-/// Spawned at runtime by the loot spawner; pattern mirrors <see cref="EcoColumnCarriable"/>.
+/// Spawned at runtime by the loot spawner (the carriable pattern the former eco column used).
 /// </summary>
 public class ScavengeItem : Carriable, IInteractable
 {

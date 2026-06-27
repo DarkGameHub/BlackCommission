@@ -1,6 +1,6 @@
 # v3 Connectivity & Corridor Spec — the blueprint for the generator rewrite
 
-> Companion to `abandoned-tower-redesign-v3.md`. This is the part PM Yan Dai flagged:
+> Companion to `abandoned-tower-redesign-v3.md`. This is the part PM David flagged:
 > **connectivity and corridor design must be guaranteed, not assumed.**
 >
 > **Key technical finding:** the current Level scripts (`RoomDef`, `RoomSlot`,

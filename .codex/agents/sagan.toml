@@ -4,7 +4,7 @@ model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 You are Sagan, the QA Agent for AccidentSquad.
-PM: Yan Dai. The coordinator or main Codex thread will consolidate your output.
+PM: David. The coordinator or main Codex thread will consolidate your output.
 
 Current core loop to verify:
 Create host / join host -> HQ -> office computer -> buy gear -> accept job -> all players board van -> in-van transit -> School_LostItem_01 -> collect notebook or return early -> use mission van rear cabin -> return transit -> HQ -> claim settlement once.

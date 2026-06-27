@@ -10,6 +10,8 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     const string DefaultTaskResourcePath = "Tasks/TowerEarthCoast_01";
 
     [SerializeField] OfficeTaskDefinition demoTask;
+    [Tooltip("Selectable commission pool. Empty → falls back to demoTask, then to every OfficeTaskDefinition under Resources/Tasks.")]
+    [SerializeField] OfficeTaskDefinition[] commissions;
     [SerializeField] string returnOfficeScene = "HQ";
     [SerializeField] bool allowNonNetworkSoloStart = false;
     // Minimum outbound transit (boarding-transit spec): the ride lasts at least this long
@@ -29,6 +31,12 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     public NetworkVariable<int> StoredBatteryCount = new(0,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    /// <summary>Which commission in the pool the host has highlighted for dispatch. Host writes, everyone reads.</summary>
+    public NetworkVariable<int> SelectedCommissionIndex = new(0,
+        NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    int localSelectedCommission;          // offline/solo fallback (no NetworkManager listening)
+    OfficeTaskDefinition[] resolvedCommissions;
+
     public OfficeTaskDefinition DemoTask => ResolveDemoTask();
     public bool HasSelectedDemoTask => ResolveDemoTask() != null && MvpMissionRuntime.SelectedTask == ResolveDemoTask();
     public string DemoTaskTitle => ResolveDemoTask()?.title ?? "No commission available";
@@ -37,8 +45,69 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     public string DemoTaskLocation => ResolveDemoTask()?.locationName ?? "Unknown site";
     public int DemoTaskMoneyReward => ResolveDemoTask()?.moneyReward ?? 0;
 
+    /// <summary>The selectable commission pool (commissions[] → demoTask → Resources/Tasks), stably ordered.</summary>
+    public OfficeTaskDefinition[] Commissions => ResolveCommissions();
+
+    /// <summary>Index of the commission currently highlighted for dispatch (clamped to the pool).</summary>
+    public int CurrentCommissionIndex
+    {
+        get
+        {
+            int n = ResolveCommissions().Length;
+            if (n == 0) return 0;
+            bool networked = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+            int idx = (networked && IsSpawned) ? SelectedCommissionIndex.Value : localSelectedCommission;
+            return Mathf.Clamp(idx, 0, n - 1);
+        }
+    }
+
+    /// <summary>Host/solo: highlight a commission for dispatch. Blocked once one is locked or a settlement is pending.</summary>
+    public void SelectCommission(int index)
+    {
+        if (MvpMissionRuntime.HasSelectedTask || MvpPendingReward.HasPending || missionLaunching) return;
+        int n = ResolveCommissions().Length;
+        if (n == 0) return;
+        index = Mathf.Clamp(index, 0, n - 1);
+        bool networked = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening;
+        if (networked)
+        {
+            if (!NetworkManager.Singleton.IsHost) return;   // host-only, mirrors commission acceptance
+            SelectedCommissionIndex.Value = index;
+        }
+        else
+        {
+            localSelectedCommission = index;
+        }
+    }
+
+    OfficeTaskDefinition[] ResolveCommissions()
+    {
+        if (resolvedCommissions != null) return resolvedCommissions;
+        if (commissions != null && commissions.Length > 0)
+            resolvedCommissions = (OfficeTaskDefinition[])commissions.Clone();
+        else if (demoTask != null)
+            resolvedCommissions = new[] { demoTask };
+        else
+            resolvedCommissions = Resources.LoadAll<OfficeTaskDefinition>("Tasks") ?? System.Array.Empty<OfficeTaskDefinition>();
+        // Stable order so the synced index means the same commission on every peer. Commissioned/Black
+        // jobs sort before Free Salvage so the default selection (index 0) is the Tower commission. The
+        // Map2 Free-Salvage scene is now scavenge-wired but solo-host only (multiplayer layout determinism
+        // is an ADR-0003 follow-up), so keep it off the default dispatch slot for now.
+        System.Array.Sort(resolvedCommissions, (a, b) =>
+        {
+            int ra = a != null && a.clientType == CommissionClientType.FreeSalvage ? 1 : 0;
+            int rb = b != null && b.clientType == CommissionClientType.FreeSalvage ? 1 : 0;
+            if (ra != rb) return ra - rb;
+            return string.CompareOrdinal(a != null ? a.taskId : "", b != null ? b.taskId : "");
+        });
+        return resolvedCommissions;
+    }
+
     OfficeTaskDefinition ResolveDemoTask()
     {
+        OfficeTaskDefinition[] list = ResolveCommissions();
+        if (list.Length > 0) return list[CurrentCommissionIndex];
+        // Legacy single-task fallback when no pool is found.
         if (demoTask == null && !string.IsNullOrWhiteSpace(DefaultTaskResourcePath))
             demoTask = Resources.Load<OfficeTaskDefinition>(DefaultTaskResourcePath);
         return demoTask;
@@ -343,8 +412,10 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
     bool CanStartDemoTask(out string reason)
     {
-        ResolveDemoTask();
-        if (demoTask == null)
+        // Pool-aware: ResolveDemoTask() returns the SELECTED commission and no longer populates the
+        // legacy demoTask field, so gate on the resolved task — not the field (else accept is blocked
+        // whenever the pool is sourced from commissions[]/Resources rather than a serialized demoTask).
+        if (ResolveDemoTask() == null)
         {
             reason = "No commission configured for this terminal.";
             return false;

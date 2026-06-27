@@ -1,11 +1,11 @@
 ---
 name: user-yan-dai
-description: Yan Dai (PM) 的角色、协作风格与对关卡设计师的期望
+description: David (PM) 的角色、协作风格与对关卡设计师的期望
 metadata:
   type: user
 ---
 
-Yan Dai 是 Black Commission 的 PM 和最终设计决策者。
+David 是 Black Commission 的 PM 和最终设计决策者。
 
 **角色：** 全栈游戏 PM，同时管理设计、建模、程序。在关卡设计上亲力亲为：会自己拟草案坐标，要求设计师做严格几何校验而不只是概念建议。
 

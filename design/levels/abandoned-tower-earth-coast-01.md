@@ -3,7 +3,7 @@
 > First designated-commission map after the school lost-item demo. Builds directly
 > on the existing `Assets/Scene/AbandonedBuilding_Blockout.unity` blockout — room
 > names below match that scene's GameObject names so this doc is buildable as-is.
-> Decisions locked 2026-06-06 (PM Yan Dai): objective = sales scale model;
+> Decisions locked 2026-06-06 (PM David): objective = sales scale model;
 > floor-2 gate = restore power; objective carry = heavy two-hand carry.
 
 ## Quick Reference

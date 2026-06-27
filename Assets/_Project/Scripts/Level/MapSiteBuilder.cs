@@ -85,6 +85,7 @@ namespace BlackCommission.Level
             // Depth-graded overgrowth + 3-4 lavish "hero" rooms + interior lighting (the surface sun never reaches
             // down here). Parented under the sunk Indoor so it all descends with the maze.
             DressInterior(indoor, layout, entry, deep);
+            ScatterLootAnchors(indoor, layout); // loot anchors in the rooms → host LootSpawner fills a seeded subset
 
             res.Entry = CellCenter(entry); res.Entry.y = -Depth; // anchors now live one storey down
             res.Deep = CellCenter(deep);   res.Deep.y = -Depth;  // DEEP = last waypoint (objective)
@@ -179,6 +180,24 @@ namespace BlackCommission.Level
                           : new Color(0.90f, 0.60f, 0.20f);                           // waypoint rooms = amber
                 Marker(parent, CellCenter(Anchors[i].Cell), col, $"ANCHOR_{Anchors[i].Id}", local: true);
             }
+        }
+
+        // Loot anchors: one per room-interior cell (cells owned by a hero/waypoint room). The host
+        // LootSpawner picks a seeded subset of these to fill with scavengeable items each run. Pure
+        // non-networked markers, deterministic from the layout; parented under the sunk Indoor.
+        static void ScatterLootAnchors(Transform indoor, GridLayout layout)
+        {
+            for (int x = 0; x < layout.Width; x++)
+                for (int y = 0; y < layout.Height; y++)
+                {
+                    var c = new GridCoord(x, y);
+                    if (layout.Kind(c) == CellKind.Empty || layout.Owner(c) == null) continue; // rooms only
+                    var go = new GameObject($"LootAnchor_{x}_{y}");
+                    go.transform.SetParent(indoor, false);
+                    Vector3 p = CellCenter(c); p.y = 0.1f; // on the room floor (Indoor local space)
+                    go.transform.localPosition = p;
+                    go.AddComponent<LootAnchor>();
+                }
         }
 
         static bool Solid(GridLayout layout, GridCoord c) =>

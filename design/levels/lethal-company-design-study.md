@@ -39,7 +39,7 @@ whitebox alone won't fix "feels too easy" — the loop has to keep pressing.
 
 ## 2. The Disorientation Engine — getting lost is *designed*, not a bug
 
-This is the property Yan Dai specifically wants. LC's "you get lost" feeling comes
+This is the property David specifically wants. LC's "you get lost" feeling comes
 from four things **stacked**:
 
 ### 2.1 Procedural *topology* (tile + doorway + main-path/branch)
@@ -127,7 +127,7 @@ or netcode:
 
 ---
 
-## 6. Decisions locked from this study (PM Yan Dai, 2026-06-07)
+## 6. Decisions locked from this study (PM David, 2026-06-07)
 
 - Keep the **2-floor** structure; densify each floor.
 - **Randomize topology, not just content** (the headline change).

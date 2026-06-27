@@ -83,7 +83,7 @@ namespace BlackCommission.Level
     /// whitebox geometry (TowerV8WhiteboxBuilder). Mirrors tools/generate_tower_floorplans_v8.js;
     /// <see cref="ValidatePlan"/> enforces the V8 rules (V8-C1..C6) headlessly in EditMode tests.
     ///
-    /// DEVIATIONS from the approved v8 SVGs (flagged for PM, Yan Dai, 2026-06-10):
+    /// DEVIATIONS from the approved v8 SVGs (flagged for PM, David, 2026-06-10):
     ///   * T3 (DORM-CANTEEN) and T12 (DOCK-SHANTY) are promoted to FIXED doors D20/D21.
     ///     CANTEEN and SHANTY were reachable only through toggles, which violates the project's
     ///     backbone rule (I8: every required room reachable with all toggles closed) — the same

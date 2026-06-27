@@ -24,7 +24,18 @@ public class LootSpawner : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        if (IsServer) SpawnLoot();
+        if (IsServer) StartCoroutine(SpawnLootDeferred());
+    }
+
+    // Some maps place their LootAnchors at runtime (e.g. TowerLayoutGenerator fills the dressed
+    // rooms on its own OnNetworkSpawn). NetworkBehaviour spawn order is not guaranteed, so wait a
+    // few frames for anchors to appear before planning. Scenes whose anchors are authored statically
+    // (testbed / showcase) have them at frame 0, so they incur no delay.
+    System.Collections.IEnumerator SpawnLootDeferred()
+    {
+        for (int i = 0; i < 4 && Object.FindObjectsByType<LootAnchor>(FindObjectsSortMode.None).Length == 0; i++)
+            yield return null;
+        SpawnLoot();
     }
 
     void SpawnLoot()

@@ -1,6 +1,6 @@
 # Floor-1 Fix Plan v2 — connectivity & LC-alignment pass
 
-> Status: **DRAFT for PM approval (Yan Dai).** No code / no scene edits until sign-off.
+> Status: **DRAFT for PM approval (David).** No code / no scene edits until sign-off.
 > Scope: **Floor 1 only, MVP single-building map.** Companion to
 > `abandoned-tower-redesign-v3.md` (design intent) and
 > `abandoned-tower-v3-connectivity.md` (the ring/invariant spec). Supersedes the open

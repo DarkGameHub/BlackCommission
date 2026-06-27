@@ -11,7 +11,7 @@ using UnityEngine.Rendering.Universal;
 /// never overlap the real HQ, and it NEVER saves the scene. Press Play (▶) to walk it; close Play and
 /// the build is gone.
 ///
-/// DESIGN — "Option A", the floor plan PM Yan Dai locked (2026-06-21):
+/// DESIGN — "Option A", the floor plan PM David locked (2026-06-21):
 ///   ONE leased industrial unit, a gentle WEDGE (9 m wide, 17 m on the +X wall, 19.5 m on the -X wall).
 ///   The far wall is CANTED; the roll-up departure door sits in it, dead ahead of the spawn line, so the
 ///   team stares at the closed door the whole prep (axial reveal). Stations sit on OPPOSITE walls to

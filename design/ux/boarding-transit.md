@@ -1,7 +1,7 @@
 # UX Spec: 上车与在途 (Boarding & Transit · 派车单)
 
 > **Status**: Drafted（待 PM 终审 2026-06-11）
-> **Author**: Yan Dai + ux-designer
+> **Author**: David + ux-designer
 > **Last Updated**: 2026-06-11
 > **Journey Phase(s)**: 出发（HQ→任务点）与返程（任务点→HQ）两段在途（无 player-journey.md，按核心循环推定）
 > **Template**: UX Spec（流程型：覆盖上车确认 + 车厢即加载 + 提前收工申请三段同链）

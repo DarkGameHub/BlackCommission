@@ -1,11 +1,11 @@
 ---
 name: user-yan-dai
-description: Yan Dai — PM and final decision maker on Black Commission, expects concrete analysis tied directly to existing documents
+description: David — PM and final decision maker on Black Commission, expects concrete analysis tied directly to existing documents
 metadata:
   type: user
 ---
 
-Yan Dai is PM and the final decision maker on all design decisions for Black Commission.
+David is PM and the final decision maker on all design decisions for Black Commission.
 
 Provides well-specified UX review tasks: supplies specific verified problem counts (e.g. "31 corridor bands cut through other rooms — VERIFIED"), references specific files to read, and expects analysis that ties back directly to those files rather than generic UX theory.
 

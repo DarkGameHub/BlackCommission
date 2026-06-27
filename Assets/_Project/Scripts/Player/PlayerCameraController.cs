@@ -14,6 +14,12 @@ public class PlayerCameraController : NetworkBehaviour
     [SerializeField] float verticalClamp = 85f;
     [SerializeField] Transform playerBody;  // rotate body for left/right; rotate this for up/down
 
+    // Global look-speed calm-down. Raw effective gain was look × (slider/2) × mouseSensitivity
+    // = look × 2 on the raw per-frame mouse delta, which read as too twitchy in the HQ
+    // walkthrough (PM 2026-06-24: "默认视角速度太快，慢一点"). This halves the default feel; the
+    // in-game sensitivity slider (0.25–8) still scales it back up for players who want it faster.
+    const float LookSpeedScale = 0.5f;
+
     PlayerInputActions inputActions;
     Camera localCamera;
     float verticalAngle;
@@ -135,8 +141,8 @@ public class PlayerCameraController : NetworkBehaviour
 
         var look = inputActions.Player.Look.ReadValue<Vector2>();
         float fallbackSensitivity = Mathf.Max(0.01f, mouseSensitivity);
-        float mouseX = look.x * (HorizontalSensitivity / 2f) * fallbackSensitivity;
-        float mouseY = look.y * (VerticalSensitivity / 2f) * fallbackSensitivity;
+        float mouseX = look.x * (HorizontalSensitivity / 2f) * fallbackSensitivity * LookSpeedScale;
+        float mouseY = look.y * (VerticalSensitivity / 2f) * fallbackSensitivity * LookSpeedScale;
         if (InvertY)
             mouseY = -mouseY;
 

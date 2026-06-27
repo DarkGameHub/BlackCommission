@@ -1,7 +1,7 @@
 # UX Spec: 委托结算单 (Mission Settlement Card)
 
 > **Status**: Approved（PM 终审通过 2026-06-11）
-> **Author**: Yan Dai + ux-designer
+> **Author**: David + ux-designer
 > **Last Updated**: 2026-06-11
 > **Journey Phase(s)**: 任务收尾 → 返程 → HQ 入账（无 player-journey.md，按核心循环推定）
 > **Template**: UX Spec

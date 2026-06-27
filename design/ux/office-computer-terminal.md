@@ -1,7 +1,7 @@
 # UX Spec: 办公电脑接单终端（Office Computer Commission Terminal）
 
 > **Status**: Approved（PM 定稿 2026-06-11）
-> **Author**: Yan Dai + ux-designer
+> **Author**: David + ux-designer
 > **Last Updated**: 2026-06-11
 > **Journey Phase(s)**: HQ 备战段（player-journey 文档尚未建立）
 > **Template**: UX Spec

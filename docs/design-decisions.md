@@ -15,7 +15,7 @@
 
 Locked decisions from design review. This document is the single source of truth for high-level creative direction.
 
-PM: Yan Dai
+PM: David
 
 ## Game Identity
 

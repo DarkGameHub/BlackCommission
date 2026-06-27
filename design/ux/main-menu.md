@@ -1,7 +1,7 @@
 # UX Spec: Main Menu（主菜单）
 
 > **Status**: Approved（PM 定稿 2026-06-11）
-> **Author**: Yan Dai + ux-designer
+> **Author**: David + ux-designer
 > **Last Updated**: 2026-06-11
 > **Journey Phase(s)**: 会话起点（player-journey 文档尚未建立）
 > **Template**: UX Spec

@@ -125,7 +125,12 @@ public class ScavengeCargoZone : NetworkBehaviour
 
     void TryStow(ScavengeItem item)
     {
-        var settlementItem = new SettlementItem(item.ItemId, item.BaseValue, ItemCondition.Good);
+        // Client preference (scavenging-core-loop §3.4): items in the run client's favoured
+        // categories settle at the preference multiplier (Free Salvage favours nothing). Condition
+        // stays Good until the condition-by-environment pass (a deeper milestone).
+        bool favoured = MvpMissionRuntime.ActiveTask != null &&
+                        MvpMissionRuntime.ActiveTask.FavoursCategoryId((int)item.Category);
+        var settlementItem = new SettlementItem(item.ItemId, item.BaseValue, ItemCondition.Good, favoured);
         if (!manifest.TryLoad(settlementItem, item.Weight))
             return; // won't fit — leave it on the ground (team decides what stays)
 
@@ -189,7 +194,14 @@ public class ScavengeCargoZone : NetworkBehaviour
         int remaining = Mathf.Max(0, cap - load);
 
         const float w = 232f, h = 30f;
-        var rect = new Rect((Screen.width - w) * 0.5f, Screen.height - h - 18f, w, h);
+        // Match MvpHud's resolution-adaptive HUD canvas: draw in 1080-tall reference space and
+        // scale to the real screen via GUI.matrix so the strip keeps its proportion at any resolution.
+        float scale = MvpHud.UiScale > 0f ? MvpHud.UiScale : 1f;
+        float rw = Screen.width / scale;
+        const float rh = 1080f;
+        Matrix4x4 savedMatrix = GUI.matrix;
+        GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
+        var rect = new Rect((rw - w) * 0.5f, rh - h - 18f, w, h);
 
         // Aged-paper slip with a civic-teal rule — same grammar as the dispatch ticket strip.
         GUI.DrawTexture(new Rect(rect.x - 2f, rect.y - 2f, rect.width + 4f, rect.height + 4f),
@@ -217,6 +229,8 @@ public class ScavengeCargoZone : NetworkBehaviour
             : new Color(0.10f, 0.095f, 0.075f, 1f);
         string label = full ? $"舱位已满 {load}/{cap}" : $"舱位 {load}/{cap}";
         GUI.Label(new Rect(rect.xMax - 92f, rect.y + 4f, 86f, 22f), label, stripStyle);
+
+        GUI.matrix = savedMatrix;
     }
 
     void EnsureStripStyle()

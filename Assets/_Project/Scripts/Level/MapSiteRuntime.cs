@@ -1,26 +1,70 @@
+using Unity.Netcode;
 using UnityEngine;
 using BlackCommission.Level;
 
 /// <summary>
-/// Runtime driver for the map-2 procedural site (ADR-0003, direction B — single-player path; multiplayer
-/// determinism is backlogged). On <see cref="Start"/> it builds the full site (outdoor approach + van
-/// drop-off + edge-based interior) from a seed via <see cref="MapSiteBuilder"/>, so entering Play in the map-2
-/// scene generates a fresh random outdoor→indoor site you can walk as a player (the whitebox geometry carries
-/// colliders, so player physics works without a navmesh). <c>fixedSeed != 0</c> forces a repeatable layout.
+/// Runtime driver for the map-2 procedural site (ADR-0003). The server rolls ONE seed, replicates it via a
+/// <see cref="NetworkVariable{T}"/>, and every peer (host + clients) rebuilds the IDENTICAL site locally from
+/// that seed — <see cref="MapSiteBuilder.Build"/> is proven deterministic (GridMapReachabilityHarnessTests:
+/// 1000-seed byte-identical, 0 unreachable). Only the int seed crosses the wire; the geometry + loot anchors
+/// are generated, not networked. The host's <c>LootSpawner</c> then fills the (now identical) anchors and
+/// replicates the spawned items, so loot lands correctly on every peer. Mirrors
+/// <see cref="GridMapNetworkBuilder"/>'s seed-sync exactly.
 ///
-/// Navmesh (for AI agents) is baked + verified by the editor tool "Build Full Map 2"; a runtime navmesh bake
-/// is a follow-up once the monster is wired into this map (see production/backlog.md).
+/// Offline (direct Play / PreviewWalker walk-test, no NetworkManager listening) it builds immediately from a
+/// local seed, so the scene stays walkable solo without a host. <c>fixedSeed != 0</c> forces a repeatable layout.
 /// </summary>
-public class MapSiteRuntime : MonoBehaviour
+[RequireComponent(typeof(NetworkObject))]
+public class MapSiteRuntime : NetworkBehaviour
 {
-    [Tooltip("Non-zero forces a repeatable layout; 0 = a fresh random seed each run.")]
+    [Tooltip("Non-zero forces a repeatable layout; 0 = a fresh random seed each session (server-chosen).")]
     [SerializeField] int fixedSeed = 0;
     [SerializeField] int width = 28;
     [SerializeField] int height = 24;
 
+    // Replicated seed: server writes, everyone reads. -1 = not chosen yet.
+    readonly NetworkVariable<int> netSeed =
+        new NetworkVariable<int>(-1, NetworkVariableReadPermission.Everyone,
+                                     NetworkVariableWritePermission.Server);
+
+    bool built;
+
+    // Offline / direct-Play path: no NGO session → build now with a local seed (single peer, determinism moot).
     void Start()
     {
-        int seed = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+            BuildOnce(fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue));
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        netSeed.OnValueChanged += OnSeedChanged;
+        if (IsServer)
+        {
+            // Host chooses the one seed for the whole session and replicates it.
+            netSeed.Value = fixedSeed != 0 ? fixedSeed : new System.Random().Next(1, int.MaxValue);
+            BuildIfReady(); // server can build immediately
+        }
+        else
+        {
+            BuildIfReady(); // late joiner: the value may already be synced with the spawn
+        }
+    }
+
+    public override void OnNetworkDespawn() => netSeed.OnValueChanged -= OnSeedChanged;
+
+    void OnSeedChanged(int previous, int current) => BuildIfReady();
+
+    void BuildIfReady()
+    {
+        if (built || netSeed.Value < 0) return;
+        BuildOnce(netSeed.Value);
+    }
+
+    void BuildOnce(int seed)
+    {
+        if (built) return;
+        built = true;
         MapSiteBuilder.Result res = MapSiteBuilder.Build(transform, seed, width, height);
         Debug.Log($"[MapSiteRuntime] seed {seed}: {res.Floors} floors / {res.Walls} walls / {res.Scatter} scatter; " +
                   $"drop-off at {res.Dropoff}, deep at {res.Deep}.");

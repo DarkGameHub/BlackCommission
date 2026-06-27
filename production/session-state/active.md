@@ -1,7 +1,252 @@
 # Active Session State — Black Commission
 
-**Last updated**: 2026-06-19
+**Last updated**: 2026-06-23 (end of night — PM went to sleep; agent finishing the build/save autonomously)
 **Stage**: Production (see `production/stage.txt`)
+
+> ## ▶▶ RESUME HERE (next session)
+> **Goal:** HQ was BUILT+SAVED 2026-06-24, but **PM walked it and rejected it** ("太丑", ground Z-fight, "和平面图不像")
+> → pivoted to a **whole-site RE-PLAN**. Produced **HQ Site Plan v2** (`design/hq/hq-site-plan-v2.md` + diagram
+> `design/hq/HQ_SitePlan_v2.png`, rendered by `tools/hq_siteplan_v2.py`) via a 4-discipline huddle (ux / game-design /
+> level-design / art). **NEXT: PM approves the plan + answers the settlement-location fork, THEN implement** the builder
+> changes (doc §8 appendix) → rebuild → walk.
+>
+> **Plan synthesis (in the doc):** interior Z-spine LOCKED (only proportion fixes WallH 3.6→2.85, DoorH 3.2→2.6);
+> enclosed dispatch yard (perimeter walls 1.3→2.0 above eye height + east shed + gate); the lawn fix = grass-DENSITY
+> distance bands (apron 0 / scrub 5–10 / wild 14–21 / treeline 0), NOT flat 14–21 everywhere; close horizon via
+> treeline+fog90+HRANGE10+bigger boulders; CUT warehouses + the gizmo-fence; NEW return→settlement beat (van re-parks →
+> walk back past debt board → settle @ CRT). **OPEN: settlement location (rec = CRT inside).**
+>
+> **Already applied to `HqOptionAProductionBuilder.cs` (uncommitted, NOT yet rebuilt):** the 14 art-bible edits
+> (shadows / grass-color / warm-interior / phosphor-CRT / ambient 0.60 / fog 22-90 / bloom / Flat-smoothness / asphalt /
+> Z-recess −0.12). Some are refined again by the new plan (ambient→0.55, fog→#1E1E19, key→0.25, grass density bands).
+> **Unity state:** after a recompile→domain-reload the **MCP bridge dropped** + Unity stuck in a long asset reimport
+> (>18 min, foliage packs) → old-layout rebuild PARKED (re-planning anyway). Drive Unity via `tools/ws-unity-call.cjs`
+> (MCP down). The 14-edit compile-check was never confirmed (Unity busy) — **verify console errors before any rebuild.**
+>
+> **Deferred — need PM input next time:**
+> - **黑色方块跟随视角** (recurring bug, PM re-flagged): NOT root-caused. `PlayerFirstPersonRig` already hides the owner
+>   body + 3rd-person model + rig shadows, and no held-item/wristwatch renders by default → it's something subtler.
+>   **Need a screenshot from the PM** (or Play-mode runtime inspection) to pin it. Do NOT re-derive blind from code.
+> - **室内贴纸/物品摆放** dressing pass — PM said unreasonable; needs specifics/screenshot.
+> - **Commit**: HQ.unity + all builder/script changes are UNCOMMITTED; ~404 MB foliage packs (`Assets/Foliage Free`,
+>   `Assets/TreePackVol.1`) repo-size decision still OPEN (commit-into-git vs gitignore+reimport) → blocks a clean commit.
+>   Do NOT commit until the PM decides (AGENTS.md: no commits unless asked).
+>
+> **PM decisions locked 2026-06-23:** exterior = 荒草野地+稀疏死树 (Unity Terrain grass + dead treeline); office materials =
+> 混凝土公务站房 (floor=CommonConcrete04, walls=CommonConcreteWall02, roof=CommonSteelRoof01); scale = enlarge HQ building
+> parents (Shell/Interior/Dressing/Yard) ×1.2, **player untouched** (2 m, locked to the mission map); door reveal = Manual [E].
+
+## Session 2026-06-23 — HQ Phase-2 收尾: van boarding wiring + roll-up door reveal (BUILT + SAVED + VERIFIED)
+PM "继续开发" → picked **HQ Phase-2 收尾** + **Manual [E] door** (AskUserQuestion 2026-06-23). Key recalibration:
+the builder **already** does yard + environment + **vegetation** (`Build()` calls `BuildYard`/`BuildEnvironment`/
+`BuildVegetation`, lines 126-128; `BuildVegetation` reuses `Resources/FoliageSet.asset`, dead-tree treatment,
+van-corridor + warehouse exclusion zones). So the only genuinely UNFINISHED Phase-2 deltas were two:
+- **(A) Van boarding wiring (functional).** `OfficeDepartureVan` (IInteractable) sat on the old scene object
+  `MVP_RuntimeStyle_Office_ExteriorDispatch` (in `Keep`; renderer hidden but COLLIDER kept) → you boarded an
+  INVISIBLE ghost collider at the old spot, while the visible `DispatchVan` (AS_OfficeVan) had colliders DISABLED
+  by `Prop()`. Interaction = `PlayerInteraction.FindAimedTarget` SphereCast (range 2.5, aim-required) →
+  `hit.collider.GetComponentInParent<IInteractable>()`, so the component must sit on/above a hit collider.
+  Departure itself (Space → `OfficeComputer.RequestDepart`) lives in `VanTransitOverlay`; `OfficeDepartureVan`
+  is only the BOARD trigger, no serialized refs → safe to re-home.
+- **(B) Roll-up door reveal (juice).** Door was a static `RollUpDoor_CLOSED`; nothing animated it. `FitPrefab`
+  STRIPS the LargeGates mesh colliders → as the real mesh it was non-solid + un-aimable.
+
+**WRITTEN (uncommitted, reversible — NOT built/saved yet):**
+- NEW `Assets/_Project/Scripts/Office/HqRollUpDoorReveal.cs` (Assembly-CSharp; `Scripts/Office/` has no asmdef,
+  only `Core/` does). MonoBehaviour+IInteractable, translate-up by door height (3.2), smoothstep, door-creak SFX.
+  Modes Manual/CommissionLocked/OnDepart; builder configures **Manual** (aim + [E] toggles; empty hint in auto
+  modes so PlayerInteraction skips it). Cosmetic, NOT a gameplay gate, NOT networked (local sim, SimpleDoor precedent).
+- 3 edits in `Editor/HqOptionAProductionBuilder.cs`: (1) `BuildShell` door → clean identity-scaled **wrapper**
+  `RollUpDoor` carrying yaw + sealing/aim BoxCollider (center y=DoorH/2, size DoorW×DoorH×0.3) + the reveal; the
+  mesh/box child is built with yaw=0 (wrapper supplies yaw, else FitPrefab's local yaw doubles it). (2) `BuildYard`
+  → after `DispatchVan`, measure `MeshBounds`, add child `VanBoardZone` = solid BoxCollider (van is scale1/yaw0 so
+  world AABB → local via `InverseTransformPoint`) + fresh `OfficeDepartureVan`. (3) `RetireLegacyOffice` →
+  `DestroyImmediate` all stray `OfficeDepartureVan` + disable old dispatch colliders (menu Camera untouched);
+  idempotent (root incl. prior VanBoardZone is destroyed first, then exactly one is re-added by BuildYard).
+
+**STATUS: BUILT + SAVED + VERIFIED 2026-06-23 (PM opened Unity ~21:25 after two ~30min watcher cycles).** Bridge
+flow: get_scene_info (HQ active) → console 0 errors (new component compiled; `.cs.meta` present) → `execute_menu_item`
+Build Production HQ (Option A) ran SYNCHRONOUSLY to completion in one pass (build log fired, no 30s cut — materials
+were already cached from cont.3) → verified via `get_gameobject`: **VanBoardZone** = `[Transform, BoxCollider,
+OfficeDepartureVan]` at world (4.5,0,22) under DispatchVan; **RollUpDoor** = `[Transform, BoxCollider,
+HqRollUpDoorReveal]` at (4.5,0,18.25) yaw 195.5° (canted wall), 1 panel child; old **MVP_RuntimeStyle_Office_
+ExteriorDispatch** = `[Transform]` only (ghost OfficeDepartureVan stripped, menu camera intact); **Vegetation** = 59
+children; **0 compile + 0 runtime errors** → `save_scene` HQ.unity (isDirty→False, rootCount 27, mtime 21:31).
+Note: "retired 0 legacy" = legacy was already inactive from the prior in-memory build (idempotent). The RollUpDoor
+BoxCollider seals the 4 m opening when closed and rises with the panel → the bay is genuinely sealed until the team
+[E]-opens it (emergent, matches the locked axial-reveal beat). Still UNCOMMITTED; ~404 MB foliage-pack repo-size
+decision still open ([[Session 2026-06-22 cont.]]). Door is local-sim/cosmetic (not networked, SimpleDoor precedent).
+
+### 2026-06-23 (cont.) — PM walked it → big feedback → 野外 exterior rework + HQ enlarge (CODE WRITTEN, building)
+PM walked the Phase-2 HQ and flagged FOUR things: (1) **室外该是野外**, not the derelict industrial district — the
+office sits alone in the wild; the FactoryPropsGround concrete ground is ugly. (2) 室内贴纸/摆放不合理 (interior
+dressing pass — deferred, needs specifics/screenshot). (3) **人物显得太高** — player capsule `standHeight=2 m`
+(Player.prefab, GUID 43b9c38f…, NetworkManager PlayerPrefab); PM noted the 2 m player is "正好" for the MISSION MAP
+(shared player → must NOT shrink). (4) **黑色方块跟随视角** ("还是" = recurring; PM 2026-06-13 note). AskUserQuestion:
+exterior = **荒草野地+稀疏死树**; scale = PM pushed back on shrinking → resolved to **enlarge HQ only**.
+- **Black square**: NOT root-caused yet — `PlayerFirstPersonRig` (on the spawned prefab) DOES hide the capsule body
+  + the whole third-person model for the owner + kills rig shadows, and by default no held item/wristwatch renders
+  (HasWristwatch=false). So it's something else; **awaiting a screenshot from PM** to pin it. Don't re-derive blind.
+- **Exterior rework WRITTEN in `HqOptionAProductionBuilder.cs`** (uncommitted, ~10 edits): replaced `BuildEnvironment`
+  (warehouses/streets/perimeter) with **`BuildWilderness`** = a real **Unity Terrain** (heightmap undulation + GPU
+  detail grass, replicated from `MapSiteBuilder.BuildTerrain`; **TerrainData persisted as asset**
+  `Assets/_Project/Scenes/HQ_TerrainData.asset` or the saved scene loses it) flat under building/yard/track via
+  `HqFlatMask`, rolling Perlin wild elsewhere; dead **treeline** ring + meadow scrub (rewrote BuildVegetation +
+  VegBlocked; `PlaceVeg` got a `groundY` param to sit foliage on the rolling terrain); dirt track north from the gate;
+  boulders; cool moon fill. Yard ground re-skinned concrete→dirt. Fog end 60→120 so the wild reads.
+- **HQ enlarge**: `const HqScale=1.2f`; Build() scales the **Shell/Interior/Dressing/Yard** parents (NOT root, NOT
+  the Terrain — Unity Terrain ignores transform scale); spawn/computer anchors ×HqScale. Player untouched → mission
+  map untouched. Pad bounds in HqFlatMask widened to cover the scaled footprint.
+- Old `Warehouse`/`WarehouseBlocks` now unused (left in place; harmless). **STATUS: builder recompiling after
+  Assets/Refresh; next = build → verify Terrain/Vegetation/scale + 0 errors → save → PM walks.** Interior dressing +
+  black square = next pass (need PM screenshot/specifics).
+
+## Session 2026-06-22 (cont. 3) — HQ dispatch yard + full environment district BUILT + SAVED
+PM signed off the office ("还行"), then two more passes into `HqOptionAProductionBuilder.cs` (all SAVED to HQ.unity):
+- **Dispatch yard** (`BuildYard`): ~24×26 m, low concrete perimeter + `LargeGates` exit gate (6 m N gap) + van on
+  a marked bay + 2 sodium lights + powerbox/barrels. Replaced the tiny pad; the ugly far skyline was DELETED.
+- **Full derelict environment** (`BuildEnvironment` + `Warehouse` helper) — PM chose "更完整的废弃工业区": ~20
+  Tirgames concrete/brick warehouse blocks (solid + steel roof cap) wrapping the HQ on all 4 sides receding into
+  fog, dead E-W + N-S cross-streets past the gate, a 180×200 district ground (no void), a far perimeter wall,
+  3 distant sodium glows. Fog end 38→60 so near district reads, far dissolves; office stays moody via near start.
+- Retire is now **NAME-AGNOSTIC** (deactivate any ACTIVE Renderer/Collider object not in `Keep`; the dispatch
+  van object stays active with its mesh disabled) — fixed the "furniture left outdoors" the name-prefix retire missed.
+- **Verified: `District_Ground` + `Warehouse` present + build completion log + saved.** AWAITING PM look.
+
+**⚠ NEW BRIDGE LESSON — the ~30s connection reset:** Unity's WS server drops the connection at ~30s
+(`ECONNRESET`), cancelling the in-flight build coroutine mid-execution. So a heavy build whose FIRST pass triggers
+URP material/shader compile (>30s) gets cut off (partial/no result, no completion log). **Fix: run the build
+TWICE** — first pass compiles the materials (then dies), second runs cached <30s and completes. Verify completion
+via a UNIQUE child (`get_gameobject District_Ground`) + the build `Debug.Log`, NOT via `get_gameobject HQ_OptionA`
+child lists (they TRUNCATE past ~4 branches → false "missing"). Raise McpUnitySettings RequestTimeoutSeconds if needed.
+
+## Session 2026-06-22 (cont. 2) — PHASE 1 BUILT + SAVED: Option A office + exterior reveal
+**DONE + SAVED to `HQ.unity`.** `Assets/_Project/Editor/HqOptionAProductionBuilder.cs` (menu `Tools ▸ Black
+Commission ▸ Map ▸ Build Production HQ (Option A)`; undo = `Restore Old HQ Office`) builds the Option A wedge:
+- Shell = exact boxes in Tirgames concrete/steel mats + `LargeGates1` roll-up door + `Factory1Column`/`LampCeiling`
+  hero meshes (auto-fit by bounds). Interior = real `AS_Office*` props on the Z-spine. Dressing = Tirgames
+  PowerBox/MetalCabinet/Barrels. Office lighting/fog/LC-post.
+- **Exterior reveal (added per PM 2026-06-22 "室外、车都没有"):** `AS_OfficeVan` (DispatchVan) + asphalt apron +
+  fogged city silhouette just outside the roll-up door. FULL vegetated dispatch yard = Phase 2.
+- Old office RETIRED (deactivated, reversible) — 80 objects. Dispatch-loop objects kept (NetworkManager/UI/
+  `MVP_OfficeComputer`/`OfficeDepartureVan`/spawn); spawn + computer repositioned into the wedge.
+- **Verified (reliable signals only):** scene rootCount 25→26, `HQ_OptionA` childCount **15 incl. `Exterior`**,
+  saved. **AWAITING PM VISUAL SIGN-OFF** (Phase-1 gate).
+
+**⚠ BRIDGE LESSONS (this session — cost hours):**
+- mcp-unity `get_gameobject` by an arbitrary name does **FUZZY matching → returns the WRONG object** (querying
+  "ShellFloor" returned "Floor"'s data + active state). It sent me in circles thinking retire failed. **Trust
+  only:** scene `rootCount`, `childCount`/child-names via a *unique-name* parent lookup, and the build's `Debug.Log`.
+- MCP server (Claude↔bridge) drops under load, but **Unity's 8091 listener stays up** → use the direct fallback
+  `node tools/ws-unity-call.cjs <method> '<json>' <timeoutMs>` ([[ws-unity-call-tool]]). Params: get=`idOrName`,
+  update=`isActiveSelf`/`instanceId`, load=`scenePath`.
+- Builds trigger **first-time URP shader compile** → client times out (~150s not enough); use **≥200s** or
+  fire-and-reprobe (`rootCount`/`childCount`). A menu dispatched right after a recompile/domain-reload can be
+  DROPPED — wait for Unity idle then dispatch. New `[MenuItem]` needs editor FOCUS to register (PM clicks Unity).
+- Reset trick when in-memory state gets messy: `git checkout -- HQ.unity` → `load_scene` → build once.
+
+**NEXT (Phase 2, after sign-off):** full dispatch yard (real ground + Foliage/TreePack vegetation + fences) +
+wire the `OfficeDepartureVan` interactable to the new van location + open/animate the roll-up reveal.
+
+## Session 2026-06-22 (cont.) — PRODUCTION HQ (Option A) build — kickoff + decisions
+PM feedback: HQ doesn't match the locked Option A plan + has no plants; wants a **directly production-ready**
+version (offered to download missing assets). **Commit `8e7a976`** saved the 06-20→22 source batch first
+(code + design/hq plan PNGs + tools; the ~404 MB Foliage Free/TreePackVol.1 packs + derived Resources assets
+LEFT OUT pending a repo-size call). Diagnosis (confirmed): the locked plan was NEVER built into the real scene —
+- **HQ ≠ plan**: shipping `HQ.unity` is the OLD rectangular **Office+Garage** box (`HqOfficePropRestorer.cs`
+  hard-codes 06-12 hand-placed props; scene objects `Shell*` / `BlenderHQ_*` / `HQ*Collider`). The Option A
+  wedge exists ONLY in throwaway `HqPlaytestMenu` (PLAYTEST_HQ, offset x+300, never saved).
+- **No plants**: no HQ builder scatters any; foliage lives only in `MapSiteBuilder` (Map2). The dispatch yard
+  (`design/mockups/hq-dispatch-yard-plan-v1.png`) was never built. `FoliageSet.asset` is fine, just unused by HQ.
+
+**PM DECISIONS (AskUserQuestion 2026-06-22):**
+- Build fabric = **in-project industrial kit** (Tirgames Factory + Concrete Props) — NO downloads.
+- Scope = **PHASED: Option A office INTERIOR first** → PM walks + signs off → THEN garage + dispatch yard +
+  vegetation (Phase 2).
+
+**BUILD INTERPRETATION (stated to PM, correctable):** Option A is a single integrated **wedge unit** whose
+roll-up departure door + muster pad + departure corridor ARE the dispatch function → it **replaces** the old
+Office+Garage 2-room box. The separate outdoor **dispatch yard (van + plants)** = Phase 2.
+
+**Assets confirmed in-project (production-grade, no download):** Tirgames Factory = full modular kit:
+`Factory1Wall01-05`/`Factory2Wall01-06`, floors, roofs, `Factory1Column*`, `LampCeiling01`, **`LargeGates1`**
+(roll-up/dispatch door), `DoorIndustrial01`, + dressing (Barrel/Debris/PowerBox/MetalCabinet/FireExtinguisher);
+prefabs under `…/Factory/Prefabs/`. Interior = 12 real `AS_Office*` prefabs (Resources/GeneratedArt), positions
+already plan-tuned in `HqPlaytestMenu`. Lighting/post = reuse `HqOfficeLightingPass` + the playtest fog/post.
+
+**GAMEPLAY ANCHORS in HQ.unity to PRESERVE** (keep the dispatch loop working): `MVP_OfficeComputer`,
+`HQSpawnManager`+`PlayerSpawnPoint`, `NetworkManager`/`ConnectionManager`/`DisconnectHandler`,
+`MVP_HUD`/`HQUI`/`SettlementUI`/`MainMenu_UGUI`/`HQMenuCamera`, `MVP_RuntimeStyle_Office_ExteriorDispatch`.
+
+**PLAN:** new editor builder `HqOptionAProductionBuilder` → Option A wedge into HQ.unity: shell = exact-dimension
+boxes wearing Tirgames concrete/steel materials + auto-fit Tirgames hero meshes (LargeGates door / columns /
+ceiling lamps) via runtime bounds (NO guessed transforms — see [[unity-fbx-build-gotchas]] / model-fit); interior
+= real AS_Office props on the Z-spine; HQ office lighting/fog/post; reposition spawn + computer into the wedge;
+neutralize old `Shell*`/`BlenderHQ_*`/`HQ*Collider` office + `HqOfficePropRestorer` auto-props. Build → verify
+(0 errors, on-floor, loop intact) → SAVE HQ.unity → PM walk + sign-off (Phase 1 gate). Tasks #1–5.
+
+**STATUS:** bridge was live (one good `get_scene_info`: active scene unsaved/clean, 3 roots), then **WEDGED** on
+`load_scene HQ.unity` (2 timeouts) — big scene + `HqOfficePropRestorer` EditorBootstrap + domain reload stalled
+the pump ([[unity-bridge-restart-recovery]]). Recovery: refocus the Unity window so the load/reload finishes,
+then re-probe; restart only if it stays wedged. Builder NOT written yet (holding until the structural
+interpretation is confirmed + bridge is healthy to measure/verify — avoids a blind, untestable build).
+
+## Session 2026-06-21 → 06-22 (BACKFILL written 2026-06-22 — work was done but never logged; all UNCOMMITTED)
+> Reconstructed on 2026-06-22 from file mtimes + contents at PM request. **Last commit is still `9d059a9`
+> (2026-06-20 11:00); everything below is dirty/untracked working-tree state on `scavenge-settlement-reveal`,
+> NOT committed and NOT PM-signed-off.** This is why a "committed-state only" status check on 06-22 missed it.
+
+### ★ HQ OFFICE FLOOR PLAN — LOCKED "Option A — Long-Axis Z-Spine" (PM David, 2026-06-21)
+- **Answer to "敲定平面图了吗" = YES for the HQ office.** PM locked **Option A**: ONE leased industrial unit, a
+  gentle WEDGE — 9 m wide, +X wall 17 m, -X wall 19.5 m, far wall CANTED. The 4 m roll-up departure door sits
+  in the canted far wall dead ahead of the spawn line (axial reveal — team stares at the closed door all prep).
+  Stations on OPPOSITE walls force a diagonal Z-spine walk: spawn (z≈2) → debt/takeover board + CRT (-X) → gear
+  wall (+X) → muster pad → run-up → roll-up door → REVEAL (van + fogged city). S1 padlocked side door
+  peripheral on -X (license-as-leash, off-path).
+- **PM directive 2026-06-21: "一定要视觉上就很好，而不是就几个方块"** → playtest uses the REAL authored office
+  prefabs (Resources/GeneratedArt `AS_Office*` — computer, gear cabinets, debt board, sofa, lamps, extinguisher,
+  gas-mask sentinel), import-normalized (base y=0, real height). Shell = skinned boxes (as the real runtime HQ
+  does) in V8 tower whitebox materials. Render mirrors HQ office: concrete LINEAR fog (interior clear / city
+  silhouette fogged), Trilight ambient, cold-fluorescent / warm-tungsten / sodium-amber pools, shadows OFF, one
+  sputtering fluorescent (`LightFlicker`), LC post stack (grain/bloom/grade).
+- **NEW `Assets/_Project/Editor/HqPlaytestMenu.cs`** (mtime 2026-06-22 00:22 — newest file) → menu
+  `Tools ▸ Black Commission ▸ Map ▸ Playtest HQ (Walk It)`. THROWAWAY: builds `PLAYTEST_HQ` offset x+300, NEVER
+  saves, does NOT touch the real runtime HQ (`HqOfficePropRestorer` / `HqOfficeLightingPass`). Play to walk;
+  un-tick `RollUpDoor_CLOSED` to preview the reveal. Per-prop facing in `PropYaw` (tweak + re-run if wrong).
+- **STATUS: built + walkable, AWAITING PM EYEBALL/SIGN-OFF; uncommitted.** The shipping RUNTIME HQ
+  (`HQ.unity` via `HqOfficePropRestorer`+`HqOfficeLightingPass`) is NOT yet rebuilt to Option A — the playtest
+  is the design proof; porting the locked plan into the runtime HQ is the next step.
+
+### Map 2 procedural site — room-class lock + real foliage + Unity Terrain + walk-test (2026-06-20→21)
+- **Room sizes LOCKED to the 3 tower classes** (`GridMapGenerator.ExpandRooms`, 06-20 12:56): S 4×4 / M 8×8 /
+  L 12×8 m (1×1 / 2×2 / 3×2 cells), identical to `TowerPlanV8 / PlanSize`. Hero anchors (ENTRY first, DEEP last)
+  always L; rest seeded class+orientation; never steals another anchor's room. PM rule 2026-06-20: these 3
+  classes only, no free-form blocks. `FullSiteBuildTests.cs` updated to match.
+- **Real plants, not whitebox** (PM 2026-06-20) → **NEW `Scripts/Level/FoliageSet.cs`** (ScriptableObject in
+  Resources: tree/bush prefabs + materials + Unity-Terrain fields; runtime-safe fallback to procedural
+  primitives if missing) + **NEW `Editor/FoliageSetup.cs`** (`… ▸ Setup Foliage (URP + Resources)`): imports the
+  "Foliage Free" pack, converts legacy mats → URP/Lit alpha-clipped double-sided dead-olive, authors
+  `Assets/Resources/FoliageSet.asset` (trees = pine1a/b+pine2a/b, bush = ferns) + GrassGround.mat,
+  GrassTerrainLayer.terrainlayer, TerrainURP.mat, and a 3-quad crossed grass-card mesh prefab `GrassTuft.prefab`.
+- **LC-style Unity Terrain pivot** (PM 2026-06-21) → `MapSiteBuilder.cs` (+955 lines, 06-21 18:19): `Foliage()`
+  loads the FoliageSet; `BuildTerrain` makes an undulating heightmap + painted grass layer + GPU-instanced
+  detail-grass cards (`GrassTuft`/`GrassDensity`) when `grassLayer` is set, else `BuildGroundMesh` (flat).
+  `ScatterWoods`/`Tree`/`Bush` instantiate the real pines/ferns auto-fit to height, falling back to the
+  procedural dead-tree silhouettes. `BuildYardDressing` (industrial yard) + `BuildEntrances` retained.
+- **Walk-it playtest rigs** (06-21 16:58): **NEW `Scripts/Player/Map2PlaytestController.cs`** — solo
+  CharacterController FPS rig mirroring the real `PlayerController` body (h2/r0.4/step0.5/slope75) + feel
+  (walk4/sprint7/crouch2/grav-20/jump5) + F noclip; reused by BOTH playtests. **NEW `Editor/Map2PlaytestMenu.cs`**
+  (`… ▸ Playtest Map 2 (Walk It)`) builds the full site at seed 1 + drops the rig at the van drop-off (solo, no NGO).
+
+### ⚠ State hygiene / open for PM
+- **UNCOMMITTED batch** (last commit `9d059a9`, 06-20 11:00): MODIFIED `MapSiteBuilder.cs`, `GridMapGenerator.cs`,
+  `Map2_Procedural.unity`, `Editor/Map2SceneBuilder.cs`, `Editor/FullMapBuilderMenu.cs`, `FullSiteBuildTests.cs`;
+  NEW `FoliageSet.cs`, `FoliageSetup.cs`, `HqPlaytestMenu.cs`, `Map2PlaytestMenu.cs`, `Map2PlaytestController.cs`.
+- **Tests last green 06-20** (bridge). `FullSiteBuildTests` + `GridMapGenerator` + `MapSiteBuilder` changed since →
+  **EditMode re-run NOT done this batch** (verify pending).
+- **PM TODO:** (1) eyeball Option A HQ playtest → decide to port into shipping `HQ.unity`; (2) eyeball Map2
+  terrain+foliage (needs Foliage Free pack imported + Setup Foliage run once); (3) commit the batch; (4) re-run
+  EditMode after the room-class + terrain changes.
 
 ## ▶▶ AUTONOMOUS BLOCK (2026-06-19, PM out ~3h — full autonomy, NO mid-way questions)
 
@@ -85,6 +330,204 @@ via bridge `recompile_scripts`, 0 errors):
 - **VERIFIED: FullSiteBuildTests 7/7 + full EditMode 204/204 (0 regressions)** via bridge.
 - **No scene rebuild needed** — `Map2_Procedural` MapSiteRuntime + Build Full Map 2 use the recompiled code →
   loops+rooms on next Play / menu click. PM judges feel; knobs = `Loops`/`RoomRadius`/`Branches`.
+
+## Session 2026-06-20 (cont.) — COMMIT map system + OUTDOOR ART PASS (hybrid, zero-import)
+- **Committed** the whole verified procedural-map system (was 100% untracked): `9d059a9`
+  `feat(level): procedural map generation system (ADR-0003)` — 101 files on `scavenge-settlement-reveal`.
+  Deliberately EXCLUDED noise: all `.mat` (URP reimport), `DefaultNetworkPrefabs.asset`, `ProjectSettings/*`,
+  `BlackCommission.slnx`, root `TestResults-*.xml`.
+- **Outdoor art pass — PM picked direction = HYBRID, assets = zero-import / I do it solo** (`AskUserQuestion`).
+  - **Tension surfaced to PM:** the locked `design/art/art-bible.md` (+ `docs/art/black-commission-style-lock-v2.md`,
+    PM-locked 2026-06-10) is interior/institutional (concrete/green/wood/rust, ≤256px, rectangular, no organic
+    curves, "no exterior/weather decay") — it has ~no forest guidance, vs the 2026-06-19 "natural outdoor" ask.
+    PM resolved: **hybrid** = dead/abandoned treeline approach + derelict INDUSTRIAL YARD dressing at the building.
+  - **`MapSiteBuilder.cs` (runtime-safe, pure procedural):** palette → locked noir (dark concrete-earth ground,
+    darkened wood-brown trunks, **dead gray-green** foliage [no vibrant green → passes litmus], concrete-gray
+    rocks, **faded safety-yellow** pad + hazard chevrons); per-instance value-jitter via position hash (NOT the
+    scatter RNG). Dead-tree silhouette = tapered trunk (only obstacle) + 2 angular snag branches + ~60% sparse
+    flattened dead crown / ~40% bare snag; branches/crown/scrub **collider-free** (`Decor` helper). Industrial
+    yard (`BuildYardDressing`, independent `seed ^ const` stream): striped hazard posts, jersey barriers, a DEAD
+    floodlight, rusty barrel cluster — all on the FLANKS (|x−door| ≥ DoorW+2.6) so the central corridor stays clear.
+  - **`Map2SceneBuilder.cs` (editor-side → serialised into scene):** fog/light desaturated (cold but not
+    movie-blue); **assigned the project's owned Tirgames `SkyBoxIndustrial01Night.mat`** as `RenderSettings.skybox`
+    (real reuse, zero import). Runtime build never touches assets (skybox is editor-baked).
+  - **Hard constraints kept:** did NOT touch `OutdoorScatterGenerator` (scatter tests auto-safe); trunk footprint
+    unchanged + dressing off-corridor (navmesh test safe); no prefab/AssetDatabase deps at runtime.
+- **✅ VERIFIED GREEN (headless batch, 2026-06-20 ~11:08):** EditMode **204 total / 197 passed / 7 failed**; the 7
+  are the documented `McpUnity` batch noise (non-Mcp failures = 0). **All `FullSiteBuildTests` pass**, incl.
+  `Outdoor_approach_dropoff_to_entry_is_walkable` (both seeds), scatter determinism/exclusion, and
+  `Site_builds_geometry_without_throwing` → compiles clean, 0 real regressions.
+- **⏳ AWAITING PM VISUAL SIGN-OFF (art = ADVISORY gate):** art-pass code is **UNCOMMITTED** pending eyeball.
+  PM flow: `Tools ▸ Black Commission ▸ Map ▸ Create Map2 Scene` (bakes new fog/skybox into the scene) → open
+  `Map2_Procedural.unity` → **Play** (palette/dead-trees/yard apply at runtime; re-Play = new layout). On thumbs-up
+  → commit the art pass. Knobs to tune live: palette Colors + `BuildYardDressing` placement in `MapSiteBuilder.cs`.
+
+### ↻ PM FEEDBACK (2026-06-20, live via bridge) — wrap-around woods + building outer SHELL — VERIFIED GREEN
+PM looked at `Build Full Map 2` (drove it via bridge; Unity open, PID 9008, port 8091). Three asks → all done in
+`MapSiteBuilder.cs`, recompiled + rebuilt + re-verified live:
+- **(1) No vegetation around the building / air-wall UX.** Cause: ground+scatter were SOUTH-only (z∈[-100,0]);
+  building's other 3 sides floated over void. Fix: `BuildOutdoor` now wraps ground+woods around the WHOLE
+  footprint and reaches `Reach=44 m` out on every side; a dense outer-`Ring=14 m` treeline (2nd scatter pass,
+  `seed ^ 0x7EE`, fill 0.85) = soft diegetic boundary; base fill 0.42. `ScatterWoods` helper dedups the two passes.
+- **(2) LC-style plain box exterior.** Added `BuildShell` (new "Shell" root child via `Build`): rectangular worn-
+  concrete box (walls + parapet + flat roof + pilaster ribs + faded signage) just outside the footprint (g=0.6).
+- **(3) PM caution "里面真正的房子不能走到外面去".** Real issue found: our maze is irregular + sparse, so a
+  rectangular box leaves a shell↔maze cavity, and the door threshold gap could let a player slip into it. **PM
+  ruling: don't fill/remove the dead space — just make it invisible + unreachable.** Fix: a SEALED ENTRANCE
+  VESTIBULE (`Shell_Jamb_L/R` bridge the shell door at z=z0 to the interior door at z=0 → straight-in only, no
+  sideways slip); **removed the fake fire exit** (it opened onto the cavity) → north/E/W walls solid, front door
+  the only opening; roof caps the cavity from above. Dead space now hidden (opaque shell+roof+jambs) + sealed.
+- **Determinism-safe:** still did NOT touch `OutdoorScatterGenerator`; the 2nd woods pass + shell use independent
+  streams / fixed geometry. **Live verify (Build Full Map 2):** outdoor **1843 scatter**, navmesh **10140 tris /
+  bounds 201.8×265.5** (wrap-around), **✓ DROP-OFF→DEEP walkable 247.7 m** + DROP-OFF→ENTRY 90.1 m through the
+  vestibule, Shell childCount 35 incl. `Shell_Jamb_L/R`, **0 console errors**, recompile clean (only CS0618 noise).
+- **STILL UNCOMMITTED — awaiting PM overall visual sign-off.** On thumbs-up: commit (art pass + shell + wrap-around
+  + vestibule) and run the formal full EditMode suite to lock regression (deferred so it doesn't pink the live
+  preview via domain reload). Tuning knobs: `Reach`/`Ring`/fills, shell `top`/`g`/pilaster spacing, palette Colors.
+
+### ↻ PM FEEDBACK (2026-06-20) — rooms LOCKED to the 3 size classes — VERIFIED GREEN (headless)
+PM asked: does the layout obey the "rooms = only 3 sizes" rule; is random-gen done; does it conflict with the shell?
+- **Two-system gap surfaced:** the "3 locked room classes" rule lived in the TOWER system (`TowerPlanV8`/`PlanSize`,
+  tested by `PlanV8_RoomSizes_UseOnlyTheThreeLockedClasses`): **S=4×4, M=8×8, L=12×8 m**. The Map2 procedural
+  generator (`GridMapGenerator.ExpandRooms`) was SEPARATE, making free-form (2r+1)² squares (12×12 / 20×20 m) →
+  did NOT obey it. (`design/gdd/map-sequence-and-modular-system.md` lists 4×4/4×8/8×12 — STALE vs the tested
+  TowerPlanV8 values; fix that doc later.)
+- **PM ruling = change the generator to use only the 3 sizes.** `ExpandRooms` now emits ONLY the 3 locked
+  footprints (S 1×1 / M 2×2 / L 3×2 cells on the 4 m grid); hero anchors (ENTRY/DEEP) = L, others seeded
+  class+orientation; anchor cell guaranteed in its room; never overwrites another room. `Rooms_are_open_and_reachable`
+  now also asserts every room footprint ∈ {S,M,L}.
+- **Random gen = done + proven** (1000-seed determinism/reachability; each build = new seed = new layout).
+- **No shell conflict:** shell recomputed from the same footprint each build + front door aligned to the fixed
+  ENTRY anchor → always wraps the random interior (verified across seeds).
+- **✅ VERIFIED GREEN (headless batch, 2026-06-20 ~13:15):** EditMode 204/197 (7 McpUnity noise, **0 real
+  failures**); ALL 7 `FullSiteBuildTests` pass incl. the new footprint assertion + 50-seed
+  `Generator_connects_entry_to_deep_at_full_size`. Zero regressions.
+- **DROP-OFF→DEEP shows PathPartial in `Build Full Map 2`** — NOT a real gap: documented full-site single-bake
+  fragmentation (bigger wrap-around forest + smaller rooms → thinner navmesh → one-pass bake fragments where big
+  rooms used to bridge). ENTRY→DEEP guaranteed by the generator (corridor stitch + safety net; 50-seed logic test
+  green); DROP-OFF→ENTRY navmesh ✓. Players move by physics; monster AI → backlogged tiled `NavMeshSurface` bake.
+- **`run_tests` over the MCP bridge is UNRELIABLE** (one-shot client drops on the test-mode domain reload →
+  300s/200s timeouts, no result). Authoritative verification = **headless `-runTests` with Unity CLOSED**
+  (per [[unity-headless-batch-tests]]). CS0108 warnings = pre-existing (`EchoMold.cs:95`, `ScavengeCargoZone.cs:55`).
+- **Unity was CLOSED for the headless run → relaunched for the PM.** All art-pass + shell + wrap-around + room
+  changes remain UNCOMMITTED pending overall visual sign-off.
+
+### ↻ PM FEEDBACK (2026-06-20) — single exit → added a real connected FIRE EXIT — VERIFIED GREEN (live)
+PM: with one exit, returning from deep is tedious/risky (loses LC's main+fire-exit mechanic). Agreed — proper
+version of the fire exit I removed earlier (now actually connected to the interior). PM chose: add it, near DEEP.
+- `CarveBackExit` carves DEEP → north boundary (mirror of `CarveEntrance`) → `backCell`; `BuildInterior` opens its
+  north edge as a door; `res.FireExit` = north-edge centre. `BuildShell` splits the north wall around it with the
+  SAME sealed vestibule (`Shell_N_L/R` + lintel + `Shell_NJamb_L/R` bridging shell z1 → interior z=h*Cell) → leads
+  straight into the maze, no cavity leak. `BuildOutdoor` adds a fire-exit porch clear + a CRT-green exit-sign
+  marker (`FIREEXIT_Marker`; art-bible: CRT green = exit signs). Menu logs a new DEEP → FIRE-EXIT check.
+- **Live verify (Build Full Map 2; recompile 0 errors, 0 console errors):** fireExit=(102,0,96); **✓ DEEP →
+  FIRE-EXIT walkable 6.0 m** (deep bails out the back); `Shell_N_L/R` + `NJamb_L/R` present. BONUS: the back
+  corridor's extra connectivity also **restored ✓ DROP-OFF → DEEP walkable (252 m)** — the earlier PathPartial
+  fragmentation is gone. DROP-OFF → ENTRY 90 m ✓. 11147 nav tris, 201×266 bounds.
+- Extraction = ONE van (south; preserves the dispatch-van ritual); fire exit (NE) = fast interior escape, then jog
+  back through the wrap-around woods to the van.
+- **Full EditMode suite NOT re-run for this increment** (bridge run_tests unreliable; Unity open). Low risk: only
+  the 2 reflection tests touch this code, both confirmed live (builds clean + DROP-OFF→ENTRY walkable). Run
+  headless before commit. Still UNCOMMITTED pending overall sign-off.
+
+### ↻ PM FEEDBACK (2026-06-20) — REAL foliage (Foliage Pack swap) — VERIFIED GREEN (headless)
+PM: whitebox plants look fake → import real foliage. PM imported TWO Asset Store packs: **Foliage Free** (Jake
+Sullivan — 4 pines + ferns, plain meshes) + **TreePackVol.1** (ALIyerEdon — ~50 trees, legacy Tree Creator).
+- **Picked Foliage Free** (plain meshes → URP-clean). TreePackVol.1 deferred (Tree Creator = URP-painful; needs
+  the official Render Pipeline Converter if its variety is wanted later). Both packs ship legacy/built-in shaders →
+  magenta in URP until converted.
+- **New `FoliageSet` ScriptableObject** (Assembly-CSharp, data-driven, in Resources) + **`Editor/FoliageSetup.cs`**
+  (menu *Setup Foliage (URP + Resources)*): converts Foliage Free's **7 materials → URP/Lit** (alpha-clip,
+  double-sided cards, **dead-olive tint (0.62,0.60,0.46)** killing vibrant green per art-bible) and authors
+  `Assets/Resources/FoliageSet.asset` (trees=4 pines, bushes=ferns; treeHeight 6 / bushHeight 0.9 / trunkRadius 0.35).
+- **`MapSiteBuilder.Tree()/Bush()`** now instantiate a seeded prefab via **`PlaceModel`** (auto-fits to target
+  height by measuring renderer bounds → scale → base on y=0; strips imported colliders; adds ONE unscaled trunk
+  capsule = sole nav obstacle). Pick is a planar hash (NOT the scatter RNG). **Missing FoliageSet ⇒ procedural
+  primitive fallback** (generator still works with no assets). `Foliage()` lazy-loads via `Resources.Load`.
+- **Bridge had to be bypassed:** new `.cs` need editor FOCUS to import (`recompile_scripts` ≠ Refresh); the MCP
+  bridge then wedged hard (listening but TIMEOUT) and a **detached GUI relaunch HANGS at ~72 MB on graphics init**
+  (the documented [[unity-bridge-restart-recovery]] hazard). **Resolution = all HEADLESS:**
+  `-executeMethod FoliageSetup.Setup -quit` then `-runTests -batchmode`.
+- **✅ VERIFIED GREEN (headless, 2026-06-20):** 0 compile errors; EditMode **204/197** (7 McpUnity noise, **0 real
+  failures**); ALL `FullSiteBuildTests` pass incl. `Site_builds_geometry_without_throwing` (real-tree instantiation
+  doesn't throw) + `Outdoor_approach_dropoff_to_entry_is_walkable` (navmesh walkable with real trees + trunk
+  capsules). The 6 log NREs are all `McpUnity.Tools.BatchExecuteTool:122` (noise); ZERO foliage-code errors.
+- **PM TO SEE IT:** open Unity from the **Hub** (NOT a CLI/background launch — that hangs on graphics init) → Build
+  Full Map 2 → dead-olive pines + ferns scatter instead of primitives.
+- **Still UNCOMMITTED (whole session) pending sign-off.** New: `FoliageSet.cs`, `Editor/FoliageSetup.cs`,
+  `Resources/FoliageSet.asset`. **Open commit decision:** the imported packs `Assets/Foliage Free/` (used) +
+  `Assets/TreePackVol.1/` (unused) are large — decide commit-into-git vs gitignore + re-import.
+
+### ↻ PM FEEDBACK (2026-06-20→21) — foliage material fix, grass, terrain undulation → PIVOT TO UNITY TERRAIN
+PM iterated on the outdoor look. Sequence of fixes (all on disk + compile; the LAST one is HALF-DONE — see RESUME):
+- **Trees/ferns rendered with NO material** (white). Cause: the Foliage Free FBX use legacy "material by base
+  texture name" search (no externalObjects remap) → bind fails in URP. **Fix (done, verified green):** `FoliageSet`
+  now stores `treeMaterial`/`bushMaterial` (the converted URP `pinetree.mat`/`fern.mat`); `MapSiteBuilder.PlaceModel`
+  **force-assigns** the material to every renderer of the instantiated model. Headless EditMode 204/197 (0 real fails).
+- **Ground should be grass:** `FoliageSetup.MakeGroundMaterial` makes `Assets/Resources/GrassGround.mat` (URP/Lit,
+  `grass2_diffuse.tga`, tiled 50×65, Repeat). Tint started dead-olive `(0.5,0.52,0.42)` → looked like dirt → bumped
+  greener to `(0.46,0.58,0.30)`. `BuildOutdoor` uses `fset.groundMaterial` for the ground.
+- **Ground should undulate** (PM: 高低不平/隆起). Implemented a procedural undulating MESH path in `MapSiteBuilder`:
+  `GroundY(x,z)` (Perlin, flattened near building+drop-off via `_gSeed/_gBW/_gBD/_gDropX/_gDropZ`, `GroundAmp=2.2`),
+  `BuildGroundMesh` (grid mesh + MeshCollider), and ALL placement now sits on it (`PlaceModel` got a `groundY`
+  param; `Tree/Bush` pass `GroundY`; `Rock` offset; pad/van offset). **⚠ This mesh-undulation build was NEVER
+  actually shown to the PM** — I malformed the Bash tool call THREE times (must use `antml:invoke`, not `invoke`),
+  and the bridge kept wedging on recompile, so the rebuild didn't land. The PM's screenshot was the OLD flat
+  muddy-grass box → "地好怪 / 没森林感 / 要真草+起伏".
+- **PM screenshot + LC-grass question → DECISION: PIVOT OUTDOOR TO UNITY TERRAIN.** Explained LC's "real grass" =
+  Unity **Terrain** (heightmap undulation + GPU-instanced **detail grass** + tree instancing) + heavy fog; the
+  mesh+GameObject-trees approach can't do instanced detail grass. **PM approved the Terrain pivot ("可以的我统一").**
+
+### ✅ DONE + VERIFIED (2026-06-21) — Unity Terrain outdoor pivot (awaiting PM visual eyeball)
+**Goal:** replace the outdoor MESH ground with a Unity **Terrain** (LC-style): heightmap undulation from `GroundY`
++ base grass `TerrainLayer` + GPU-instanced **detail grass** (the "真草") + URP terrain material; keep the working
+(material-fixed) GameObject trees/rocks/dressing sitting on it (they already use `GroundY` → match the terrain).
+**DONE so far:** `FoliageSet.cs` got 3 new fields — `grassLayer` (TerrainLayer), `grassDetail` (Texture2D),
+`terrainMaterial` (URP "Universal Render Pipeline/Terrain/Lit"). Nothing references them yet → still compiles.
+**✅ IMPLEMENTED + VERIFIED GREEN (headless, Unity CLOSED, 2026-06-21):**
+- **`FoliageSetup.cs`** — `MakeGrassLayer()` → `Assets/Resources/GrassTerrainLayer.terrainlayer` (diffuse
+  `grass2_diffuse.tga`, tileSize 8); `grassDetail` = `Foliage Free/detail/grass_detail1.tga`; `MakeTerrainMaterial()`
+  → `Assets/Resources/TerrainURP.mat` (URP `Terrain/Lit`). Ran `-executeMethod FoliageSetup.Setup` headless → log
+  **`layer=True detail=True urpMat=True`** (URP terrain shader resolved even `-nographics` ⇒ NOT magenta), FoliageSet.asset
+  updated, **0 CS errors**. The 3 new assets exist on disk.
+- **`MapSiteBuilder.cs`** — `BuildTerrain(parent,minX,minZ,maxX,maxZ,fset)` + `GrassDensity(x,z)` + `TBASE=-4`/`HRANGE=8`:
+  257² heightmap from the SAME `GroundY` props use (`h=(GroundY−TBASE)/HRANGE` ⇒ terrain SURFACE == GroundY in world);
+  one painted grass `TerrainLayer` (alphamap all-1); 512-res `GrassBillboard` detail grass (GrassDensity = 0 under
+  building+pad, 9–13 else) + waving; `Terrain.CreateTerrainGameObject` at localPos `(minX,−4,minZ)`, `materialTemplate`
+  = TerrainURP, `drawInstanced`, `detailObjectDistance 140`. `BuildOutdoor`: `grassLayer!=null → BuildTerrain` else
+  `BuildGroundMesh` (mesh stays the no-foliage-assets fallback).
+- **Headless EditMode 204 total / 197 passed / 7 failed** — the 7 are the documented `McpUnity.BatchExecuteTool`
+  batch-noise (NRE count == 7 == failed-test count, 1:1; **0 real failures**). **All 7 `FullSiteBuildTests` PASS**, incl.
+  `Site_builds_geometry_without_throwing` (BuildTerrain runs with the terrain path ACTIVE, no throw headless) and
+  `Outdoor_approach_dropoff_to_entry_is_walkable` = navmesh bakes over the **TerrainCollider**: **6120 tris (seed 1) /
+  6430 tris (seed 777)**, DROP-OFF→ENTRY walkable through the forest. Zero regressions vs the prior baseline.
+- **⏳ AWAITING PM VISUAL EYEBALL (art = ADVISORY → UNCOMMITTED).** PM: open Unity from the **Hub** → `Tools ▸ Black
+  Commission ▸ Map ▸ Build Full Map 2` (or open `Map2_Procedural.unity` + Play) → check: terrain not magenta; bladed
+  grass showing (URP GrassBillboard detail is the ONE render risk — if blades don't show, the base grass TerrainLayer
+  still textures the ground, and the fix is `renderMode=Grass` or URP terrain-detail support); trees/rocks sit ON the
+  terrain surface. Knobs: `GroundAmp`, `GrassDensity` return, DetailPrototype colors/size, `Loops`/`RoomRadius`/`Branches`.
+- **OPS:** HEADLESS with Unity CLOSED (`-batchmode -nographics -executeMethod`/`-runTests`) was reliable this session;
+  the [[unity-bridge-restart-recovery]] GUI/bridge hazards were NOT hit. Machine left clean (no Unity.exe, lockfile cleared).
+- **COMMIT on thumbs-up:** only `9d059a9` (procedural map system) is committed; everything after — art/shell/fire-exit/
+  room-size/foliage/**terrain** — is UNCOMMITTED on `scavenge-settlement-reveal`, all on disk. Then run the formal full suite to lock.
+
+### ↻ PM FEEDBACK (2026-06-21) — "草只是贴图,不是真的草" → instanced MESH grass (live-built, awaiting eyeball)
+PM opened the editor, saw the terrain grass as a flat TEXTURE (no 3-D blades). **Root cause** (Unity issue tracker
+"URP fails to render grass Terrain details" + manual): URP does NOT reliably render texture/billboard terrain grass;
+the manual says **"Instancing details work with all render pipelines"** → instanced **Vertex-Lit detail MESHES** are
+the cross-pipeline path. Fix:
+- `FoliageSet.cs`: new `grassDetailPrefab` (GameObject) field.
+- `FoliageSetup.cs`: `MakeGrassTuft()` authors a 3-quad crossed grass-card MESH (`Assets/Resources/GrassTuftMesh.asset`)
+  + URP/Lit alpha-clip, double-sided, **GPU-instanced** material (`GrassDetail.mat`, `grass_detail1`) + `GrassTuft.prefab`;
+  forces the grass tga to import alpha-as-transparency. Assigns `set.grassDetailPrefab`.
+- `MapSiteBuilder.BuildTerrain`: detail prototype → `usePrototypeMesh + useInstancing + VertexLit` pointing at the grass
+  prefab; the texture billboard is kept only as a fallback. **Trade-off:** VertexLit doesn't wave — wind deferred.
+- **Bridge wedged** on the post-recompile domain reload (MCP node bridge process died; `execute_menu_item` → "Connection
+  closed"). Did NOT kill the PM's open editor. Unity's **8091 listener recovered** after the reload → drove **Setup
+  Foliage + Build Full Map 2 via `tools/ws-unity-call.cjs` direct** (bypassing the dead node bridge; that's the go-to now).
+- **LIVE build clean (0 terrain/grass errors):** grass assets created; `Build Full Map 2` → navmesh **12100 tris**,
+  DROP-OFF→ENTRY 90.2 m / DROP-OFF→DEEP 257.1 m / DEEP→FIRE-EXIT 6.0 m all walkable. **⏳ PM eyeball:** do 3-D grass
+  blades show now in the outdoor approach (dark dry-olive, intentional)? If yes → commit. Still UNCOMMITTED.
 
 ### ✅ AUTONOMOUS BLOCK COMPLETE (2026-06-19) — all 6 items done + verified
 **How the PM sees it on return:** (1) open Unity (via Hub) → open `Map2_Procedural.unity` → **Play** → random
@@ -422,7 +865,7 @@ NOT a data gap. So slice 2-4 = feed the right inputs in, and surface the lines o
 
 ## Session 2026-06-18 — Economy & Map Design Overhaul
 
-### Locked design decisions (PM Yan Dai)
+### Locked design decisions (PM David)
 
 **Economy model (replaces prior GDD):**
 - Reputation system: **removed entirely** from all docs and code
@@ -624,7 +1067,7 @@ f1_stair_anchors, topology_resolve). systems-index: Level/Map Gen → Designed (
 `design/levels/abandoned-tower-earth-coast-01.md`, building on
 `Assets/Scene/AbandonedBuilding_Blockout.unity`.
 
-Locked decisions (PM Yan Dai, 2026-06-06):
+Locked decisions (PM David, 2026-06-06):
 - Objective = sales scale model (楼盘沙盘) — "the unbuilt Earth dream as a collectible"
 - Floor-2 gate = restore power in `F1_S3_PowerRoom`
 - Objective carry = heavy two-hand carry (new mechanic)
@@ -657,7 +1100,7 @@ van (south-center F1).
 
 ## Session 2026-06-09 — Progression System + Pillar Unification
 
-**Design locked (PM Yan Dai):**
+**Design locked (PM David):**
 - Progression backbone = 5 license stages (not office level 1-8, not reputation bar)
 - Economy = money only (no reputation metric exposed to player)
 - Player level is hidden (dev-visible only; drives job pool selection)
@@ -2105,3 +2548,90 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
   separate-asset path. Runtime Play test still blocked from the bridge (no play toggle; CoplayDev not attached).
 - **Note for PM:** earlier tower monster concept = "核查专员/Auditor" (`TowerAuditorLogic`, tested). Echo Mold
   is the newer PM-approved mushroom (2026-06-14/15). Whether they coexist or supersede is a PM design call.
+
+## Session 2026-06-24 (cont.) — HQ 改向火星货运堂 + Option B 纯室内锁定
+- **概念锁**: HQ = 破产事务所蹲占「废弃火星轨道货运堂」死壳; 论点「扎哈=火星」(死参数化壳=火星弃物 对峙 小暖窝=人类对位)。
+- **Option B 纯室内已锁**(art-director/level-designer/game-designer/technical-director 4家一致): 集结·登车·结算全在壳内; 货车室内装卸湾; 卷帘门=框景, 门外火星废料场=不可进入背景。laplace 估 builder delta≈-150行/-1 NavMesh/-1 Terrain, 近零新代码。
+- **"室内稍微大一点"**(PM 2026-06-24): 壳顶13.6→15.5m(剖面显示·零穿行成本), 宽11→13m(平面显示), 深~不变, **暖窝不放大**(对比更狠), 门4.6→5.0m框景。
+- **已出**: design/hq/HQ_Section_AA_v3.png (剖面v3室内·渲染器 tools/hq_section_v3_interior.py); 批过的 v2 保留。**待PM确认尺寸/读感** → 然后改平面(hq_siteplan_v5.py→B版13m宽) + laplace 落 builder + 重写 hq-architecture-pass.md。
+- **待记两代价**: repo-agent接管演出→门口; 返程减压beat→接受损失或室内替代。
+- **仍开**: 背包系统(荐 van-as-backpack 或不做); MAP5 起源叙事批准; 结算位置(室内CRT vs 车上)。
+
+## Session 2026-06-24 (cont.2) — HQ 尺寸定稿 + 三步执行中
+- **尺寸已锁**(art-director+level-designer 收敛, PM "行,继续做吧"): 壳13.6m / 净宽11m / 深~27m / 门4.8m(4.6→4.8唯一微调) / 暖窝6.6×7.0顶2.8不放大。放大试验(15.5/13)被否。剖面定稿候选=design/hq/HQ_Section_AA_v3.png。
+- **结算位置=室内CRT**(PM默认采纳荐案)。
+- **执行顺序**: (1) 平面改B版(tools/hq_siteplan_v5.py: 车进室内·门外背景化·宽11m) → (2) 重写 design/hq/hq-architecture-pass.md(旧"市政验车站"→火星货运堂+OptionB) → (3) builder delta(HqOptionAProductionBuilder.cs; level-designer:终稿几何≈v2,主要 DoorH 4.6→4.8 + 车/门/cargo zone 室内化+门外backdrop; 注意当前builder仍是旧概念,Mars壳/nest是否已建需先核实再定工作量)。
+
+## Session 2026-06-24 (cont.3) — 三步执行完成 (1+2 done, 3 核实=重建)
+- **(1) 平面 B 版 已出**: `design/hq/HQ_SitePlan_v5.png` (渲染器 `tools/hq_siteplan_v5.py` 已重写)。门外火星废料场收成顶部窄带(z28–38,~10m,货柜+废墟地标透过门可见·标注不可进入); 室内主导; 出发动线止于室内登车; 返程门口→CRT结算; 宽11m; 砍院墙/院门/土路/室外灯锚。
+- **(2) hq-architecture-pass.md 已重写**: 旧「市政验车站」→「废弃火星轨道货运堂」纯室内 OptionB; 11节; 锁定尺寸表(13.6/11/27/门4.8/暖窝6.6×7×2.8/压缩比1:4.86); 结算=室内CRT; 两代价已记; §8室内灯锚; §11=builder核实结果。
+- **(3) builder 已核实 (读937行)**: `HqOptionAProductionBuilder.cs` **100%还是旧「Option A市政混凝土楔形」**, 零火星几何 (UnitW=9≠11 / Depth17·19.5≠27 / WallH=3.6≠13.6 / Door4·3.2≠4.8; BuildShell=简单盒子+斜墙; BuildInterior=道具摆楔形地板**无暖窝围合**; +BuildYard/Wilderness/Vegetation/HqTerrain室外)。**→ Mars+OptionB 不是tweak, 是 BuildShell+BuildInterior 从头重建** (重写壳13.6/11/27+曲东墙/斜北墙/门4.8/传送带/悬挑/裂缝/树柱 + 建暖窝盒子6.6×7×2.8 + 车/zone挪室内 + 删4个室外builder + 灯重指室内 + CRT结算collider)。多百行改generated editor builder, 需Unity验证。
+- **建议(待PM决策)**: 先批定稿三件(剖面v3 + 平面v5 + doc) → 再按图把 builder 重建当作独立实现任务 (建议委派 unity-specialist/laplace, Unity开着验证)。**不应在PM看到定稿前抢跑重写900行builder**。
+- **仍开**: 背包系统(荐van-as-backpack或不做); MAP5起源叙事批准; ~404MB foliage-pack提交决策; 黑色方块跟随视角bug(需PM截图); 室内dressing pass。
+
+## Session 2026-06-24 (cont.4) — 火星货运堂白模已建成 (PM "可以先建白模")
+- **新建独立 editor 脚本** `Assets/_Project/Editor/HqMarsFreightWhitebox.cs`(**不碰**旧 HqOptionAProductionBuilder,可逆): 纯灰盒 Cube 按定稿终米建白模。两个菜单: `Tools/Black Commission/Map/Build HQ White-box - Mars Freight Option B` + `Remove HQ White-box (restore)`。
+- **白模已成功建进 HQ 场景并桥接验证** (get_gameobject 确认 6 组全到位): Shell(地板+14个Z-bay分面:每bay西矮檐墙/斜屋面/东高墙, 西檐扫到东脊13.6m + 后墙 + 北门墙4.8m洞 + 死传送带/断悬挑/天窗裂缝) / Nest(顶+东墙+前墙带门洞, 6.6×7×2.8 SW角) / Interior(CRT桌+绿屏/债务板/折叠桌/半空军械墙/集结台/歪树柱/4出生点) / VanBay(车体+车头+登车区 z21.4 室内) / Backdrop_NonWalkable(地面/集装箱/废墟地标/死电杆 + 门槛隐形墙) / Lights(暖窝钨丝/CRT荧光/裂缝冷昼光打集结/车湾钠灯/门口背光)。重定位 PlayerSpawnPoint(4.5,0.1,2.4 朝+Z)+ MVP_OfficeComputer(1.2,1.0,1.2)。
+- **⚠ 未保存**: 白模只在打开的编辑器会话里 live, 场景 dirty 未存(设计上不自动存; 存=改 HQ.unity YAML 需 PM 明确同意)。PM 满意→Ctrl+S 保留; 不满意→Remove 菜单撤或不存关掉。
+- **过程坑(已记忆)**: (a) 新[MenuItem]需编辑器焦点才注册→后台桥调不动(用只读菜单Audit Proportions探针确诊); (b) 菜单名内 `/` 被Unity当子菜单分隔→改 `-`; (c) recompile_scripts不做Refresh(新/改文件需先execute_menu_item Assets/Refresh导入); (d) 模态DisplayDialog会卡死桥主线程→已改成非阻塞LogWarning; (e) 桥卡死→PM授权taskkill /F /IM Unity.exe(MSYS_NO_PATHCONV=1防/F被转F:/)+删Temp/UnityLockfile+直连exe -logFile重启, 新实例PID58836冷启动菜单正常注册→build成功。
+- **下一步(待PM视觉验收)**: 桥无截图工具→需PM亲眼看Scene视图(已FrameLastActiveSceneView框好)或Play走查, 验尺度/压迫比/OptionB动线。验收后: 满意则存+按白模把production builder重建; 要调则改灰盒数字再rebuild。
+- **仍开(承上)**: 背包系统; MAP5起源叙事; ~404MB foliage-pack提交决策; 黑色方块跟随视角bug; 室内dressing pass。
+
+## Session 2026-06-24 (cont.5) — 白模"材质化"升级完成 (PM四点反馈→"行按你说的改吧")
+- **PM 四点反馈**(看完灰盒白模): ①贴材质(但要充分调研用哪些) ②用我原来HQ里的`AS_Office*`模型别手建方块 ③屋顶镂空(真bug) ④你是不是没法建曲面? → PM 批 **"行,你先按照你说的改吧"**。
+- **`HqMarsFreightWhitebox.cs` 整段重写**(同脚本同两菜单,仍不碰旧builder/可逆/不自动存),**已编译通过(0错)+建进HQ场景+桥接逐项验过**(root=7组/84对象/**0回退警告**=全真资产):
+  - **①屋顶镂空根除 + ④真曲面**: 旧14个Z-bay分面盒子(接缝高度/角度对不齐→漏三角洞) → 换成**一整张程序化曲面网格** `BuildShellMesh`(Catmull-Rom截面: 西矮墙A→P0→拱→脊P2偏东0.42span→长东坡P3→东基P4; 沿Z 45刀放样, 用Ridge高度+EastX东extent双profile; watertight indexed grid; RecalculateNormals平滑; **双面**_Cull=0; UV; MeshCollider)。验`ShellSkin`=MeshFilter+MeshRenderer+MeshCollider。
+  - **③用真模型**: `Prop()`(Resources.Load `GeneratedArt/AS_*` scale1, 关碰撞) 换掉所有手建Cube道具; 验`Computer_CRT`→`AS_OfficeComputer_Model`、`DispatchVan`→`AS_OfficeVan_Model`; 债务板/哨兵/文件箱/折叠桌/台灯/沙发/补给柜/档案柜/工具架/安全板/灭火器/车间角全真`AS_Office*`。门=`FitPrefab(LargeGates1_2)`卷帘; 门外=真`Debris01_2/_5`+`Barrel01b/c`+`GasBallone01_2`。
+  - **②材质A方案**(充分调研: §7/§8锁定方向+Tirgames/Sat库+无壳模型确认): 壳=`Tint(CommonConcreteWall02)`冷调实例(_BaseColor 0.86,0.90,0.97/低光泽/双面)+污渍条; 地面=`M(CommonConcrete04)`共享; 钢(传送带/悬挑)=`Tint(CommonMetal01)`冷; 暖窝=`Tint(CommonMetalPainted01)`暖灰(暖是灯不是漆); 门外silhouette=`Tint(CommonConcrete05)`冷暗。**全`new Material(源)`实例, 一个共享.mat都没动**(`Tint`/`M`/`Flat` helper)。
+  - **补打光让材质落地**: 冷向主光`Key_ColdSky`(软阴影 Euler48,-26) + §8五灯池(暖窝钨丝/CRT绿/裂缝冷昼光spot打集结/车湾钠灯/门口背光) + `Light_Fluorescent_Hall`挂`LightFlicker.Sputter(0.7,7)`濒死灯管 + 真`LampCeiling01`灯管×2 + `BuildPost`=LC风格Volume(FilmGrain Medium1 0.18/Bloom 1.15·0.30/ColorAdj sat-12 contrast+8 priority10)。Mood改Trilight冷暗ambient+linear fog 11-62。
+- **关键确认**: CommonConcreteWall02=URP/Lit(shader guid 933532...=universal Lit, `_Cull:2`)→`Tint(doubleSided)`置_Cull=0生效→玩家在壳内看到双面壳不空。
+- **桥流程坑补记**: 成功编译触发domain reload→桥WebSocket拆重建, `get_console_logs`先`ECONNRESET`后`TIMEOUT`是**reload中(非卡死)**, 等15-20s重连恢复(失败编译反而秒返); `get_gameobject`参数=`idOrName`(非objectPath); `get_console_logs`可`{"logType":"error"/"warning"}`过滤秒查编译错/回退。CS1503一处(BoxEuler第5参传float应Vector3)已修。
+- **⚠ 仍未保存**(场景dirty, 不自动存)。**待PM视觉验收**(桥无截图→PM需Alt-tab看Scene(已Frame)或Play走查): 重点验 曲面壳形/法线(有无发黑穿插)·**货车朝向(yaw=0可能要180朝门)**·冷死壳vs暖窝对比·道具摆位。满意→Ctrl+S; 调→改数字rebuild; 撤→Remove菜单。验收后才谈把production builder(HqOptionAProductionBuilder)按此重建。
+- **仍开**: 背包系统; MAP5起源叙事; ~404MB foliage-pack提交决策; 黑色方块跟随视角bug。
+
+## Session 2026-06-24 (cont.6) — 壳"太丑"美术重定向已重建 (art-director redirect → PM「行你开始开发吧」)
+- **触发**: PM 看完 cont.5 材质化壳→「这个建筑整体长得有点太丑了」+「我们是不是要突出这是曾经的火星建筑被遗弃的?」。走 `/art-bible` skill 拉 art-director 子agent 诊断+给可建重定向(存 `.claude/agent-memory/art-director/project_hq-mars-shell-redirect.md`)。先出 PM 批准的**侧剖+俯视**两图(`design/hq/HQ_Section_AA_v4_redirect.png` + `HQ_Plan_redirect.png`, 渲染脚本 `tools/hq_section_redirect.py` + `tools/hq_siteplan_redirect.py`, 含 before/after 剪影对比)→ PM「行,你开始开发吧」。
+- **`HqMarsFreightWhitebox.cs` 已按重定向重建**(同脚本同两菜单, 仍不碰旧builder/可逆/不自动存), **编译0错+build成功+0回退警告**, redirect对象桥接验在场(`ShellSkin`/`TornRebar_0`/`MissingPanel_0`/`HangingConduit`/`Prow_Rim`):
+  - **①形体(治"团块")**: 旧 `Ridge` 居中对称(13.6中跨两端等衰)→**单向 sweep**: 低南矮肩(5.8)→单脊压北门 13.6@z20→急落门头8.6→断裂船首过z27。`EastX` 肚最肥12.9 北移到z19。**核心修**: `Section` 增 `zT` 参, 顶点 P2 横向 **lerp 0.30→0.52·span(南→北)**=把"直挤出 extrude"变"真扫掠 sweep"(脊随北升东漂)。`arch 6→12`, `zSteps 45→72`(治faceting)。
+  - **②材质(治muddy)**: `mShell` 推**冷苍蓝灰**(_BaseColor 0.86,0.90,0.97 → **0.60,0.69,0.86** 强蓝偏低值压住暖混凝土底色, 故意出地球混凝土/绿/木/锈色板=火星异星)。新增 `mShellDark`(0.17,0.20,0.27 暗蓝钢)给T3外露结构。`mGrime` 转冷。
+  - **③衰败北聚(治"突出被遗弃")**: 所有废墟挪到北端(船首): `BrokenCantilever` 移z28.6 + 5根 `TornRebar` 钢筋外露; NE上翼 3处 `MissingPanel` 暗recess+各3根 `Rib` 内肋外露; `HangingConduit` 从撕口垂落; `Stain_Run` 改**垂直**重力条且北聚(A/B/C)。南窝角保持完好(占屋者选最稳角)。
+  - **④打光**: 冷主光 `Key_ColdSky` 0.35→**0.62** 且压低(Euler 48,-26→30,-22)沿sweep**掠射**; `Crack_Daylight` 移北撕口斜打集结; 新增 `Prow_Rim` 第二道冷光rim断裂船首。
+- **我主动补修3处穿帮**(都是PM敏感的"没设计感"硬伤, 改数字级低风险): (a)北脊升到8.6→侧墙平板捅出屋脊→`Wall_N_L/R` 高度封到近壳高(6.8/5.0)不再捅(顶过梁仍到脊8.6); (b)南脊降到6.7→`DeadConveyor` y7.0 戳穿屋顶→降到y5.6 z[7,23]吊在壳下; (c)`MissingPanel` Y首估浮在皮外1.5m→重采样贴NE斜翼(mpX/Y/Z 改 7.2/10.3, 7.6/7.5, 7.0/6.6)。
+- **⚠ 仍未保存**(dirty)。**待PM视觉验收**(桥无截图→PM Alt-tab看Scene已Frame/Play走查): 验 北升sweep剪影(不再居中团块)·冷蓝异星 vs 暖窝·北聚撕裂废墟·掠光雕曲面。
+- **一处已知近似(我故意留+已flag)**: 北端封口仍是"封高的平板盒"(单盒顶配不上斜壳→最西角仍残~3m小poke, 雾+船首遮挡+暗多半看不见)。要彻底干净=按 `Section` 曲线建**带门洞的profiled端盖网格**(有缠绕/法线/挖洞风险, 盲建难调)→PM 若看见残角再做。
+- **验收后才做(art-director 标 BLOCKING)**: 写 design doc(`design/art/hq-mars-shell-art-direction.md`, hq-exterior 兄弟篇) + 把"火星壳=美术圣经§3唯一获准的曲线例外(地球永远矩形)"写进 art-bible §3, 防未来 consistency sweep 把曲线正交化/把壳暖回地球混凝土。**未批准前不动圣经/不存场景**。
+- **仍开**: 背包系统; MAP5起源叙事; ~404MB foliage-pack提交决策; 黑色方块跟随视角bug; 室内dressing pass。
+
+### PM 验收(2026-06-24 关机前): 「还行吧」= **形体过关**, 但**①材质还差点意思 ②光效/氛围感要再做一轮**。下一阶段 = 材质深度 + 光氛围, 形体不再大动。
+**⚠ 场景未存就关机 = 正常**: 全部改动在 `HqMarsFreightWhitebox.cs`(已落盘), 场景是脚本产物。下次重开 Unity → 跑 Build 菜单即重生, 无丢失。圣经/场景仍未动。
+
+**下次开机 resume = 直接进 Stage A(材质), 桥活着就先 Build 一次看当前态再动手。**
+
+#### Stage A — 材质深度(治"差点意思", 优先)
+- **A1[最大杠杆]**: 程序化**冷色拼板缝贴图**(PIL, 256-512px)换掉现在的混凝土平铺——壳现在是"一坨浇筑的冷色"没有装配感。要: ~2.5×2.0m 金属板块 + 细凹缝 + **逐板明度变化烤进贴图**(T1完好亮/T2风化暗) + 顶部火星尘漂移。存 `Assets/_Project/Art/Textures/MarsShellPanels.png`, 改 import(sRGB/无mip条纹), 在 `BuildPalette` `mShell.SetTexture("_BaseMap", tex)`。(art-director 早就点名这条, cont.6 我只做了颜色没做贴图=这就是PM说的"差点意思")。
+- **A2**: 配套 **法线贴图**(缝倒角+凹坑)+ 粗糙度变化, 让掠射主光真能"雕"出板缝, 不再是死平的漆。
+- **A3**: **空间分层**(不是只靠损坏几何): 完好色压低处/南, 风化暗压高处/北 + 火星尘积在朝上/朝北面(顶点色或材质分区), 给"老化"读数。
+
+#### Stage B — 光效 & 氛围感(治"氛围", A之后)
+- **B1[最大杠杆]**: **体积光/神光柱**——裂缝/大门/船首rim 现在是看不见光柱的点/聚光。加可见的含尘光轴(URP 体积雾 or 廉价半透明加色锥mesh)。这条对"氛围感"最值钱(LC的废教堂感全靠它)。
+- **B2**: 光池里飘**尘埃粒子**(cheap ParticleSystem)→ 立刻"被遗弃的大空间"。
+- **B3**: **雾重调** + 验光池分离: 脊顶 fade into dark 卖 1:4.86 矮人比; 暖窝/CRT绿/钠灯车湾/冷裂缝 四池要是**被真黑分开的孤岛**不是一片糊(压 ambient/收 range)。
+- **B4**: **Post 加深**: vignette(收心) + 亮源 bloom 阈值(CRT/钠灯/光柱 只让这几个发光) + **分离调色**(teal阴影/amber高光 = Municipal Debt Noir 分色) + 轻 CA(脏镜头)。
+- **B5**: **自发光的"破办公室生命"**: CRT/债务板/出口牌 emissive 自发光 + 钠灯嗡鸣, 保留濒死灯管 sputter。
+
+#### Stage C — A/B 落地后(收尾 + 锁档)
+- **C1**: 北端 **profiled 端盖网格**(按 Section 曲线建带门洞端盖)杀掉残留西角 poke——PM 看见才做。
+- **C2[BLOCKING]**: 写 design doc `design/art/hq-mars-shell-art-direction.md` + 圣经 §3 写入"火星壳=唯一获准曲线例外"。**look 批准后才写, 防 consistency sweep 掰直曲线/暖回地球混凝土。**
+- **C3**: 批准的 look 反向重建进 production builder(`HqOptionAProductionBuilder`)。
+
+---
+
+### PM 关机前追加(2026-06-24「最快速度」): 两个走查 bug
+
+**Bug① 视角速度太快 → 本次已修**: `PlayerCameraController.cs` 加 `const LookSpeedScale = 0.5f` 乘进 mouseX/mouseY → 默认视角灵敏度减半(原 effective = 原始鼠标delta×2, 太twitchy)。游戏内灵敏度滑条(0.25–8)仍可调回快。改的是 .cs(已落盘), 下次 Unity 获焦重编译即生效;桥在 Play 模式被占, 本次没法跑桥验证。PreviewWalker(0.12)本来就慢, 未动。判定 PM 用的是**联机玩家**(host流程, PlayerCameraController ×2), 不是 PreviewWalker。
+
+**Bug② 第一视角黑色「阴影」跟随镜头 → PM 要求只记待办, 暂不修**(细化/替代上面 line 2603 "黑色方块"笼统条)。
+- **PM 更正(重要)**: 是**黑色阴影**, 不是方块、**和准星(crosshair)无关**(crosshair 4–6px 中心暗点已被 PM 排除), **随人物第一视角移动**。
+- **本次已排除(省下次时间)**: owner 所有手持 view-model 默认全关(手表 HasWristwatch=false / 手电 slot0 空且无起始发放 / heldItemRoot 空); 身体胶囊 MeshRenderer 在 OnNetworkSpawn 被 `HideCapsuleBodyMesh` disable(disabled renderer 不渲染也不投影); 第三人称模型 owner 端全 renderer disabled; rig `shadowCastingMode=Off`; FlashlightController 不建 mesh; `Player.prefab` 相机(`PlayerCamera`)下只挂 `HoldPoint`(空)+`Flashlight`(纯 Light, m_Enabled=0); `HQ.unity` 无保存的黑 mesh; VanTransitOverlay 非 transit 不激活。
+- **剩余假设(均运行时才现, 静态查不到→须 Play 现场抓)**: (a)[最可能] 某盏光(钠灯车湾 / 掠射冷主光 / 手电)把**近 body 几何或仍投影的物件**的实时阴影投进视野下缘, 随转身扫动; (b) 相机 near-clip 蹭暖窝近壁/道具→暗楔随视角扫; (c) URP SSAO / contact shadow 落在相机正下方; (d) post/vignette 暗角被误读。
+- **下次修法**: **必须 Play 模式现场看**——桥在 Play 时主线程被占, get_console_logs/get_gameobject 全 TIMEOUT, 静态分析到头了。让 PM 暂停 Play 给桥 ~10s 抓 active-camera 子树 + 地面阴影源, 或 PM 截图(阴影在屏幕哪个位置 / 多大 / 形状)。锁定光源后: 关那盏灯对 rig/胶囊层的投影, 或给 owner 胶囊/rig 设独立 layer 让主光 shadow culling mask 跳过。

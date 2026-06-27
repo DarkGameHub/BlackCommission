@@ -4,7 +4,7 @@
 
 Accepted
 
-*Accepted by Yan Dai (PM), 2026-06-18 — indoor procedural generation greenlit for implementation.*
+*Accepted by David (PM), 2026-06-18 — indoor procedural generation greenlit for implementation.*
 
 ## Date
 
@@ -12,7 +12,7 @@ Accepted
 
 ## Decision Makers
 
-Yan Dai (PM, final decision maker); authored via `/architecture-decision`.
+David (PM, final decision maker); authored via `/architecture-decision`.
 
 ## Summary
 

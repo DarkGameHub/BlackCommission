@@ -21,7 +21,7 @@ using UnityEngine.SceneManagement;
 public class VanTransitOverlay : MonoBehaviour
 {
     public enum Phase { None, Boarding, Transit, Arrived }
-    enum Card { None, Dispatch, DispatchSigned, EarlyReturn }
+    enum Card { None, Dispatch, DispatchSigned }
 
     const float CardSlideSeconds = 0.25f;   // paper slides in from below (settlement grammar)
     const float StampSlamSeconds = 0.12f;   // 章砸落 1.3→1.0
@@ -62,8 +62,7 @@ public class VanTransitOverlay : MonoBehaviour
     float signedAt;              // dispatch stamp slam start
     bool drivePending;           // signed → waiting the stamp beat before driving off
     float pendingDriveDuration;
-    float signHold;              // early-return ink, 0..SignHoldSeconds
-    int estimatedPartialMoney;
+    float signHold;              // early-return ink (now unused after early-return removal)
 
     // Transit gate: the ride ends when BOTH the minimum duration elapsed AND a scene
     // load finished after the signature (the destination loading underneath us).
@@ -372,10 +371,10 @@ public class VanTransitOverlay : MonoBehaviour
         }
 
         if (phase == Phase.Transit || phase == Phase.Arrived || drivePending) return;
-        if (card == Card.EarlyReturn || card == Card.DispatchSigned) return;
+        if (card == Card.DispatchSigned) return;
 
         bool localSeated = local != null && local.IsSeated;
-        bool terminal = TowerMissionManager.Instance != null && TowerMissionManager.Instance.IsTerminalState;
+        bool terminal = ScavengeMissionManager.Instance != null && ScavengeMissionManager.Instance.IsTerminalState;
 
         // 全员就位才弹中央派车单 (PM 锁定); the card folds again if someone steps off.
         if (card == Card.None && allSeated && localSeated && !terminal)
@@ -494,12 +493,6 @@ public class VanTransitOverlay : MonoBehaviour
 
         if (phase == Phase.Transit || drivePending || !seated) return;
 
-        if (card == Card.EarlyReturn)
-        {
-            HandleEarlyReturnInput(keyboard);
-            return;
-        }
-
         if (card == Card.Dispatch && keyboard.spaceKey.wasPressedThisFrame && IsLocalHost())
         {
             HandleHostSignature(local);
@@ -513,22 +506,12 @@ public class VanTransitOverlay : MonoBehaviour
 
     void HandleHostSignature(PlayerController local)
     {
-        var mission = TowerMissionManager.Instance;
+        // On a mission site: Space settles the cargo currently loaded in the van and rides home.
+        // Scavenge has no partial / objective-aboard split — departing = settle what you carried out.
+        var mission = ScavengeMissionManager.Instance;
         if (mission != null && !mission.IsTerminalState)
         {
-            if (mission.IsObjectiveAboard)
-            {
-                mission.RequestDepart(); // full delivery — Settle stamps the card via ShowReturn
-            }
-            else
-            {
-                // 未取柱: Space opens the application card instead of departing (防误触).
-                card = Card.EarlyReturn;
-                cardShownAt = Time.unscaledTime;
-                signHold = 0f;
-                estimatedPartialMoney = mission.EstimatePartialMoney();
-                mission.SetFilingEarlyReturn(true);
-            }
+            mission.RequestDepart();
             return;
         }
 
@@ -538,34 +521,7 @@ public class VanTransitOverlay : MonoBehaviour
             computer.RequestDepart(local);
     }
 
-    void HandleEarlyReturnInput(Keyboard keyboard)
-    {
-        var mission = TowerMissionManager.Instance;
-
-        if (keyboard.escapeKey.wasPressedThisFrame)
-        {
-            // 撤回: back to the waiting dispatch card; can be re-opened any number of times.
-            card = Card.Dispatch;
-            cardShownAt = Time.unscaledTime;
-            signHold = 0f;
-            mission?.SetFilingEarlyReturn(false);
-            return;
-        }
-
-        if (keyboard.eKey.isPressed)
-            signHold += Time.unscaledDeltaTime;
-        else
-            signHold = Mathf.Max(0f, signHold - Time.unscaledDeltaTime * SignDecayRate);
-
-        if (signHold >= SignHoldSeconds)
-        {
-            signHold = 0f;
-            card = Card.None;
-            AudioManager.Instance?.PlayStamp(); // 落章音 — the signature takes effect
-            mission?.SetFilingEarlyReturn(false);
-            mission?.RequestDepart(confirmedPartial: true);
-        }
-    }
+    // (提前收工申请单 / partial-settlement input removed — scavenge depart settles current cargo)
 
     void Disembark(PlayerController local)
     {
@@ -619,7 +575,6 @@ public class VanTransitOverlay : MonoBehaviour
         {
             case Card.Dispatch: DrawDispatchCard(false); break;
             case Card.DispatchSigned: DrawDispatchCard(true); break;
-            case Card.EarlyReturn: DrawEarlyReturnCard(); break;
         }
     }
 
@@ -666,15 +621,6 @@ public class VanTransitOverlay : MonoBehaviour
             GUI.Label(statusRect, status + "    " + MvpLocale.T("press_x_leave"), smallStyle);
         }
 
-        // 队友同步行: the host is filling the early-return application right now.
-        var mission = TowerMissionManager.Instance;
-        if (mission != null && mission.HostFilingEarlyReturn.Value && card != Card.EarlyReturn)
-        {
-            var subStrip = new Rect(ticket.x + 24f, ticket.yMax + 4f, ticket.width - 48f, 22f);
-            GUI.DrawTexture(subStrip, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
-            GUI.Label(new Rect(subStrip.x, subStrip.y + 2f, subStrip.width, 18f),
-                "房主正在填写提前收工申请…", smallStyle);
-        }
     }
 
     // En-route ink bar: uniform 0→92% over the minimum transit; if the scene is still
@@ -747,53 +693,7 @@ public class VanTransitOverlay : MonoBehaviour
     }
 
     // 提前收工申请单: clause B-2 conversion preview + warnings + hold-E signature line.
-    void DrawEarlyReturnCard()
-    {
-        var mission = TowerMissionManager.Instance;
-        float completeness = mission != null ? mission.SyncedCompleteness.Value : 1f;
-        float rejectAt = mission != null ? mission.RejectThreshold : 0.5f;
-        bool rejectRisk = completeness < rejectAt;
-
-        float w = 420f, h = rejectRisk ? 286f : 264f;
-        Rect cardRect = SlideCardRect(w, h);
-        DrawCardPaper(cardRect, "黑色委托事务所  ·  提前收工申请单");
-
-        float y = cardRect.y + 62f;
-        GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 36f, 20f),
-            "目标未回收。按条款 B-2 折算：", cardRowStyle);
-        y += 26f;
-
-        // 条款式账目行 (settlement grammar): label … amount, clause fine print below.
-        GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 160f, 22f), "提前收工折算", cardRowStyle);
-        GUI.Label(new Rect(cardRect.xMax - 170f, y, 152f, 22f), $"预估实付 {estimatedPartialMoney}G", cardRowStyle);
-        y += 24f;
-        GUI.Label(new Rect(cardRect.x + 32f, y, cardRect.width - 64f, 16f),
-            "· 按委托报酬 22% 折算，不低于慰问金", cardSublineStyle);
-        y += 24f;
-
-        GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 36f, 20f),
-            "⚠ 签发后全队将随车返回事务所", cardWarnStyle);
-        y += 22f;
-        if (rejectRisk)
-        {
-            GUI.Label(new Rect(cardRect.x + 18f, y, cardRect.width - 36f, 20f),
-                $"⚠ 完整度 {completeness:P0} — 低于 {rejectAt:P0} 客户拒收", cardWarnStyle);
-            y += 22f;
-        }
-
-        // 签字栏: hold-E ink fill (1.2s); released ink drains back in 0.3s.
-        y += 8f;
-        GUI.Label(new Rect(cardRect.x + 18f, y, 120f, 22f), "签字栏 [按住 E]", cardRowStyle);
-        var inkBg = new Rect(cardRect.x + 148f, y + 5f, cardRect.width - 184f, 12f);
-        GUI.DrawTexture(inkBg, BlackCommissionUiTheme.MakeTex(new Color(0.18f, 0.17f, 0.13f, 0.30f)));
-        float inkFill = Mathf.Clamp01(signHold / SignHoldSeconds);
-        if (inkFill > 0f)
-            GUI.DrawTexture(new Rect(inkBg.x, inkBg.y, Mathf.Max(2f, inkBg.width * inkFill), inkBg.height),
-                BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
-
-        GUI.Label(new Rect(cardRect.x + 18f, cardRect.yMax - 32f, cardRect.width - 36f, 20f),
-            "[Esc] 撤回申请", cardSublineStyle);
-    }
+    // (提前收工申请单 / partial-settlement card removed — scavenge has no partial settlement)
 
     Rect SlideCardRect(float w, float h)
     {

@@ -2,7 +2,7 @@
 status: reverse-documented
 source: Assets/_Project/Scripts/Network/, Assets/_Project/Scripts/Mission/, Assets/_Project/Scripts/Player/, Assets/_Project/Scripts/Office/
 date: 2026-06-07
-verified-by: Yan Dai
+verified-by: David
 ---
 
 # ADR-0001: Host-Authoritative Networking Model
@@ -25,7 +25,7 @@ Accepted
 
 ## Decision Makers
 
-Yan Dai (PM, final decision maker); reverse-documented by Claude Code.
+David (PM, final decision maker); reverse-documented by Claude Code.
 
 ## Summary
 

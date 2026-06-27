@@ -1,6 +1,6 @@
 # Black Commission Style Lock v2 — 低保真工业恐怖（Lo-Fi Industrial Horror）
 
-**状态**: LOCKED — PM Yan Dai 拍板（2026-06-10）
+**状态**: LOCKED — PM David 拍板（2026-06-10）
 **取代**: `black-commission-style-lock-v1.md`（半写实方向，废止）
 **回归**: `retro_industrial_horror_style_guide.md`（2026-05-27 PM 原始方向）的低保真路线
 **与 art-bible 的关系**: `design/art/art-bible.md` 仍是执行圣经（色板纪律、灯光语法、

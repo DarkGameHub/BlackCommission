@@ -4,8 +4,8 @@ using UnityEngine;
 /// <summary>
 /// The mission-site van interactable: board &amp; sit (E), locker hand-outs
 /// (flashlights/batteries), and the return/partial-return decision. Boarding shows the
-/// shared cabin overlay; the return request resolves through <see cref="TowerMissionManager"/>
-/// (full delivery vs partial settlement by cargo-zone check).
+/// shared cabin overlay; the return request resolves through <see cref="ScavengeMissionManager"/>
+/// (departing settles the cargo currently loaded in the van — no partial/objective split).
 /// </summary>
 [RequireComponent(typeof(Collider))]
 [RequireComponent(typeof(NetworkObject))]
@@ -20,16 +20,12 @@ public class MissionVanExitPoint : NetworkBehaviour, IInteractable
     public NetworkVariable<int> BatteryCount = new(2,
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    static bool ObjectiveSecured =>
-        TowerMissionManager.Instance != null &&
-        (TowerMissionState)TowerMissionManager.Instance.SyncedState.Value == TowerMissionState.ObjectiveSecured;
-
     public string InteractHint
     {
         get
         {
             if (VanTransitOverlay.IsActive) return "";
-            return ObjectiveSecured ? "上车返程" : "上车";
+            return "上车";
         }
     }
 
@@ -78,30 +74,21 @@ public class MissionVanExitPoint : NetworkBehaviour, IInteractable
 
     public string GetReturnSummary()
     {
-        var manager = TowerMissionManager.Instance;
-        if (manager == null) return "委托车已停在前院。";
-        string seal = $"生态柱密封完整度 {manager.SyncedCompleteness.Value:P0}。";
-        if (manager.SyncedCompleteness.Value < 0.5f)
-            seal += " 警告：低于 50% 客户拒收，只能按部分结算。";
-        return ObjectiveSecured
-            ? $"生态柱已到手——放进货舱再发车即可完整结算。{seal}"
-            : $"目标尚未到手，房主可提前返程；事务所只会按部分结果结算。{seal}";
+        var cargo = ScavengeCargoZone.Instance;
+        if (cargo == null || cargo.Capacity.Value <= 0)
+            return "委托车已停在前院。发车即按车上现有货物结算。";
+        return $"已装载 {cargo.ItemCount.Value} 件，舱位 {cargo.LoadUnits.Value}/{cargo.Capacity.Value}。" +
+               "发车即按车上现有货物结算——发车后全队随车返回事务所。";
     }
 
-    public string GetReturnButtonLabel() =>
-        ObjectiveSecured ? "关门返程 - 完成委托" : "房主关门返程 - 部分结算";
+    public string GetReturnButtonLabel() => "关门返程 - 发车结算";
 
-    public bool IsPartialReturnRequest() => !ObjectiveSecured;
+    public bool IsPartialReturnRequest() => false;
 
-    public bool CanLocalPlayerRequestReturn()
-    {
-        if (TowerMissionManager.Instance == null) return true;
-        if (!ObjectiveSecured) return IsLocalHostOrSolo();
-        return true;
-    }
+    public bool CanLocalPlayerRequestReturn() => IsLocalHostOrSolo();
 
     public string GetReturnBlockedReason() =>
-        !ObjectiveSecured ? "提前返程会拉全队回事务所，需要房主确认。" : "";
+        IsLocalHostOrSolo() ? "" : "发车会拉全队回事务所，需要房主确认。";
 
     public void TryTakeLockerItem(int slotIndex)
     {
@@ -121,9 +108,9 @@ public class MissionVanExitPoint : NetworkBehaviour, IInteractable
     {
         if (player != null && player.TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
             return;
-        // This screen already shows the partial-settlement summary + host gate, so it counts
-        // as a confirmed request; the in-cabin path uses the hold-E application card instead.
-        TowerMissionManager.Instance?.RequestDepart(confirmedPartial: true);
+        // This screen already shows the cargo summary + host gate, so it counts as a confirmed
+        // request: depart and settle whatever is loaded in the van.
+        ScavengeMissionManager.Instance?.RequestDepart();
     }
 
     [ServerRpc(RequireOwnership = false)]

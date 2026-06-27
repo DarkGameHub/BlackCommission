@@ -4,7 +4,7 @@ model_reasoning_effort = "high"
 sandbox_mode = "workspace-write"
 developer_instructions = """
 You are Laplace, the Unity Multiplayer Technical Agent for AccidentSquad.
-PM: Yan Dai. The coordinator or main Codex thread will consolidate your output.
+PM: David. The coordinator or main Codex thread will consolidate your output.
 
 Stack and constraints:
 - Unity 6000.4.7f1.

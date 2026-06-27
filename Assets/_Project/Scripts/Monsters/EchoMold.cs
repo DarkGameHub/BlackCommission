@@ -24,8 +24,7 @@ using UnityEngine.AI;
 ///   same deceptive-idle ↔ open-hunt reveal (no client decides its own pose).</item>
 /// </list>
 ///
-/// <para>Authority mirrors the project idiom (see
-/// <c>TowerMissionManager.HasMissionAuthority</c>): runs on the server, or locally when
+/// <para>Authority mirrors the project idiom: runs on the server, or locally when
 /// no <see cref="NetworkManager"/> is listening (offline PreviewWalker walkthroughs),
 /// so the creature is testable both in a hosted session and in offline preview.</para>
 /// </summary>
@@ -87,7 +86,6 @@ public class EchoMold : NetworkBehaviour
     float damageTimer;
     float lastContactTime;
     float playerScanTimer;
-    bool aggroBoost;            // objective lifted → more aggressive (GDD danger_level hook)
 
     readonly List<PlayerController> players = new();
 
@@ -138,7 +136,6 @@ public class EchoMold : NetworkBehaviour
     {
         if (authorityWired) return;
         authorityWired = true;
-        TowerMissionManager.OnObjectiveSecured += OnObjectiveSecured;
         nextLureTime = Time.time + lureInterval;
         SetState(State.Roam);
     }
@@ -147,18 +144,6 @@ public class EchoMold : NetworkBehaviour
     {
         if (!authorityWired) return;
         authorityWired = false;
-        TowerMissionManager.OnObjectiveSecured -= OnObjectiveSecured;
-    }
-
-    // Lifting the eco-column trips the violation alarm; the colony rouses (GDD: activity
-    // scales with danger_level). First pass: a flat aggression boost + immediate Hunt if
-    // anyone is already in sense range.
-    void OnObjectiveSecured()
-    {
-        aggroBoost = true;
-        if (!HasAuthority || state == State.Dead) return;
-        RescanPlayers();
-        if (PickTarget(out PlayerController p, out _)) StartHunt(p);
     }
 
     void Update()
@@ -259,7 +244,7 @@ public class EchoMold : NetworkBehaviour
             else { GiveUp(); return; }
         }
 
-        agent.speed = aggroBoost ? huntSpeed * 1.15f : huntSpeed;
+        agent.speed = huntSpeed;
         agent.SetDestination(target.transform.position);
 
         float dist = Vector3.Distance(transform.position, target.transform.position);

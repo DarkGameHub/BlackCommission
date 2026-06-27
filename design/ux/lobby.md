@@ -1,7 +1,7 @@
 # UX Spec: 大厅（派工名单）
 
 > **Status**: Drafted（待 PM 终审，关键决策已 PM 锁定 2026-06-12）
-> **Author**: Yan Dai + ux-designer
+> **Author**: David + ux-designer
 > **Last Updated**: 2026-06-12
 > **Journey Phase(s)**: 会话起点 → 进入 HQ 之间的报到一拍（player-journey 文档尚未建立）
 > **Template**: UX Spec

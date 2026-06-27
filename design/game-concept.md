@@ -17,7 +17,7 @@ HQ settlement`
 
 ## Canonical Sources (authoritative — current)
 
-- **Vision & rules**: `@AGENTS.md` — PM Yan Dai, design pillars, long-term constraints
+- **Vision & rules**: `@AGENTS.md` — PM David, design pillars, long-term constraints
 - **Pillars & progression backbone**: `design/game-pillars.md` (locked 2026-06-09 —
   4 license stages, money-only economy, the moral slope)
 - **System GDDs**: `design/gdd/`

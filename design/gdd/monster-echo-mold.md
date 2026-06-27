@@ -1,7 +1,7 @@
 # Monster — The Echo Mold (回声菌)
 
 > **Status**: In Design
-> **Author**: Yan Dai (PM) + Claude (zeno/laplace/banach lens)
+> **Author**: David (PM) + Claude (zeno/laplace/banach lens)
 > **Last Updated**: 2026-06-14
 > **Implements Pillar**: Threat Design (infection ecology — MRC-7 "Noble Guest Plague") · co-op extraction tension
 > **Priority / Layer**: MVP / Feature

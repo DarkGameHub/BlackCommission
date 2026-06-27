@@ -2,7 +2,7 @@
 status: reverse-documented
 source: Assets/_Project/Scripts/Network/ConnectionManager.cs, MvpConnectionLimiter.cs, GameBuild.cs, QuickNetworkUI.cs, HQSpawnManager.cs
 date: 2026-06-07
-verified-by: Yan Dai
+verified-by: David
 ---
 
 # ADR-0002: Relay Transport & Connection Approval
@@ -25,7 +25,7 @@ Accepted
 
 ## Decision Makers
 
-Yan Dai (PM, final decision maker); reverse-documented by Claude Code.
+David (PM, final decision maker); reverse-documented by Claude Code.
 
 ## Summary
 

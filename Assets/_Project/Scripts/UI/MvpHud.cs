@@ -13,6 +13,16 @@ public class MvpHud : MonoBehaviour
     public static bool IsBlockingPanelOpen =>
         activeComputer != null || activeMissionVan != null || activeCabinet != null || activeBestiary != null || SettingsOverlay.IsOpen;
 
+    // Resolution-adaptive HUD canvas. Everything is laid out in a fixed 1080-tall reference space
+    // and scaled to the real screen by a GUI.matrix in OnGUI, so all panels/bars/labels keep their
+    // proportions at any resolution. Scale is height-driven (stable for first-person PC across
+    // standard/ultrawide); RefW tracks the real aspect so the extra width on ultrawide is empty
+    // side margin. ScavengeCargoZone reads UiScale to match the same canvas.
+    const float RefH = 1080f;
+    float uiScale = 1f;
+    public static float UiScale { get; private set; } = 1f;
+    float RefW => Screen.width / Mathf.Max(0.01f, uiScale);
+
     [SerializeField] int panelWidth = 390;
     [SerializeField] bool showNetworkHint = false;
 
@@ -114,7 +124,7 @@ public class MvpHud : MonoBehaviour
         AudioListener.volume = MasterVolume;
         ProximityVoiceChat.EnsureInstance();
         SettingsOverlay.EnsureInstance();
-        if (TowerMissionManager.Instance != null)
+        if (ScavengeMissionManager.Instance != null)
             RestoreGameplayCursor();
     }
 
@@ -178,7 +188,7 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        if (TowerMissionManager.Instance != null) return;
+        if (ScavengeMissionManager.Instance != null) return;
     }
 
     void TryBuy(PlayerHotbar hotbar, MvpHotbarItemId itemId)
@@ -244,15 +254,24 @@ public class MvpHud : MonoBehaviour
         if (MainMenuUI.IsMenuVisible)
             return;
 
+        // Resolution-adaptive HUD: lay everything out in a fixed 1920x1080-equivalent reference
+        // space and let GUI.matrix scale it to the real screen, so every panel/bar/label keeps its
+        // proportions at any resolution. Scale is height-driven (stable for first-person PC across
+        // standard/ultrawide); RefW absorbs the aspect ratio as empty side margins.
+        uiScale = Mathf.Clamp(Screen.height / RefH, 0.5f, 3f);
+        UiScale = uiScale;
+
         EnsureStyles();
         BlackCommissionUiTheme.ApplyButtonSkin(buttonStyle);
 
-        if (TowerMissionManager.Instance != null)
+        Matrix4x4 savedMatrix = GUI.matrix;
+        GUI.matrix = Matrix4x4.Scale(new Vector3(uiScale, uiScale, 1f));
+
+        if (ScavengeMissionManager.Instance != null)
         {
             DrawMissionPanel();
             if (activeMissionVan != null)
                 DrawMissionVanPanel();
-            DrawHotbar();
         }
         else
         {
@@ -263,12 +282,20 @@ public class MvpHud : MonoBehaviour
                 DrawBestiaryPanel();
         }
 
+        // Always-on inventory bar (HQ + mission). It used to live inside the mission-only
+        // branch above, so it was invisible in the HQ; it is HUD chrome like the crosshair/
+        // vitals, not mission-specific — draw it whenever a local player owns a hotbar.
+        DrawHotbar();
+
+        // Full-screen flash works under the matrix too (RefW x RefH == the real screen when scaled).
         DrawDamageFlash();
         DrawCrosshair();
         DrawGestureHint();
         DrawVitalsBlock();
         if (showNetworkHint)
             DrawFooterHint();
+
+        GUI.matrix = savedMatrix;
     }
 
     void DrawGestureHint()
@@ -283,7 +310,7 @@ public class MvpHud : MonoBehaviour
 
         float alpha = Mathf.Clamp01(1.5f - (Time.time % 3f));
         GUI.color = new Color(1f, 1f, 1f, alpha);
-        GUI.Label(new Rect(Screen.width * 0.5f - 80f, Screen.height - 140f, 160f, 28f), name, accentStyle);
+        GUI.Label(new Rect(RefW * 0.5f - 80f, RefH - 140f, 160f, 28f), name, accentStyle);
         GUI.color = Color.white;
     }
 
@@ -293,7 +320,7 @@ public class MvpHud : MonoBehaviour
         if (damageFlashTex == null) return;
         float alpha = (damageFlashUntil - Time.time) / 0.35f;
         GUI.color = new Color(1f, 1f, 1f, alpha * 0.55f);
-        GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), damageFlashTex, ScaleMode.StretchToFill);
+        GUI.DrawTexture(new Rect(0, 0, RefW, RefH), damageFlashTex, ScaleMode.StretchToFill);
         GUI.color = Color.white;
     }
 
@@ -301,8 +328,8 @@ public class MvpHud : MonoBehaviour
     {
         if (IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
 
-        float cx = Screen.width * 0.5f;
-        float cy = Screen.height * 0.5f;
+        float cx = RefW * 0.5f;
+        float cy = RefH * 0.5f;
 
         if (cachedLocalInteraction == null)
         {
@@ -385,9 +412,9 @@ public class MvpHud : MonoBehaviour
         }
 
         OfficeComputer computer = activeComputer;
-        float computerWidth = Mathf.Clamp(Screen.width - 48f, 760f, 1050f);
-        float computerHeight = Mathf.Clamp(Screen.height - 76f, 560f, 720f);
-        Rect rect = new Rect((Screen.width - computerWidth) * 0.5f, 38f, computerWidth, computerHeight);
+        float computerWidth = Mathf.Clamp(RefW - 48f, 760f, 1050f);
+        float computerHeight = Mathf.Clamp(RefH - 76f, 560f, 720f);
+        Rect rect = new Rect((RefW - computerWidth) * 0.5f, 38f, computerWidth, computerHeight);
 
         DrawOfficeManagementTerminal(rect, computer, company, nearShop);
 
@@ -507,7 +534,8 @@ public class MvpHud : MonoBehaviour
         };
     }
 
-    // [1] Commissions — fully data-driven (the real task pool; no hardcoded fake rows).
+    // [1] Commissions — the selectable commission pool. Host/solo clicks a row to choose which
+    // commission to dispatch; clients see the host's choice (synced). Data-driven, no fake rows.
     void DrawTabCommissions(Rect content, OfficeComputer computer, CompanyState company)
     {
         float y = content.y;
@@ -529,15 +557,31 @@ public class MvpHud : MonoBehaviour
         DrawTerminalLine(new Rect(content.x, y + 22f, content.width, 1f));
         y += 30f;
 
-        if (computer != null)
+        OfficeTaskDefinition[] pool = computer != null ? computer.Commissions : null;
+        int selectedIdx = computer != null ? computer.CurrentCommissionIndex : 0;
+        bool canSwitch = computer != null && IsLocalHostOrSolo()
+            && !MvpMissionRuntime.HasSelectedTask && !MvpPendingReward.HasPending;
+
+        if (pool != null && pool.Length > 0)
         {
-            GUI.Box(new Rect(content.x, y - 2f, content.width, 26f), GUIContent.none, terminalSelectedButtonStyle);
-            GUI.Label(new Rect(content.x + 8f, y, 48f, 22f), "007", terminalInverseStyle);
-            GUI.Label(new Rect(content.x + 60f, y, content.width * 0.42f, 22f), computer.DemoTaskTitle, terminalInverseStyle);
-            GUI.Label(new Rect(content.x + content.width * 0.50f, y, content.width * 0.18f, 22f), computer.DemoTaskClient, terminalInverseStyle);
-            GUI.Label(new Rect(content.x + content.width * 0.70f, y, 84f, 22f), computer.DemoTaskMoneyReward + "G", terminalInverseStyle);
-            GUI.Label(new Rect(content.x + content.width * 0.82f, y, content.width * 0.18f, 22f), GetDemoTaskStatus(computer), terminalInverseStyle);
-            y += 30f;
+            for (int i = 0; i < pool.Length; i++)
+            {
+                OfficeTaskDefinition t = pool[i];
+                if (t == null) continue;
+                bool sel = i == selectedIdx;
+                Rect row = new Rect(content.x, y - 2f, content.width, 26f);
+                if (sel) GUI.Box(row, GUIContent.none, terminalSelectedButtonStyle);
+                GUIStyle rs = sel ? terminalInverseStyle : terminalLabelStyle;
+                GUI.Label(new Rect(content.x + 8f, y, 52f, 22f), $"{i + 1:000}", rs);
+                GUI.Label(new Rect(content.x + 60f, y, content.width * 0.40f, 22f), t.title, rs);
+                GUI.Label(new Rect(content.x + content.width * 0.50f, y, content.width * 0.18f, 22f), t.client, rs);
+                GUI.Label(new Rect(content.x + content.width * 0.70f, y, 84f, 22f), t.moneyReward + "G", rs);
+                GUI.Label(new Rect(content.x + content.width * 0.82f, y, content.width * 0.18f, 22f),
+                    sel ? GetDemoTaskStatus(computer) : "—", rs);
+                if (canSwitch && !sel && GUI.Button(row, GUIContent.none, GUIStyle.none))
+                    computer.SelectCommission(i);
+                y += 30f;
+            }
         }
         else
         {
@@ -556,17 +600,31 @@ public class MvpHud : MonoBehaviour
         DrawTerminalLine(new Rect(content.x, y + 6f, content.width, 1f));
         y += 18f;
 
-        if (computer != null)
+        if (pool != null && pool.Length > 0)
         {
-            GUI.Label(new Rect(content.x, y, content.width, 20f), "DETAIL [007]:  " + computer.DemoTaskTitle, terminalLabelStyle);
+            OfficeTaskDefinition t = pool[Mathf.Clamp(selectedIdx, 0, pool.Length - 1)];
+            GUI.Label(new Rect(content.x, y, content.width, 20f), $"DETAIL [{selectedIdx + 1:000}]:  " + t.title, terminalLabelStyle);
             y += 26f;
-            DrawTerminalDetailLine(content.x, y, "SITE", computer.DemoTaskLocation, null); y += 22f;
-            DrawTerminalDetailLine(content.x, y, "PAY", computer.DemoTaskMoneyReward + "G x seal completeness", null); y += 22f;
-            DrawTerminalDetailLine(content.x, y, "WINDOW", MvpMissionClock.GetScheduleSummary(computer.DemoTask), null); y += 22f;
-            DrawTerminalDetailLine(content.x, y, "OUTCOME", "FULL / PARTIAL / FAILED", null); y += 24f;
-            GUI.Label(new Rect(content.x, y, content.width, 40f), "NOTE: " + computer.DemoTaskDescription, terminalSmallStyle);
+            DrawTerminalDetailLine(content.x, y, "SITE", t.locationName, null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, "PAY", t.moneyReward + "G  回收估价", null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, "WINDOW", MvpMissionClock.GetScheduleSummary(t), null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, "CLIENT", CommissionTierLabel(t.clientType), null); y += 24f;
+            GUI.Label(new Rect(content.x, y, content.width, 40f), "NOTE: " + t.description, terminalSmallStyle);
+            if (canSwitch && pool.Length > 1)
+            {
+                y += 44f;
+                GUI.Label(new Rect(content.x, y, content.width, 20f), "[ 点击上方任一行切换委托 ]", terminalMutedStyle);
+            }
         }
     }
+
+    static string CommissionTierLabel(CommissionClientType type) => type switch
+    {
+        CommissionClientType.FreeSalvage => "自由采集 (市价回收)",
+        CommissionClientType.Commissioned => "指定委托 (客户偏好加价)",
+        CommissionClientType.BlackCommission => "黑色委托 (客户偏好加价)",
+        _ => "委托"
+    };
 
     // [2] Supply — gear catalog (host only). Frozen until a pending settlement is claimed.
     void DrawTabSupply(Rect content, bool nearShop)
@@ -909,9 +967,9 @@ public class MvpHud : MonoBehaviour
         OfficeCabinetStorage cabinet = activeCabinet;
         if (cabinet == null) return;
 
-        float width = Mathf.Clamp(Screen.width - 36f, 380f, 700f);
-        float height = Mathf.Clamp(Screen.height - 96f, 420f, 620f);
-        Rect rect = new Rect((Screen.width - width) * 0.5f, 48, width, height);
+        float width = Mathf.Clamp(RefW - 36f, 380f, 700f);
+        float height = Mathf.Clamp(RefH - 96f, 420f, 620f);
+        Rect rect = new Rect((RefW - width) * 0.5f, 48, width, height);
         PlayerHotbar hotbar = FindLocalHotbar();
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
@@ -984,9 +1042,9 @@ public class MvpHud : MonoBehaviour
     {
         if (activeBestiary == null) return;
 
-        float width = Mathf.Clamp(Screen.width - 36f, 380f, 680f);
-        float height = Mathf.Clamp(Screen.height - 96f, 380f, 580f);
-        Rect rect = new Rect((Screen.width - width) * 0.5f, 54, width, height);
+        float width = Mathf.Clamp(RefW - 36f, 380f, 680f);
+        float height = Mathf.Clamp(RefH - 96f, 380f, 580f);
+        Rect rect = new Rect((RefW - width) * 0.5f, 54, width, height);
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
@@ -1032,28 +1090,29 @@ public class MvpHud : MonoBehaviour
 
     void DrawMissionPanel()
     {
-        TowerMissionManager mission = TowerMissionManager.Instance;
+        ScavengeMissionManager mission = ScavengeMissionManager.Instance;
         GUILayout.BeginArea(new Rect(18, 18, panelWidth, 230), GUIContent.none, panelStyle);
         GUILayout.Label(GetMissionObjective(mission), accentStyle);
-        float completeness = mission.SyncedCompleteness.Value;
-        GUILayout.Label($"密封完整度: {completeness:P0}", completeness < 0.5f ? warningStyle : mutedStyle);
+        var cargo = ScavengeCargoZone.Instance;
+        if (cargo != null && cargo.Capacity.Value > 0)
+        {
+            int load = cargo.LoadUnits.Value;
+            int cap = cargo.Capacity.Value;
+            bool full = load >= cap;
+            GUILayout.Label($"舱位: {load}/{cap}　已装 {cargo.ItemCount.Value} 件",
+                full ? warningStyle : mutedStyle);
+        }
         if (!string.IsNullOrEmpty(missionMessage) && Time.time < missionMessageUntil)
             GUILayout.Label(missionMessage, missionMessage.Contains("警告") ? warningStyle : accentStyle);
         DrawSpectatorHint();
         GUILayout.EndArea();
     }
 
-    static string GetMissionObjective(TowerMissionManager mission)
+    static string GetMissionObjective(ScavengeMissionManager mission)
     {
-        switch ((TowerMissionState)mission.SyncedState.Value)
-        {
-            case TowerMissionState.InProgress: return "目标: 恢复供电，找到「真实海岸」生态柱。";
-            case TowerMissionState.ObjectiveSecured: return "目标: 把生态柱送回货舱并拉杆发车——轻拿轻放。";
-            case TowerMissionState.Delivered: return "目标: 已交付，即将返回事务所结算。";
-            case TowerMissionState.PartialReturn: return "目标: 部分结算，即将返回事务所。";
-            case TowerMissionState.Failed: return "目标: 委托失败，返回事务所复盘。";
-            default: return "目标: 等待任务状态。";
-        }
+        if (mission != null && mission.IsTerminalState)
+            return "目标: 已发车结算，正在返回事务所。";
+        return "目标: 搜刮值钱物件 → 放进货舱 → 搬完上车，拉杆发车结算。";
     }
 
     void DrawSpectatorHint()
@@ -1094,9 +1153,9 @@ public class MvpHud : MonoBehaviour
         MissionVanExitPoint van = activeMissionVan;
         if (van == null) return;
 
-        float width = Mathf.Clamp(Screen.width - 36f, 320f, 560f);
-        float height = Mathf.Clamp(Screen.height - 112f, 360f, 560f);
-        Rect rect = new Rect((Screen.width - width) * 0.5f, 56, width, height);
+        float width = Mathf.Clamp(RefW - 36f, 320f, 560f);
+        float height = Mathf.Clamp(RefH - 112f, 360f, 560f);
+        Rect rect = new Rect((RefW - width) * 0.5f, 56, width, height);
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
         DrawTerminalHeader(MvpLocale.T("mission_van"), "RETURN GATE");
@@ -1193,38 +1252,88 @@ public class MvpHud : MonoBehaviour
         return hotbar != null && hotbar.HasWristwatchOwned;
     }
 
+    // Always-on inventory bar — LC-style bottom-centre slot row in the Municipal Debt Noir
+    // palette. Per the art bible: bare locker cells (NO backing slip, NO drop shadow, NO rule),
+    // 48px squares, empty slots are outline-only, the selected slot is marked with sodium-amber
+    // corner brackets (top-left + bottom-right). Laid out in 1920x1080 reference space; the OnGUI
+    // GUI.matrix scales it to the real resolution. Hidden while a blocking panel or the transit
+    // cabin owns the screen (matches the crosshair/vitals gating).
     void DrawHotbar()
     {
+        if (IsBlockingPanelOpen || VanTransitOverlay.IsActive) return;
+
         PlayerHotbar hotbar = FindLocalHotbar();
         if (hotbar == null) return;
 
-        int slotSize = Mathf.Clamp((Screen.width - 56) / PlayerHotbar.SlotCount, 62, 92);
-        int gap = Mathf.Clamp(slotSize / 11, 5, 8);
-        int slotHeight = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.76f), 52, 70);
-        int iconSize = Mathf.Clamp(Mathf.RoundToInt(slotSize * 0.48f), 32, 44);
-        int totalWidth = PlayerHotbar.SlotCount * slotSize + (PlayerHotbar.SlotCount - 1) * gap;
-        float startX = (Screen.width - totalWidth) * 0.5f;
-        float y = Screen.height - 92f;
+        int count = PlayerHotbar.SlotCount;
+        const float slotSize = 48f;   // art-bible hotbar spec @1080p
+        const float gap = 4f;
+        const float iconSize = 24f;
+        float totalWidth = count * slotSize + (count - 1) * gap;
+        float startX = (RefW - totalWidth) * 0.5f;   // centred (PM-confirmed)
+        float y = RefH - slotSize - 16f;
 
-        for (int i = 0; i < PlayerHotbar.SlotCount; i++)
+        Color cellBorder  = new Color(0.565f, 0.585f, 0.545f, 0.45f); // MutedText, faint outline
+        Color cellFill    = new Color(0.058f, 0.062f, 0.060f, 0.78f); // ConcretePanel chip (populated)
+        Color cellFillSel = new Color(0.098f, 0.104f, 0.100f, 0.88f); // ConcreteRaised (selected lift)
+
+        for (int i = 0; i < count; i++)
         {
             HotbarSlot slot = hotbar.GetSlot(i);
+            bool empty = slot == null || slot.IsEmpty;
             bool selected = hotbar.SelectedSlot.Value == i;
-            Rect rect = new Rect(startX + i * (slotSize + gap), y, slotSize, slotHeight);
-            GUI.Label(rect, GUIContent.none, selected ? selectedSlotStyle : slotStyle);
+            var rect = new Rect(startX + i * (slotSize + gap), y, slotSize, slotSize);
 
-            string qty = slot == null || slot.IsEmpty ? "" : $" x{slot.quantity}";
-            GUI.Label(new Rect(rect.x + 8, rect.y + 8, rect.width - 16, 18), $"{i + 1}", mutedStyle);
-            GUI.DrawTexture(new Rect(rect.x + (rect.width - iconSize) * 0.5f, rect.y + 16, iconSize, iconSize),
-                GetItemIcon(slot == null || slot.IsEmpty ? MvpHotbarItemId.None : slot.itemId),
-                ScaleMode.ScaleToFit, true);
-            GUI.Label(new Rect(rect.x + rect.width - 38, rect.y + rect.height - 22, 34, 16), qty, mutedStyle);
+            // Populated cells get a dark concrete chip; the selected cell lifts slightly. Empty
+            // cells stay unfilled (outline only) so the row reads light, not as a black brick.
+            if (!empty)
+                GUI.DrawTexture(rect, BlackCommissionUiTheme.MakeTex(selected ? cellFillSel : cellFill));
+            else if (selected)
+                GUI.DrawTexture(rect, BlackCommissionUiTheme.MakeTex(cellFillSel));
 
-            // Battery level bar for flashlight slot
-            if (slot != null && slot.itemId == MvpHotbarItemId.Flashlight)
-                DrawFlashlightBar(rect);
+            DrawSlotBorder(rect, cellBorder, 1f);
+
+            GUI.Label(new Rect(rect.x + 4f, rect.y + 2f, 16f, 14f), $"{i + 1}", mutedStyle);
+
+            if (!empty)
+            {
+                GUI.DrawTexture(
+                    new Rect(rect.x + (slotSize - iconSize) * 0.5f, rect.y + (slotSize - iconSize) * 0.5f, iconSize, iconSize),
+                    GetItemIcon(slot.itemId), ScaleMode.ScaleToFit, true);
+
+                if (slot.quantity > 1)
+                    GUI.Label(new Rect(rect.xMax - 22f, rect.yMax - 16f, 20f, 14f), $"x{slot.quantity}", mutedStyle);
+
+                // Battery level bar for the flashlight slot.
+                if (slot.itemId == MvpHotbarItemId.Flashlight)
+                    DrawFlashlightBar(rect);
+            }
+
+            // Selected: sodium-amber corner brackets — the only warm accent on the bar.
+            if (selected)
+                DrawSlotCornerBrackets(rect, BlackCommissionUiTheme.OldWood, 8f, 2f);
         }
+    }
 
+    // Thin 4-edge outline for a hotbar cell (reference px; scaled by the HUD matrix).
+    void DrawSlotBorder(Rect r, Color color, float t)
+    {
+        Texture2D tex = BlackCommissionUiTheme.MakeTex(color);
+        GUI.DrawTexture(new Rect(r.x, r.y, r.width, t), tex);
+        GUI.DrawTexture(new Rect(r.x, r.yMax - t, r.width, t), tex);
+        GUI.DrawTexture(new Rect(r.x, r.y, t, r.height), tex);
+        GUI.DrawTexture(new Rect(r.xMax - t, r.y, t, r.height), tex);
+    }
+
+    // Sodium-amber selection mark: an L at the top-left and a reverse-L at the bottom-right
+    // (art-bible hotbar selection grammar) — lighter than a full frame, reads as a scan direction.
+    void DrawSlotCornerBrackets(Rect r, Color color, float len, float t)
+    {
+        Texture2D tex = BlackCommissionUiTheme.MakeTex(color);
+        GUI.DrawTexture(new Rect(r.x, r.y, len, t), tex);                 // top-left horizontal
+        GUI.DrawTexture(new Rect(r.x, r.y, t, len), tex);                 // top-left vertical
+        GUI.DrawTexture(new Rect(r.xMax - len, r.yMax - t, len, t), tex); // bottom-right horizontal
+        GUI.DrawTexture(new Rect(r.xMax - t, r.yMax - len, t, len), tex); // bottom-right vertical
     }
 
     // Minimal bottom-left vitals (PM 2026-06-13): no panel box, no numbers — just an "HP"
@@ -1240,7 +1349,7 @@ public class MvpHud : MonoBehaviour
 
         const float pad = 24f, w = 160f;
         float x = pad;
-        float yTop = Screen.height - pad - 50f;
+        float yTop = RefH - pad - 50f;
 
         if (localHealth != null)
         {
@@ -1297,7 +1406,7 @@ public class MvpHud : MonoBehaviour
     void DrawFooterHint()
     {
         string text = "多人 MVP: Start Host 后接任务；1-5 切热栏，左键/H 使用，HQ 内按 G 丢当前格到地上存放。";
-        GUI.Label(new Rect(18, Screen.height - 30, 720, 24), text, mutedStyle);
+        GUI.Label(new Rect(18, RefH - 30, 720, 24), text, mutedStyle);
     }
 
 

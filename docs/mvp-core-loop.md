@@ -208,7 +208,7 @@ The current virtual team is:
 | Banach | Art Direction Agent | Rundown office, school scene, monster, notebook, visual readability |
 | Sagan | QA Agent | Multiplayer smoke tests, mission completion/failure, rewards, hotbar, acquisition validation |
 
-PM owner: Yan Dai.
+PM owner: David.
 
 Project-specific Codex custom agents live in `.codex/agents/`. Longer-term product direction lives in [Black Commission Long-Term Roadmap](black-commission-long-term-roadmap.md).
 
