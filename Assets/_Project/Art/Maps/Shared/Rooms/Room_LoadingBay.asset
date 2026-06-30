@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u5730\u4E0B\u5378\u8D27\u533A Loading Bay"
   size: 2
-  contentPrefab: {fileID: 7269585081781515069, guid: 9087dc5c0157b194e9534761a60eebe1, type: 3}
+  contentPrefab: {fileID: 8954911819263428715, guid: 9087dc5c0157b194e9534761a60eebe1, type: 3}
   roleFilter: 0
   floor1Only: 1
   floor2Only: 0

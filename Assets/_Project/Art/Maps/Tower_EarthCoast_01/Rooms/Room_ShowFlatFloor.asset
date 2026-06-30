@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u6BDB\u576F\u6837\u677F\u5C42 Unfinished Show-Flat Floor"
   size: 2
-  contentPrefab: {fileID: 222997632905088692, guid: 22e3d4dc991c64a4f84dc7de8bd3fd99, type: 3}
+  contentPrefab: {fileID: 6324001618884479630, guid: 22e3d4dc991c64a4f84dc7de8bd3fd99, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

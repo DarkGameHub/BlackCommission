@@ -72,12 +72,16 @@ namespace BlackCommission.Level
             if (networked && !isServer)
                 return null;
 
+            // Room is placed unrotated at the slot anchor; door-fill clearance then slides aside only
+            // the props that sit across the slab's real doors (RoomDoorClearance).
+            Quaternion rot = slot.transform.rotation;
+
             if (networked)
             {
                 // Server spawns at world pose (no parenting before spawn).
-                GameObject go = Object.Instantiate(def.contentPrefab,
-                    slot.transform.position, slot.transform.rotation);
+                GameObject go = Object.Instantiate(def.contentPrefab, slot.transform.position, rot);
                 go.name = def.roomName;
+                RoomDoorClearance.Clear(go, slot);
                 var netObj = go.GetComponent<NetworkObject>();
                 if (netObj != null && NetworkManager.Singleton != null &&
                     NetworkManager.Singleton.IsListening)
@@ -88,9 +92,9 @@ namespace BlackCommission.Level
             }
 
             // Pure decor: parent under the slot, instantiated identically on every peer.
-            GameObject decor = Object.Instantiate(def.contentPrefab,
-                slot.transform.position, slot.transform.rotation, slot.transform);
+            GameObject decor = Object.Instantiate(def.contentPrefab, slot.transform.position, rot, slot.transform);
             decor.name = def.roomName;
+            RoomDoorClearance.Clear(decor, slot);
             return decor;
         }
 

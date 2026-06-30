@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u5DE5\u5730\u98DF\u5802 Site Canteen"
   size: 1
-  contentPrefab: {fileID: 5129384607662504199, guid: 87b827a4c5e22b543aada053f522d706, type: 3}
+  contentPrefab: {fileID: 2280484834613197271, guid: 87b827a4c5e22b543aada053f522d706, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

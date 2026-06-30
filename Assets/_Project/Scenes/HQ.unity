@@ -15,15 +15,15 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
   m_Fog: 1
-  m_FogColor: {r: 0.09, g: 0.1, b: 0.11, a: 1}
-  m_FogMode: 1
+  m_FogColor: {r: 0.18039216, g: 0.1882353, b: 0.1764706, a: 1}
+  m_FogMode: 3
   m_FogDensity: 0.0006
   m_LinearFogStart: 11
   m_LinearFogEnd: 62
-  m_AmbientSkyColor: {r: 0.16470589, g: 0.17254902, b: 0.1882353, a: 1}
-  m_AmbientEquatorColor: {r: 0.13333334, g: 0.14117648, b: 0.14901961, a: 1}
-  m_AmbientGroundColor: {r: 0.078431375, g: 0.08235294, b: 0.08627451, a: 1}
-  m_AmbientIntensity: 0.55
+  m_AmbientSkyColor: {r: 0.29411766, g: 0.29803923, b: 0.28235295, a: 1}
+  m_AmbientEquatorColor: {r: 0.23921569, g: 0.24705882, b: 0.22745098, a: 1}
+  m_AmbientGroundColor: {r: 0.14901961, g: 0.15686275, b: 0.14509805, a: 1}
+  m_AmbientIntensity: 0.92
   m_AmbientMode: 1
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
@@ -7030,8 +7030,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -12971,8 +12973,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 603247074}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.0000000022876774, y: 0.9986295, z: -0.05233596, w: -0.000000043651482}
-  m_LocalPosition: {x: 0, y: 1.55, z: 1.25}
+  m_LocalRotation: {x: 0.03469423, y: -0.9030974, z: 0.074330084, w: 0.42152876}
+  m_LocalPosition: {x: 2.0333335, y: 0.9666667, z: 1.8333333}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -13253,8 +13255,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -13428,8 +13432,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -19155,8 +19161,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -32281,8 +32289,10 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses:
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -37374,7 +37384,7 @@ Light:
   m_InnerSpotAngle: 21.80208
   m_CookieSize2D: {x: 0.5, y: 0.5}
   m_Shadows:
-    m_Type: 2
+    m_Type: 0
     m_Resolution: -1
     m_CustomResolution: -1
     m_Strength: 1
@@ -44772,7 +44782,7 @@ Material:
   - _METALLICGLOSSMAP
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
+  m_DoubleSidedGI: 1
   m_CustomRenderQueue: -1
   stringTagMap:
     RenderType: Opaque

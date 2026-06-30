@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u65BD\u5DE5\u6750\u6599\u95F4 Construction Stores"
   size: 1
-  contentPrefab: {fileID: 7088153961374995314, guid: 7eccfbbb084833c4bb32cc97e1446d66, type: 3}
+  contentPrefab: {fileID: 3589736492482273695, guid: 7eccfbbb084833c4bb32cc97e1446d66, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

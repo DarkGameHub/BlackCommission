@@ -116,6 +116,7 @@ GameObject:
   - component: {fileID: 3729408567247584862}
   - component: {fileID: 6386157325178312606}
   - component: {fileID: 5620728701690079600}
+  - component: {fileID: 254380943267363496}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -320,6 +321,7 @@ MonoBehaviour:
   staminaRegenRate: 10
   cameraRoot: {fileID: 5193395001453616976}
   crouchCameraDrop: 0.85
+  seatedCameraDrop: 0.6
   cameraCrouchLerpSpeed: 12
   swimSpeed: 3.2
   swimAcceleration: 7
@@ -559,6 +561,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerFirstPersonRig
   ShowTopMostFoldoutHeaderGroup: 1
   rigLocalPosition: {x: 0, y: -0.34, z: 0.46}
+  fpModelOffset: {x: 0, y: -1.35, z: 0.32}
+  fpModelRotation: {x: 72, y: 0, z: 0}
+  fpModelScale: {x: 0.55, y: 1.1, z: 1.1}
 --- !u!114 &5620728701690079600
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -581,6 +586,22 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 100
+--- !u!114 &254380943267363496
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476353687523599177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb704248d22e0774fa7e3f6dcb16a3c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InspectController
+  ShowTopMostFoldoutHeaderGroup: 1
+  rotateSpeed: 0.25
+  inspectAnchorLocal: {x: 0, y: -0.12, z: 0.42}
+  placeholderHoldSize: 0.22
 --- !u!1 &5764614823530907345
 GameObject:
   m_ObjectHideFlags: 0

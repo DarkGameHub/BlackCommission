@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u4FDD\u5B89\u5C97\u4EAD Security Booth"
   size: 0
-  contentPrefab: {fileID: 110919680118830711, guid: 9aedbc41849b60f479e38601e861d7c6, type: 3}
+  contentPrefab: {fileID: 7695643357270002394, guid: 9aedbc41849b60f479e38601e861d7c6, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

@@ -20,6 +20,26 @@ namespace BlackCommission.Level
     /// </summary>
     public enum PlanDoorType { Critical, Fixed, Toggle, Junction }
 
+    /// <summary>Which wall of a slab a door/opening sits on. x-west / x-east faces run along z;
+    /// z-south / z-north faces run along x. Flags so a slab can report several at once.</summary>
+    [System.Flags]
+    public enum DoorEdge { None = 0, S = 1, N = 2, W = 4, E = 8 }
+
+    /// <summary>
+    /// One door opening on a slab wall, in the room's own frame. <see cref="Offset"/> is the door
+    /// centre's signed offset from the slab centre ALONG the wall's running axis (x for S/N walls,
+    /// z for W/E walls); <see cref="HalfWidth"/> is half the door width. Used by the room-fill door
+    /// clearance to slide only the props that actually sit across the opening.
+    /// </summary>
+    public readonly struct SlabDoorOpening
+    {
+        public readonly DoorEdge Edge;
+        public readonly float Offset;
+        public readonly float HalfWidth;
+        public SlabDoorOpening(DoorEdge edge, float offset, float halfWidth)
+        { Edge = edge; Offset = offset; HalfWidth = halfWidth; }
+    }
+
     /// <summary>One axis-aligned slab. Units are metres on the 4 m grid; origin SW, x=east, z=north.</summary>
     public readonly struct PlanSlab
     {
@@ -323,6 +343,39 @@ namespace BlackCommission.Level
             if (!TryGetSharedFace(a, b, out PlanFace f)) return false;
             axis = f.Axis; at = f.At; pos = f.Mid + d.OffsetM;
             return true;
+        }
+
+        /// <summary>
+        /// The door openings of <paramref name="slabId"/>, derived from the plan via
+        /// <see cref="TryGetDoorCenter"/>, each as (wall, centre-offset-from-slab-centre, half-width).
+        /// Toggles are included — they open seed-dependently, so a filled room must keep that opening
+        /// clear too. Used by the room-fill door clearance to slide blocking props off each opening.
+        /// Pure (plan-only) and EditMode-testable.
+        /// </summary>
+        public static List<SlabDoorOpening> DoorOpeningsForSlab(string slabId)
+        {
+            var openings = new List<SlabDoorOpening>();
+            if (!ById.TryGetValue(slabId, out PlanSlab s)) return openings;
+            const float eps = 0.2f;
+            foreach (PlanDoor d in Doors)
+            {
+                if (d.A != slabId && d.B != slabId) continue;
+                if (!TryGetDoorCenter(d, out char axis, out float at, out float pos)) continue;
+                float half = d.WidthM * 0.5f;
+                if (axis == 'x') // wall at constant x; door runs along z -> west / east face
+                {
+                    float off = pos - s.CenterZ;
+                    if (System.Math.Abs(at - s.X) < eps) openings.Add(new SlabDoorOpening(DoorEdge.W, off, half));
+                    else if (System.Math.Abs(at - (s.X + s.W)) < eps) openings.Add(new SlabDoorOpening(DoorEdge.E, off, half));
+                }
+                else // wall at constant z; door runs along x -> south / north face
+                {
+                    float off = pos - s.CenterX;
+                    if (System.Math.Abs(at - s.Z) < eps) openings.Add(new SlabDoorOpening(DoorEdge.S, off, half));
+                    else if (System.Math.Abs(at - (s.Z + s.D)) < eps) openings.Add(new SlabDoorOpening(DoorEdge.N, off, half));
+                }
+            }
+            return openings;
         }
 
         static bool Overlap(in PlanSlab a, in PlanSlab b)

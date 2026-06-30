@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u914D\u7535\u95F4 Breaker Closet"
   size: 0
-  contentPrefab: {fileID: 7313851442283203745, guid: f33b3306e6c040048af33cf9e9bc221f, type: 3}
+  contentPrefab: {fileID: 6764630329813342492, guid: f33b3306e6c040048af33cf9e9bc221f, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

@@ -3,7 +3,10 @@ using UnityEngine;
 
 public static class MvpLocale
 {
-    static int Lang => PlayerPrefs.GetInt("AS.Settings.Language", 0);
+    // Default 1 = 中文: mission/commission content is authored in Chinese only, so English mode
+    // mixes EN UI chrome with ZH job data ("…to site. 地球海岸壹号"). Until content is localised,
+    // Chinese is the consistent default. (Players can still switch in Settings.)
+    static int Lang => PlayerPrefs.GetInt("AS.Settings.Language", 1);
 
     static readonly Dictionary<string, string[]> Strings = new()
     {

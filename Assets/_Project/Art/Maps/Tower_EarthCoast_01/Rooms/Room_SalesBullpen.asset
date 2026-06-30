@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u9500\u552E\u529E\u516C\u533A Sales Bullpen (\u8C0E\u8A00)"
   size: 1
-  contentPrefab: {fileID: 4539574103484373918, guid: 19e1a0fad07a0b840b544dff4888cf41, type: 3}
+  contentPrefab: {fileID: 372250904544831161, guid: 19e1a0fad07a0b840b544dff4888cf41, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

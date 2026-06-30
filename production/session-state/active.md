@@ -2635,3 +2635,91 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
 - **本次已排除(省下次时间)**: owner 所有手持 view-model 默认全关(手表 HasWristwatch=false / 手电 slot0 空且无起始发放 / heldItemRoot 空); 身体胶囊 MeshRenderer 在 OnNetworkSpawn 被 `HideCapsuleBodyMesh` disable(disabled renderer 不渲染也不投影); 第三人称模型 owner 端全 renderer disabled; rig `shadowCastingMode=Off`; FlashlightController 不建 mesh; `Player.prefab` 相机(`PlayerCamera`)下只挂 `HoldPoint`(空)+`Flashlight`(纯 Light, m_Enabled=0); `HQ.unity` 无保存的黑 mesh; VanTransitOverlay 非 transit 不激活。
 - **剩余假设(均运行时才现, 静态查不到→须 Play 现场抓)**: (a)[最可能] 某盏光(钠灯车湾 / 掠射冷主光 / 手电)把**近 body 几何或仍投影的物件**的实时阴影投进视野下缘, 随转身扫动; (b) 相机 near-clip 蹭暖窝近壁/道具→暗楔随视角扫; (c) URP SSAO / contact shadow 落在相机正下方; (d) post/vignette 暗角被误读。
 - **下次修法**: **必须 Play 模式现场看**——桥在 Play 时主线程被占, get_console_logs/get_gameobject 全 TIMEOUT, 静态分析到头了。让 PM 暂停 Play 给桥 ~10s 抓 active-camera 子树 + 地面阴影源, 或 PM 截图(阴影在屏幕哪个位置 / 多大 / 形状)。锁定光源后: 关那盏灯对 rig/胶囊层的投影, 或给 owner 胶囊/rig 设独立 layer 让主光 shadow culling mask 跳过。
+
+---
+
+## Session 2026-06-28 — UX spec: 物品检视系统 (/ux-design item-inspection) [IN PROGRESS]
+- **入口**: PM 问"到哪步了/待办" → 给三线全局(HQ火星壳Stage A材质 / 搜刮双层loot+检视 / 建模任务书) → PM 选 **「检视系统 UX 设计」** 接 /ux-design。
+- **范围**: 任务现场「举起·旋转·检视」交互层; **结算反差交叉引用已批准 `settlement.md`(不重写)**。输出 `design/ux/item-inspection.md`。
+- **已读上下文**: 权威源 `scavenging-two-tier-revision-2026-06-26.md` §5+D4(**APPROVED**) + `core-loop` §9(InspectController=Task#2) + settlement.md/mission-encounter-hud.md/hud.md。**检视契约(不可破)**: 不改价值, 改认知/情感连接; 数据预留 `relic.targetPersonId`+可选 `inspectDetail`; 层二遗物(信/照片/儿童画/日记/公文, 每图3-6件)是主对象; 层一salvage可检视但读不出多少。
+- **已建骨架**(14节[To be designed])。两个待PM定的设计张力: ①**3D实体检视 vs 盖章公文卡平面模态**; ②**检视=低头脆弱态**(co-op host不暂停, 怪物仍猎杀)是否做成显式协作机制。
+- **状态文件对账**: 06-26 提交批(two-tier loot/建模任务书/PM改名/foliage→LFS)此前未在本文件单列; **foliage ~404MB提交决策已由 Git LFS 解决** → 从 open 列表划掉。HQ.unity 仍有未提交改动。
+- **NEXT**: 逐节撰写, 从 §Purpose & Player Need 起 (问→选项→决策→草稿→批准→写入)。
+- **PM 拍板两基础张力(2026-06-28)**: ①视觉语言 = **3D 实体握持**(第一人称真握遗物·鼠标旋转·凑近读痕迹; 与结算冷归档卡形成反差; **非**平面盖章卡、**非**混合)。②风险 = **脆弱·可中断·可改日**(现场检视=低头握持·host不暂停·Inspector仍逼近; 任意键瞬断逃/战; 遗物可收进口袋带回**车上/HQ安全检视**; 绝不强制、跳过零损失)。两决都取推荐案。→ 解锁逐节撰写。
+- **撰写计划(更新)**: 按已定两张力分 4 批, 每批 草稿→批准→写入。Batch1=框架(Purpose / Player Context / Navigation / Entry-Exit); Batch2=交互核心(Layout / States / Interaction / Transitions); Batch3=契约(Events / Data / A11y / Loc); Batch4=收尾(Acceptance / Open Q)。
+- **PM 拍板撰写细节(2026-06-28 续)**: A1=②(视觉痕迹+克制一两行可读文本→`relic.inspectDetail`; ②③文本须可本地化UI层、不烤进贴图)。A2=**一拿到眼前即看到全部**(砍"粗看→凑近zoom揭示"渐进门控; 保留鼠标旋转看3D不同面——照片正反/玩具各面磨损=全部信息的空间分布、非隐藏门控)。A3=MVP统一握持, 5类差异化(信翻开/日记翻页/照片翻面/玩具转磨损)标**v2**。A4=MVP切线=**现场·层二遗物·3D握持·视觉痕迹**; 层一salvage检视+改日安全检视(车上/HQ)标**v2**(留数据+退出口、UI延后)。B1/B2/B3全确认。C1=hold右键(与E拾取分开); C2=音频延后只留hook; C3=怪物"现场威胁"统称+收Open Q。
+- **措辞(PM追问"为什么用举起")**: 面向玩家统一用"**拿到眼前/握着看**"指检视姿态(=从持握位抬到视线前细看, 非额外机制/非分层); 弃"举起→凑近"两段式。
+- **Batch1 已写盘**(item-inspection.md 四节: Purpose/Player Context/Navigation/Entry-Exit; 应用A4标v2 + 新措辞 + header统一语言定位=3D握持)。**NEXT=Batch2**(Layout/States/Interaction/Transitions), 待PM点头措辞后撰写。
+- **桥探活(2026-06-28)**: MCP-unity **活**, 端口8091(settings+netstat一致), `Unity.exe`PID17252监听, **非Play**(get_scene_info秒回), 场景=HQ(dirty), **0编译错误**。→ 开发判断升级: InspectController逻辑/交互层我可自行 写.cs→Refresh→recompile→get_console_logs验→run_tests(EditMode)验, 不必全等David Play; 仅第一人称**手感**(姿态/旋转感)仍建议David Play终验。注意HQ.unity dirty(上次白模/材质未存遗留+git M)——开发检视是独立.cs不碰场景YAML, 不动它。
+- **Batch2 已写盘**(Layout含wireframe/States/Interaction/Transitions)。**我定+告知的机械细节**: 检视中可移动但减速+视野被遗物占(不强制定身=脆弱来源); 鼠标=旋转遗物·视角锁定(不能环顾·强化脆弱)·任意移动键瞬断恢复; **安全HUD(HP/耐力/手电/威胁)检视时保留不全隐**(脆弱态安全); 进入抬到眼前~0.3s/急放~0.1s。
+- **NEXT**: Batch3 Data+Events(开发硬契约)+验收 → dev-ready → 桥上起 InspectController 占位实现。
+- **ux-designer 审查回(2026-06-28)**: 框架被判定**扎实有依据**(3D握持/不暂停/松手即退/脆弱即张力, 引 Edith Finch/SOMA/Amnesia/Signalis/WCAG/GAG)。必改+建议已**落盘**: ①States"可移动但减速"与Interaction"移动即打断"**自相矛盾**→改**检视站定·移动键瞬断**(反转我之前flag的"可慢走", 已给David翻盘开关); ②inspectDetail暗场景对比度→加**深色半透明"撕边档案标签"底衬**(WCAG AA, 融纸质美学非UI卡); ③hold语义=即入·无进度条·连续按住(Hold型)·已握持免对准; ④inspectDetail **screen-space锚定**(旋转不转字); ⑤填**Accessibility节**(Hold→Toggle必须/对比度底衬必须/ReducedMotion俯仰归零/文本缩放); ⑥Transitions相机俯仰-8~-12°+ReducedMotion归零; ⑦填**Open Questions**(怪物canon/audio掩护音效Pattern B/输入绑定/v2清单)。**a11y之前空白=最大实际风险, 已补**。
+- **spec进度**: 14节剩 **Events/Data/Localization/Acceptance**(开发硬契约)未填 → 填完=dev-ready→上桥起InspectController占位。
+- **建模任务书复核**: gap G1(本地化文本别烤贴图·真坑)/G2(正反多面建模)/G3(握持轴心)/G4(检视MVP=层二)。建议走**(a)**等检视spec定稿一次性同步(spec即将定稿)。**David选(b)→已补G1进任务书§5.6**(痕迹归贴图·文字归`inspectDetail` UI层别烤死, 顺带G2正反多面一句); G3(握持轴心)/G4(检视MVP=层二)仍候spec完全定稿后同步。
+- **spec DEV-READY(2026-06-28)**: 14节全填(Events/Data/Localization/Acceptance 已落盘)。Data字段=tier/isInspectable/targetPersonId/inspectDetail(=loc key不烤贴图); Events=`IsInspecting` NetworkVariable(server-auth广播第三人称姿态)+本地InspectStarted/Ended/RelicPersonRevealed, **不触value**; AC1-8(AC4=不改价值断言/AC5=联机IsInspecting同步/AC6手感Play验)。移动处理=**站定·移动即打断**(David默许#3)。
+- **开发启动(David"赶紧开发")**: 桥8091活·非Play。起 `InspectController`(core-loop §9 Task#2)占位实现。流程: recon钩子→写.cs→execute_menu_item Assets/Refresh→recompile→get_console_logs验→run_tests EditMode(AC1-5,8)。AC6手感/AC7 a11y待David Play终验。
+- **InspectController 已落盘(2026-06-28, 待编译验证)**:
+  - `Scripts/Scavenge/Core/InspectSession.cs`(纯核·ns `BlackCommission.Scavenge`·noEngineRef assembly): `Tick(InspectInput)`→Enter/Exit, 退出优先级 **Downed>Interrupt>Release**; 无value引用=结构性保证AC4。
+  - `Scripts/Player/InspectController.cs`(NetworkBehaviour·owner-only): hold右键+对准`ScavengeItem`→进检视; `IsInspecting` NetworkVariable(server-auth→第三人称姿态B3); `LocalInspecting`静态gate; 占位克隆mesh到eye anchor旋转·**不走CarrySystem/不读baseValue**; 任意 移动/攻击/手电/热栏/倒地→打断。
+  - `Scripts/Player/PlayerCameraController.cs`: +`if(InspectController.LocalInspecting)return;`锁视角。
+  - `Tests/EditMode/Scavenge/InspectSessionTests.cs`(9例): AC1进入/释放·AC2打断·AC3倒地+不能倒地进入·优先级·hold维持·丢准星不掉。
+- **验证(进行中)**: 桥MCP server随reload断→改用 `tools/ws-unity-call.cjs` 直连8091。Refresh已触发编译, 后台轮询`get_console_logs`等结果(bash bo6cnfdkh)。**待**: 编译0错→`run_tests` EditMode跑InspectSession→挂InspectController到`Player.prefab`→David Play验AC6手感/AC7 a11y。
+- **MVP占位范围**: 现场·对准ScavengeItem·3D握持旋转。**后续(spec已定·占位未做)**: tier/isInspectable gating + held-relic entry + inspectDetail文本面板 + 撕边标签底衬 + 低头俯仰-8~-12° + Toggle a11y。
+- **桥重启成功+编译0错(2026-06-28)**: 桥泵卡死160s→David授权A→`taskkill /F /PID 17252`(只杀BC实例·没碰另2个Unity·删lockfile)→直连exe重启新实例(~36s起·新8091)。**检视代码编译0错**(InspectController+InspectSession Core+9测试+camera gate全过, 人工review准)。⚠HQ.unity dirty白模随强杀丢失(脚本产物·重跑build菜单可重生)。
+- **prefab挂接**: 写 `Assets/_Project/Editor/InspectControllerInstaller.cs`([InitializeOnLoad]·幂等·自动给Player.prefab加InspectController·免手改YAML·临时MVP挂接·正式authored后删此installer)。后台编译+挂+验证(bash bc7pou855)。**待**: David Play 对准ScavengeItem hold右键验AC6(握持旋转+占位"检视中"文字面板)。David"先别测"=跳过run_tests。
+- **桥操作模式**: MCP server断未自动重连→全程`node tools/ws-unity-call.cjs <method> '<json>'`直连8091; 编译触发reload→ws断→后台轮询get_console_logs(grep TIMEOUT/WS ERROR)等恢复; 编译错查error类·成功success+error空。
+- **挂接成功(2026-06-28)**: installer 改 [InitializeOnLoad] **static ctor 同步执行**(delayCall后台不tick→改同步, reload时必跑不依赖焦点)+delayCall兜底。重编译后 **Player.prefab 已WIRED** InspectController(grep guid `fb704248...`命中)。⚠installer改了`Player.prefab`(git显示 M, 预期挂接·非误改; 正式authored后删installer)。当前场景=HQ(clean, 强杀后从盘重载, 旧dirty白模已丢)。
+- **待David Play验(任务现场, 非HQ)**: HQ无ScavengeItem→检视对准不了; 须起host+进搜刮任务现场+对准搜刮物hold右键。预期: 拿到眼前·鼠标转·视角锁·右侧"检视中/itemId/占位"纸色字+深色底衬; 松右键或WASD/左键/F/1-5→放下解锁。手感反馈后调rotateSpeed/anchor。
+- **检视键 hold右键→hold F(David问"为什么不是F")**: 核实 fKey全项目仅InspectController用→**F空闲**(手电走PlayerHotbar热栏选slot + PM 2026-06-13已禁用, 不占F); 我原"F=手电打断"是记错。改: Update hold读`Keyboard.fKey`; ReadInterrupt移除fKey(F是检视键不能同时当打断); spec Entry/Interaction/OpenQ "右键"→"F"。打断键现=WASD/Space/Shift/左键攻击/1-5热栏。
+- **修armed-latch bug**: 原"检视中点一下移动打断+F还按着"→下帧立刻重进。InspectSession加`armed`(打断/进入后=false·松hold才re-arm)→打断后须松F再按才重进。测试+1例(10例)。
+- **重编译中**(bg624ssq5)。prefab已WIRED不受重编译影响。0错→David任务现场按**F**重验。
+
+## Session 2026-06-28 (cont) — 检视「先这样」+ David 发现 level bug(门对齐) + loot
+### 检视 MVP「先这样」定稿(David 2026-06-28)
+- David 验检视时接受现状。**可玩**: 3D握持/鼠标旋转/**hold F**/打断(WASD·Space·Shift·左键·1-5)/armed-latch/不改价值/`IsInspecting`联机/占位文字面板。编译0错·已挂Player.prefab(installer)。
+- **捡起=E / 检视=hold F**(E拿走装车算钱; F端详痕迹不改价值)。
+- **待办(spec已定·占位未做)**: 真遗物模型 + `inspectDetail` loc文案 + 撕边档案标签底衬 + 低头俯仰-8~-12° + Toggle a11y + 层一salvage检视 + 改日安全检视 + EditMode跑测试(David"先别测"未跑) + (可选)Loot白模加暖描边区分可捡(David未采纳)。
+### 门-家具对齐 bug(David报"家具挡门"→选方案1"转圈")——**已设计·待实现**
+- **根因(非我改, git证)**: 图1=`TowerPlanV8` **authored固定楼**(具名房间+精确门, seed只toggle不挪门; `TryGetDoorCenter`给门在哪条边)。家具走RoomDresser烤进**通用模块**(Room_Office_4x8等), 按"假设门边"避(Office留空S+E/Utility S/Large S+W), 但`TowerLayout`随机填进**门在别的边**的房间(`RoomDef.Fits`只比size/role)→靠满"假设无门墙"的家具挡门。走廊已按门边命名(Corridor_SW等)解决, 房间没补齐。3个Dressing asset都是默认值。数据链通: `slot.slotId`=slab Id→plan查门。
+- **方案1设计**: ①门边算法(slotId→plan→TryGetDoorCenter→N/S/E/W bitmask·纯逻辑可单测) ②`RoomDef`加`blankEdges` ③`TowerLayout.Place`找旋转(方形0/90/180/270·长方形仅0/180)让转后留空边⊇门边·盖不住换间/警告。~3-4文件+测试+编译验证(David退Play)。
+### loot诊断: 物品定义17个+白模Loot_Light/Medium/Heavy都在·LootSpawner host填LootAnchor。David问捡起键=管线通。
+
+### 门对齐「最终版本框架」落盘(2026-06-28夜·待编译验证)
+- **真相修正**: 图1房间池=`TowerRoomPoolBuilder`(PM 2026-06-18·真Asset Store包·Room_BreakerCloset等), 道具按`Wall`枚举(N/S/E/W/C)摆·多数占3-4墙。**非**早期RoomDresser/Room_Office_4x8那套。
+- David否决临时隐藏·要**最终版本**(模块标门边+摆家具时门可见+生成转圈对齐plan门)。今晚落盘**框架6块**:
+  1. `TowerPlanV8.DoorEdgesForSlab(slotId)` + `DoorEdge` enum: 从plan算房间门在哪边(N/S/E/W)。纯逻辑。
+  2. `Scripts/Level/Topology/RoomFillAlignment.cs`(纯逻辑·Topology asmdef): `Rotate`(DoorEdge 90°CW: N→E→S→W) + `FindRotation`(找转角使留空边⊇门边; 方形0/90/180/270·长方0/180·-1=盖不住)。
+  3. `RoomDef.blankEdges`字段(DoorEdge)。
+  4. `TowerLayout.Place`→`AlignedRotation`: slab门边+方/长方(size!=Large)+FindRotation→转模块; 盖不住LogWarning+不转。
+  5. `TowerRoomPoolBuilder.BlankEdgesOf(spec)`: 道具占的Wall反推留空边(保守:占墙=非blank), 建RoomDef时填。
+  6. 测试 `Tests/EditMode/Level/RoomFillAlignmentTests.cs`(Topology.Tests): Rotate/FindRotation 6例 + DoorEdgesForSlab(PUMP=W\|E·unknown=None)。
+- **待**: Unity编译(0错?) + run_tests + 重跑菜单`Build Tower Room Pool v1`(把blankEdges写进RoomDef assets) + Play验门通。
+- **诚实现状**: 框架在·留空边够的房间自动转对; 但现有房间道具占满3-4墙→留空边少→多门slab `FindRotation`=-1→警告+不转(仍挡门)。**要David照门口重摆家具腾空墙才完美**(David的活)。**门可视化工具未做**(下一步·帮David摆)。
+- **⚠ Unity已关**(8091 down·无进程): 框架代码全落盘**未编译验证**。重开Unity→Refresh编译→get_console_logs(error空?)→run_tests→Build Tower Room Pool v1。
+- **✅ 框架已验证(2026-06-28夜·David要"验证")**: 重启Unity编译**0错** · 全EditMode测试 **255测试/passCount212/failCount0**(`RoomFillAlignment` 8例全过·含`DoorEdgesForSlab_Pump`=W\|E手算对; `InspectSession` 10例全过) · 重跑`Build Tower Room Pool v1`成功(**10 RoomDef写入blankEdges + 30 loot anchors + catalog**)。框架运行时生效: `TowerLayout`填房间→读`blankEdges`+算slab门边+`FindRotation`转圈对齐。
+- **待David**: Play验门通——**留空边够的房间自动转对**; 道具占满3-4墙的房间`FindRotation`=-1→LogWarning+不转(仍挡门)→**要David照门口重摆家具腾空墙**。**下一步=门可视化工具**(帮David摆家具时看见门口)。menu `Build Tower Room Pool v1` 桥后台可调(已注册)。Unity当前开着(我启动·8091活)。
+
+## Session 2026-06-29 — 门对齐**推翻转圈框架→换"门洞局部清空"**(David拍板"换"·代码全落盘·待编译)
+- **David质疑命中要害**: "塞满墙有什么关系?只要不挡着门不就行了"。核实道具定义=`(wall, along)`两参(沿墙偏移!)→旧`blankEdges`把整面墙塌缩成布尔丢了`along`=过度保守。**正解=门洞局部清空**(只挪压在门口那一两件·其余原地不动·零旋转)。David"可以的。换"→"go"。
+- **关键几何事实(已查证)**: slot anchor 放`(CenterX,y,CenterZ)`格子正中·**旋转identity**(`BuildRoomSlots`从没设过); 房间prefab局部+x=东+z=北·**与plan轴完全对齐**→门偏移(plan系)直接==道具`along`(房间系)。所以转圈框架本就多余。
+- **已落盘改动(8处·未编译)**:
+  - **删**: `RoomDef.blankEdges`字段 · `TowerLayout.AlignedRotation` · `TowerPlanV8.DoorEdgesForSlab` · `Topology/RoomFillAlignment.cs`(+meta) · `TowerRoomPoolBuilder.BlankEdgesOf`。
+  - **加**: `TowerPlanV8.DoorOpeningsForSlab(slabId)`→`List<SlabDoorOpening{Edge,Offset(相对格心沿墙偏移),HalfWidth}>`(纯逻辑·Topology) · `Scripts/Level/RoomPropPlacement.cs`(运行时组件:`DoorEdge wall;float along`) · `Scripts/Level/Topology/DoorClearance.cs`(纯1D滑槽搜索`NearestFree(along,maxOffset,forbidden[])`→最近空位/NaN) · `Scripts/Level/RoomDoorClearance.cs`(静态`Clear(room,slot)`:对每门→同墙道具`along`压进门洞±(门半宽+道具半宽+0.15余量)→`NearestFree`沿墙滑·滑不动`SetActive(false)`+warn·道具半宽现场renderer bounds算)。
+  - **改**: `TowerLayout.Place`实例化后调`RoomDoorClearance.Clear`(networked+decor两路都调)·用`slot.transform.rotation`不再转 · `TowerRoomPoolBuilder`给贴墙道具(N/S/E/W)挂`RoomPropPlacement`(`EdgeOf(Wall)`映射)+**LootAnchor改挂道具子物体下**(挪/禁用时loot跟着走·LootSpawner用FindObjectsByType嵌套无碍)。
+  - **测试**: `Tests/EditMode/Level/DoorClearanceTests.cs`(替换RoomFillAlignmentTests·Topology.Tests asm): DoorOpeningsForSlab(PUMP=W/E offset0 half1.0手算·LOBBY含D-VAN S offset3 half1.4·NOPE空) + NearestFree(已清/滑到门边/对称取lo边/全覆盖NaN/道具宽于墙NaN) 共8例。
+- **调参**: `DoorClearance.Clearance`0.3→**0.15** · `RoomDoorClearance.EdgeInset`0.3→**0.1**——4×4墙上2m居中门(plan最大50%面)每侧仅1m·余量大会逼窄道具被删而非挪。现窄道具能滑过·宽到塞不下才删(几何正确)。
+- **效果**: 家具不再被逼腾空整面墙·房间不转圈·只有正好压门口的1-2件沿墙挪开(挪不动才删)·其余原地。**长房间12×8竖摆朝向不匹配=另一既有问题·没碰**。
+- **✅ 全部验证通过(2026-06-29·我自己拉起Unity)**: `Unity.exe -projectPath`后台启(8091约30s起·PID41612) → 直连`ws-unity-call.cjs`。**编译0错**(type=error 0条·我的代码无错; 4条`[MCP Unity]`路径校验=包噪音可忽略) · **全EditMode 212/212 pass·0 fail**(`DoorClearance` 8例全列全过: DoorOpeningsForSlab PUMP/LOBBY/NOPE + NearestFree 5例) · 重跑`Build Tower Room Pool v1`成功(**10 prefab + 30 loot anchors**) · 验prefab: Room_BreakerCloset 4贴墙道具全挂`RoomPropPlacement`(墙{N,N,W,S}✓·中心decal正确没挂)·3 loot anchor。
+- **唯一待David**: Play到搜刮任务现场(host+进任务·HQ无ScavengeItem)验门通——压门道具是否沿墙滑开/其余原地。Unity当前**开着**(我启·8091活·PID41612)。
+- **下一步(David摆家具辅助)**: 门可视化工具仍未做(现在更可有可无了·因为不再要David腾墙·只在"宽道具塞不下被禁用"时才需看门口)。
+
+## Session 2026-06-29 (cont) — loot洋红诊断 + 菜单背景相机修正(David Play反馈)
+### loot "紫色冒光+按E没用"诊断(代码已查证·未动手修)
+- **紫色=URP下材质丢shader的洋红**: `Resources/Loot/Loot_Whitebox.mat` 用**内置Standard shader**(guid 933532a4...), URP渲不出→洋红(本意`_BaseColor`=土褐0.42,0.37,0.29)。Asset Store包(Tirgames/Sat)房间道具多半同坑。**修法**: `Edit > Rendering > Materials > Convert All Built-in Materials to URP`(CLAUDE.md早警告)。**未执行**(David没要求·先诊断)。
+- **按E没用**: loot白模 collider(非trigger·enabled·1×1×1)+NetworkObject+`ScavengeItem`(IInteractable·`CanBeCarried`=true)全在·捡拾走`PlayerInteraction.FindAimedTarget`SphereCast需准星对准。**最可能David按的是洋红家具(无ScavengeItem)误当loot**。真loot应能捡·待材质转完分清后验。
+### 菜单背景相机=对着空墙→改框办公电脑(David"让背景出现电脑·摄像机对着墙没感觉")
+- **根因(git证·非我改)**: `CrtMenuStage.BuildMenuCamera`默认构图硬编码"屏幕朝-Z·相机看+Z"(早期旧布局), 但HQ Option-A的CRT在-X墙·`MVP_OfficeComputer`锚点yaw90°**朝+X进屋**→默认相机背对电脑、面朝空墙。`MenuCameraAnchor`物件存在则用其位姿(美术钩子·当前无)。
+- **几何(已算)**: HqScale=1.2·Interior父级×1.2。CRT屏幕锚点世界≈(1.44,1.2,7.2)朝+X·债务板≈(0.26,1.5,4.3)·岗哨≈(1.2,0,2.6)·桌+暖灯≈(2.6,0,12.7)。
+- **已改(CrtMenuStage.cs默认else块·相对screenAnchor偏移·未编译验证)**: camPos=screenCenter+(2.76,0.35,1.80)·lookAt=screenCenter+(-0.14,-0.05,-0.20)→CRT正前方~2.8m抬0.35略偏下游的3/4回看视角。全屏MainMenuUI叠加层不受影响仍清晰。
+- **⚠桥死**(get_console_logs/get_gameobject全TIMEOUT·Unity Play后台没tick): 没法实时调相机/确认编译。**待David**: 停Play(触发重编译)→重进Play看菜单背景→报"太小/太偏/想看桌子"我调那两个偏移。可能微调1-2轮。**若电脑也洋红**=同URP材质坑·一起转。
+- **备选**(没采纳·留着): 想要持久/可视拖拽构图可在HQ builder生成`MenuCameraAnchor`物件(David拖到满意位姿)·`CrtMenuStage`已支持读它。

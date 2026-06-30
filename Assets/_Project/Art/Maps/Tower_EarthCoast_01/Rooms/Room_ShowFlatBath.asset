@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u6837\u677F\u536B\u6D74 Show-Flat Bathroom (\u6BDB\u576F)"
   size: 0
-  contentPrefab: {fileID: 1541657582531712097, guid: ca1f23a84b366b8439778635a1ad0a1a, type: 3}
+  contentPrefab: {fileID: 3992098661829642647, guid: ca1f23a84b366b8439778635a1ad0a1a, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

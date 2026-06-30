@@ -153,6 +153,22 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         MvpHud.OpenComputer(this);
     }
 
+    // Head-on "seated at the terminal" camera pose, derived from the monitor's own transform so it
+    // works wherever the computer is placed. The screen faces +forward, so the viewer sits a short
+    // way out in front of the glass at eye height and looks straight back at the screen centre —
+    // PlayerCameraController pushes the local camera here while the terminal is open (no more
+    // off-axis side view of the CRT). Tunable: how far back the seat sits and how high the eye is.
+    const float TerminalSeatDistance = 0.82f;
+    const float TerminalEyeLift = 0.12f;
+
+    public void GetTerminalCameraPose(out Vector3 position, out Quaternion rotation)
+    {
+        Transform t = transform;
+        Vector3 screenCentre = t.position;
+        position = screenCentre + t.forward * TerminalSeatDistance + Vector3.up * TerminalEyeLift;
+        rotation = Quaternion.LookRotation((screenCentre - position).normalized, Vector3.up);
+    }
+
     public void ExecuteComputerAction(PlayerController player)
     {
         if (missionLaunching) return;

@@ -27,6 +27,7 @@ public class PlayerCameraController : NetworkBehaviour
     // Spectator
     Transform spectateTarget;
     int spectateIndex = -1;
+    bool terminalPosing;   // true while the local camera is pushed in to the office terminal
     public bool IsSpectating => spectateTarget != null;
     public string SpectateTargetName => spectateTarget != null ? spectateTarget.root.name : "";
 
@@ -129,10 +130,36 @@ public class PlayerCameraController : NetworkBehaviour
         if (spectateTarget != null)
             ExitSpectator();
 
+        // Office terminal open: smoothly push the local camera to a head-on "seated at the desk"
+        // view of the monitor and suspend look — so reading the terminal faces the screen straight
+        // on instead of the off-axis angle the player happened to walk up at. Restored on close.
+        OfficeComputer terminal = MvpHud.ActiveComputer;
+        if (terminal != null && localCamera != null)
+        {
+            terminal.GetTerminalCameraPose(out Vector3 termPos, out Quaternion termRot);
+            float k = 1f - Mathf.Exp(-12f * Time.unscaledDeltaTime);
+            localCamera.transform.position = Vector3.Lerp(localCamera.transform.position, termPos, k);
+            localCamera.transform.rotation = Quaternion.Slerp(localCamera.transform.rotation, termRot, k);
+            terminalPosing = true;
+            return;
+        }
+        if (terminalPosing)
+        {
+            terminalPosing = false;
+            if (localCamera != null)
+            {
+                localCamera.transform.localPosition = Vector3.zero;
+                localCamera.transform.localRotation = Quaternion.identity;
+            }
+        }
+
         // Look stays active while seated in the van (you can turn your head); only a
         // blocking UI panel (settings / locker / lobby waiting room) fully stops the camera.
         if (MainMenuUI.IsGameplayInputBlockedByMenu) return;
         if (MvpHud.IsBlockingPanelOpen) return;
+        // Inspecting: the mouse rotates the held relic, not the view — suspend look so the
+        // player "can't look around" (the vulnerability, item-inspection.md decision ②).
+        if (InspectController.LocalInspecting) return;
         if (Cursor.lockState != CursorLockMode.Locked)
         {
             Cursor.lockState = CursorLockMode.Locked;

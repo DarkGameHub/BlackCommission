@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BlackCommission.Level.RoomDef
   roomName: "\u5DE5\u4EBA\u5BBF\u820D Worker Bunkroom (\u5360\u5C4B)"
   size: 1
-  contentPrefab: {fileID: 6196764913122455160, guid: 33a0ed63e28eed6419b55ff9285e9a31, type: 3}
+  contentPrefab: {fileID: 1802554268560906361, guid: 33a0ed63e28eed6419b55ff9285e9a31, type: 3}
   roleFilter: 0
   floor1Only: 0
   floor2Only: 0

@@ -299,6 +299,15 @@ public static class TowerRoomPoolBuilder
                 (cur.y - b.min.y) + p.lift,        // raise so the lowest point sits at the floor
                 target.z - (b.center.z - cur.z));
 
+            // Record the prop's wall + offset so RoomDoorClearance can slide it off a real door at
+            // fill time. Centre props never reach a wall, so they carry no placement marker.
+            if (p.wall != Wall.C)
+            {
+                var place = go.AddComponent<RoomPropPlacement>();
+                place.wall = EdgeOf(p.wall);
+                place.along = p.along;
+            }
+
             if (p.blocker || p.loot.HasValue)
             {
                 Bounds nb = WorldBounds(go);        // recompute after the move
@@ -313,8 +322,10 @@ public static class TowerRoomPoolBuilder
                 }
                 if (p.loot.HasValue)
                 {
+                    // Parent the anchor UNDER the prop so a door-clearance nudge carries the loot with
+                    // it (LootSpawner gathers anchors via FindObjectsByType, so nesting is fine).
                     var a = new GameObject($"LootAnchor_{p.label}");
-                    a.transform.SetParent(root.transform, false);
+                    a.transform.SetParent(go.transform, false);
                     a.transform.position = new Vector3(nb.center.x, nb.max.y + 0.05f, nb.center.z);
                     a.AddComponent<LootAnchor>().surface = p.loot.Value;
                     anchors++;
@@ -341,6 +352,16 @@ public static class TowerRoomPoolBuilder
             _      => new Vector3(p.along, 0f, 0f),
         };
     }
+
+    // Map a dressing wall to the plan-frame door edge (N/S/E/W). Centre = None.
+    static DoorEdge EdgeOf(Wall w) => w switch
+    {
+        Wall.N => DoorEdge.N,
+        Wall.S => DoorEdge.S,
+        Wall.E => DoorEdge.E,
+        Wall.W => DoorEdge.W,
+        _      => DoorEdge.None,
+    };
 
     // Combined world-space render bounds of a prop (all child renderers). Falls back to a small box.
     static Bounds WorldBounds(GameObject go)

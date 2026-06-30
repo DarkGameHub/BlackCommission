@@ -10,6 +10,9 @@ public class MvpHud : MonoBehaviour
     static OfficeCabinetStorage activeCabinet;
     static OfficeMonsterBestiary activeBestiary;
     public static bool IsComputerOpen => activeComputer != null;
+    /// <summary>The terminal the local player currently has open, or null. Lets the camera
+    /// frame a head-on "seated at the desk" view of the monitor while the terminal is up.</summary>
+    public static OfficeComputer ActiveComputer => activeComputer;
     public static bool IsBlockingPanelOpen =>
         activeComputer != null || activeMissionVan != null || activeCabinet != null || activeBestiary != null || SettingsOverlay.IsOpen;
 
@@ -87,7 +90,7 @@ public class MvpHud : MonoBehaviour
 
     static int LanguageIndex
     {
-        get => PlayerPrefs.GetInt("AS.Settings.Language", 0);
+        get => PlayerPrefs.GetInt("AS.Settings.Language", 1); // default 中文 (content is ZH-only)
         set => PlayerPrefs.SetInt("AS.Settings.Language", Mathf.Clamp(value, 0, 1));
     }
 
