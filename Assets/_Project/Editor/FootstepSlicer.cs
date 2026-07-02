@@ -1,23 +1,26 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Cuts two single-step samples out of the long walking take David sourced
-/// (<c>Resources/Audio/Sfx/footsteps_walk_raw.mp3</c>, freesound #52640 CC0 — multiple
-/// steps across a kitchen floor) and writes them as <c>footstep_a/footstep_b.wav</c>
-/// next to it. <see cref="AudioManager"/> then loads those per-step clips instead of
-/// the synth footsteps; the whole take can't be used directly because footsteps play
-/// one clip per stride.
+/// Cuts single-step samples out of the long walking take David sourced
+/// (<c>Resources/Audio/Sfx/footsteps_walk_raw.mp3</c>, freesound #52640 CC0 — many steps
+/// across a kitchen floor) and writes them as <c>footstep_a..d.wav</c> next to it.
+/// <see cref="AudioManager"/> loads whichever of the four exist.
 ///
-/// Transient detection: RMS over 10 ms windows → the two loudest peaks at least 0.4 s
-/// apart, each exported as a 0.32 s window starting 30 ms before its peak with a short
-/// fade in/out. Run via <c>Tools ▸ Black Commission ▸ Audio ▸ Slice Footsteps</c>.
+/// v2 (David: "脚步声很奇怪"): the first pass grabbed the two loudest windows, which came
+/// with room rumble and bleed from neighbouring steps. Now: transient candidates are the
+/// top RMS peaks ≥0.35 s apart, scored by how QUIET their 150 ms lead-in is (clean attack),
+/// best four win; each slice is 0.26 s, high-passed (~150 Hz one-pole) to cut the room
+/// rumble, peak-normalized to 0.7 and faded. Run via
+/// <c>Tools ▸ Black Commission ▸ Audio ▸ Slice Footsteps</c>.
 /// </summary>
 public static class FootstepSlicer
 {
     const string RawPath = "Assets/_Project/Resources/Audio/Sfx/footsteps_walk_raw.mp3";
     const string OutDir = "Assets/_Project/Resources/Audio/Sfx";
+    static readonly string[] Names = { "footstep_a", "footstep_b", "footstep_c", "footstep_d" };
 
     [MenuItem("Tools/Black Commission/Audio/Slice Footsteps")]
     public static void Slice()
@@ -37,55 +40,98 @@ public static class FootstepSlicer
         var data = new float[n * ch];
         clip.GetData(data, 0);
 
-        // mono mix + windowed RMS
-        int win = sr / 100; // 10 ms
+        // mono mix
+        var mono = new float[n];
+        for (int i = 0; i < n; i++)
+        {
+            float acc = 0f;
+            for (int c = 0; c < ch; c++) acc += data[i * ch + c];
+            mono[i] = acc / ch;
+        }
+
+        // windowed RMS (10 ms)
+        int win = sr / 100;
         int frames = n / win;
         var rms = new float[frames];
         for (int f = 0; f < frames; f++)
         {
             float acc = 0f;
-            for (int i = 0; i < win; i++)
-            {
-                float s = 0f;
-                for (int c = 0; c < ch; c++) s += data[(f * win + i) * ch + c];
-                s /= ch;
-                acc += s * s;
-            }
+            for (int i = 0; i < win; i++) { float v = mono[f * win + i]; acc += v * v; }
             rms[f] = Mathf.Sqrt(acc / win);
         }
 
-        // two loudest peaks ≥0.4 s apart
-        int minGap = (int)(0.4f * 100);
-        int p1 = -1, p2 = -1;
-        for (int f = 1; f < frames - 1; f++)
-            if (p1 < 0 || rms[f] > rms[p1]) p1 = f;
-        for (int f = 1; f < frames - 1; f++)
-            if (Mathf.Abs(f - p1) >= minGap && (p2 < 0 || rms[f] > rms[p2])) p2 = f;
-        if (p1 < 0 || p2 < 0) { Debug.LogError("[FootstepSlicer] could not find two transients"); return; }
+        // candidate transients: every local RMS maximum, ranked by loudness, then greedily
+        // deduped to ≥0.35 s spacing (threshold-based hunts starve on takes where one stomp
+        // dominates — both v2 attempts found <2). Keeps up to 8 for the quality sort below.
+        var maxima = new List<int>();
+        for (int f = 2; f < frames - 2; f++)
+            if (rms[f] >= rms[f - 1] && rms[f] >= rms[f + 1] && rms[f] > 0f) maxima.Add(f);
+        maxima.Sort((a, b) => rms[b].CompareTo(rms[a]));
+        var candidates = new List<int>();
+        const int minGap = 35; // 0.35 s in 10 ms frames
+        foreach (int f in maxima)
+        {
+            bool clash = false;
+            foreach (int kept in candidates) if (Mathf.Abs(kept - f) < minGap) { clash = true; break; }
+            if (!clash) candidates.Add(f);
+            if (candidates.Count >= 8) break;
+        }
+        if (candidates.Count < 2) { Debug.LogError("[FootstepSlicer] too few transients found"); return; }
 
-        WriteSlice(data, ch, sr, n, p1 * win, "footstep_a");
-        WriteSlice(data, ch, sr, n, p2 * win, "footstep_b");
+        // score: prefer QUIET 150 ms lead-in (clean attack, no bleed from the previous step)
+        candidates.Sort((a, b) => LeadNoise(rms, a).CompareTo(LeadNoise(rms, b)));
+        int take = Mathf.Min(Names.Length, candidates.Count);
+
+        for (int k = 0; k < take; k++)
+            WriteSlice(mono, sr, n, candidates[k] * win, Names[k]);
+        for (int k = take; k < Names.Length; k++)
+        {
+            string stale = $"{OutDir}/{Names[k]}.wav";
+            if (File.Exists(stale)) AssetDatabase.DeleteAsset(stale);
+        }
+
         AssetDatabase.Refresh();
-        Debug.Log($"[FootstepSlicer] sliced peaks at {p1 * 0.01f:0.00}s and {p2 * 0.01f:0.00}s → footstep_a/b.wav");
+        Debug.Log($"[FootstepSlicer] v2: {candidates.Count} transients, wrote {take} clean slices " +
+                  $"at {string.Join(", ", candidates.GetRange(0, take).ConvertAll(f => (f * 0.01f).ToString("0.00")))}s.");
     }
 
-    static void WriteSlice(float[] data, int ch, int sr, int totalSamples, int peakSample, string name)
+    static float LeadNoise(float[] rms, int frame)
+    {
+        float acc = 0f; int cnt = 0;
+        for (int f = Mathf.Max(0, frame - 15); f < frame - 2; f++) { acc += rms[f]; cnt++; }
+        return cnt > 0 ? acc / cnt : float.MaxValue;
+    }
+
+    static void WriteSlice(float[] mono, int sr, int totalSamples, int peakSample, string name)
     {
         int start = Mathf.Max(0, peakSample - (int)(0.03f * sr));
-        int len = Mathf.Min((int)(0.32f * sr), totalSamples - start);
-        int fade = (int)(0.012f * sr);
+        int len = Mathf.Min((int)(0.26f * sr), totalSamples - start);
+        int fade = (int)(0.010f * sr);
 
-        var pcm = new short[len]; // mono out
+        // one-pole high-pass (~150 Hz) kills the room rumble that read as "怪"
+        var buf = new float[len];
+        float rc = 1f / (2f * Mathf.PI * 150f), dt = 1f / sr, a = rc / (rc + dt);
+        float prevX = mono[start], prevY = 0f;
         for (int i = 0; i < len; i++)
         {
-            float s = 0f;
-            for (int c = 0; c < ch; c++) s += data[(start + i) * ch + c];
-            s /= ch;
+            float x = mono[start + i];
+            float y = a * (prevY + x - prevX);
+            prevX = x; prevY = y;
+            buf[i] = y;
+        }
+
+        // peak normalize to 0.7, then fades
+        float peak = 1e-5f;
+        for (int i = 0; i < len; i++) peak = Mathf.Max(peak, Mathf.Abs(buf[i]));
+        float gain = 0.7f / peak;
+        var pcm = new short[len];
+        for (int i = 0; i < len; i++)
+        {
             float env = 1f;
             if (i < fade) env = i / (float)fade;
             int tail = len - i;
-            if (tail < fade * 4) env *= tail / (float)(fade * 4);
-            pcm[i] = (short)Mathf.Clamp(s * env * 32767f, short.MinValue, short.MaxValue);
+            if (tail < fade * 5) env *= tail / (float)(fade * 5);
+            pcm[i] = (short)Mathf.Clamp(buf[i] * gain * env * 32767f, short.MinValue, short.MaxValue);
         }
 
         string path = $"{OutDir}/{name}.wav";
@@ -100,7 +146,7 @@ public static class FootstepSlicer
             bw.Write(sr); bw.Write(sr * 2); bw.Write((short)2); bw.Write((short)16);
             bw.Write(System.Text.Encoding.ASCII.GetBytes("data"));
             bw.Write(dataBytes);
-            foreach (short s in pcm) bw.Write(s);
+            foreach (short v in pcm) bw.Write(v);
         }
     }
 }

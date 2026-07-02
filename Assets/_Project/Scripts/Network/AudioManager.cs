@@ -71,6 +71,7 @@ public class AudioManager : MonoBehaviour
     AudioClip clipAmbGhost;
     AudioClip clipAmbMarsWind;
     AudioClip synthJoinChime;
+    AudioClip[] footstepClips;
     bool joinChimeHooked;
 
     void Awake()
@@ -128,6 +129,7 @@ public class AudioManager : MonoBehaviour
     {
         if (ambientSource == null || clip == null) return;
         if (ambientSource.clip == clip && ambientSource.isPlaying) return;
+        Trace("ambience", clip);
         ambientSource.clip = clip;
         ambientSource.volume = volume;
         ambientSource.Play();
@@ -144,6 +146,15 @@ public class AudioManager : MonoBehaviour
     void HandleClientJoined(ulong clientId)
     {
         if (sfxSource != null) sfxSource.PlayOneShot(synthJoinChime, 0.5f);
+    }
+
+    /// <summary>Audition log for the Excel-alignment pass: every event prints its clip.
+    /// Read the entries as "[SFX] event -> clipname" in the Console / Editor.log.</summary>
+    public static bool LogSfx = true;
+
+    static void Trace(string evt, AudioClip clip)
+    {
+        if (LogSfx) Debug.Log($"[SFX] {evt} -> {(clip != null ? clip.name : "null")}");
     }
 
     void GenerateSynthClips()
@@ -178,6 +189,12 @@ public class AudioManager : MonoBehaviour
         // Sourced-clip overrides (each falls back to the synth version when absent).
         synthFootstepA = Ext("footstep_a", synthFootstepA);
         synthFootstepB = Ext("footstep_b", synthFootstepB);
+        var steps = new System.Collections.Generic.List<AudioClip> { synthFootstepA, synthFootstepB };
+        var extC = Resources.Load<AudioClip>("Audio/Sfx/footstep_c");
+        var extD = Resources.Load<AudioClip>("Audio/Sfx/footstep_d");
+        if (extC != null) steps.Add(extC);
+        if (extD != null) steps.Add(extD);
+        footstepClips = steps.ToArray();
         synthComputerBoot = Ext("computer_open", synthComputerBoot);
         synthEngineStart = Ext("engine_start", synthEngineStart);
         synthPickup = Ext("pickup_take", synthPickup);
@@ -201,14 +218,18 @@ public class AudioManager : MonoBehaviour
 
     public void PlayFootstep(Vector3 position)
     {
-        AudioClip clip = Random.value > 0.5f ? synthFootstepA : synthFootstepB;
-        AudioSource.PlayClipAtPoint(clip, position, 0.35f);
+        AudioClip clip = footstepClips != null && footstepClips.Length > 0
+            ? footstepClips[Random.Range(0, footstepClips.Length)]
+            : (Random.value > 0.5f ? synthFootstepA : synthFootstepB);
+        Trace("walk_footstep", clip);
+        AudioSource.PlayClipAtPoint(clip, position, 0.3f);
     }
 
     /// <summary>Footstep on metal surfaces (stair ramps / scaffold bridge / drop dock).</summary>
     public void PlayFootstepMetal(Vector3 position)
     {
         AudioClip clip = Random.value > 0.5f ? synthFootstepMetalA : synthFootstepMetalB;
+        Trace("metal_footstep", clip);
         AudioSource.PlayClipAtPoint(clip, position, 0.4f);
     }
 
@@ -216,11 +237,13 @@ public class AudioManager : MonoBehaviour
 
     public void PlayComputerOpen(Vector3 position)
     {
+        Trace("computer_open", synthComputerBoot);
         AudioSource.PlayClipAtPoint(synthComputerBoot, position, 0.5f);
     }
 
     public void PlayComputerBeep(Vector3 position)
     {
+        Trace("computer_beep", synthComputerBeep);
         AudioSource.PlayClipAtPoint(synthComputerBeep, position, 0.4f);
     }
 
@@ -228,6 +251,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlayEngineStart(Vector3 position)
     {
+        Trace("engine_start", synthEngineStart);
         AudioSource.PlayClipAtPoint(synthEngineStart, position, 0.6f);
     }
 
@@ -249,16 +273,19 @@ public class AudioManager : MonoBehaviour
 
     public void PlayDoorCreak(Vector3 position)
     {
+        Trace("door_creak(legacy)", synthDoorCreak);
         AudioSource.PlayClipAtPoint(synthDoorCreak, position, 0.5f);
     }
 
     public void PlayDoorOpen(Vector3 position)
     {
+        Trace("door_open", clipDoorOpen);
         AudioSource.PlayClipAtPoint(clipDoorOpen, position, 0.55f);
     }
 
     public void PlayDoorClose(Vector3 position)
     {
+        Trace("door_close", clipDoorClose);
         AudioSource.PlayClipAtPoint(clipDoorClose, position, 0.55f);
     }
 
@@ -266,23 +293,27 @@ public class AudioManager : MonoBehaviour
 
     public void PlayCabinetOpen(Vector3 position)
     {
+        Trace("cabinet_open", clipCabinetOpen);
         AudioSource.PlayClipAtPoint(clipCabinetOpen, position, 0.5f);
     }
 
     public void PlayCabinetClose(Vector3 position)
     {
+        Trace("cabinet_close", clipCabinetClose);
         AudioSource.PlayClipAtPoint(clipCabinetClose, position, 0.5f);
     }
 
     /// <summary>Placing an item INTO storage/cargo (the Excel "存入" event).</summary>
     public void PlayStore(Vector3 position)
     {
+        Trace("store", clipStore);
         AudioSource.PlayClipAtPoint(clipStore, position, 0.5f);
     }
 
     /// <summary>An item hitting the ground after a hotbar drop.</summary>
     public void PlayDrop(Vector3 position)
     {
+        Trace("drop", clipDrop);
         AudioSource.PlayClipAtPoint(clipDrop, position, 0.5f);
     }
 
@@ -290,6 +321,7 @@ public class AudioManager : MonoBehaviour
 
     public void PlayPickup(Vector3 position)
     {
+        Trace("pickup/take", synthPickup);
         AudioSource.PlayClipAtPoint(synthPickup, position, 0.45f);
     }
 

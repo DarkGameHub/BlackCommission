@@ -68,7 +68,9 @@ public class HqRollUpDoorReveal : MonoBehaviour, IInteractable
     {
         targetOpen = open;
         animating = true;
-        AudioManager.Instance?.PlayDoorCreak(transform.position);
+        // Excel-aligned door sounds (audio pass v2) — the synth creak is retired here.
+        if (open) AudioManager.Instance?.PlayDoorOpen(transform.position);
+        else AudioManager.Instance?.PlayDoorClose(transform.position);
     }
 
     OfficeComputer GetComputer()
