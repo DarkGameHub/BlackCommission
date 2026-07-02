@@ -90,6 +90,11 @@ public static class MonsterSpawnBootstrap
 
                 GameObject go = Object.Instantiate(prefab, hit.position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
                 go.name = prefab.name;
+                // A NavMeshAgent instantiated at a position binds to the navmesh at the PREFAB
+                // pose and yanks the transform back to the origin on its first update — Warp is
+                // the documented fix (verified live 2026-07-02: all three monsters sat at 0,0,0).
+                var agent = go.GetComponent<NavMeshAgent>();
+                if (agent != null) agent.Warp(hit.position);
                 go.GetComponent<NetworkObject>().Spawn();
                 spawned++;
             }

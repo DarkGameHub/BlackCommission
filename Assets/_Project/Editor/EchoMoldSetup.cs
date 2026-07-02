@@ -151,8 +151,18 @@ public static class EchoMoldSetup
     {
         var model = AssetDatabase.LoadAssetAtPath<GameObject>(FbxPath);
         if (model == null) { Debug.LogError("[EchoMold] Could not load model for prefab build."); return; }
-        var inst = (GameObject)Object.Instantiate(model);
-        inst.name = "EchoMold";
+
+        // The baked FBX take keys the ROOT node at identity, so an Animator on the prefab root
+        // stomps the whole transform every frame and the NavMeshAgent's motion never shows
+        // (agent.nextPosition advances while the monster stays pinned at the origin — caught in
+        // the 2026-07-02 mission smoke). Classic fix: gameplay components live on a clean root,
+        // the animated model is a CHILD, so the root-node curves only pin the child's LOCAL
+        // transform (which is exactly where it belongs).
+        var inst = new GameObject("EchoMold");
+        var modelChild = (GameObject)Object.Instantiate(model, inst.transform);
+        modelChild.name = "Model";
+        modelChild.transform.localPosition = Vector3.zero;
+        modelChild.transform.localRotation = Quaternion.identity;
 
         // Accurate height check: Renderer.bounds is world-space on the live instance, so it
         // accounts for every rig part's transform (mesh.bounds alone is per-mesh local space).
@@ -165,11 +175,13 @@ public static class EchoMoldSetup
         }
         else Debug.LogWarning("[EchoMold] No renderers on instantiated model.");
 
-        if (!inst.TryGetComponent<Animator>(out var anim)) anim = inst.AddComponent<Animator>();
+        // Animator must sit on the MODEL child (curve paths bind from there; root stays free).
+        if (!modelChild.TryGetComponent<Animator>(out var anim)) anim = modelChild.AddComponent<Animator>();
         anim.runtimeAnimatorController = controller;
         anim.applyRootMotion = false;
         anim.updateMode = AnimatorUpdateMode.Normal;
         anim.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+        foreach (var rootAnim in inst.GetComponents<Animator>()) Object.DestroyImmediate(rootAnim);
 
         if (!inst.TryGetComponent<NavMeshAgent>(out var agent)) agent = inst.AddComponent<NavMeshAgent>();
         agent.radius = 0.4f;

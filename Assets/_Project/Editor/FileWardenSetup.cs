@@ -139,8 +139,14 @@ public static class FileWardenSetup
     {
         var model = AssetDatabase.LoadAssetAtPath<GameObject>(FbxPath);
         if (model == null) { Debug.LogError("[FileWarden] Could not load model for prefab build."); return; }
-        var inst = (GameObject)Object.Instantiate(model);
-        inst.name = "FileWarden";
+
+        // Root-node identity keys in the baked take would pin an Animator-on-root prefab to the
+        // origin (see EchoMoldSetup) — components on a clean root, animated model as a child.
+        var inst = new GameObject("FileWarden");
+        var modelChild = (GameObject)Object.Instantiate(model, inst.transform);
+        modelChild.name = "Model";
+        modelChild.transform.localPosition = Vector3.zero;
+        modelChild.transform.localRotation = Quaternion.identity;
 
         var renderers = inst.GetComponentsInChildren<Renderer>();
         if (renderers.Length > 0)
@@ -150,10 +156,11 @@ public static class FileWardenSetup
             Debug.Log($"[FileWarden] Instance bounds size = {b.size} (expect ~2.2 m tall).");
         }
 
-        if (!inst.TryGetComponent<Animator>(out var anim)) anim = inst.AddComponent<Animator>();
+        if (!modelChild.TryGetComponent<Animator>(out var anim)) anim = modelChild.AddComponent<Animator>();
         anim.runtimeAnimatorController = controller;
         anim.applyRootMotion = false;
         anim.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+        foreach (var rootAnim in inst.GetComponents<Animator>()) Object.DestroyImmediate(rootAnim);
 
         if (!inst.TryGetComponent<NavMeshAgent>(out var agent)) agent = inst.AddComponent<NavMeshAgent>();
         agent.radius = 0.45f;
