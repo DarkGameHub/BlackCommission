@@ -57,7 +57,7 @@
 
 - Netcode for GameObjects
 - TextMesh Pro
-- mcp-unity (editor bridge, port 8090)
+- CoplayDev "MCP For Unity" (`com.coplaydev.unity-mcp` UPM package + `UnityMCP` stdio server via `uvx mcpforunityserver`)
 
 ## Architecture Decisions Log
 

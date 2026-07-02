@@ -59,11 +59,20 @@ See `docs/COLLABORATIVE-DESIGN-PRINCIPLE.md` for the full protocol.
 
 - The playable HQ is runtime-generated in `MvpSceneStyleDirector`; Blender assets
   are supporting/imported unless the runtime flow uses them explicitly.
-- An MCP bridge to the Unity editor is available (mcp-unity, port 8091 — the
-  canonical port is whatever `ProjectSettings/McpUnitySettings.json` says; the Node
-  bridge reads that file at spawn) for scene/material/gameobject operations.
-  The package is EMBEDDED at `Packages/com.gamelovers.mcp-unity/` with a local
-  patch (background-safe message pump); do not revert to the git-cache version.
+- An MCP bridge to the Unity editor is available via **CoplayDev "MCP For Unity"**
+  for scene/material/gameobject operations. Two halves:
+  - Unity side: UPM git package `com.coplaydev.unity-mcp`
+    (`https://github.com/CoplayDev/unity-mcp.git?path=/MCPForUnity#main`) in
+    `Packages/manifest.json`. Open Unity and start the bridge from its window
+    (`Window > MCP For Unity`).
+  - Claude side: MCP server `UnityMCP` (stdio) =
+    `uvx --from mcpforunityserver==10.0.0 mcp-for-unity`, registered project-local
+    in `~/.claude.json`. Server and Unity package versions must stay in sync; bump
+    both together (Unity ref is `#main`, so re-pin the uvx version when main advances).
+  - Requires Unity open + bridge running; MCP tools only load into a session after
+    Claude Code restarts. Prefer stdio transport (not HTTP auto-configure).
+  - Note: the previous embedded bridge `com.gamelovers.mcp-unity` (port 8091, Node
+    server, `ws-unity-call.cjs` fallback) was fully removed on 2026-07-01.
 - Framework management directories live at project root and are NOT Unity assets:
   - `design/` — game design documents (GDDs, entity registry)
   - `docs/` — architecture, engine reference, postmortems

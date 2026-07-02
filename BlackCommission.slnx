@@ -1,14 +1,12 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
-  <Project Path="McpUnity.Editor.csproj" />
   <Project Path="BlackCommission.Mission.Core.csproj" />
   <Project Path="BlackCommission.Scavenge.Core.Tests.csproj" />
-  <Project Path="BlackCommission.Office.Core.Tests.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="BlackCommission.Office.Core.Tests.csproj" />
   <Project Path="BlackCommission.Scavenge.Core.csproj" />
   <Project Path="BlackCommission.Level.Topology.Tests.csproj" />
   <Project Path="BlackCommission.Mission.Core.Tests.csproj" />
-  <Project Path="McpUnity.Editor.Tests.csproj" />
   <Project Path="BlackCommission.Office.Core.csproj" />
   <Project Path="BlackCommission.Level.Generation.csproj" />
   <Project Path="BlackCommission.Level.Topology.csproj" />
