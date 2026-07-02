@@ -249,8 +249,9 @@ public static class MarsLogisticsBuilder
         Box(p, "ColdNotice", new Vector3(10.12f, 1.7f, 18.1f), new Vector3(0.02f, 0.8f, 0.6f), Mat(Paper), collider: false);
         Box(p, "ColdNoticeStamp", new Vector3(10.13f, 1.45f, 18.1f), new Vector3(0.02f, 0.18f, 0.3f), Mat(StampRed), collider: false);
 
-        // MonsterSeed — the nest, deepest corner
-        Seed(p, "MonsterSeed_ML_COLD", new Vector3(2f, 0.05f, 23f));
+        // MonsterSeed — the nest, deepest corner. "WARDEN" routes to the FileWarden:
+        // the archive custodian guards the heritage crates (MonsterSpawnBootstrap keyword).
+        Seed(p, "MonsterSeed_ML_COLD_WARDEN", new Vector3(2f, 0.05f, 23f));
     }
 
     static void BuildMezzanine(Transform p)

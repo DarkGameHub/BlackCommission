@@ -1,0 +1,30 @@
+{
+  "fbx": "FileWarden.fbx",
+  "rig": "Generic",
+  "clips": [
+    {
+      "name": "FW_Idle",
+      "start": 1,
+      "end": 96,
+      "loop": true
+    },
+    {
+      "name": "FW_Hunt",
+      "start": 101,
+      "end": 196,
+      "loop": true
+    },
+    {
+      "name": "FW_Attack",
+      "start": 201,
+      "end": 224,
+      "loop": false
+    },
+    {
+      "name": "FW_Death",
+      "start": 231,
+      "end": 286,
+      "loop": false
+    }
+  ]
+}
