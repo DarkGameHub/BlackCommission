@@ -19,7 +19,8 @@ public static class EchoMoldSetup
 {
     const string FbxPath = "Assets/_Project/Art/Monsters/EchoMold/EchoMold.fbx";
     const string ControllerPath = "Assets/_Project/Art/Monsters/EchoMold/EchoMold.controller";
-    const string PrefabPath = "Assets/_Project/Prefabs/Monsters/EchoMold.prefab";
+    // In Resources so MonsterSpawnBootstrap can load it at runtime (moved 2026-07-02).
+    const string PrefabPath = "Assets/_Project/Resources/Monsters/EchoMold.prefab";
 
     // Clip splits — mirror tools/rigging/output/EchoMold_clips.json.
     struct ClipDef { public string name; public int first; public int last; public bool loop; }
