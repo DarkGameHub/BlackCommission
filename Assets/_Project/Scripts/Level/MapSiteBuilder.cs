@@ -87,6 +87,16 @@ namespace BlackCommission.Level
             DressInterior(indoor, layout, entry, deep);
             ScatterLootAnchors(indoor, layout); // loot anchors in the rooms → host LootSpawner fills a seeded subset
 
+            // Monster seeds — consumed by MonsterSpawnBootstrap (the server spawns one creature per
+            // marker). W2/W4/W6 are mid-maze waypoint rooms: away from both the ENTRY descent and the
+            // DEEP objective, so first contact happens while exploring, never on arrival.
+            foreach (int wi in new[] { 2, 4, 6 })
+            {
+                var ms = Child(indoor, $"MonsterSeed_M2_{Anchors[wi].Id}");
+                Vector3 msPos = CellCenter(Anchors[wi].Cell); msPos.y = 0.05f;
+                ms.localPosition = msPos;
+            }
+
             res.Entry = CellCenter(entry); res.Entry.y = -Depth; // anchors now live one storey down
             res.Deep = CellCenter(deep);   res.Deep.y = -Depth;  // DEEP = last waypoint (objective)
             res.FrontDoor = new Vector3((frontCell.X + 0.5f) * Cell, 0f, frontCell.Y * Cell);    // SURFACE point above the buried door
@@ -465,6 +475,14 @@ namespace BlackCommission.Level
             var van = Child(parent, "DROPOFF_VanSpawn");
             van.position = new Vector3(dropoff.x, padY, dropoff.z);
 
+            // The real van prop (the "meaningless beacon poles" replacement promised 2026-06-21),
+            // parked BESIDE the pad — its solid body would otherwise carve a navmesh hole exactly
+            // on the DROPOFF anchor and break the DROP-OFF→ENTRY path (caught by FullSiteBuildTests).
+            // Plus a PlayerSpawnPoint clear of its body so unseating players never appear inside it.
+            VanProp(parent, dropoff.x + 4f, padY, dropoff.z);
+            var spawnPt = Child(parent, "PlayerSpawnPoint");
+            spawnPt.position = new Vector3(dropoff.x - 3.5f, padY + 0.05f, dropoff.z - 2f);
+
             // The club is BURIED, so its surface footprint grows woods like the rest of the meadow (the meadow crept
             // over it — no naked patch above the rooms). Only the two ENTRANCE corridors stay clear (ramp + mouth +
             // apron) so no trunk spawns over a descent hole, plus the drop-off pad. Branches/canopies are collider-
@@ -593,6 +611,40 @@ namespace BlackCommission.Level
         }
 
         // ── outdoor art helpers ──────────────────────────────────────────────────────
+        // The dispatch van parked on the drop-off pad, nose pointed away from the site (ready to
+        // leave). Model colliders off + one solid body box (the HQ prop idiom); whitebox box when
+        // the prefab is unavailable so the generator stays asset-optional.
+        static void VanProp(Transform parent, float x, float y, float z)
+        {
+            var prefab = Resources.Load<GameObject>("GeneratedArt/AS_OfficeVan");
+            GameObject van;
+            if (prefab != null)
+            {
+                van = Object.Instantiate(prefab, parent);
+                van.transform.position = new Vector3(x, y, z);
+                // Nose = model local +X; world nose after yaw θ = (cos θ, 0, −sin θ). The buried club
+                // is at z > 0 and the pad at z ≈ −80, so yaw 90 points the nose −Z: away from the site.
+                van.transform.rotation = Quaternion.Euler(0f, 90f, 0f);
+                foreach (var col in van.GetComponentsInChildren<Collider>()) col.enabled = false;
+            }
+            else
+            {
+                van = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                van.transform.SetParent(parent, false);
+                van.transform.position = new Vector3(x, y + 1f, z);
+                van.transform.localScale = new Vector3(2.2f, 2f, 5f);
+                van.GetComponent<Renderer>().sharedMaterial = Mat(new Color(0.55f, 0.55f, 0.52f));
+                van.GetComponent<Collider>().enabled = false; // solid body box below is the collider
+            }
+            van.name = "DROPOFF_VanVisual";
+            var solid = new GameObject("VAN_BodyCollider");
+            solid.transform.SetParent(van.transform, false);
+            solid.transform.position = new Vector3(x, y + 1f, z);
+            solid.transform.rotation = van.transform.rotation;
+            var body = solid.AddComponent<BoxCollider>();
+            body.size = new Vector3(4.6f, 2f, 2f); // local X = the model's long axis
+        }
+
         // Diagonal hazard chevrons painted on the drop-off pad (collider-free; purely a read-cue for "park here").
         static void HazardChevrons(Transform parent, Vector3 pad)
         {
