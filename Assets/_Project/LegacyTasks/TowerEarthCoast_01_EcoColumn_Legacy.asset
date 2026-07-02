@@ -10,12 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c2d1a7e60ef846d785533fd019ae4600, type: 3}
-  m_Name: TowerEarthCoast_01
-  m_EditorClassIdentifier:
+  m_Name: TowerEarthCoast_01_EcoColumn_Legacy
+  m_EditorClassIdentifier: 
   taskId: tower_ecocolumn_01
   title: "\"Real Coast\" Eco-Column Recovery"
   client: "Anonymous client (Mars relay)"
-  description: "A sealed living eco-column is stored inside the derelict Earth Coast 01 pre-sale tower. Recover it. A broken seal voids acceptance; each drop deducts by completeness. The building has no power - the substation is on floor 1. Note: the original site supervisor is still on duty."
+  description: "A sealed living eco-column is stored inside the derelict Earth Coast
+    01 pre-sale tower. Recover it. A broken seal voids acceptance; each drop deducts
+    by completeness. The building has no power - the substation is on floor 1. Note:
+    the original site supervisor is still on duty."
   locationName: "Earth Coast 01 - Derelict Pre-Sale Tower"
   sceneName: Tower_EarthCoast_01
   recommendedPlayersMin: 1
@@ -35,11 +38,17 @@ MonoBehaviour:
   failureReputationPenalty: -2
   failureExperience: 0
   settlementNotesSuccess:
-  - "Fingerprints found on the column's rim; sterilization arranged. Paid in full. Don't make a habit of it."
-  - "Water seal intact. Transit time is not counted toward pay - that was your own scheduling."
+  - "Fingerprints found on the column's rim; sterilization arranged. Paid in full.
+    Don't make a habit of it."
+  - "Water seal intact. Transit time is not counted toward pay - that was your own
+    scheduling."
   settlementNotesPartial:
-  - "Coming back empty-handed is also a result. See the reverse for terms; the reverse is blank."
-  - "Your office clocked out early. The cargo berth is billed regardless, and deducted from your pay."
+  - "Coming back empty-handed is also a result. See the reverse for terms; the reverse
+    is blank."
+  - "Your office clocked out early. The cargo berth is billed regardless, and deducted
+    from your pay."
   settlementNotesFailure:
-  - "Personnel losses are your office's internal affair. Condolence money paid at the floor rate."
-  - "The item is still on site. If your office resumes operations, you are welcome to bid again."
+  - "Personnel losses are your office's internal affair. Condolence money paid at
+    the floor rate."
+  - "The item is still on site. If your office resumes operations, you are welcome
+    to bid again."

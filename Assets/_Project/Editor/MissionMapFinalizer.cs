@@ -83,6 +83,9 @@ public static class MissionMapFinalizer
         // top. Probe a ring of candidates around the exit, keep only hits genuinely BELOW the
         // lifted trigger, and prefer the one nearest the player spawn — that side is the yard
         // the crew actually walks on. Falls back to trigger height - 1.
+        // Freshly built geometry isn't in the physics world until a sync — without this every
+        // probe below misses and the van silently uses the fallback height.
+        Physics.SyncTransforms();
         Vector3 exitPos = exit.transform.position;
         Vector3 groundPos = new Vector3(exitPos.x, exitPos.y - 1f, exitPos.z);
         var spawn = GameObject.Find("PlayerSpawnPoint");
