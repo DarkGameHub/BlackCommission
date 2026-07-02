@@ -59,6 +59,20 @@ public class AudioManager : MonoBehaviour
     AudioClip synthFootstepMetalB;
     AudioClip synthObjectiveAlarm;
 
+    // Sourced clips (2026-07-02 audio pass, see Assets/_Project/Resources/Audio/CREDITS.md).
+    // Loaded from Resources/Audio/Sfx with the synth clips as fallback, so a missing file
+    // degrades to the old synth sound instead of silence.
+    AudioClip clipCabinetOpen;
+    AudioClip clipCabinetClose;
+    AudioClip clipStore;
+    AudioClip clipDrop;
+    AudioClip clipDoorOpen;
+    AudioClip clipDoorClose;
+    AudioClip clipAmbGhost;
+    AudioClip clipAmbMarsWind;
+    AudioClip synthJoinChime;
+    bool joinChimeHooked;
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -105,8 +119,31 @@ public class AudioManager : MonoBehaviour
     {
         if (ambientSource == null) return;
         if (sceneName == "HQ") PlayOfficeAmbient();
-        else if (sceneName.StartsWith("Tower")) PlayTowerAmbient();
+        else if (sceneName.StartsWith("Mars")) PlayLoopAmbient(clipAmbMarsWind, 0.16f);
+        else if (sceneName.StartsWith("Tower") || sceneName.StartsWith("Map2")) PlayLoopAmbient(clipAmbGhost, 0.14f);
         else ambientSource.Stop();
+    }
+
+    void PlayLoopAmbient(AudioClip clip, float volume)
+    {
+        if (ambientSource == null || clip == null) return;
+        if (ambientSource.clip == clip && ambientSource.isPlaying) return;
+        ambientSource.clip = clip;
+        ambientSource.volume = volume;
+        ambientSource.Play();
+    }
+
+    // Chime for everyone the callback reaches (host hears each join; the joiner hears itself).
+    void Update()
+    {
+        if (joinChimeHooked || Unity.Netcode.NetworkManager.Singleton == null) return;
+        joinChimeHooked = true;
+        Unity.Netcode.NetworkManager.Singleton.OnClientConnectedCallback += HandleClientJoined;
+    }
+
+    void HandleClientJoined(ulong clientId)
+    {
+        if (sfxSource != null) sfxSource.PlayOneShot(synthJoinChime, 0.5f);
     }
 
     void GenerateSynthClips()
@@ -136,6 +173,28 @@ public class AudioManager : MonoBehaviour
         synthFootstepMetalA = SynthAudio.FootstepMetal("synth_footstep_metal_a", 1.0f);
         synthFootstepMetalB = SynthAudio.FootstepMetal("synth_footstep_metal_b", 0.88f);
         synthObjectiveAlarm = SynthAudio.ObjectiveAlarm("synth_objective_alarm");
+        synthJoinChime = SynthAudio.Tone("synth_join_chime", 620f, 0.28f, 0.2f, SynthAudio.WaveShape.Sine);
+
+        // Sourced-clip overrides (each falls back to the synth version when absent).
+        synthFootstepA = Ext("footstep_a", synthFootstepA);
+        synthFootstepB = Ext("footstep_b", synthFootstepB);
+        synthComputerBoot = Ext("computer_open", synthComputerBoot);
+        synthEngineStart = Ext("engine_start", synthEngineStart);
+        synthPickup = Ext("pickup_take", synthPickup);
+        clipCabinetOpen = Ext("cabinet_open", synthDoorCreak);
+        clipCabinetClose = Ext("cabinet_close", synthDoorCreak);
+        clipStore = Ext("store_laydown", synthPickup);
+        clipDrop = Ext("item_drop", synthGlassThud);
+        clipDoorOpen = Ext("door_open", synthDoorCreak);
+        clipDoorClose = Ext("door_close", synthDoorCreak);
+        clipAmbGhost = Ext("ambience_ghost", synthWindAmbient);
+        clipAmbMarsWind = Ext("ambience_marswind", synthWindAmbient);
+    }
+
+    static AudioClip Ext(string name, AudioClip fallback)
+    {
+        var clip = Resources.Load<AudioClip>("Audio/Sfx/" + name);
+        return clip != null ? clip : fallback;
     }
 
     // ─── Footsteps ───
@@ -191,6 +250,40 @@ public class AudioManager : MonoBehaviour
     public void PlayDoorCreak(Vector3 position)
     {
         AudioSource.PlayClipAtPoint(synthDoorCreak, position, 0.5f);
+    }
+
+    public void PlayDoorOpen(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(clipDoorOpen, position, 0.55f);
+    }
+
+    public void PlayDoorClose(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(clipDoorClose, position, 0.55f);
+    }
+
+    // ─── Cabinet / storage ───
+
+    public void PlayCabinetOpen(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(clipCabinetOpen, position, 0.5f);
+    }
+
+    public void PlayCabinetClose(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(clipCabinetClose, position, 0.5f);
+    }
+
+    /// <summary>Placing an item INTO storage/cargo (the Excel "存入" event).</summary>
+    public void PlayStore(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(clipStore, position, 0.5f);
+    }
+
+    /// <summary>An item hitting the ground after a hotbar drop.</summary>
+    public void PlayDrop(Vector3 position)
+    {
+        AudioSource.PlayClipAtPoint(clipDrop, position, 0.5f);
     }
 
     // ─── Items ───

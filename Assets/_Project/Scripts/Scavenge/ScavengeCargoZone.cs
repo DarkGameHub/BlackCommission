@@ -144,7 +144,7 @@ public class ScavengeCargoZone : NetworkBehaviour
         else
             Destroy(item.gameObject);
 
-        AudioManager.Instance?.PlayPickup(pos);
+        AudioManager.Instance?.PlayStore(pos);   // "存入" — stowing INTO the van, not picking up
         Debug.Log($"[ScavengeCargoZone] Stowed '{item.ItemId}' ({item.Weight}, {item.Weight.Units()}u) — " +
                   $"load {manifest.LoadUnits}/{manifest.Capacity}, {manifest.Count} item(s).");
     }

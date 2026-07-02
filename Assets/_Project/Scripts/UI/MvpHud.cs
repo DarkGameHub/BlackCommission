@@ -1500,6 +1500,7 @@ public class MvpHud : MonoBehaviour
         activeCabinet = cabinet;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        AudioManager.Instance?.PlayCabinetOpen(cabinet.transform.position);
     }
 
     public static void OpenBestiary(OfficeMonsterBestiary bestiary)
@@ -1531,6 +1532,8 @@ public class MvpHud : MonoBehaviour
 
     static void CloseCabinet()
     {
+        if (activeCabinet != null)
+            AudioManager.Instance?.PlayCabinetClose(activeCabinet.transform.position);
         activeCabinet = null;
         RestoreGameplayCursor();
     }

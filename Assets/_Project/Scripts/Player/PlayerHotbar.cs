@@ -396,6 +396,7 @@ public class PlayerHotbar : NetworkBehaviour
 
     static void SpawnDropVisualLocal(Vector3 position, MvpHotbarItemId itemId)
     {
+        AudioManager.Instance?.PlayDrop(position);   // runs on every peer via the ClientRpc
         Color itemColor = itemId switch
         {
             MvpHotbarItemId.Flashlight => new Color(0.18f, 0.19f, 0.18f),

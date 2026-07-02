@@ -69,6 +69,7 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
 
         AddOneToCabinetSlot(targetIndex, itemId);
         Save();
+        AudioManager.Instance?.PlayStore(transform.position);
         message = $"Stored: {GetItemLabel(itemId)}.";
         return true;
     }
@@ -113,6 +114,7 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
         if (slot.quantity <= 0)
             slot.itemId = MvpHotbarItemId.None;
         Save();
+        AudioManager.Instance?.PlayPickup(transform.position);
         message = $"Taken: {GetItemLabel(itemId)}.";
         return true;
     }

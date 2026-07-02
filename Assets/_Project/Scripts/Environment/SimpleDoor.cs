@@ -38,7 +38,9 @@ public class SimpleDoor : MonoBehaviour, IInteractable
     IEnumerator Swing()
     {
         isAnimating = true;
-        AudioManager.Instance?.PlayDoorCreak(transform.position);
+        // isOpen still holds the pre-swing state here: false → this swing is an open.
+        if (isOpen) AudioManager.Instance?.PlayDoorClose(transform.position);
+        else AudioManager.Instance?.PlayDoorOpen(transform.position);
 
         Quaternion start = transform.localRotation;
         Quaternion end   = isOpen ? closedRot : openRot;
