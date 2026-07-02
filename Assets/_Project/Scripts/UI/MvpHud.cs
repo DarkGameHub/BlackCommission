@@ -117,8 +117,13 @@ public class MvpHud : MonoBehaviour
         set => MasterVolume = value;
     }
 
+    /// <summary>True while a scene-authored MvpHud exists (HQ). Scenes without one (mission maps)
+    /// fall back to SettingsOverlay's own ESC handling.</summary>
+    public static bool Present { get; private set; }
+
     void Awake()
     {
+        Present = true;
         activeComputer = null;
         activeMissionVan = null;
         activeCabinet = null;
@@ -129,6 +134,11 @@ public class MvpHud : MonoBehaviour
         SettingsOverlay.EnsureInstance();
         if (ScavengeMissionManager.Instance != null)
             RestoreGameplayCursor();
+    }
+
+    void OnDestroy()
+    {
+        Present = false;
     }
 
     void Update()
@@ -1462,7 +1472,10 @@ public class MvpHud : MonoBehaviour
         computerOpenedAt = Time.unscaledTime;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        ComputerCloseupCamera.Enter(computer.transform);
+        // Camera: PlayerCameraController sees MvpHud.ActiveComputer and eases the local camera to
+        // the head-on GetTerminalCameraPose. (The legacy ComputerCloseupCamera hardcoded a world
+        // -Z offset — a side-on view of the -X-wall CRT — and disabled the controller, which
+        // starved the head-on path. Do not re-enter it here.)
         AudioManager.Instance?.PlayComputerOpen(computer.transform.position);
     }
 
@@ -1502,7 +1515,7 @@ public class MvpHud : MonoBehaviour
 
     static void CloseComputer()
     {
-        ComputerCloseupCamera.Exit();
+        ComputerCloseupCamera.Exit();   // no-op unless a legacy closeup instance is still alive
         activeComputer = null;
         computerClosedAt = Time.unscaledTime;
         RestoreGameplayCursor();

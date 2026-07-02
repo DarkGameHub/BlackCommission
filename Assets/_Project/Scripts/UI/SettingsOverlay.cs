@@ -1,10 +1,15 @@
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// The single, shared settings panel for the whole game. Self-bootstraps as a
 /// DontDestroyOnLoad IMGUI singleton so it works identically in the main menu, the HQ,
 /// and every mission scene. Both the menu (MainMenuUI) and the in-game HUD (MvpHud)
-/// open it via Open()/Toggle(); ESC handling for the gameplay case stays in MvpHud.
+/// open it via Open()/Toggle(). ESC handling: MvpHud owns it where an MvpHud exists (HQ —
+/// its ESC chain closes the office panels first); everywhere else (mission maps) this
+/// overlay listens for ESC itself, so brightness/gamma/sensitivity and quit stay reachable
+/// mid-mission.
 /// </summary>
 public class SettingsOverlay : MonoBehaviour
 {
@@ -12,8 +17,11 @@ public class SettingsOverlay : MonoBehaviour
 
     public static bool IsOpen { get; private set; }
 
+    const float QuitToMenuConfirmWindow = 2.5f;
+
     Vector2 scroll;
     bool stylesReady;
+    float quitToMenuArmedAt = float.NegativeInfinity;
     GUIStyle panelStyle, titleStyle, labelStyle, accentStyle, buttonStyle, headerTextStyle;
     Texture2D panelTex, headerBandTex;
 
@@ -31,6 +39,7 @@ public class SettingsOverlay : MonoBehaviour
     public static void Open()
     {
         EnsureInstance();
+        instance.quitToMenuArmedAt = float.NegativeInfinity;
         IsOpen = true;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -68,6 +77,22 @@ public class SettingsOverlay : MonoBehaviour
         foreach (var c in ctrls)
             if (c.IsOwner) return true;
         return false;
+    }
+
+    void Update()
+    {
+        // HQ: MvpHud owns ESC (it closes the office panels first, then opens this overlay).
+        // Menu: MainMenuUI owns ESC. Mission maps have neither — handle ESC here.
+        if (MvpHud.Present || MainMenuUI.IsGameplayInputBlockedByMenu) return;
+
+        var keyboard = Keyboard.current;
+        if (keyboard == null || !keyboard.escapeKey.wasPressedThisFrame) return;
+
+        if (IsOpen) { Close(); return; }
+        if (VanTransitOverlay.IsActive) return;               // seated transit owns the screen
+        if (SettlementCardOverlay.IsCardVisible) return;      // card folds itself on ESC
+        if (!InGameplay()) return;
+        Open();
     }
 
     void EnsureStyles()
@@ -161,6 +186,14 @@ public class SettingsOverlay : MonoBehaviour
             DisplaySettings.Brightness = newBrightness;
             BrightnessController.Apply();
         }
+        GUILayout.Label(MvpLocale.T("gamma", $"{DisplaySettings.Gamma:0.00}"), labelStyle);
+        float newGamma = GUILayout.HorizontalSlider(DisplaySettings.Gamma,
+            DisplaySettings.MinGamma, DisplaySettings.MaxGamma);
+        if (!Mathf.Approximately(newGamma, DisplaySettings.Gamma))
+        {
+            DisplaySettings.Gamma = newGamma;
+            BrightnessController.Apply();
+        }
         bool newFullscreen = GUILayout.Toggle(DisplaySettings.Fullscreen, MvpLocale.T("fullscreen"));
         if (newFullscreen != DisplaySettings.Fullscreen)
         {
@@ -199,6 +232,14 @@ public class SettingsOverlay : MonoBehaviour
         GUILayout.BeginHorizontal();
         if (GUILayout.Button(MvpLocale.T("reset_defaults"), GUILayout.Height(32)))
             ResetDefaults();
+        // Quit-to-menu is two-press (host quitting ends the session for everyone).
+        bool quitToMenuArmed = Time.unscaledTime - quitToMenuArmedAt < QuitToMenuConfirmWindow;
+        if (GUILayout.Button(MvpLocale.T(quitToMenuArmed ? "quit_to_menu_confirm" : "quit_to_menu"),
+                GUILayout.Height(32)))
+        {
+            if (quitToMenuArmed) { QuitToMainMenu(); return; }
+            quitToMenuArmedAt = Time.unscaledTime;
+        }
         if (GUILayout.Button(MvpLocale.T("quit_game"), GUILayout.Height(32)))
             QuitGame();
         GUILayout.EndHorizontal();
@@ -261,6 +302,22 @@ public class SettingsOverlay : MonoBehaviour
         DisplaySettings.ApplyFullscreen();
         DisplaySettings.ApplyQuality();
         BrightnessController.Apply();
+    }
+
+    /// <summary>Leave the session and return to the main menu (the non-networked HQ scene).
+    /// Mirrors DisconnectHandler's return path; a host shutting down drops its clients, whose
+    /// own DisconnectHandler walks them back to the menu too.</summary>
+    static void QuitToMainMenu()
+    {
+        PlayerPrefs.Save();
+        IsOpen = false;
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            NetworkManager.Singleton.Shutdown();
+        // Guests may be mirroring the host's company; restore the local save. Stale commission
+        // state must not leak into the fresh menu session either.
+        CompanyData.ReloadFromDisk();
+        MvpMissionRuntime.Clear();
+        UnityEngine.SceneManagement.SceneManager.LoadScene("HQ");
     }
 
     static void QuitGame()

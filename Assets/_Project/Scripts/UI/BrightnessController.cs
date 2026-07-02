@@ -13,6 +13,7 @@ public class BrightnessController : MonoBehaviour
 
     Volume volume;
     ColorAdjustments colorAdjust;
+    LiftGammaGain liftGammaGain;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Bootstrap() => EnsureInstance();
@@ -43,6 +44,10 @@ public class BrightnessController : MonoBehaviour
         colorAdjust.postExposure.overrideState = true;
         colorAdjust.postExposure.value = DisplaySettings.Brightness;
 
+        liftGammaGain = profile.Add<LiftGammaGain>(true);
+        liftGammaGain.gamma.overrideState = true;
+        liftGammaGain.gamma.value = new Vector4(1f, 1f, 1f, DisplaySettings.Gamma);
+
         volume = gameObject.AddComponent<Volume>();
         volume.isGlobal = true;
         volume.priority = 100f;
@@ -68,8 +73,15 @@ public class BrightnessController : MonoBehaviour
 
     void ApplyBrightness()
     {
-        if (colorAdjust == null) return;
-        colorAdjust.postExposure.overrideState = true;
-        colorAdjust.postExposure.value = DisplaySettings.Brightness;
+        if (colorAdjust != null)
+        {
+            colorAdjust.postExposure.overrideState = true;
+            colorAdjust.postExposure.value = DisplaySettings.Brightness;
+        }
+        if (liftGammaGain != null)
+        {
+            liftGammaGain.gamma.overrideState = true;
+            liftGammaGain.gamma.value = new Vector4(1f, 1f, 1f, DisplaySettings.Gamma);
+        }
     }
 }

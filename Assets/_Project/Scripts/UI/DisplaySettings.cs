@@ -9,10 +9,20 @@ public static class DisplaySettings
     public const float MinBrightness = -1.5f;
     public const float MaxBrightness = 2f;
 
+    // URP LiftGammaGain offset on the gamma (midtone) channel; 0 = neutral.
+    public const float MinGamma = -0.8f;
+    public const float MaxGamma = 0.8f;
+
     public static float Brightness
     {
         get => PlayerPrefs.GetFloat("AS.Display.Brightness", 0f);
         set => PlayerPrefs.SetFloat("AS.Display.Brightness", Mathf.Clamp(value, MinBrightness, MaxBrightness));
+    }
+
+    public static float Gamma
+    {
+        get => PlayerPrefs.GetFloat("AS.Display.Gamma", 0f);
+        set => PlayerPrefs.SetFloat("AS.Display.Gamma", Mathf.Clamp(value, MinGamma, MaxGamma));
     }
 
     public static bool Fullscreen
@@ -43,6 +53,7 @@ public static class DisplaySettings
     public static void ResetDefaults()
     {
         Brightness = 0f;
+        Gamma = 0f;
         Fullscreen = true;
         QualityLevel = QualitySettings.GetQualityLevel();
     }

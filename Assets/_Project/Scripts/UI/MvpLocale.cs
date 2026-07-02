@@ -112,6 +112,7 @@ public static class MvpLocale
         ["fov"] = new[] { "Field of View: {0}", "视野：{0}" },
         ["display"] = new[] { "Display", "显示" },
         ["brightness"] = new[] { "Brightness: {0}", "亮度：{0}" },
+        ["gamma"] = new[] { "Gamma: {0}", "伽马：{0}" },
         ["fullscreen"] = new[] { "Fullscreen", "全屏" },
         ["quality"] = new[] { "Quality: {0}", "画质：{0}" },
         ["voice"] = new[] { "Voice", "语音" },
@@ -135,6 +136,8 @@ public static class MvpLocale
         ["voice_consent_keep"] = new[] { "Keep mic on", "保持开启" },
         ["voice_consent_mute"] = new[] { "Mute me", "先静音我" },
         ["quit_game"] = new[] { "Quit Game", "退出游戏" },
+        ["quit_to_menu"] = new[] { "Quit to Main Menu", "退出到主菜单" },
+        ["quit_to_menu_confirm"] = new[] { "Press again to confirm", "再按一次确认" },
         ["prev"] = new[] { "Prev", "上一个" },
         ["next"] = new[] { "Next", "下一个" },
 
