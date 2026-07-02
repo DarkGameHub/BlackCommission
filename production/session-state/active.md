@@ -2723,3 +2723,61 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
 - **已改(CrtMenuStage.cs默认else块·相对screenAnchor偏移·未编译验证)**: camPos=screenCenter+(2.76,0.35,1.80)·lookAt=screenCenter+(-0.14,-0.05,-0.20)→CRT正前方~2.8m抬0.35略偏下游的3/4回看视角。全屏MainMenuUI叠加层不受影响仍清晰。
 - **⚠桥死**(get_console_logs/get_gameobject全TIMEOUT·Unity Play后台没tick): 没法实时调相机/确认编译。**待David**: 停Play(触发重编译)→重进Play看菜单背景→报"太小/太偏/想看桌子"我调那两个偏移。可能微调1-2轮。**若电脑也洋红**=同URP材质坑·一起转。
 - **备选**(没采纳·留着): 想要持久/可视拖拽构图可在HQ builder生成`MenuCameraAnchor`物件(David拖到满意位姿)·`CrtMenuStage`已支持读它。
+
+## Session 2026-07-01 — 洋红根因**推翻上次诊断**·已修 DecalsDirt01(新CoplayDev桥首战)
+- **新桥确认连通**: CoplayDev UnityMCP(uvx stdio)工具全套可用·read_console实测通。⚠本session Anthropic安全分类器间歇故障→MCP mutating工具(execute_code/execute_menu_item)反复被挡·只读工具(Grep/Read/read_console)全程可用→改走本地YAML直改。
+- **上次(06-29)诊断错了·两处**: ①`Loot_Whitebox.mat` shader guid `933532a4...`=**URP/Lit**(不是内置Standard·上次把URP Lit的guid误认了)·材质健康(土褐0.42,0.37,0.29·无自发光)→loot本身从来不洋红; ②"全项目批量Convert Built-in Materials"不必要。
+- **真·根因(本次静态全扫定位)**: 全Assets共51个内置shader材质: AdventureForge MetalCabinet×19(Standard·**项目零引用**·房间里的柜子实际是Tirgames prefab+URP材质) + TreePackVol.1×29(Nature/Tree Soft Occlusion+skybox·**运行时零引用**·植被走Foliage Free已转URP) + Tirgames skybox×2(URP下本就能用) + **`DecalsDirt01.mat`×1(legacy Transparent/Diffuse fileID30→URP下洋红·唯一真凶)**。它被`DecalX1Y1.prefab`引用·`TowerRoomPoolBuilder`摆在房间**中央地板**(L93配电间"油渍"/L108"积水渍")→暗房间地上一块发亮洋红片+按E无反应(贴花非loot)=David报的"紫色冒光+按E没用"**完全吻合**。DecalX3Y1/其余Decals材质本就URP。
+- **已修**: `DecalsDirt01.mat` YAML直改(Write工具·绕过被挡的桥)→URP/Lit透明(_SURFACE_TYPE_TRANSPARENT·SrcAlpha/OneMinusSrcAlpha·queue3000·贴图guid `6e8fb2ff...`保留进_BaseMap)。**待**: Unity焦点/Refresh重导入→David进任务现场验贴花显示为半透明脏渍(非洋红)+真loot(土褐盒)按E可捡。
+- **修正结论**: 不需要跑全项目URP转换(51个里50个零引用或本就兼容); AdventureForge/TreePack若日后启用再转。
+
+## Session 2026-07-01 (cont) — David报4问题: ①电脑侧身已修 ③闭环缺口已补(核心) ②④待David拍板
+- **David四点**: ①电脑交互身体侧过来(要正对) ②黑影bug还在 ③要完整循环(两图→结算→选图→出任务) ④车内过场UI丑。AskUserQuestion超时无人→按推荐案推进③、④②等拍板。
+- **①已修(编译0错)**: 根因=两套终端相机打架——`MvpHud.OpenComputer`走旧`ComputerCloseupCamera`(硬编码世界系-Z偏移→对-X墙朝+X的CRT成侧视),且它禁用`PlayerCameraController`,把新的正对路径`GetTerminalCameraPose`(`PlayerCameraController.cs:136`)饿死。改`MvpHud.cs`两处:OpenComputer不再Enter旧特写相机(注释说明),CloseComputer保留Exit当无害兜底。**待David开电脑验**。
+- **③真缺口(guid逐场景核对)**: Tower_EarthCoast_01.unity只有MissionVanExitPoint×1,Map2_Procedural啥都没有——ScavengeMissionManager/ScavengeCargoZone/LootSpawner只存在于Scavenge_Testbed;TowerV8WhiteboxBuilder的BuildMissionManager只在编辑器内存里建过、从没存进场景→正式派遣=无loot/无法结算/无法回家。**闭环其余链路全在**(任务池Resources/Tasks两图都列、联机SelectCommission、结算、返程、HQ领奖、再选)。
+- **③已实现(运行时装配·David没回但这是他明确要的)**:
+  - 新`Scripts/Scavenge/ScavengeMissionBootstrap.cs`: [RuntimeInitializeOnLoadMethod]挂sceneLoaded; server+listening+scene==ActiveTask.sceneName才跑(ActiveTask从不清空→场景名gate挡HQ); runner协程等锚点≤5s(现有MissionVanExitPoint→DROPOFF_VanSpawn(Map2)→PlayerSpawnPoint)→按缺补:ExitPoint(场景没有才生成)/CargoZone(anchor+2.5,1.25,-0.5)/LootSpawner/Manager,全部Resources/Mission预制体Instantiate+Spawn。场景已有的件永远优先不重复。
+  - 新`Editor/ScavengeMissionRigBuilder.cs`菜单`Tools/Black Commission/Scavenge/Build Mission Rig Prefabs`: 四件各自独立prefab(NGO禁嵌套NetworkObject+各件[RequireComponent(NetworkObject)]),尺寸抄TowerV8WhiteboxBuilder(cargo 8×2.5×4 trigger/exit 2.5×2×2.5); 注册进DefaultNetworkPrefabs(实测NGO导入钩子已自动注册,Add兜底)。
+  - **已跑通**: 菜单执行成功→4 prefab落盘`Assets/Resources/Mission/`+注册验证(list现9件:Player/EchoMold/Loot×3/rig×4)。**EditMode 157/157 pass**。省掉手动DepartLever(MissionVanExitPoint上车面板本就走RequestDepart)。
+  - **已知妥协(已知会David)**: Tower的van视觉(VAN_Body)也是编辑器产物没存场景→上车点在空地上飘着"上车"提示; CargoZone偏移是估的可再调; Map2多人determinism仍是ADR-0003遗留(solo-host OK)。
+- **②黑影**: 静态排查历史已穷尽,给了David三选(截图/Play暂停我桥上抓/先不管),未答。
+- **④过场UI**: 确认整个`VanTransitOverlay`是IMGUI(OnGUI+GUI.Label)结构性丑; 给了David两选(推倒重做uGUI+TMP按债务噪音视觉语言[推荐]/IMGUI原地精修),未答。
+- **待David验收清单**: 开电脑正对CRT? → host派遣进烂尾楼:有loot捡/装车区计数/上车能出发→结算卡→回HQ→CRT领钱→选Map2→再出发(Map2场景锚点DROPOFF_VanSpawn) → 顺手答②④两问。
+- **未提交面继续变大**: 本session新增2脚本+4prefab+DefaultNetworkPrefabs+MvpHud+DecalsDirt01.mat(+此前CrtMenuStage/门口清空/检视全套)——建议David点头后打checkpoint commit。
+
+## Session 2026-07-01 (cont.2) — 任务图ESC设置菜单+伽马+退出到主菜单(David要求·已实现·编译0错)
+- **David**: 地图里ESC要能开设置(亮度/伽马/鼠标速度)+退出游戏+退出到主菜单。
+- **现状核实**: `SettingsOverlay`(DDOL单例·IMGUI"PREFERENCE RECORD/FORM BC-05")早就有亮度(URP postExposure via BrightnessController全局Volume p100)/全屏/画质/双轴灵敏度/反转Y/FOV/语言/音量/语音/退出游戏——**缺的只是①任务图没人听ESC(监听在MvpHud而MvpHud只是HQ场景对象·guid核对Tower/Map2/Testbed全0) ②伽马 ③退出到主菜单**。
+- **已实现(5文件·编译0错·反射验证过)**:
+  - `MvpHud.cs`: +`static bool Present`(Awake/OnDestroy跟踪)。
+  - `SettingsOverlay.cs`: +`Update()` ESC监听——`MvpHud.Present`或菜单占用时让位(HQ仍走MvpHud面板链·菜单走MainMenuUI),任务图上ESC开/关;guard VanTransitOverlay.IsActive+SettlementCardOverlay.IsCardVisible+InGameplay()。+伽马滑条(亮度下方)。+"退出到主菜单"按钮**两次按确认**(2.5s窗口·host退会踢全队·开面板时重置armed)→`QuitToMainMenu()`: Save+Shutdown+CompanyData.ReloadFromDisk+MvpMissionRuntime.Clear+LoadScene HQ(抄DisconnectHandler返回路径·非联机HQ自动出主菜单;客户端被踢由DisconnectHandler自己走回菜单)。
+  - `DisplaySettings.cs`: +`Gamma`(PlayerPrefs `AS.Display.Gamma`·±0.8·ResetDefaults含)。
+  - `BrightnessController.cs`: Volume profile +`LiftGammaGain`(gamma.w=Gamma)·Apply()两项都刷。
+  - `MvpLocale.cs`: +gamma/quit_to_menu/quit_to_menu_confirm三键(EN/ZH)。
+- **待David Play验**: 任务图ESC开面板→调亮度/伽马/灵敏度立即生效→ESC关回锁准星→"退出到主菜单"两按回菜单(mid-mission退出的过场overlay残留是已知边缘·见了报)。
+
+## Session 2026-07-01 (cont.3) — David「事务所建筑+室内还是非常不满意」→ Stage A+B 欠账已补完(已重建·待走查)
+- **现场核实**: HQ.unity 里 HQ_OptionA=off·**HQ_MarsWhitebox=ON**(David看的是火星白模)——而06-24拍板的 Stage A材质+Stage B氛围**一直没做**,他看的是半成品。AskUserQuestion(建筑痛点多选/室内痛点多选/流程三选:概念图先行[荐]/先补两pass再评/口述直改)**超时未答**→按判断先补已批欠账(不动方向)。
+- **Stage A 已实现**(`HqMarsFreightWhitebox.cs`): C#烘焙**拼板缝贴图+法线**(512²·2×2板/tile≈2.3m板·逐板明度0.78-1.06·缝槽4px+角螺栓·重力垂直污带·顶部火星尘暖漂·细噪防死平; seed=20260701幂等) → 存`Assets/_Project/Art/Textures/MarsShellPanels{,_N}.png`(importer自动设NormalMap/Repeat) → `ApplyShellSkinTextures(mShell)`挂_BaseMap+_BumpMap+_NORMALMAP。冷蓝tint仍由材质乘。
+- **Stage B 已实现**: **B1**三道god shaft(交叉梯形additive quad·URP Unlit SrcAlpha/One·Cull Off·底宽渐隐渐变贴图): Shaft_Crack(裂缝→集结台)/Shaft_Door(门头→车湾)/Shaft_Prow(船首rim)。**B2**两组尘埃ParticleSystem(Crack池+Bay钠灯池·prewarm·noise漂移·URP Particles/Unlit软点)。**B3**ambient 0.55→0.45·fogEnd 62→50(光池成孤岛·脊顶隐入黑)。**B4**post加深: Vignette0.28+SplitToning(teal阴影#2E4A4E/amber高光#C89A50·balance-15)+CA0.06+bloom强度0.30→0.42。**B5**自发光: CRT磷光玻璃quad(绿·HDR2.2·bloom拾取)+暖窝门头amber条(1.6)。
+- **✅ 已重建进场景**(菜单跑通·完成log·0错; Atmosphere 7子物体/ShellSkin挂上双贴图+_NORMALMAP/两PNG资产在盘/尘埃PS在)。**场景dirty未存**(惯例·David满意再Ctrl+S; 材质仍是builder内存产物·重开Unity重跑菜单再生)。
+- **⚠方向级不满意仍未解**: 上面三问(建筑痛点/室内痛点/流程)等David答——若是形体/布局层面,下一步走**概念图先行**(建模任务书流程·设计部门有推翻权·3张方向图)。
+
+## Session 2026-07-01 (cont.4) — **火星方向废止(PM拍板)** → HQ=「破旧事务所+车库湾」·平面图v6已出待批
+- **PM「不能用火星白模,他应该就是一个破旧事务所」**·我表态同意(三理由: ①支柱对齐——市政债务黑色的幻想是"经营快倒闭的小事务所",宏伟与幻想打架,破旧本身=身份; ②奇观归任务图——LC结构=船小挤/星球大冷,家↔任务图的对比比塞进HQ内部成立; ③制作现实——程序化大曲面已四轮建→丑→改循环,小而密的破办公室正是现有资产能做出高质量密度的东西)。**保留两条经验**: 纯室内(室外地形/植被也是失败循环)+刚写的StageA/B氛围技术全可迁移(光池/尘埃/光柱/分离调色在小尺度更好用)。
+- **PM三决(AskUserQuestion)**: ①空间构成=**办公厅+车库湾一体小平房** ②流程=**平面图先批再建** ③旧的两套HQ(火星白模/OptionA)=**先留着停用**。
+- **平面图v6已出**: `design/hq/HQ_ShabbyOffice_Plan_v1.png`(渲染器 `tools/hq_shabby_office_plan_v1.py`·复用hq_floorplan_render)。要点: 办公厅8×7m顶2.9 + 车库加建7.2×8.2m顶4.3铁皮(向北凸1.2m=便宜加建的叙事); **正门被法院查封(印章红封条·不可用)=只能走车库进出**(敌意收购压力入平面); 卷帘门4.0m=框景(死街背景不可进入:链网栅栏/垃圾箱/死路灯/废楼剪影); 办公厅=休息角(破沙发/折叠桌/四人地铺出生)+西墙CRT终端桌+债务板+北墙装备墙(补给柜/档案柜/工具架)+纸箱杂物挤动线+岗哨守查封门; 车库=van车头朝门/车尾登车+集结垫+工作台/油桶/轮胎/配电箱/油渍; S1挂锁门(执照锁)西墙休息角旁; 出发动线=地铺→CRT→装备墙→胶条门帘→集结→车尾; **返程结算beat=进门帘迎面债务板+CRT一条直视线**。灯语=办公厅钨丝+濒死灯管sputter/CRT磷光绿/车库钠灯/南脏窗冷天光。
+- **NEXT**: David批平面图(改尺寸/摆位直接说)→按图新写builder(独立`HqShabbyOfficeBuilder.cs`·不碰旧builder·复用StageA/B氛围代码+Tirgames/AS_Office资产)→建→走查。旧HQ_MarsWhitebox/HQ_OptionA继续停用保底。
+## Session 2026-07-01 (cont.5) — 破旧事务所已按v2施工完成(David"施工吧"·MCP全程验证·待走查)
+- **新builder `Assets/_Project/Editor/HqShabbyOfficeBuilder.cs`**(自包含·不碰旧builder·菜单Build HQ Shabby Office (v6)/Remove(restore Mars))·坐标全部来自批准的平面v2。
+- **已建成+桥上verified**: 编译0错 → 反射调Build()(绕过新MenuItem需焦点注册的坑) → 建成`HQ_ShabbyOffice`根(Envelope35/Office23/Garage11/Backdrop14/Lights9/Post/Atmosphere7)·**退役81旧物件**(Mars白模+MVP_RestoredOfficeProps等全停用·菜单相机保留) → 逐项验: Van_BoardZone+OfficeDepartureVan+solid collider✓ · GearSupply_StorageTrigger+OfficeCabinetStorage(isTrigger)✓ · BestiaryNotebook+OfficeMonsterBestiary(折叠桌上)✓ · PlayerSpawnPoint(1.7,0.1,2.0)✓ · MVP_OfficeComputer(1.05,1.05,4.4)fwd=+X✓(GetTerminalCameraPose/CrtMenuStage都吃这个anchor) · DispatchVan(11.6,0,4.3)✓ · 兜底盒仅1个(Tires01不存在·按设计) → **EditMode 157/157 pass**。
+- **实现要点**: 查封正门(门板+木条+红胶带X+查封告示+印章)·公文钉板(SafetyBoard+红章片)·2脏窗(磨砂玻璃+冷光)·胶条门帘9条(半透明)·卷帘收起卷+隐形ThresholdBlocker·死街背景(链网栅栏/垃圾箱/死路灯/对面废楼)·灯语四池+濒死灯管sputter·氛围复用(窗2道+卷帘1道光柱/办公室+车库尘埃/CRT磷光玻璃+门帘上amber条自发光/同款post)。
+- **⚠走查检查单(David)**: ①**VanYaw**(车头该朝卷帘门·若反了改builder顶部`VanYaw=180`重建) ②尺度/压抑感(顶2.9是否合适) ③门帘穿行手感 ④登车/储物/图鉴/CRT四交互都按E试 ⑤主菜单背景(anchor挪了·CrtMenuStage相对偏移应自动跟) ⑥场景dirty未存·满意Ctrl+S。
+## Session 2026-07-01 (cont.6) — David报"电脑摆在椅子上"→ unity-model-fit 全量重排 + 两个大坑(已修·正式重建·待存)
+- **根因**: 我猜坐标没量bounds。实测(走unity-model-fit技能): `AS_OfficeComputer`=**整张电脑桌单元**1.69×1.05×0.89落地件(我抬0.76m→悬浮在AS_OfficeDesk上="电脑在椅子上"); `AS_OfficeSofa`=L型转角沙发1.78×**1.88**(原摆穿南墙); `AS_OfficeToolSet`=2.3×2.06巨物(原当纸箱用堵死走道); `AS_OfficeVan`长轴=**局部X**(yaw0=横停)。
+- **重排(全部按实测)**: CRT单元落地(0.6,0,4.4)yaw90·删冗余CrtDesk·锚点(1.0,0.95,4.4)fwd+X·绿光池(1.3,1.0,4.4)·删悬浮CRT_Glass自发光(模型自带亮屏); L沙发进西南角(0.95,0,1.0); 地铺4张挪窗下(4.2/5.0,0.75/1.65)+PlayerSpawnPoint(4.6,0.1,1.2); 台灯/图鉴笔记本按实测桌高0.75落位; 公文钉板实测1.88宽→查封门旁墙段放不下→沙发上方(1.0,1.45)+红章片; 岗哨挪门东侧(3.35,0,0.55); 工具架(6.5,0.9)避开档案柜; 灭火器上party墙(7.76,1.1,5.9); ToolSet换`CartonStack`三层纸箱primitive×2; **VanYaw=270**(截图验证90是车头朝南)。
+- **⚠大坑2·URP运行时透明材质渲染成实心白**(截图发现光柱=白三角/门帘=白板): 手动SetFloat(_Surface/_Blend)+keyword**不生效**——须调URP编辑器侧`Unity.Rendering.Universal.ShaderUtils.UpdateMaterial(mat,ModifiedMaterial)`(internal→反射)。已封装`ValidateUrpMaterial()`进builder(Glass/Shaft/Dust三处materials都过一遍)。**记住: 以后任何editor代码手配URP透明材质都要跟这一步**。
+- **⚠大坑3·Play模式误建**: 第一次重建时David在Play里→几何建进运行时会话(退Play即丢)+MarkSceneDirty抛异常。builder已加`Application.isPlaying`护栏拒建。教训: execute_code动场景前先查isPlaying。
+- **манage_camera截图=自验证闭环**: `screenshot`+view_position/view_target+include_image → 我自己能看场景了(CRT角/车库/办公厅全景三张全过目)——不再拿David当人肉验证器。修正前后对比图在Assets/Screenshots/shabby_*.png。
+- **状态**: 编辑模式正式重建完成·board/cabinet/bestiary接线verified·vanYaw270·场景dirty**待David Ctrl+S**。
+- **UX+游戏设计双审(David指示·并行子agent)**: 两份都判 **NEEDS REVISION·小修不推翻**·独立撞上同一最重问题。**已改进 v2**(`HQ_ShabbyOffice_Plan_v2.png`·同一渲染脚本): ①折叠桌 cx1.6→2.0(东移0.4m·西墙走道~1.0→1.4m 两胶囊可错身·顺带解 P3/P4 出生贴脸·动线改绕桌东侧不再穿模) ②公文钉板加在查封门旁南墙(GD:「可疑市政公文」支柱此前无实体锚点·印章红语言) ③图鉴笔记本落位折叠桌上(UX:OfficeMonsterBestiary图上无落点; 我选桌上闲翻案=顺带给非host等待时有事做·David可翻) ④三个灯语锚点钉死坐标(UX:LW/LG/LS只声明没绑定: 钨丝(1.5,1.2)/CRT绿(0.6,4.9)/钠灯(10.0,2.6)) ⑤登车区纵深0.9→1.5m ⑥债务板南移0.3m收视线夹角<6°。**记到建模阶段的**: 查封/挂锁需非颜色线索(十字胶带/实体锁/盖章告示·a11y)·主动线头顶灯具管线别压到2.3m以下·非host微交互(摸工具架/翻档案柜)后续任务。**双审点名保留**: 查封门+车库唯一出入口叙事拓扑·返程直视线·门帘2.4m·集结垫紧贴门帘·装备墙4.15m分散站位·尺度落差·六段节拍(勿再拉长)。**待David答**: S1执照门外(西墙外)地块有没有预留扩展余量——没有的话现在就该定"解锁后走向"(GD警告:不定=重蹈火星四轮返工)。

@@ -114,6 +114,7 @@ public static class HqMarsFreightWhitebox
         ConfigureMood();
         BuildLights(root.transform);
         BuildPost(root.transform);
+        BuildAtmosphere(root.transform);
         RepositionAnchors();
 
         EditorSceneManager.MarkSceneDirty(scene);
@@ -391,12 +392,14 @@ public static class HqMarsFreightWhitebox
         RenderSettings.ambientSkyColor = Rgb(0x2A, 0x2C, 0x30);     // cool dead Mars sky
         RenderSettings.ambientEquatorColor = Rgb(0x22, 0x24, 0x26);
         RenderSettings.ambientGroundColor = Rgb(0x14, 0x15, 0x16);  // dark so the light pools do the work
-        RenderSettings.ambientIntensity = 0.55f;
+        // Stage B3: ambient pressed DOWN + fog pulled IN so the four §8 light pools are islands separated
+        // by true dark, and the 13.6 m crest fades into gloom (sells the 1:4.86 nest compression).
+        RenderSettings.ambientIntensity = 0.45f;
         RenderSettings.fog = true;
         RenderSettings.fogColor = new Color(0.09f, 0.10f, 0.11f);
         RenderSettings.fogMode = FogMode.Linear;
         RenderSettings.fogStartDistance = 11f;
-        RenderSettings.fogEndDistance = 62f;
+        RenderSettings.fogEndDistance = 50f;
     }
 
     static void BuildLights(Transform root)
@@ -433,9 +436,19 @@ public static class HqMarsFreightWhitebox
         var grain = profile.Add<FilmGrain>(true);
         grain.type.Override(FilmGrainLookup.Medium1); grain.intensity.Override(0.18f); grain.response.Override(0.7f);
         var bloom = profile.Add<Bloom>(true);
-        bloom.threshold.Override(1.15f); bloom.intensity.Override(0.30f); bloom.scatter.Override(0.45f);
+        bloom.threshold.Override(1.15f); bloom.intensity.Override(0.42f); bloom.scatter.Override(0.45f);
         var color = profile.Add<ColorAdjustments>(true);
         color.saturation.Override(-12f); color.contrast.Override(8f);
+
+        // Stage B4: vignette pulls the eye centre-frame; Municipal-Debt-Noir split tone (teal shadows /
+        // sodium-amber highlights); a whisper of CA = the office's cheap dirty lens.
+        var vig = profile.Add<Vignette>(true);
+        vig.intensity.Override(0.28f); vig.smoothness.Override(0.42f);
+        var split = profile.Add<SplitToning>(true);
+        split.shadows.Override(Rgb(0x2E, 0x4A, 0x4E)); split.highlights.Override(Rgb(0xC8, 0x9A, 0x50));
+        split.balance.Override(-15f);
+        var ca = profile.Add<ChromaticAberration>(true);
+        ca.intensity.Override(0.06f);
 
         var go = new GameObject("MarsPostVolume");
         go.transform.SetParent(root, false);
@@ -482,12 +495,319 @@ public static class HqMarsFreightWhitebox
                 yield return t.gameObject;
     }
 
+    // ----------------------------------------------------------------- Stage A: baked shell panel textures
+
+    const string TexDir = "Assets/_Project/Art/Textures";
+    const string ShellAlbedoPath = TexDir + "/MarsShellPanels.png";
+    const string ShellNormalPath = TexDir + "/MarsShellPanels_N.png";
+
+    /// <summary>Bakes (idempotent, seeded) and applies the panel-seam albedo + normal onto the shell
+    /// material. UV is ~1 tile / 4.5 m (BuildShellMesh), so a 2×2-panel sheet ≈ 2.3 m panels.</summary>
+    static void ApplyShellSkinTextures(Material m)
+    {
+        BakeShellTextures();
+        var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(ShellAlbedoPath);
+        var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(ShellNormalPath);
+        if (albedo != null)
+        {
+            m.SetTexture("_BaseMap", albedo);
+            m.SetTextureScale("_BaseMap", Vector2.one);
+            m.SetTextureOffset("_BaseMap", Vector2.zero);
+        }
+        if (normal != null)
+        {
+            m.SetTexture("_BumpMap", normal);
+            m.SetFloat("_BumpScale", 1.0f);
+            m.EnableKeyword("_NORMALMAP");
+        }
+    }
+
+    static void BakeShellTextures()
+    {
+        const int S = 512;
+        const int panels = 2;              // 2×2 panels per tile
+        const int seamPx = 4;              // seam half-width in pixels
+        int panelPx = S / panels;
+        var rng = new System.Random(20260701);
+
+        // Per-panel plate value (T1 sound bright / T2 weathered dark, baked variance).
+        float[,] plate = new float[panels, panels];
+        for (int py = 0; py < panels; py++)
+            for (int px = 0; px < panels; px++)
+                plate[px, py] = 0.78f + 0.24f * (float)rng.NextDouble();
+
+        var albedoPx = new Color32[S * S];
+        var height = new float[S, S];
+        for (int y = 0; y < S; y++)
+        {
+            for (int x = 0; x < S; x++)
+            {
+                int px = x / panelPx, py = y / panelPx;
+                int lx = x % panelPx, ly = y % panelPx;
+                int edge = Mathf.Min(Mathf.Min(lx, panelPx - 1 - lx), Mathf.Min(ly, panelPx - 1 - ly));
+
+                float v = plate[px, py];
+                // Gravity streaks: vertical dark runs, strongest just under the top seam of each panel.
+                float streak = Fbm(x * 0.055f, py * 17.3f) * Mathf.Pow(1f - (float)ly / panelPx, 1.6f);
+                v -= 0.16f * streak;
+                // Mars dust drift settles pale-warm on the upper band of each panel.
+                float dust = Fbm(x * 0.02f, y * 0.02f + px * 9.1f) * Mathf.Pow(1f - (float)ly / panelPx, 3f);
+                // Fine surface noise so flat light never reads as paint.
+                v += 0.045f * (Fbm(x * 0.11f, y * 0.11f) - 0.5f);
+
+                float h = 1f;
+                if (edge < seamPx) { v *= 0.42f + 0.13f * edge; h = 0.15f + 0.2f * edge; } // seam groove
+                // Corner bolts (inset ~10 px): a dark ring + a height bump.
+                float bx = lx < panelPx / 2 ? 10f : panelPx - 11f;
+                float by = ly < panelPx / 2 ? 10f : panelPx - 11f;
+                float bd = Mathf.Sqrt((lx - bx) * (lx - bx) + (ly - by) * (ly - by));
+                if (bd < 3.5f) { v *= 0.55f; h = 1.25f; }
+
+                v = Mathf.Clamp01(v);
+                // Cool near-neutral cast — the material tint supplies the Mars blue; dust warms the top band.
+                var c = new Color(v * 0.94f, v * 0.965f, v * 1.0f);
+                c = Color.Lerp(c, new Color(0.72f, 0.62f, 0.55f), 0.16f * dust);
+                albedoPx[y * S + x] = c;
+                height[x, y] = h;
+            }
+        }
+
+        var normalPx = new Color32[S * S];
+        const float strength = 2.2f;
+        for (int y = 0; y < S; y++)
+        {
+            for (int x = 0; x < S; x++)
+            {
+                float dx = height[(x + 1) % S, y] - height[(x - 1 + S) % S, y];
+                float dy = height[x, (y + 1) % S] - height[x, (y - 1 + S) % S];
+                var n = new Vector3(-dx * strength, -dy * strength, 1f).normalized;
+                normalPx[y * S + x] = new Color(n.x * 0.5f + 0.5f, n.y * 0.5f + 0.5f, n.z * 0.5f + 0.5f);
+            }
+        }
+
+        System.IO.Directory.CreateDirectory(TexDir);
+        WriteTexture(ShellAlbedoPath, S, albedoPx, normalMap: false);
+        WriteTexture(ShellNormalPath, S, normalPx, normalMap: true);
+    }
+
+    static void WriteTexture(string path, int size, Color32[] pixels, bool normalMap)
+    {
+        var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.SetPixels32(pixels);
+        tex.Apply();
+        System.IO.File.WriteAllBytes(path, tex.EncodeToPNG());
+        Object.DestroyImmediate(tex);
+        AssetDatabase.ImportAsset(path);
+        if (AssetImporter.GetAtPath(path) is TextureImporter imp)
+        {
+            bool dirty = imp.wrapMode != TextureWrapMode.Repeat;
+            imp.wrapMode = TextureWrapMode.Repeat;
+            if (normalMap && imp.textureType != TextureImporterType.NormalMap)
+            { imp.textureType = TextureImporterType.NormalMap; dirty = true; }
+            if (dirty) imp.SaveAndReimport();
+        }
+    }
+
+    // Cheap 2-octave value noise (deterministic, tileable enough at these frequencies).
+    static float Fbm(float x, float y)
+    {
+        return 0.65f * ValueNoise(x, y) + 0.35f * ValueNoise(x * 2.7f + 11.3f, y * 2.7f + 7.9f);
+    }
+
+    static float ValueNoise(float x, float y)
+    {
+        int xi = Mathf.FloorToInt(x), yi = Mathf.FloorToInt(y);
+        float xf = x - xi, yf = y - yi;
+        float a = Hash01(xi, yi), b = Hash01(xi + 1, yi), c = Hash01(xi, yi + 1), d = Hash01(xi + 1, yi + 1);
+        float u = xf * xf * (3f - 2f * xf), v = yf * yf * (3f - 2f * yf);
+        return Mathf.Lerp(Mathf.Lerp(a, b, u), Mathf.Lerp(c, d, u), v);
+    }
+
+    static float Hash01(int x, int y)
+    {
+        unchecked
+        {
+            uint h = (uint)(x * 374761393 + y * 668265263);
+            h = (h ^ (h >> 13)) * 1274126177u;
+            return ((h ^ (h >> 16)) & 0xFFFFFF) / 16777215f;
+        }
+    }
+
+    // ----------------------------------------------------------------- Stage B: atmosphere (shafts / dust / emissive)
+
+    /// <summary>Stage B (PM 2026-06-24 "光效/氛围感要再做一轮"): visible dusty light shafts under the crack
+    /// and door, drifting dust in the light pools, and the emissive "broke office life" (CRT phosphor
+    /// glass, nest door strip) that the bloom pass picks out of the dark.</summary>
+    static void BuildAtmosphere(Transform root)
+    {
+        var p = Sub(root, "Atmosphere");
+
+        // B1 — god shafts (cheap crossed additive trapezoids; the LC derelict-chapel read).
+        LightShaft(p, "Shaft_Crack", new Vector3(6.0f, 12.0f, 24.4f), new Vector3(4.5f, 0.05f, 15.6f),
+            1.3f, 4.2f, ColdDaylight, 0.10f);
+        LightShaft(p, "Shaft_Door", new Vector3(4.5f, DoorH - 0.2f, 26.8f), new Vector3(4.5f, 0.05f, 23.6f),
+            DoorW * 0.9f, DoorW * 1.25f, Rgb(0x8E, 0x98, 0xA6), 0.06f);
+        LightShaft(p, "Shaft_Prow", new Vector3(7.0f, 8.8f, 29.6f), new Vector3(8.6f, 0.05f, 26.4f),
+            0.9f, 2.6f, Rgb(0x9A, 0xA8, 0xBC), 0.07f);
+
+        // B2 — dust motes drifting inside the two big pools ("被遗弃的大空间" for pennies).
+        Dust(p, "Dust_Crack", new Vector3(5.2f, 5.5f, 20f), new Vector3(4f, 10f, 9f), 14f);
+        Dust(p, "Dust_Bay", new Vector3(5.4f, 2.0f, 21f), new Vector3(4f, 3.5f, 7f), 8f);
+
+        // B5 — emissive life: the CRT's phosphor glass (in front of the terminal anchor, facing +X into
+        // the nest) and a dim amber strip over the nest door — the only lit "signs" in the dead shell.
+        EmissiveQuad(p, "CRT_Glass", new Vector3(1.34f, 1.05f, 1.2f), new Vector3(0.02f, 0.30f, 0.42f),
+            CrtGreen, 2.2f);
+        EmissiveQuad(p, "NestDoor_Strip", new Vector3(4.9f, 2.62f, 6.6f), new Vector3(1.5f, 0.07f, 0.05f),
+            SodiumAmber, 1.6f);
+    }
+
+    /// <summary>Two crossed additive trapezoid quads from a bright top edge to a wide faded floor end.</summary>
+    static void LightShaft(Transform parent, string name, Vector3 top, Vector3 bottom, float topW, float bottomW,
+        Color c, float alpha)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = top;
+        Vector3 axis = bottom - top;
+        float len = axis.magnitude;
+        go.transform.rotation = Quaternion.FromToRotation(Vector3.down, axis.normalized);
+
+        var verts = new List<Vector3>();
+        var uvs = new List<Vector2>();
+        var tris = new List<int>();
+        for (int q = 0; q < 2; q++)
+        {
+            Vector3 w = q == 0 ? Vector3.right : Vector3.forward;
+            int i0 = verts.Count;
+            verts.Add(-w * topW * 0.5f); uvs.Add(new Vector2(0f, 1f));
+            verts.Add(w * topW * 0.5f); uvs.Add(new Vector2(1f, 1f));
+            verts.Add(Vector3.down * len - w * bottomW * 0.5f); uvs.Add(new Vector2(0f, 0f));
+            verts.Add(Vector3.down * len + w * bottomW * 0.5f); uvs.Add(new Vector2(1f, 0f));
+            tris.AddRange(new[] { i0, i0 + 1, i0 + 2, i0 + 1, i0 + 3, i0 + 2 });
+        }
+        var mesh = new Mesh { name = name };
+        mesh.SetVertices(verts); mesh.SetUVs(0, uvs); mesh.SetTriangles(tris, 0);
+        mesh.RecalculateBounds();
+
+        go.AddComponent<MeshFilter>().sharedMesh = mesh;
+        var mr = go.AddComponent<MeshRenderer>();
+        mr.sharedMaterial = ShaftMaterial(c, alpha);
+        mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        mr.receiveShadows = false;
+    }
+
+    static Material ShaftMaterial(Color c, float alpha)
+    {
+        var m = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+        m.SetFloat("_Surface", 1f);
+        m.SetOverrideTag("RenderType", "Transparent");
+        m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);   // additive: light adds, never darkens
+        m.SetInt("_ZWrite", 0);
+        m.SetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Off);
+        m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        m.renderQueue = 3000;
+        m.SetTexture("_BaseMap", ShaftGradientTexture());
+        m.SetColor("_BaseColor", new Color(c.r, c.g, c.b, alpha));
+        return m;
+    }
+
+    static Texture2D shaftGradientTex;
+    static Texture2D ShaftGradientTexture()
+    {
+        if (shaftGradientTex != null) return shaftGradientTex;
+        const int S = 64;
+        shaftGradientTex = new Texture2D(S, S, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+        for (int y = 0; y < S; y++)
+            for (int x = 0; x < S; x++)
+            {
+                float u = (x + 0.5f) / S, v = (y + 0.5f) / S;
+                float a = Mathf.Sin(u * Mathf.PI);              // soft side edges
+                a *= Mathf.Pow(v, 1.4f);                        // bright at the source (v=1), fading to the floor
+                shaftGradientTex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+            }
+        shaftGradientTex.Apply();
+        return shaftGradientTex;
+    }
+
+    static void Dust(Transform parent, string name, Vector3 center, Vector3 box, float rate)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+        go.transform.position = center;
+        var ps = go.AddComponent<ParticleSystem>();
+
+        var main = ps.main;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(8f, 14f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(0.01f, 0.04f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.015f, 0.05f);
+        main.startColor = new Color(0.9f, 0.92f, 1f, 0.10f);
+        main.maxParticles = 250;
+        main.prewarm = true;
+        main.loop = true;
+
+        var emission = ps.emission;
+        emission.rateOverTime = rate;
+        var shape = ps.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        shape.scale = box;
+        var noise = ps.noise;
+        noise.enabled = true;
+        noise.strength = 0.06f;
+        noise.frequency = 0.12f;
+
+        var rend = go.GetComponent<ParticleSystemRenderer>();
+        var m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+        m.SetFloat("_Surface", 1f);
+        m.SetOverrideTag("RenderType", "Transparent");
+        m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        m.SetInt("_ZWrite", 0);
+        m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        m.renderQueue = 3000;
+        m.SetTexture("_BaseMap", DustDotTexture());
+        m.SetColor("_BaseColor", Color.white);
+        rend.sharedMaterial = m;
+        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+    }
+
+    static Texture2D dustDotTex;
+    static Texture2D DustDotTexture()
+    {
+        if (dustDotTex != null) return dustDotTex;
+        const int S = 32;
+        dustDotTex = new Texture2D(S, S, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };
+        for (int y = 0; y < S; y++)
+            for (int x = 0; x < S; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x, y), new Vector2(S / 2f - 0.5f, S / 2f - 0.5f)) / (S / 2f);
+                dustDotTex.SetPixel(x, y, new Color(1f, 1f, 1f, Mathf.Clamp01(1f - d) * Mathf.Clamp01(1f - d)));
+            }
+        dustDotTex.Apply();
+        return dustDotTex;
+    }
+
+    static void EmissiveQuad(Transform parent, string name, Vector3 pos, Vector3 size, Color c, float intensity)
+    {
+        var go = Box(parent, name, pos, size, null, collider: false);
+        var m = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        m.SetColor("_BaseColor", Color.black);
+        m.EnableKeyword("_EMISSION");
+        m.SetColor("_EmissionColor", c * intensity);
+        m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+        go.GetComponent<MeshRenderer>().sharedMaterial = m;
+    }
+
     static void BuildPalette()
     {
         // Dead Mars shell. REDIRECT (2026-06-24): push it COLD PALE BLUE-GREY, deliberately OUTSIDE the Earth
         // concrete/green/wood/rust palette (Mars = alien) — the old near-white tint let the warm concrete bleed
         // through and read "gray-brown blob". A strong blue-biased, lower-value multiplier overpowers the warm albedo.
         mShell = Tint(TIR + "CommonConcreteWall02.mat", new Color(0.60f, 0.69f, 0.86f), 0.07f, doubleSided: true);
+        // Stage A (PM 2026-06-24 "材质还差点意思"): swap the concrete tiling for a baked cold PANEL-SEAM sheet
+        // (per-panel value variance + seam grooves via normal map) so the shell reads ASSEMBLED, not poured.
+        ApplyShellSkinTextures(mShell);
         mShellDark = Flat(new Color(0.17f, 0.20f, 0.27f));                   // T3 exposed ribs / missing-panel recess / torn edges (dark blue-steel)
         mFloor = M(TIR + "CommonConcrete04.mat", new Color(0.16f, 0.16f, 0.18f));
         mSteel = Tint(TIR + "CommonMetal01.mat", new Color(0.50f, 0.56f, 0.64f), 0.22f);
