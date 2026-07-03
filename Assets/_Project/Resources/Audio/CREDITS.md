@@ -13,8 +13,8 @@
 | **存入** | store_laydown.mp3 | [freesound #245915](https://freesound.org/people/Ediecz/sounds/245915/) | **Ediecz** | **CC-BY**（须署名） |
 | **打开电脑** | computer_open.wav | [freesound #39028](https://freesound.org/people/wildweasel/sounds/39028/) | **wildweasel** | **CC-BY**（须署名） |
 | **车辆启动** | engine_start.wav | [耳聆网 #15976](https://www.ear0.com/sound/show/soundid-15976) | **耳聆网用户**（丰田4Runner启动出发） | **CC-BY**（须署名） |
-| 开门 | door_open.mp3 | [freesound #444540](https://freesound.org/people/sfarkas92/sounds/444540/) | sfarkas92 | CC0 |
-| 关门 | door_close.mp3 | [freesound #444541](https://freesound.org/people/sfarkas92/sounds/444541/) | sfarkas92 | CC0 |
+| 开门 | door_open.wav（自 #444540 裁剪 0.49s，原 3.15s 大半是静音） | [freesound #444540](https://freesound.org/people/sfarkas92/sounds/444540/) | sfarkas92 | CC0 |
+| 关门 | door_close.wav（自 #444541 裁剪 0.43s） | [freesound #444541](https://freesound.org/people/sfarkas92/sounds/444541/) | sfarkas92 | CC0 |
 | 掉落 | item_drop.wav | [freesound #361659](https://freesound.org/people/mjvilches/sounds/361659/) | mjvilches | CC0 |
 
 注：freesound 的 door/take 三条为站方公开预览流（HQ mp3）。若要无损原文件，登录 freesound 手动下载替换同名文件即可，代码不用改。
