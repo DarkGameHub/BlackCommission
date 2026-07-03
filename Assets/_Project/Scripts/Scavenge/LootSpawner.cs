@@ -44,6 +44,15 @@ public class LootSpawner : NetworkBehaviour
         int min = config != null ? config.itemsPerMapInstanceMin : 10;
         int max = config != null ? config.itemsPerMapInstanceMax : 14;
 
+        // Big maps override the global budget via a scene profile (Mars v2's 15-minute
+        // target wants ~2x the tower's fill; the other maps stay untouched).
+        var profile = Object.FindAnyObjectByType<ScavengeMapProfile>();
+        if (profile != null)
+        {
+            min = Mathf.Max(1, profile.itemsMin);
+            max = Mathf.Max(min, profile.itemsMax);
+        }
+
         // Item pool from the authored definitions (Resources/Scavenge/Items).
         var defs = Resources.LoadAll<ScavengeItemDefinition>("Scavenge/Items");
         if (defs == null || defs.Length == 0)

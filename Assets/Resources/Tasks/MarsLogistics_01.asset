@@ -24,7 +24,7 @@ MonoBehaviour:
   clientType: 1
   favouredCategoryIds: 06000000040000000b000000
   missionStartClockHour: 8
-  contractWindowGameHours: 12
+  contractWindowGameHours: 18
   realSecondsPerGameHour: 60
   overtimeMoneyPenaltyPerGameHour: 30
   moneyReward: 380

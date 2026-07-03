@@ -60,9 +60,21 @@ public static class MarsLogisticsBuilder
         BuildHall(Child(root, "Hall"));
         BuildCold(Child(root, "ColdStorage"));
         BuildMezzanine(Child(root, "Mezzanine"));
+        // v2 expansion (David 2026-07-02: "每张图要玩到15min" — Mars only): container yard,
+        // loading dock, quarantine sublevel, upper catwalk loop. Existing sections untouched.
+        BuildYard(Child(root, "ContainerYard"));
+        BuildDock(Child(root, "LoadingDock"));
+        BuildSublevel(Child(root, "QuarantineSublevel"));
+        BuildCatwalk(Child(root, "Catwalk"));
         BuildLights(Child(root, "Lights"));
         BuildMissionAnchors(Child(root, "Mission"));
         ApplyAtmosphere();
+
+        // per-map loot budget: ~2x the global 10–14 so the bigger floor plan stays dense
+        var profile = new GameObject("ScavengeMapProfile").AddComponent<ScavengeMapProfile>();
+        profile.transform.SetParent(root, false);
+        profile.itemsMin = 26;
+        profile.itemsMax = 32;
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
@@ -72,7 +84,13 @@ public static class MarsLogisticsBuilder
     // ── exterior: regolith apron, drop pad, storm backdrop ─────────────────────────
     static void BuildExterior(Transform p)
     {
-        Box(p, "Regolith", new Vector3(21f, -0.55f, 10f), new Vector3(120f, 1.1f, 120f), Mat(Regolith));
+        // regolith in four pieces, leaving a shaft slot (x−9..0.5, z7.8..10.7) so the
+        // sublevel descent tube doesn't run through solid collider (navmesh dies inside it)
+        Material rego = Mat(Regolith);
+        Box(p, "Regolith_W", new Vector3(-24f, -0.55f, 10f), new Vector3(30f, 1.1f, 120f), rego);
+        Box(p, "Regolith_E", new Vector3(40.75f, -0.55f, 10f), new Vector3(80.5f, 1.1f, 120f), rego);
+        Box(p, "Regolith_ShaftN", new Vector3(-4.25f, -0.55f, 40.35f), new Vector3(9.5f, 1.1f, 59.3f), rego);
+        Box(p, "Regolith_ShaftS", new Vector3(-4.25f, -0.55f, -21.1f), new Vector3(9.5f, 1.1f, 57.8f), rego);
         Box(p, "DropPad", new Vector3(21f, 0.03f, -8f), new Vector3(10f, 0.06f, 8f), Mat(FloorGray));
         // faded hazard stripes on the pad (decor)
         for (int i = -2; i <= 2; i++)
@@ -105,7 +123,7 @@ public static class MarsLogisticsBuilder
         // invisible perimeter blockers keep players inside the diegetic bowl
         Blocker(p, "Bound_N", new Vector3(21f, 3f, 55f), new Vector3(120f, 6f, 0.5f));
         Blocker(p, "Bound_S", new Vector3(21f, 3f, -30f), new Vector3(120f, 6f, 0.5f));
-        Blocker(p, "Bound_E", new Vector3(68f, 3f, 10f), new Vector3(0.5f, 6f, 120f));
+        Blocker(p, "Bound_E", new Vector3(78f, 3f, 10f), new Vector3(0.5f, 6f, 120f)); // v2: past the yard
         Blocker(p, "Bound_W", new Vector3(-26f, 3f, 10f), new Vector3(0.5f, 6f, 120f));
     }
 
@@ -127,8 +145,19 @@ public static class MarsLogisticsBuilder
         WallX(p, wall, "Hall_S_b", 22.5f, 33f, 6f, 0f, 8f);
         WallX(p, wall, "Hall_S_c", 37f, 42f, 6f, 0f, 8f);
         WallX(p, wall, "Hall_S_rollerHdr", 33f, 37f, 6f, 2.2f, 8f); // jammed shutter above the gap
-        WallX(p, wall, "Hall_N", 10f, 42f, 26f, 0f, 8f);
-        WallZ(p, wall, "Hall_E", 6f, 26f, 42f, 0f, 8f);
+        // north wall (v2): x20–23 roller OPEN to the loading dock; x32–35 reads as a second
+        // roller jammed SHUT (header + stuck slab with collider — no passage)
+        WallX(p, wall, "Hall_N_a", 10f, 20f, 26f, 0f, 8f);
+        WallX(p, wall, "Hall_N_hdrA", 20f, 23f, 26f, 2.2f, 8f);
+        WallX(p, wall, "Hall_N_b", 23f, 32f, 26f, 0f, 8f);
+        WallX(p, wall, "Hall_N_hdrB", 32f, 35f, 26f, 2.2f, 8f);
+        WallX(p, wall, "Hall_N_c", 35f, 42f, 26f, 0f, 8f);
+        var jam = Box(p, "Hall_N_jammedShutter", new Vector3(33.5f, 1.1f, 26f), new Vector3(2.9f, 2.24f, 0.16f), Mat(RackSteel));
+        jam.transform.localRotation = Quaternion.Euler(0f, 0f, 1.5f);
+        // east wall (v2): z14–17 roller OPEN to the container yard
+        WallZ(p, wall, "Hall_E_a", 6f, 14f, 42f, 0f, 8f);
+        WallZ(p, wall, "Hall_E_hdr", 14f, 17f, 42f, 2.6f, 8f);
+        WallZ(p, wall, "Hall_E_b", 17f, 26f, 42f, 0f, 8f);
         // hall/cold divider (h5 side): opening z15–17.5
         WallZ(p, wall, "Div_a", 6f, 15f, 10f, 0f, 5f);
         WallZ(p, wall, "Div_b", 17.5f, 26f, 10f, 0f, 5f);
@@ -139,7 +168,10 @@ public static class MarsLogisticsBuilder
         // cold annex outer walls (h5)
         WallX(p, wall, "Cold_S", 0f, 10f, 6f, 0f, 5f);
         WallX(p, wall, "Cold_N", 0f, 10f, 26f, 0f, 5f);
-        WallZ(p, wall, "Cold_W", 6f, 26f, 0f, 0f, 5f);
+        // west wall (v2): z8–10.5 doorway down to the quarantine sublevel
+        WallZ(p, wall, "Cold_W_a", 6f, 8f, 0f, 0f, 5f);
+        WallZ(p, wall, "Cold_W_hdr", 8f, 10.5f, 0f, 2.4f, 5f);
+        WallZ(p, wall, "Cold_W_b", 10.5f, 26f, 0f, 0f, 5f);
 
         // airlock walls (h3.2): outer door x19.5–22.5 in z0; inner door same x in z6 (cut from hall wall)
         WallX(p, wall, "Air_S_a", 16f, 19.5f, 0f, 0f, 3.2f);
@@ -265,7 +297,8 @@ public static class MarsLogisticsBuilder
         for (int i = 0; i < 3; i++)
             Box(p, $"MezzPost_{i}", new Vector3(31f + i * 5f, 1.8f, 13.6f), new Vector3(0.3f, 3.6f, 0.3f), steel);
         // railing along the open north edge and west stair edge
-        Box(p, "MezzRail_N", new Vector3(36f, 4.6f, 13.9f), new Vector3(12f, 0.9f, 0.08f), steel);
+        // x30–40 railed; x40–42 opens onto the upper catwalk loop (v2)
+        Box(p, "MezzRail_N", new Vector3(35f, 4.6f, 13.9f), new Vector3(10f, 0.9f, 0.08f), steel);
         Box(p, "MezzRail_W", new Vector3(30.05f, 4.6f, 11.2f), new Vector3(0.08f, 0.9f, 5.4f), steel);
 
         // straight stair ramp up the west side: from (24,0,7.6) to (30,3.6,7.6) ≈ 31°
@@ -333,6 +366,11 @@ public static class MarsLogisticsBuilder
 
         // pad beacon so the return run reads from inside the door
         Point(p, "PadBeacon", new Vector3(21f, 3.2f, -8f), SodiumAmber, 1.8f, 10f);
+
+        // v2 sections
+        Point(p, "Yard_Sodium", new Vector3(58f, 6.2f, 12f), SodiumAmber, 2.8f, 14f);
+        Point(p, "Dock_Sodium_A", new Vector3(20f, 5.2f, 32f), SodiumAmber, 2.6f, 12f);
+        Point(p, "Dock_Sodium_B", new Vector3(34f, 5.2f, 35f), SodiumAmber, 2.4f, 11f);
     }
 
     static void BuildMissionAnchors(Transform p)
@@ -362,6 +400,259 @@ public static class MarsLogisticsBuilder
         RenderSettings.skybox = null; // the storm box owns every sightline
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
         RenderSettings.ambientLight = new Color(0.34f, 0.27f, 0.20f);
+    }
+
+    // ── v2 sections ─────────────────────────────────────────────────────────────
+
+    /// <summary>Open-air container yard east of the hall (x44–74, z0–26): stacked rows with
+    /// walk-through lanes, three enterable containers holding loot. Storm-exposed.</summary>
+    static void BuildYard(Transform p)
+    {
+        Color[] cans = { CrateOlive, CrateBrown, new Color(0.24f, 0.28f, 0.33f) };
+        var openSpots = new (float x, float z)[] { (47f, 7f), (59.4f, 14f), (65.6f, 21f) };
+
+        foreach (float z in new[] { 7f, 14f, 21f })
+            for (float x = 47f; x <= 71f; x += 6.2f)
+            {
+                bool isOpen = false;
+                foreach (var o in openSpots) if (Mathf.Abs(o.x - x) < 0.1f && Mathf.Abs(o.z - z) < 0.1f) isOpen = true;
+                int h = Mathf.Abs((int)(x * 13 + z * 7));
+                if (isOpen) { OpenContainer(p, new Vector3(x, 0f, z), $"OpenCan_{x:0}_{z:0}"); continue; }
+                if ((h & 7) == 0) continue; // lane break
+                Color c = cans[h % 3];
+                Box(p, $"Can_{x:0}_{z:0}", new Vector3(x, 1.3f, z), new Vector3(6f, 2.6f, 2.6f), Mat(c));
+                if ((h & 3) == 0)
+                    Box(p, $"CanTop_{x:0}_{z:0}", new Vector3(x + 0.15f, 3.9f, z), new Vector3(6f, 2.6f, 2.6f), Mat(cans[(h + 1) % 3]));
+            }
+
+        // lane loot between the stacks
+        Loot(p, "LA_yard_0", new Vector3(50f, 0.12f, 10.5f), DressingSurface.Floor);
+        Loot(p, "LA_yard_1", new Vector3(62f, 0.12f, 17.5f), DressingSurface.Floor);
+        Loot(p, "LA_yard_2", new Vector3(56f, 0.12f, 3.8f), DressingSurface.Floor);
+        Loot(p, "LA_yard_3", new Vector3(68.5f, 0.12f, 10.5f), DressingSurface.Floor);
+
+        // dead yard floodlight + one live sodium pole
+        Box(p, "YardPole", new Vector3(58f, 3.2f, 12f), new Vector3(0.18f, 6.4f, 0.18f), Mat(RackSteel));
+        Seed(p, "MonsterSeed_ML_YARD", new Vector3(58f, 0.05f, 13f));
+    }
+
+    /// <summary>One enterable container: five slabs, open end toward -X, two loot anchors inside.</summary>
+    static void OpenContainer(Transform p, Vector3 basePos, string name)
+    {
+        Material shell = Mat(new Color(0.30f, 0.24f, 0.16f));
+        float x = basePos.x, z = basePos.z;
+        Box(p, name + "_floor", new Vector3(x, 0.08f, z), new Vector3(6f, 0.16f, 2.6f), shell);
+        Box(p, name + "_roof", new Vector3(x, 2.52f, z), new Vector3(6f, 0.16f, 2.6f), shell);
+        Box(p, name + "_sideN", new Vector3(x, 1.3f, z + 1.22f), new Vector3(6f, 2.6f, 0.16f), shell);
+        Box(p, name + "_sideS", new Vector3(x, 1.3f, z - 1.22f), new Vector3(6f, 2.6f, 0.16f), shell);
+        Box(p, name + "_back", new Vector3(x + 2.92f, 1.3f, z), new Vector3(0.16f, 2.6f, 2.6f), shell);
+        var door = Box(p, name + "_doorAjar", new Vector3(x - 3.3f, 1.28f, z + 1.05f), new Vector3(0.1f, 2.4f, 1.2f), shell);
+        door.transform.localRotation = Quaternion.Euler(0f, -35f, 0f);
+        Loot(p, name + "_LA0", new Vector3(x + 0.6f, 0.28f, z + 0.4f), DressingSurface.Floor);
+        Loot(p, name + "_LA1", new Vector3(x + 2f, 0.28f, z - 0.4f), DressingSurface.Floor);
+    }
+
+    /// <summary>Loading dock north of the hall (x14–42, z26–38, h6): conveyor line, two
+    /// trailers (one open-backed with loot), pallet clutter. Entry via the open roller x20–23.</summary>
+    static void BuildDock(Transform p)
+    {
+        Material wall = PanelMat();
+        Material floor = Mat(FloorGray);
+        Material steel = Mat(RackSteel);
+
+        Box(p, "Dock_Floor", new Vector3(28f, -0.075f, 32f), new Vector3(28f, 0.25f, 12f), floor);
+        Box(p, "Dock_Roof", new Vector3(28f, 6.1f, 32f), new Vector3(28.6f, 0.2f, 12.6f), Mat(new Color(0.20f, 0.18f, 0.17f)));
+        WallZ(p, wall, "Dock_W", 26f, 38f, 14f, 0f, 6f);
+        WallZ(p, wall, "Dock_E", 26f, 38f, 42f, 0f, 6f);
+        WallX(p, wall, "Dock_N", 14f, 42f, 38f, 0f, 6f);
+        // two exterior rollers on the north wall, both jammed shut (visual seams)
+        Box(p, "Dock_RollerA", new Vector3(20f, 1.6f, 37.9f), new Vector3(3.4f, 3.2f, 0.1f), steel, collider: false);
+        Box(p, "Dock_RollerB", new Vector3(34f, 1.6f, 37.9f), new Vector3(3.4f, 3.2f, 0.1f), steel, collider: false);
+
+        // conveyor line across the room
+        Box(p, "Conveyor", new Vector3(28f, 0.72f, 31.2f), new Vector3(22f, 0.14f, 0.9f), steel);
+        for (float x = 18f; x <= 38f; x += 2.2f)
+        {
+            var leg = Box(p, $"ConvLeg_{x:0}", new Vector3(x, 0.33f, 31.2f), new Vector3(0.12f, 0.66f, 0.7f), steel);
+        }
+        Loot(p, "LA_dock_conv0", new Vector3(22f, 0.9f, 31.2f), DressingSurface.DeskSurface);
+        Loot(p, "LA_dock_conv1", new Vector3(33f, 0.9f, 31.2f), DressingSurface.DeskSurface);
+
+        // closed trailer + open-backed trailer with loot inside
+        Box(p, "TrailerClosed", new Vector3(19f, 1.35f, 35f), new Vector3(7f, 2.5f, 2.4f), Mat(CrateOlive));
+        Material tr = Mat(new Color(0.33f, 0.30f, 0.24f));
+        Box(p, "TrailerOpen_floor", new Vector3(31f, 0.35f, 35f), new Vector3(7f, 0.2f, 2.4f), tr);
+        Box(p, "TrailerOpen_roof", new Vector3(31f, 2.55f, 35f), new Vector3(7f, 0.2f, 2.4f), tr);
+        Box(p, "TrailerOpen_sideN", new Vector3(31f, 1.45f, 36.1f), new Vector3(7f, 2f, 0.14f), tr);
+        Box(p, "TrailerOpen_sideS", new Vector3(31f, 1.45f, 33.9f), new Vector3(7f, 2f, 0.14f), tr);
+        Box(p, "TrailerOpen_back", new Vector3(34.43f, 1.45f, 35f), new Vector3(0.14f, 2f, 2.4f), tr);
+        // step up into the open trailer bed
+        Box(p, "TrailerStep", new Vector3(27f, 0.16f, 35f), new Vector3(1.2f, 0.32f, 1.6f), steel);
+        Loot(p, "LA_dock_tr0", new Vector3(29.5f, 0.6f, 35.3f), DressingSurface.Floor);
+        Loot(p, "LA_dock_tr1", new Vector3(32.5f, 0.6f, 34.7f), DressingSurface.Floor);
+
+        // pallet clutter
+        Crate(p, "DockPallet_A", new Vector3(16f, 0.5f, 28.5f), 1.0f, CrateBrown, 20f);
+        Crate(p, "DockPallet_B", new Vector3(39.5f, 0.5f, 29f), 1.0f, CrateOlive, 55f);
+        Crate(p, "DockPallet_B2", new Vector3(39.5f, 1.4f, 29f), 0.8f, CrateBrown, 80f);
+        Loot(p, "LA_dock_p0", new Vector3(16f, 1.12f, 28.5f), DressingSurface.CrateTop);
+        Loot(p, "LA_dock_p1", new Vector3(39.5f, 1.92f, 29f), DressingSurface.CrateTop);
+        Loot(p, "LA_dock_floor", new Vector3(24f, 0.12f, 34f), DressingSurface.Floor);
+
+        Seed(p, "MonsterSeed_ML_DOCK", new Vector3(36f, 0.05f, 33f));
+    }
+
+    /// <summary>Quarantine sublevel under the west regolith (y −4): an enclosed ramp from the
+    /// cold annex descends to a corridor and three rooms — exam, relic archive (warden nest),
+    /// incinerator. The relic-dense, darkest end of the map.</summary>
+    static void BuildSublevel(Transform p)
+    {
+        Material wall = PanelMat();
+        Material floor = Mat(new Color(0.22f, 0.21f, 0.20f));
+        Material steel = Mat(RackSteel);
+
+        // descent tube from the Cold_W doorway (x0, z8–10.5) down to x−8 (26.6°)
+        Tube(p, new Vector3(-0.2f, 0.02f, 9.25f), new Vector3(-8f, -3.95f, 9.25f), 2.4f, 2.6f, wall, "SubDescent");
+        // landing slab bridging tube mouth ↔ corridor: the voxelizer left a one-cell seam at
+        // the junction (z≈10.5) that islanded the whole sublevel — a physical overlap stitches it
+        Box(p, "Sub_Landing", new Vector3(-9.2f, -3.93f, 10.2f), new Vector3(2.2f, 0.1f, 5.4f), floor);
+        // …and the seams SURVIVED the slab (polys on both sides, no weld) — NavMeshLinks are the
+        // sanctioned bridge. The tube mouth pinches BOTH sides: one link per seam (z≈8 and z≈10.5).
+        foreach (float lz in new[] { 7.95f, 10.5f })
+        {
+            var linkGo = new GameObject($"Sub_SeamLink_{lz:0}");
+            linkGo.transform.SetParent(p, false);
+            linkGo.transform.position = new Vector3(-9.2f, -3.85f, lz);
+            var seam = linkGo.AddComponent<Unity.AI.Navigation.NavMeshLink>();
+            seam.startPoint = new Vector3(0f, 0f, -1.1f);
+            seam.endPoint = new Vector3(0f, 0f, 1.1f);
+            seam.width = 2f;
+            seam.bidirectional = true;
+        }
+
+        // shell: floor/ceiling x−22..−8, z4..26
+        Box(p, "Sub_Floor", new Vector3(-15f, -4.075f, 15f), new Vector3(14f, 0.25f, 22f), floor);
+        Box(p, "Sub_Ceil", new Vector3(-15f, -0.9f, 15f), new Vector3(14.6f, 0.2f, 22.6f), Mat(new Color(0.16f, 0.15f, 0.14f)));
+        WallX(p, wall, "Sub_S", -22f, -8f, 4f, -4f, -1f);
+        WallX(p, wall, "Sub_N", -22f, -8f, 26f, -4f, -1f);
+        WallZ(p, wall, "Sub_W", 4f, 26f, -22f, -4f, -1f);
+        // east wall with the tube mouth (z8–10.5)
+        WallZ(p, wall, "Sub_E_a", 4f, 8f, -8f, -4f, -1f);
+        WallZ(p, wall, "Sub_E_hdr", 8f, 10.5f, -8f, -1.4f, -1f);
+        WallZ(p, wall, "Sub_E_b", 10.5f, 26f, -8f, -4f, -1f);
+
+        // corridor x−10.4..−8; room wall x=−10.4 with three doorways
+        WallZ(p, wall, "Sub_RoomWall_a", 4f, 6f, -10.4f, -4f, -1f);
+        WallZ(p, wall, "Sub_RW_hdr1", 6f, 8f, -10.4f, -1.4f, -1f);   // 2.55m clear — 2.2 got voxel-rounded below the 2.0 agent
+        WallZ(p, wall, "Sub_RoomWall_b", 8f, 13.5f, -10.4f, -4f, -1f);
+        WallZ(p, wall, "Sub_RW_hdr2", 13.5f, 15.5f, -10.4f, -1.4f, -1f);
+        WallZ(p, wall, "Sub_RoomWall_c", 15.5f, 20.5f, -10.4f, -4f, -1f);
+        WallZ(p, wall, "Sub_RW_hdr3", 20.5f, 22.5f, -10.4f, -1.4f, -1f);
+        WallZ(p, wall, "Sub_RoomWall_d", 22.5f, 26f, -10.4f, -4f, -1f);
+        // room dividers
+        WallX(p, wall, "Sub_Div1", -22f, -10.4f, 11f, -4f, -1f);
+        WallX(p, wall, "Sub_Div2", -22f, -10.4f, 18f, -4f, -1f);
+
+        // R1 exam room (z4–11): two gurneys
+        Box(p, "Sub_Gurney_A", new Vector3(-17f, -3.6f, 7f), new Vector3(1.9f, 0.7f, 0.8f), steel);
+        Box(p, "Sub_Gurney_B", new Vector3(-13.5f, -3.6f, 9f), new Vector3(1.9f, 0.7f, 0.8f), steel);
+        Loot(p, "LA_sub_0", new Vector3(-17f, -3.18f, 7f), DressingSurface.DeskSurface);
+        Loot(p, "LA_sub_1", new Vector3(-13.5f, -3.18f, 9f), DressingSurface.DeskSurface);
+
+        // R2 relic archive (z11–18): two short shelf runs — the warden's nest
+        foreach (float z in new[] { 13.2f, 16f })
+        {
+            Box(p, $"SubShelf_lo_{z:0}", new Vector3(-16f, -3.3f, z), new Vector3(9f, 0.08f, 1.1f), Mat(ShelfWood));
+            Box(p, $"SubShelf_hi_{z:0}", new Vector3(-16f, -2.3f, z), new Vector3(9f, 0.08f, 1.1f), Mat(ShelfWood));
+            for (float x = -20f; x <= -12f; x += 4f)
+                Box(p, $"SubPost_{x:0}_{z:0}", new Vector3(x, -2.9f, z), new Vector3(0.16f, 2.1f, 1.05f), steel);
+        }
+        Loot(p, "LA_sub_2", new Vector3(-19f, -3.22f, 13.2f), DressingSurface.ShelfSlot);
+        Loot(p, "LA_sub_3", new Vector3(-14f, -2.22f, 13.2f), DressingSurface.ShelfSlot);
+        Loot(p, "LA_sub_4", new Vector3(-17f, -3.22f, 16f), DressingSurface.ShelfSlot);
+        Loot(p, "LA_sub_5", new Vector3(-13f, -2.22f, 16f), DressingSurface.ShelfSlot);
+        Seed(p, "MonsterSeed_ML_SUB_WARDEN", new Vector3(-15f, -3.9f, 14.5f));
+
+        // R3 incinerator (z18–26)
+        Box(p, "Sub_Furnace", new Vector3(-16f, -2.9f, 22.5f), new Vector3(2.2f, 2.2f, 2.2f), steel);
+        Box(p, "Sub_FurnaceDoor", new Vector3(-16f, -3.3f, 21.35f), new Vector3(1f, 1f, 0.08f), Mat(new Color(0.35f, 0.12f, 0.08f)), collider: false);
+        Loot(p, "LA_sub_6", new Vector3(-19.5f, -3.83f, 24f), DressingSurface.Floor);
+        Loot(p, "LA_sub_7", new Vector3(-12f, -3.83f, 20f), DressingSurface.Floor);
+        // corridor stray
+        Loot(p, "LA_sub_8", new Vector3(-9.2f, -3.83f, 23f), DressingSurface.Floor);
+
+        // seizure language at the descent mouth
+        TapeX(p, new Vector3(0.12f, 1.45f, 7.6f));
+
+        // lights: one dying cyan in the corridor, one cyan in the archive, red glow in R3
+        Point(p, "SubLamp_Corr", new Vector3(-9.2f, -1.5f, 10f), ColdCyan, 1.3f, 7f);
+        Point(p, "SubLamp_Arch", new Vector3(-16f, -1.5f, 14.5f), ColdCyan, 1.6f, 8f);
+        Point(p, "SubLamp_Furn", new Vector3(-16f, -2.6f, 21f), new Color(0.9f, 0.25f, 0.12f), 1.8f, 7f);
+    }
+
+    /// <summary>Upper catwalk loop (y 3.6): mezz NE corner → east wall run → north wall run →
+    /// ramp back down at the hall's NW. Overlooks every rack aisle; four loot anchors.</summary>
+    static void BuildCatwalk(Transform p)
+    {
+        Material steel = Mat(RackSteel);
+        Material deckM = Mat(new Color(0.30f, 0.30f, 0.32f));
+
+        // decks OVERLAP their neighbours (mezz / each other / the ramp) — edge-to-edge
+        // adjacency left navmesh seams and the loop baked as an island
+        Box(p, "CatE_Deck", new Vector3(41.2f, 3.6f, 19.05f), new Vector3(1.6f, 0.15f, 11.1f), deckM);  // z13.5–24.6, laps the mezz deck
+        Box(p, "CatN_Deck", new Vector3(25.95f, 3.6f, 25.2f), new Vector3(31.1f, 0.15f, 1.6f), deckM);  // x10.4–41.5, laps ramp + east run
+        // inner railings (outer edges hug walls)
+        Box(p, "CatE_Rail", new Vector3(40.44f, 4.35f, 19.3f), new Vector3(0.08f, 1.5f, 10.6f), steel);
+        Box(p, "CatN_Rail", new Vector3(27.9f, 4.35f, 24.44f), new Vector3(26.8f, 1.5f, 0.08f), steel);
+        // supports
+        foreach (float x in new[] { 17f, 26f, 35f })
+            Box(p, $"CatPost_{x:0}", new Vector3(x, 1.8f, 25.6f), new Vector3(0.25f, 3.6f, 0.25f), steel);
+
+        // ramp down along the west divider (clear of the rack rows which start at x13)
+        var ramp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        ramp.name = "Cat_Ramp";
+        ramp.transform.SetParent(p, false);
+        Vector3 a = new Vector3(11.2f, 3.6f, 24.4f), b = new Vector3(11.2f, 0.05f, 17.4f);
+        ramp.transform.localPosition = (a + b) * 0.5f;
+        ramp.transform.localRotation = Quaternion.FromToRotation(Vector3.forward, (b - a).normalized);
+        ramp.transform.localScale = new Vector3(1.6f, 0.14f, Vector3.Distance(a, b));
+        ramp.GetComponent<MeshRenderer>().sharedMaterial = steel;
+        Box(p, "CatRamp_Rail", new Vector3(12.05f, 2.6f, 20.9f), new Vector3(0.08f, 3.4f, 7.4f), steel);
+
+        Loot(p, "LA_cat_0", new Vector3(16f, 3.72f, 25.2f), DressingSurface.Floor);
+        Loot(p, "LA_cat_1", new Vector3(24f, 3.72f, 25.2f), DressingSurface.Floor);
+        Loot(p, "LA_cat_2", new Vector3(33f, 3.72f, 25.2f), DressingSurface.Floor);
+        Loot(p, "LA_cat_3", new Vector3(41.2f, 3.72f, 16.5f), DressingSurface.Floor);
+    }
+
+    /// <summary>Enclosed sloped tube between two points sharing a z: walkable floor, side
+    /// walls, roof. The sublevel descent.</summary>
+    static void Tube(Transform p, Vector3 a, Vector3 b, float width, float height, Material m, string name)
+    {
+        Vector3 d = b - a;
+        float len = d.magnitude;
+        Quaternion rot = Quaternion.LookRotation(d / len, Vector3.up);
+        Vector3 up = rot * Vector3.up;
+        Vector3 right = rot * Vector3.right;
+        Vector3 mid = (a + b) * 0.5f;
+        RotBox(p, m, mid - up * 0.08f, rot, new Vector3(width, 0.16f, len + 0.6f), name + "_Floor");
+        RotBox(p, m, mid + right * (width * 0.5f) + up * (height * 0.5f), rot, new Vector3(0.16f, height, len), name + "_WallR");
+        RotBox(p, m, mid - right * (width * 0.5f) + up * (height * 0.5f), rot, new Vector3(0.16f, height, len), name + "_WallL");
+        // roof pulled back toward the TOP end: an overhang past the mouth squeezed the landing
+        // strip below agent height and cut the sublevel corridor out of the navmesh
+        Vector3 dirN = d / len;
+        RotBox(p, m, mid + up * height - dirN * 0.7f, rot, new Vector3(width, 0.16f, len - 0.8f), name + "_Roof");
+    }
+
+    static void RotBox(Transform p, Material m, Vector3 pos, Quaternion rot, Vector3 scale, string name)
+    {
+        var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        go.name = name;
+        go.transform.SetParent(p, false);
+        go.transform.localPosition = pos;
+        go.transform.localRotation = rot;
+        go.transform.localScale = scale;
+        go.GetComponent<Renderer>().sharedMaterial = m;
     }
 
     // ── pieces ──────────────────────────────────────────────────────────────────
