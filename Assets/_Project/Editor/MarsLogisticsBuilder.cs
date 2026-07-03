@@ -343,34 +343,35 @@ public static class MarsLogisticsBuilder
         var dl = sun.AddComponent<Light>();
         dl.type = LightType.Directional;
         dl.color = new Color(1.0f, 0.62f, 0.35f);
-        dl.intensity = 0.45f;
+        dl.intensity = 0.55f;
         dl.shadows = LightShadows.Soft;
 
-        // hall sodium pools (gaps between them stay genuinely dark — flashlight country)
-        Point(p, "Sodium_A", new Vector3(14f, 6.5f, 11f), SodiumAmber, 3.6f, 14f);
-        Point(p, "Sodium_B", new Vector3(26f, 6.5f, 15f), SodiumAmber, 3.6f, 14f);
-        Point(p, "Sodium_C", new Vector3(36f, 6.5f, 20f), SodiumAmber, 3.3f, 13f);
-        Point(p, "Sodium_D", new Vector3(18f, 6.5f, 21f), SodiumAmber, 3.0f, 12f);
+        // hall sodium pools (R3 brighten pass, David 2026-07-02 "内部偏暗": pools up ~40%,
+        // gaps still dimmer than pools so the light-language survives, floor no longer black)
+        Point(p, "Sodium_A", new Vector3(14f, 6.5f, 11f), SodiumAmber, 5.0f, 16f);
+        Point(p, "Sodium_B", new Vector3(26f, 6.5f, 15f), SodiumAmber, 5.0f, 16f);
+        Point(p, "Sodium_C", new Vector3(36f, 6.5f, 20f), SodiumAmber, 4.6f, 15f);
+        Point(p, "Sodium_D", new Vector3(18f, 6.5f, 21f), SodiumAmber, 4.2f, 14f);
 
         // airlock utility lamp
-        Point(p, "AirLamp", new Vector3(21f, 2.7f, 3f), new Color(0.9f, 0.85f, 0.7f), 2.0f, 7f);
+        Point(p, "AirLamp", new Vector3(21f, 2.7f, 3f), new Color(0.9f, 0.85f, 0.7f), 2.8f, 8f);
 
         // cold storage dying fluorescents
-        Point(p, "Cold_A", new Vector3(5f, 4.2f, 12f), ColdCyan, 2.6f, 10f);
-        Point(p, "Cold_B", new Vector3(4f, 4.2f, 22f), ColdCyan, 2.2f, 9f);
-        Point(p, "Cold_C", new Vector3(8f, 4.2f, 17f), ColdCyan, 1.8f, 8f);
+        Point(p, "Cold_A", new Vector3(5f, 4.2f, 12f), ColdCyan, 3.6f, 11f);
+        Point(p, "Cold_B", new Vector3(4f, 4.2f, 22f), ColdCyan, 3.1f, 10f);
+        Point(p, "Cold_C", new Vector3(8f, 4.2f, 17f), ColdCyan, 2.5f, 9f);
 
         // mezzanine: warm desk pool + phosphor green terminal glow
-        Point(p, "MezzWarm", new Vector3(34f, 5.1f, 9f), new Color(1.0f, 0.8f, 0.5f), 2.0f, 6f);
-        Point(p, "MezzCrt", new Vector3(38.5f, 4.9f, 11.5f), new Color(0.35f, 1.0f, 0.5f), 1.1f, 4f);
+        Point(p, "MezzWarm", new Vector3(34f, 5.1f, 9f), new Color(1.0f, 0.8f, 0.5f), 2.8f, 7f);
+        Point(p, "MezzCrt", new Vector3(38.5f, 4.9f, 11.5f), new Color(0.35f, 1.0f, 0.5f), 1.4f, 4.5f);
 
         // pad beacon so the return run reads from inside the door
-        Point(p, "PadBeacon", new Vector3(21f, 3.2f, -8f), SodiumAmber, 1.8f, 10f);
+        Point(p, "PadBeacon", new Vector3(21f, 3.2f, -8f), SodiumAmber, 2.4f, 11f);
 
         // v2 sections
-        Point(p, "Yard_Sodium", new Vector3(58f, 6.2f, 12f), SodiumAmber, 2.8f, 14f);
-        Point(p, "Dock_Sodium_A", new Vector3(20f, 5.2f, 32f), SodiumAmber, 2.6f, 12f);
-        Point(p, "Dock_Sodium_B", new Vector3(34f, 5.2f, 35f), SodiumAmber, 2.4f, 11f);
+        Point(p, "Yard_Sodium", new Vector3(58f, 6.2f, 12f), SodiumAmber, 3.9f, 16f);
+        Point(p, "Dock_Sodium_A", new Vector3(20f, 5.2f, 32f), SodiumAmber, 3.6f, 14f);
+        Point(p, "Dock_Sodium_B", new Vector3(34f, 5.2f, 35f), SodiumAmber, 3.3f, 13f);
     }
 
     static void BuildMissionAnchors(Transform p)
@@ -399,7 +400,7 @@ public static class MarsLogisticsBuilder
         RenderSettings.fogEndDistance = 62f;
         RenderSettings.skybox = null; // the storm box owns every sightline
         RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.34f, 0.27f, 0.20f);
+        RenderSettings.ambientLight = new Color(0.42f, 0.34f, 0.26f); // R3 brighten: floor of visibility up ~25%
     }
 
     // ── v2 sections ─────────────────────────────────────────────────────────────
@@ -584,10 +585,11 @@ public static class MarsLogisticsBuilder
         // seizure language at the descent mouth
         TapeX(p, new Vector3(0.12f, 1.45f, 7.6f));
 
-        // lights: one dying cyan in the corridor, one cyan in the archive, red glow in R3
-        Point(p, "SubLamp_Corr", new Vector3(-9.2f, -1.5f, 10f), ColdCyan, 1.3f, 7f);
-        Point(p, "SubLamp_Arch", new Vector3(-16f, -1.5f, 14.5f), ColdCyan, 1.6f, 8f);
-        Point(p, "SubLamp_Furn", new Vector3(-16f, -2.6f, 21f), new Color(0.9f, 0.25f, 0.12f), 1.8f, 7f);
+        // lights (R3 brighten): corridor + exam + archive cyans, red glow in R3
+        Point(p, "SubLamp_Corr", new Vector3(-9.2f, -1.5f, 10f), ColdCyan, 2.0f, 8f);
+        Point(p, "SubLamp_Exam", new Vector3(-15f, -1.5f, 7.5f), ColdCyan, 2.2f, 8f);
+        Point(p, "SubLamp_Arch", new Vector3(-16f, -1.5f, 14.5f), ColdCyan, 2.4f, 9f);
+        Point(p, "SubLamp_Furn", new Vector3(-16f, -2.6f, 21f), new Color(0.9f, 0.25f, 0.12f), 2.4f, 8f);
     }
 
     /// <summary>Upper catwalk loop (y 3.6): mezz NE corner → east wall run → north wall run →
