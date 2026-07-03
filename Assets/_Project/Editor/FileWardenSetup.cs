@@ -7,32 +7,36 @@ using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// One-shot editor tooling that turns the Blender-exported <c>FileWarden.fbx</c> (档案看守 —
-/// the archive-custodian horror, built by <c>tools/rigging/build_file_warden.py</c>) into a
-/// game-ready monster. Mirrors <see cref="EchoMoldSetup"/>: Generic-rig import with the four
-/// baked clips split out, a Pose-int AnimatorController, and a prefab in Resources/Monsters
-/// so <see cref="MonsterSpawnBootstrap"/> can spawn it (seed keyword "WARDEN").
+/// One-shot editor tooling that turns <c>ArchiveWraith.fbx</c> (档案怨灵 — the archive-warden
+/// horror; CC0 base mesh "Ghost Skull" from Quaternius' Ultimate Monsters pack, re-skinned to
+/// the Black Commission palette via <c>ArchiveWraith_Atlas.png</c>) into a game-ready monster.
+/// Mirrors <see cref="EchoMoldSetup"/>: Generic-rig import, a Pose-int AnimatorController, and
+/// a prefab in Resources/Monsters so <see cref="MonsterSpawnBootstrap"/> can spawn it (seed
+/// keyword "WARDEN"). Unlike the Blender-baked v1, the source FBX carries one take per clip,
+/// so clips are selected by take name instead of frame ranges.
 ///
 /// The brain is the shared <see cref="EchoMold"/> state machine with warden tuning: slower,
 /// harder-hitting, never lures — a patrolling area-denial threat instead of a baiting hunter.
 ///
 /// Run via <c>Tools ▸ Black Commission ▸ Monsters ▸ Build File Warden Asset</c>.
-/// Idempotent — safe to re-run after re-exporting the FBX.
+/// Idempotent — safe to re-run after swapping the FBX or atlas.
 /// </summary>
 public static class FileWardenSetup
 {
-    const string FbxPath = "Assets/_Project/Art/Monsters/FileWarden/FileWarden.fbx";
+    const string FbxPath = "Assets/_Project/Art/Monsters/FileWarden/ArchiveWraith.fbx";
+    const string AtlasPath = "Assets/_Project/Art/Monsters/FileWarden/ArchiveWraith_Atlas.png";
+    const string MaterialPath = "Assets/_Project/Art/Monsters/FileWarden/ArchiveWraith.mat";
     const string ControllerPath = "Assets/_Project/Art/Monsters/FileWarden/FileWarden.controller";
     const string PrefabPath = "Assets/_Project/Resources/Monsters/FileWarden.prefab";
 
-    // Clip splits — mirror tools/rigging/output/FileWarden_clips.json.
-    struct ClipDef { public string name; public int first; public int last; public bool loop; }
+    // Map source takes (suffix match) onto the four Pose-controller clips.
+    struct ClipDef { public string name; public string takeSuffix; public bool loop; }
     static readonly ClipDef[] Clips =
     {
-        new ClipDef { name = "FW_Idle",   first = 1,   last = 96,  loop = true  },
-        new ClipDef { name = "FW_Hunt",   first = 101, last = 196, loop = true  },
-        new ClipDef { name = "FW_Attack", first = 201, last = 224, loop = false },
-        new ClipDef { name = "FW_Death",  first = 231, last = 286, loop = false },
+        new ClipDef { name = "FW_Idle",   takeSuffix = "Flying_Idle", loop = true  },
+        new ClipDef { name = "FW_Hunt",   takeSuffix = "Fast_Flying", loop = true  },
+        new ClipDef { name = "FW_Attack", takeSuffix = "Headbutt",    loop = false },
+        new ClipDef { name = "FW_Death",  takeSuffix = "Death",       loop = false },
     };
 
     [MenuItem("Tools/Black Commission/Monsters/Build File Warden Asset")]
@@ -45,8 +49,9 @@ public static class FileWardenSetup
         }
 
         ConfigureImporter();
+        var material = BuildMaterial();
         var controller = BuildController();
-        BuildPrefab(controller);
+        BuildPrefab(controller, material);
         RegisterNetworkPrefab();
 
         AssetDatabase.SaveAssets();
@@ -59,36 +64,38 @@ public static class FileWardenSetup
         var importer = (ModelImporter)AssetImporter.GetAtPath(FbxPath);
         importer.animationType = ModelImporterAnimationType.Generic;
         importer.useFileScale = true;
+        // Source model imports at 3.23 m tall / 5.3 m hand-span; 0.55 lands the wraith at ~1.8 m.
+        importer.globalScale = 0.55f;
         importer.importConstraints = false;
         importer.importCameras = false;
         importer.importLights = false;
         importer.importVisibility = false;
-        importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
-        importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
+        // Source materials are palette-atlas Standard stubs; the prefab overrides every
+        // renderer with the URP re-skin material, so skip importing them entirely.
+        importer.materialImportMode = ModelImporterMaterialImportMode.None;
         importer.importAnimation = true;
 
-        // PASS 1 — discover the baked take (see EchoMoldSetup for why two passes are needed).
+        // PASS 1 — plain import so takes are discoverable (see EchoMoldSetup).
         importer.clipAnimations = new ModelImporterClipAnimation[0];
         importer.SaveAndReimport();
 
-        string takeName = importer.importedTakeInfos.Length > 0 ? importer.importedTakeInfos[0].name : "";
-        if (string.IsNullOrEmpty(takeName))
-            Debug.LogWarning("[FileWarden] No take info after first import — clip split will likely fail.");
-
-        // PASS 2 — split into the four named clips.
+        // PASS 2 — pick the four wanted takes by suffix, rename to the FW_* pose clips.
+        var defaults = importer.defaultClipAnimations;
         var defs = new List<ModelImporterClipAnimation>();
         foreach (var c in Clips)
         {
-            defs.Add(new ModelImporterClipAnimation
+            var take = defaults.FirstOrDefault(t => t.takeName.EndsWith(c.takeSuffix));
+            if (take == null)
             {
-                name = c.name,
-                takeName = takeName,
-                firstFrame = c.first,
-                lastFrame = c.last,
-                loopTime = c.loop,
-                wrapMode = c.loop ? WrapMode.Loop : WrapMode.Once,
-                loop = c.loop,
-            });
+                Debug.LogError($"[FileWarden] Take '*{c.takeSuffix}' not found. Available: " +
+                               string.Join(", ", defaults.Select(t => t.takeName)));
+                continue;
+            }
+            take.name = c.name;
+            take.loopTime = c.loop;
+            take.wrapMode = c.loop ? WrapMode.Loop : WrapMode.Once;
+            take.loop = c.loop;
+            defs.Add(take);
         }
         importer.clipAnimations = defs.ToArray();
         importer.SaveAndReimport();
@@ -97,6 +104,30 @@ public static class FileWardenSetup
             .OfType<AnimationClip>().Where(a => !a.name.StartsWith("__")).ToList();
         Debug.Log($"[FileWarden] Imported {clips.Count} clips: " +
                   string.Join(", ", clips.Select(c => $"{c.name}({c.length:0.00}s,loop={c.isLooping})")));
+    }
+
+    static Material BuildMaterial()
+    {
+        // Palette atlas: point filtering keeps the flat cells from bleeding at UV seams.
+        if (AssetImporter.GetAtPath(AtlasPath) is TextureImporter texImp &&
+            (texImp.filterMode != FilterMode.Point || texImp.mipmapEnabled))
+        {
+            texImp.filterMode = FilterMode.Point;
+            texImp.mipmapEnabled = false;
+            texImp.SaveAndReimport();
+        }
+        var atlas = AssetDatabase.LoadAssetAtPath<Texture2D>(AtlasPath);
+
+        var mat = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+        if (mat == null)
+        {
+            mat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+            AssetDatabase.CreateAsset(mat, MaterialPath);
+        }
+        mat.SetTexture("_BaseMap", atlas);
+        mat.SetFloat("_Smoothness", 0.08f);
+        EditorUtility.SetDirty(mat);
+        return mat;
     }
 
     static AnimatorController BuildController()
@@ -135,12 +166,12 @@ public static class FileWardenSetup
         t.canTransitionToSelf = false;
     }
 
-    static void BuildPrefab(AnimatorController controller)
+    static void BuildPrefab(AnimatorController controller, Material material)
     {
         var model = AssetDatabase.LoadAssetAtPath<GameObject>(FbxPath);
         if (model == null) { Debug.LogError("[FileWarden] Could not load model for prefab build."); return; }
 
-        // Root-node identity keys in the baked take would pin an Animator-on-root prefab to the
+        // Root-node identity keys in imported takes would pin an Animator-on-root prefab to the
         // origin (see EchoMoldSetup) — components on a clean root, animated model as a child.
         var inst = new GameObject("FileWarden");
         var modelChild = (GameObject)Object.Instantiate(model, inst.transform);
@@ -148,12 +179,16 @@ public static class FileWardenSetup
         modelChild.transform.localPosition = Vector3.zero;
         modelChild.transform.localRotation = Quaternion.identity;
 
+        foreach (var r in inst.GetComponentsInChildren<Renderer>())
+            r.sharedMaterials = Enumerable.Repeat(material, r.sharedMaterials.Length).ToArray();
+
         var renderers = inst.GetComponentsInChildren<Renderer>();
+        Bounds b = default;
         if (renderers.Length > 0)
         {
-            var b = renderers[0].bounds;
+            b = renderers[0].bounds;
             foreach (var r in renderers) b.Encapsulate(r.bounds);
-            Debug.Log($"[FileWarden] Instance bounds size = {b.size} (expect ~2.2 m tall).");
+            Debug.Log($"[FileWarden] Instance bounds size = {b.size}, min.y = {b.min.y:0.00} (wraith target ~1.6-2 m tall).");
         }
 
         if (!modelChild.TryGetComponent<Animator>(out var anim)) anim = modelChild.AddComponent<Animator>();
@@ -161,6 +196,17 @@ public static class FileWardenSetup
         anim.applyRootMotion = false;
         anim.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
         foreach (var rootAnim in inst.GetComponents<Animator>()) Object.DestroyImmediate(rootAnim);
+
+        // Seal-red glow in the skull: reads in dark corridors, doubles as a threat telegraph.
+        var glow = new GameObject("SealGlow");
+        glow.transform.SetParent(inst.transform, false);
+        glow.transform.localPosition = new Vector3(0f, Mathf.Max(1.2f, b.size.y * 0.72f), 0.25f);
+        var light = glow.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.color = new Color(1.0f, 0.22f, 0.12f);
+        light.intensity = 2.4f;
+        light.range = 3.5f;
+        light.shadows = LightShadows.None;
 
         if (!inst.TryGetComponent<NavMeshAgent>(out var agent)) agent = inst.AddComponent<NavMeshAgent>();
         agent.radius = 0.45f;

@@ -2794,3 +2794,21 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
 - **P5 QA·全链路Play打通**(火星): 开房(Relay)→派遣→过场→**11 loot/3怪(FileWarden在冷藏)/373tris导航/火星风环境音全活**→3件装车(6/12)→发车→**结算卡「完成」章弹出+回HQ**。修复: **怪物生成必须agent.Warp()**(NavMeshAgent绑prefab原位·三只怪全在0,0,0·live warp验证后已修MonsterSpawnBootstrap)。
 - **⚠⚠两个运维级发现**: ①**编辑器是暂停状态会让Play全冻在frame1**(EditorApplication.isPaused=true残留·bridge的editor泵还活着所以极具迷惑性——之前"Play后桥死/黑影"疑与此同根)·解法isPaused=false; ②失焦编辑器Play需Application.runInBackground=true。
 - **已知妥协/待David**: 强制HideCabin跳过下车重定位(正常按键下车流程不受影响·怀疑预存在)·门开关长音3.2s偏长可裁·火星内部灯偏暗(ESC伽马可调·或再加灯)·上车/下车独立音未接(车辆启动录音自带关门声)。
+
+## Session 2026-07-02 (下午) — David回来验收→三轮修复(R1音效/R2火星v2/R3怪物概念)·全部已commit
+- **R1 音效修复**(commit `5828c3e`): AudioManager.LogSfx探针(每个表格事件log `[SFX] event -> clip`·30秒听测可定位错配)·FootstepSlicer v2(响度排序局部极大+前导静音质检·4片0.26s·~150Hz单极高通去房间隆隆声「怪」·峰值归一+淡入出·AudioManager四片轮播)·HQ卷帘门改走door_open/close(合成creak退役)。**频谱发现待David耳测**: freesound #426765(表里的「打开柜子」)实为~1.76kHz窄带金属铃音——听感=终端beep·映射照表·录音本身可疑; #39028(打开电脑)=600Hz门卡锁正常。
+- **R2 火星v2**(commit `cdbd07f`·只动火星·tower/map2按David指示没碰): 集装箱堆场(x44-74·3个可进箱+1 seed)·装卸码头(z26-38·传送带+拖车+1 seed)·检疫地下层(y-4·封闭26.6°坡道下行·检查室/遗物档案室(第2只FileWarden)/焚化炉)·高架猫道环线。**导航排雷记进builder**: 风化层切4块避免下行井在实心collider里·管廊顶收回(压低落点低于agent高)·地下层门头抬到2.55m净空(2.2被voxel取整卡2.0 agent)·管口voxel缝2条NavMeshLink桥接。8条路线全PathComplete(33-73m)。Loot 28→57锚+**新ScavengeMapProfile**(火星26-32件·别图10-14不变)·怪3→6 seed·合同窗12→18游戏小时。EditMode 157/157。
+- **R3 FileWarden v2概念**(commits `1b2afd0`+`9ba11ad`): David验收判v1丑→重走概念。三方向原创设计(不抄LC): **A**=驼背管理员 / **B**=柜身高跷猎手 / **C**=纸人锥·预览`tools/rigging/preview/fw2_concept_{a,b,c}.png`。**B已做hero精修**(`fw2_concept_b_hero.png`·LC制作法评估: 圆润大块面bevel+subdiv·夸张比例小重躯干+超长细高跷腿膝过顶·极简脸=单个图章红独眼灯·哑光双色teal+图章红点缀·一个「不对劲」细节=半开抽屉下颚拖纸舌·staged渲染)。**Blender 5.1 headless坑已烤进脚本**: Principled按TYPE找(按名找silent fail→全白)·方块用bevel(subsurf会把cube塌掉)·四肢用点到点圆柱。
+- ~~⚠待David pick: FileWarden v2三方向选型~~ → **被19:00 session推翻**(见下)。
+- ~~杂项: Assets/_Recovery待确认可删~~ → 已删(David批·AssetDatabase.DeleteAsset)。
+
+## Session 2026-07-02 (晚) — David问「能不能直接抄LC」→ **怪物美术改走现成CC0资产改皮路线(拍板)** · 档案怨灵上线 · 三挂起项清完
+- **David两问两答**: ①概念选型答A(驼背管理员)——但随即问「怪能不能直接抄别人的/复现致命公司的?」→ 我正面回答: 复刻LC=侵权风险(自己建模复现设计仍是抄设计·上架吃DMCA)+违反AGENTS.md自家红线; 但"直接抄"的合法版=**现成可商用资产改皮** → ②David拍板「现成资产改皮」→ 概念A路线废止(fw2概念图/hero pass留档)。
+- **资产源**: Quaternius Ultimate Monsters(CC0·50只全动画·FBX/Blend/glTF)·Drive公开文件夹·gdown拉(整夹限流→按文件ID单下·manifest在scratchpad)。5候选BC改皮预览渲染(`tools/rigging/preview/qm_*.png`): Orc/Yeti/Demon呆脸压不住·**GhostSkull最阴**·Alien次之。60s无人答→按推荐GhostSkull推进。
+- **改皮管线(可复现)**: `tools/rigging/recolor_atlas.py`(Quaternius调色板atlas按亮度重映射: 黑→civic teal→旧纸ramp·红系→印章红)+`preview_qm_candidates.py`(Blender headless批量导入FBX套BC材质+Idle摆姿+staged渲染·顺带打印action清单——Big系14clip/Flying系8clip)。
+- **档案怨灵已上线(FileWarden视觉v2·prefab身份/WARDEN路由/EchoMold warden脑参数全不动)**: `FileWardenSetup.cs`重写——FBX源换`ArchiveWraith.fbx`(GhostSkull)+`ArchiveWraith_Atlas.png`(Flying atlas BC重映射·Point filter)·**take名选clip替代帧区间切片**(FW_Idle←Flying_Idle/FW_Hunt←Fast_Flying/FW_Attack←Headbutt/FW_Death←Death·loop标齐)·URP Lit材质代码建+prefab renderer全量覆盖(materialImportMode=None断源材质)·**globalScale=0.55**(原尺寸3.23m高/5.3m手展→1.78m)·**SealGlow红点光**塞骷髅内(眼窝透红=图章红威胁语言·暗走廊远读)。四clip导入✓·bounds 1.78m✓·网络注册沿用✓·**朝向+Z=agent前进向✓**(orbit四角截图`Assets/Screenshots/wraith_orbit.png`过目·暗光下卡通感消失)。宽2.9m(双爪展开)>胶囊0.45——怨灵穿模=虚体设定成立·不改。
+- **火星提亮(R3·builder+活场景双改保持一致)**: ambient 0.34/0.27/0.20→0.42/0.34/0.26·StormSun 0.45→0.55·全部内部点灯+~40%强度/+1-2m范围(钠灯池3.6→5.0等)·地下层新增**SubLamp_Exam**(-15,-1.5,7.5·检查室原本无灯)。活场景按灯名patch(19灯全ok)+builder源码同值→**没重跑builder=没动navmesh**。截图验: 地下层可读性大改善·大厅货架间隙保留"手电领域"。场景已存。
+- **门声裁剪**: 3.15s/3.57s的mp3实为**大段静音包0.3s事件**(RMS包络实锤·"门响滞后"根因)→soundfile解码+能量裁剪→door_open.wav 0.49s/door_close.wav 0.43s(8ms淡入/80ms淡出)·删mp3·AudioManager按无扩展名路径加载无需改码·CREDITS.md已注。
+- **验证**: 编译0错·**EditMode 157/157 pass**·`Assets/_Recovery`已删(David批)。
+- **新CREDITS**: `Assets/_Project/Art/Monsters/CREDITS.md`(Quaternius CC0留档+改皮说明+自建资产清单)。
+- **待David Play验**: 派火星→冷藏/地下档案室看档案怨灵(飘移+红眼+Headbutt攻击)·手电走大厅感受新亮度·开关门听新短音。**待答**: 卷角异形要不要当第三只怪入池(改皮预览已有`qm_Big_Alien.png`·加一条路由关键字即可)。
