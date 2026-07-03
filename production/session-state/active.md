@@ -2811,4 +2811,12 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
 - **门声裁剪**: 3.15s/3.57s的mp3实为**大段静音包0.3s事件**(RMS包络实锤·"门响滞后"根因)→soundfile解码+能量裁剪→door_open.wav 0.49s/door_close.wav 0.43s(8ms淡入/80ms淡出)·删mp3·AudioManager按无扩展名路径加载无需改码·CREDITS.md已注。
 - **验证**: 编译0错·**EditMode 157/157 pass**·`Assets/_Recovery`已删(David批)。
 - **新CREDITS**: `Assets/_Project/Art/Monsters/CREDITS.md`(Quaternius CC0留档+改皮说明+自建资产清单)。
-- **待David Play验**: 派火星→冷藏/地下档案室看档案怨灵(飘移+红眼+Headbutt攻击)·手电走大厅感受新亮度·开关门听新短音。**待答**: 卷角异形要不要当第三只怪入池(改皮预览已有`qm_Big_Alien.png`·加一条路由关键字即可)。
+- **待David Play验**: 派火星→冷藏/地下档案室看档案怨灵(飘移+红眼+Headbutt攻击)·手电走大厅感受新亮度·开关门听新短音。~~待答: 卷角异形要不要当第三只怪入池~~→被下一条回答。
+
+## Session 2026-07-02 (晚·cont) — David「把那个蘑菇删了」→ 回声菌视觉v2=卷角异形(蘑菇退役)
+- **"蘑菇"=EchoMold v1**(echo_mold_front.png实锤: 大伞盖+菌柄+菌架=字面意义蘑菇)。David指令"删了"→ 解读: 蘑菇造型干掉·主力怪机制(声音诱饵/追猎)保留——**图鉴文案本来就写"infected fungal humanoid"(人形!)·蘑菇模型从来没对上过自己的设定**·换人形卷角异形反而吻合(卷角读作真菌增生)·文案零改动。
+- **实现(镜像wraith模式)**: EchoAlien.fbx(Big_Alien)+EchoAlien_Atlas.png(Big系BC重映射)入EchoMold文件夹·EchoMoldSetup重写(take选clip: EM_Idle/Walk/Hunt←Run/Attack←Punch/Death·globalScale 0.58→2.12m含角·URP材质覆盖·prefab身份/Resources路径/兜底路由全不动)。
+- **顺带修运动动画**: 旧蘑菇Pose<2全程Idle=滑行(蘑菇成立·人形穿帮)→ EchoMold.cs加`DriveLocomotionAnim()`(Update最前·authority gate之前**全端**跑·transform delta算速度→SetFloat Speed·clamp 5)+controller Idle态改**1D BlendTree(Speed: EM_Idle@0↔EM_Walk@1.2)**·Lure站定=Idle·Roam走路=Walk·Hunt仍整状态Run。FileWarden.controller也补Speed参数(共用大脑SetFloat安全)。
+- **验证**: 编译0错·5clip全对·两controller参数=[Pose:Int,Speed:Float]·orbit四角截图(`Assets/Screenshots/echoalien_orbit.png`·黑影+卷角+苍白腹斑·朝向+Z正确)·**EditMode 157/157**。
+- **老资产**: EchoMold.fbx/build_echo_mold.py退役留档(CREDITS已注)。
+- **待David Play验**: 任意图看新回声菌(走路动画+诱饵站定+Punch攻击); 暗图里它是纯黑影+腹斑=靠手电——嫌太隐形我可以给腹斑加自发光。**待答**: "回声菌/EchoMold"这名字要不要跟着改(现在设定=真菌感染人形·名字仍成立·你定)。

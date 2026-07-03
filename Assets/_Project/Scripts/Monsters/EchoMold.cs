@@ -74,10 +74,12 @@ public class EchoMold : NetworkBehaviour
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     static readonly int PoseParam = Animator.StringToHash("Pose");
+    static readonly int SpeedParam = Animator.StringToHash("Speed");
 
     NavMeshAgent agent;
     Animator animator;
     State state = State.Roam;
+    Vector3 lastAnimPos;
 
     PlayerController target;
     float nextRoamRepath;
@@ -103,6 +105,19 @@ public class EchoMold : NetworkBehaviour
         }
         animator = GetComponent<Animator>();
         if (animator == null) animator = GetComponentInChildren<Animator>();
+        lastAnimPos = transform.position;
+    }
+
+    /// <summary>Feeds horizontal world speed into the Animator's Speed float on every peer.
+    /// Clients move via NetworkTransform (no live agent velocity there), so speed is derived
+    /// from the transform delta; drives the Idle↔Walk locomotion blend for humanoid rigs.</summary>
+    void DriveLocomotionAnim()
+    {
+        if (animator == null) return;
+        Vector3 pos = transform.position;
+        float speed = Mathf.Min(Vector3.Distance(pos, lastAnimPos) / Mathf.Max(Time.deltaTime, 0.0001f), 5f);
+        lastAnimPos = pos;
+        animator.SetFloat(SpeedParam, speed);
     }
 
     public override void OnNetworkSpawn()
@@ -148,6 +163,7 @@ public class EchoMold : NetworkBehaviour
 
     void Update()
     {
+        DriveLocomotionAnim(); // all peers — before the authority gate
         if (!HasAuthority || state == State.Dead) return;
         if (agent == null || !agent.isOnNavMesh) return;
 

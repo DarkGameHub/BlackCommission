@@ -135,6 +135,9 @@ public static class FileWardenSetup
         AssetDatabase.DeleteAsset(ControllerPath);
         var ctrl = AnimatorController.CreateAnimatorControllerAtPath(ControllerPath);
         ctrl.AddParameter("Pose", AnimatorControllerParameterType.Int);
+        // The shared EchoMold brain drives a Speed float for locomotion blends; the wraith
+        // hovers (no blend needed) but the parameter must exist for the SetFloat calls.
+        ctrl.AddParameter("Speed", AnimatorControllerParameterType.Float);
 
         var clips = AssetDatabase.LoadAllAssetsAtPath(FbxPath)
             .OfType<AnimationClip>().Where(a => !a.name.StartsWith("__"))
