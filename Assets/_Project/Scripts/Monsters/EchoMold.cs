@@ -249,6 +249,11 @@ public class EchoMold : NetworkBehaviour
         target = p;
         lastContactTime = Time.time;
         SetState(State.Hunt);
+        // Bestiary: the hunt reveal IS the encounter. The FileWarden shares this brain, so
+        // the species is read off the spawned prefab's name (host/solo local progress).
+        MonsterBestiaryProgress.MarkEncountered(name.Contains("FileWarden")
+            ? MonsterBestiaryProgress.FileWarden
+            : MonsterBestiaryProgress.EchoMold);
     }
 
     void TickHunt()

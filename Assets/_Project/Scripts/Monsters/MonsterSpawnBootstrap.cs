@@ -7,10 +7,15 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// Server-side monster populator for dispatched mission scenes. Mission maps author their
 /// threat layout as "MonsterSeed*" marker transforms (the tower whitebox bakes three; new maps
-/// place their own), but until now nothing consumed those seeds — a dispatched run shipped with
-/// zero monsters. On mission-scene load the SERVER spawns one creature per seed from
-/// <c>Resources/Monsters/&lt;type&gt;</c> (registered network prefabs), snapped onto the baked
-/// NavMesh so the <see cref="NavMeshAgent"/> can actually path.
+/// place their own); the SERVER spawns creatures from <c>Resources/Monsters/&lt;type&gt;</c>
+/// (registered network prefabs), snapped onto the baked NavMesh so the
+/// <see cref="NavMeshAgent"/> can actually path.
+///
+/// Seeds are CANDIDATE points, not guarantees: activation is gated by the site danger track
+/// (<see cref="BlackCommission.Monsters.DangerClock"/>, danger-infection quick-spec 2026-06-18).
+/// Survey opens with a sparse third of the seeds, Active brings in two thirds, Pursuit lights
+/// them all — "the building wakes up" instead of the full roster camping the entrance at t=0.
+/// Seeds activate in name order (sorted), so level design can stage priority by naming.
 ///
 /// Seed → prefab routing: a seed named <c>MonsterSeed_XX-SUFFIX</c> can pin a species by
 /// suffix keyword (see <see cref="PrefabPathForSeed"/>); anything unrecognised falls back to
@@ -47,9 +52,14 @@ public static class MonsterSpawnBootstrap
         runner.AddComponent<SpawnRunner>();
     }
 
-    /// <summary>Waits for seeds + NavMesh, spawns per-seed creatures, then self-destructs.</summary>
+    /// <summary>
+    /// Waits for seeds + NavMesh, then activates seeds as the danger phase advances
+    /// (Survey ⌈N/3⌉ → Active ⌈2N/3⌉ → Pursuit all); self-destructs once every seed is live.
+    /// </summary>
     class SpawnRunner : MonoBehaviour
     {
+        const float PhasePollSeconds = 5f;
+
         IEnumerator Start()
         {
             float deadline = Time.unscaledTime + SeedPollSeconds;
@@ -69,38 +79,70 @@ public static class MonsterSpawnBootstrap
                    && Time.unscaledTime < deadline)
                 yield return null;
 
-            int spawned = 0;
-            foreach (Transform seed in seeds)
+            // Deterministic activation order; scene-authored monsters already parked on a seed
+            // count as that seed being live.
+            System.Array.Sort(seeds, (a, b) => string.CompareOrdinal(a.name, b.name));
+            var live = new bool[seeds.Length];
+            int liveCount = 0;
+            for (int i = 0; i < seeds.Length; i++)
+                if (SeedOccupied(seeds[i].position)) { live[i] = true; liveCount++; }
+
+            var clock = BlackCommission.Monsters.DangerConfig.LoadClockOrDefaults();
+            float missionStart = Time.time;
+            var lastPhase = (BlackCommission.Monsters.DangerPhase)(-1);
+
+            while (liveCount < seeds.Length)
             {
-                if (SeedOccupied(seed.position)) continue;
-                if (!NavMesh.SamplePosition(seed.position, out NavMeshHit hit, NavSnapRadius, NavMesh.AllAreas))
+                var phase = clock.PhaseAt(Time.time - missionStart);
+                int target = BlackCommission.Monsters.DangerClock.ActiveSeedCount(seeds.Length, phase);
+                if (phase != lastPhase)
                 {
-                    Debug.LogWarning($"[MonsterSpawnBootstrap] Seed '{seed.name}' at {seed.position} has no " +
-                                     $"NavMesh within {NavSnapRadius} m — skipped (bake the map's NavMesh).");
-                    continue;
+                    lastPhase = phase;
+                    Debug.Log($"[MonsterSpawnBootstrap] Danger phase → {phase}: {target}/{seeds.Length} seed(s) live.");
                 }
 
-                string path = PrefabPathForSeed(seed.name);
-                GameObject prefab = Resources.Load<GameObject>(path) ?? Resources.Load<GameObject>(FallbackPrefabPath);
-                if (prefab == null)
+                for (int i = 0; i < seeds.Length && liveCount < target; i++)
                 {
-                    Debug.LogError($"[MonsterSpawnBootstrap] Missing prefab Resources/{path} (and fallback) — aborting.");
-                    break;
+                    if (live[i]) continue;
+                    if (PlayerNear(seeds[i].position)) continue;  // never spawn in a player's face — retry next poll
+                    live[i] = true;           // consumed even when spawn fails — don't retry a bad seed forever
+                    liveCount++;
+                    TrySpawnAt(seeds[i]);
                 }
 
-                GameObject go = Object.Instantiate(prefab, hit.position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
-                go.name = prefab.name;
-                // A NavMeshAgent instantiated at a position binds to the navmesh at the PREFAB
-                // pose and yanks the transform back to the origin on its first update — Warp is
-                // the documented fix (verified live 2026-07-02: all three monsters sat at 0,0,0).
-                var agent = go.GetComponent<NavMeshAgent>();
-                if (agent != null) agent.Warp(hit.position);
-                go.GetComponent<NetworkObject>().Spawn();
-                spawned++;
+                yield return new WaitForSeconds(PhasePollSeconds);
             }
 
-            Debug.Log($"[MonsterSpawnBootstrap] Spawned {spawned} monster(s) across {seeds.Length} seed(s).");
+            Debug.Log($"[MonsterSpawnBootstrap] All {seeds.Length} seed(s) live — runner done.");
             Destroy(gameObject);
+        }
+
+        static void TrySpawnAt(Transform seed)
+        {
+            if (!NavMesh.SamplePosition(seed.position, out NavMeshHit hit, NavSnapRadius, NavMesh.AllAreas))
+            {
+                Debug.LogWarning($"[MonsterSpawnBootstrap] Seed '{seed.name}' at {seed.position} has no " +
+                                 $"NavMesh within {NavSnapRadius} m — skipped (bake the map's NavMesh).");
+                return;
+            }
+
+            string path = PrefabPathForSeed(seed.name);
+            GameObject prefab = Resources.Load<GameObject>(path) ?? Resources.Load<GameObject>(FallbackPrefabPath);
+            if (prefab == null)
+            {
+                Debug.LogError($"[MonsterSpawnBootstrap] Missing prefab Resources/{path} (and fallback) — skipped.");
+                return;
+            }
+
+            GameObject go = Object.Instantiate(prefab, hit.position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
+            go.name = prefab.name;
+            // A NavMeshAgent instantiated at a position binds to the navmesh at the PREFAB
+            // pose and yanks the transform back to the origin on its first update — Warp is
+            // the documented fix (verified live 2026-07-02: all three monsters sat at 0,0,0).
+            var agent = go.GetComponent<NavMeshAgent>();
+            if (agent != null) agent.Warp(hit.position);
+            go.GetComponent<NetworkObject>().Spawn();
+            Debug.Log($"[MonsterSpawnBootstrap] Seed '{seed.name}' activated → {prefab.name}.");
         }
 
         static Transform[] FindSeeds()
@@ -117,13 +159,25 @@ public static class MonsterSpawnBootstrap
             string upper = seedName.ToUpperInvariant();
             if (upper.Contains("WARDEN")) return "Monsters/FileWarden";
             if (upper.Contains("SNAPPER")) return "Monsters/SealSnapper";
+            if (upper.Contains("IDOL") || upper.Contains("STATUE")) return "Monsters/CivicIdol";
             return FallbackPrefabPath;
+        }
+
+        static bool PlayerNear(Vector3 position)
+        {
+            foreach (var player in FindObjectsByType<PlayerController>())
+                if (Vector3.Distance(player.transform.position, position) < 12f)
+                    return true;
+            return false;
         }
 
         static bool SeedOccupied(Vector3 position)
         {
             foreach (var mold in FindObjectsByType<EchoMold>())
                 if (Vector3.Distance(mold.transform.position, position) < OccupiedRadius)
+                    return true;
+            foreach (var idol in FindObjectsByType<CivicIdol>())
+                if (Vector3.Distance(idol.transform.position, position) < OccupiedRadius)
                     return true;
             return false;
         }
