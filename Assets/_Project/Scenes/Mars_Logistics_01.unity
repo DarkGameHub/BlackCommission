@@ -29066,7 +29066,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1671702859}
   m_Layer: 0
-  m_Name: MonsterSeed_ML_HALL
+  m_Name: MonsterSeed_ML_HALL_IDOL
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

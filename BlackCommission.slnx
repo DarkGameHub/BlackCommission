@@ -4,8 +4,10 @@
   <Project Path="BlackCommission.Mission.Core.csproj" />
   <Project Path="BlackCommission.Scavenge.Core.Tests.csproj" />
   <Project Path="BlackCommission.Office.Core.Tests.csproj" />
+  <Project Path="BlackCommission.Monsters.Core.Tests.csproj" />
   <Project Path="BlackCommission.Scavenge.Core.csproj" />
   <Project Path="BlackCommission.Level.Topology.Tests.csproj" />
+  <Project Path="BlackCommission.Monsters.Core.csproj" />
   <Project Path="BlackCommission.Mission.Core.Tests.csproj" />
   <Project Path="BlackCommission.Office.Core.csproj" />
   <Project Path="BlackCommission.Level.Generation.csproj" />

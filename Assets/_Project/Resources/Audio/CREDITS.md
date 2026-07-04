@@ -6,7 +6,8 @@
 
 | 游戏事件 | 文件 (Resources/Audio/Sfx) | 来源 | 作者 | 许可 |
 |---|---|---|---|---|
-| 走路/跑步(切片) | footstep_a.wav, footstep_b.wav (自 footsteps_walk_raw.mp3 切片) | [freesound #52640](https://freesound.org/people/kstein1/sounds/52640/) | kstein1 | CC0 |
+| 走路/跑步(切片) | footstep_a–d.wav（自 #546827 HQ 预览瞬态对齐切片，2026-07-03 换源重切） | [freesound #546827](https://freesound.org/people/Kinoton/sounds/546827/) "Footsteps Leather Concrete" | Kinoton | CC0 |
+| ~~走路(旧源，已退役)~~ | footsteps_walk_raw.mp3（留档：仅 3.6s 片段、木地板/厨房质感不符、页面许可实为 Sampling+ 与此前 CC0 记录不符） | [freesound #52640](https://freesound.org/people/kstein1/sounds/52640/) | kstein1 | Sampling+ |
 | 打开柜子 | cabinet_open.wav | [freesound #426765](https://freesound.org/people/cMilan/sounds/426765/) | cMilan | CC0 |
 | 关上柜子 | cabinet_close.wav | [freesound #426766](https://freesound.org/people/cMilan/sounds/426766/) | cMilan | CC0 |
 | 取出 | pickup_take.mp3 | [freesound #132025](https://freesound.org/people/User1994/sounds/132025/) | User1994 | CC0 |

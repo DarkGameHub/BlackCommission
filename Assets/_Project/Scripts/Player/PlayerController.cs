@@ -357,7 +357,7 @@ public class PlayerController : NetworkBehaviour
             float netSpeed = NetworkMoveSpeed.Value;
             if (netSpeed > 0.3f && Time.time >= nextFootstepTime)
             {
-                nextFootstepTime = Time.time + (netSpeed >= 0.9f ? 0.32f : 0.45f);
+                nextFootstepTime = Time.time + (netSpeed >= 0.9f ? 0.32f : 0.45f) * Random.Range(0.92f, 1.08f);
                 PlaySurfaceFootstep();
             }
             return;
@@ -541,7 +541,8 @@ public class PlayerController : NetworkBehaviour
         if (grounded && hasMoveInput && Time.time >= nextFootstepTime)
         {
             float interval = isSprinting ? 0.32f : isCrouching ? 0.6f : 0.45f;
-            nextFootstepTime = Time.time + interval;
+            // ±8% cadence jitter — a fixed interval reads as a metronome, not a walk.
+            nextFootstepTime = Time.time + interval * Random.Range(0.92f, 1.08f);
             PlaySurfaceFootstep();
         }
 
@@ -675,7 +676,9 @@ public class PlayerController : NetworkBehaviour
         if (Physics.Raycast(transform.position + Vector3.up * 0.2f, Vector3.down,
                 out RaycastHit hit, 1.6f, ~0, QueryTriggerInteraction.Ignore))
             metal = hit.collider.name.StartsWith("Bridge_");
-        if (metal) AudioManager.Instance?.PlayFootstepMetal(transform.position);
+        // Own steps play 2D with pitch jitter; teammates' steps stay positional.
+        if (IsOwner) AudioManager.Instance?.PlayFootstepLocal(metal);
+        else if (metal) AudioManager.Instance?.PlayFootstepMetal(transform.position);
         else AudioManager.Instance?.PlayFootstep(transform.position);
     }
 

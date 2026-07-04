@@ -23,6 +23,8 @@ MonoBehaviour:
   recommendedPlayersMax: 4
   clientType: 0
   favouredCategoryIds: 
+  favouredMaterialClassIds: 
+  relicSentimentalClient: 0
   missionStartClockHour: 8
   contractWindowGameHours: 12
   realSecondsPerGameHour: 60

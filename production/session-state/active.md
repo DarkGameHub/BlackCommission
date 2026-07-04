@@ -2820,3 +2820,69 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
 - **验证**: 编译0错·5clip全对·两controller参数=[Pose:Int,Speed:Float]·orbit四角截图(`Assets/Screenshots/echoalien_orbit.png`·黑影+卷角+苍白腹斑·朝向+Z正确)·**EditMode 157/157**。
 - **老资产**: EchoMold.fbx/build_echo_mold.py退役留档(CREDITS已注)。
 - **待David Play验**: 任意图看新回声菌(走路动画+诱饵站定+Punch攻击); 暗图里它是纯黑影+腹斑=靠手电——嫌太隐形我可以给腹斑加自发光。**待答**: "回声菌/EchoMold"这名字要不要跟着改(现在设定=真菌感染人形·名字仍成立·你定)。
+
+## Session 2026-07-03 — David再问「怪能不能直接抄别的游戏」→ 答机制可抄(公版原型)美术不可 → 拍板做第三只怪「盯住就停」(石像鬼/SCP-173原型) = **市政圣像 CivicIdol**
+- **David两步**: ①问"能不能直接抄别的游戏的怪(开blender建模+机制)" → 我答: 美术抄=侵权(7/2已拍板CC0改皮=合法版直接抄)·机制不受版权保护可复刻(取公版原型别1:1搬LC行为组合) → ②四选一选了「盯住就停」。
+- **选型**: 剩余候选Orc/Yeti/Demon里选**Big_Demon**——角+翅膀+光环=「被市政厅封圣的滴水兽铜像」,呆脸在雕像设定里成立。Trident道具节点prefab构建时剔除(Blender探明是独立mesh"Trident")。
+- **美术**: `recolor_atlas.py`加**statue模式**(红系肉色块抬入铜绿带+深青铜→铜绿→粉白氧化ramp·迭代3版: v1太闷灰→v2锚点右移仍闷→v3红系特判才出铜绿)。定妆图`tools/rigging/preview/civic_idol_{stride,dormant}.png`(奔跑中途冻结+沉眠雕像双姿势)。**Quaternius源FBX已从旧scratchpad抢救到`tools/rigging/input/qm/`**(5 FBX+2 atlas,以后不怕临时目录被清)。
+- **机制(全新大脑CivicIdol.cs·不共用EchoMold)**: 服务器权威·被任意存活玩家「水平视锥(50°半角/45m)+物理LoS射线(货架/墙挡·玩家身体/怪不挡)」看到=冻结(NavMeshAgent停+**Animator.speed=0全端同步**=定格奔跑中途)·移开视线0.35s宽限后高速追(4.6>走路4)·近身重击40/0.8s·**被看着时零伤害**(一人盯防=保命)。俯仰不同步(owner-local)→只判yaw=对玩家宽容·非漏洞。躲藏者算观察者不算目标;倒地者两者都不算。
+- **纯逻辑核**: `Scripts/Monsters/Core/IdolGazeLogic.cs`(纯float平面几何·noEngineReferences asmdef=**BlackCommission.Monsters.Core**)+12条EditMode测试(`Tests/EditMode/Monsters/`·锥内/锥外/边界角/退化朝向/滞回窗)。
+- **产线文件**: CivicIdolSetup.cs(镜像FileWardenSetup·take选clip: CI_Idle←Idle/CI_Stalk←Run/CI_Attack←Punch/CI_Death←Death·globalScale 0.68→~2.1m·**AlwaysAnimate**防culling吃冻结帧·SealEyes红眼点光=有猎物才亮)·路由IDOL/STATUE关键字·SeedOccupied补CivicIdol·Mars大厅种子改名`MonsterSeed_ML_HALL_IDOL`(builder源码已改·**活场景rename待做**)。
+- **文档**: `design/gdd/monster-civic-idol.md`(8节全)·CREDITS.md已注(Demon底模+statue模式说明)。
+- **进行中**: Unity没开→已后台拉起,等桥心跳→refresh+编译→跑Build Civic Idol Asset→EditMode测试→活场景种子rename+存→截图给David。
+- **完成(2026-07-03上午)**: Unity重启后编译0错0警·Build一次通过(4clip对/Trident剔除/全高2.2m/prefab已注册NGO)·**EditMode 169/169**(157老+12新)·Mars活场景种子已rename+存·验证截图`Assets/Screenshots/civicidol_orbit.png`+`civicidol_hall_closeup.png`(暗光大厅里铜绿雕像成立·休眠红眼灯正确熄灭)。
+- **待David Play验**: 派火星→大厅东北货架区(38,22)看圣像——盯着它不动/移开视线被追/一人盯防全队免伤/它有猎物时红眼亮。**待答**: 「市政圣像/CivicIdol」名字你定(可改)。
+
+## Session 2026-07-03 (cont) — David转向UI/UX → 全面审计(静态半场)已交付 + Play中三条新反馈待处理
+- **David两拍板**: ①UI/UX从「全面审计」入手(8 spec vs 实现对账) ②CivicIdol=David先Play验收再commit(未提交改动原样保留)。
+- **审计静态半场已落盘**: `design/ux/ui-ux-audit-2026-07-03.md`。核心结论: 最大欠账=**搜刮结算揭示链路**(双层loot数据字段/逐件揭示/relic倍率/检视detail面板——机制APPROVED代码零实现·ScavengeMissionManager.cs:14明注deferred·branch本名); spec过时带(hud/settlement/boarding=塔楼时代写成); 遭遇HUD spec 13/15节空白(怪已3只); 大厅还是spec明令退役的WaitingTerminal; 终端无页签无账本(前置=逐单历史ADR); 设置已ad-hoc实现但无spec(全部a11y开关无家可归); 全部游戏内UI=IMGUI。优先级建议P0-P3在报告里,待David拍板。动态半场(截图走查)等编辑器空闲。
+- **David Play中甩来三条(待处理)**: ①走路音效"还是很奇怪"——已查: footstep_a-d.wav真切片在放(非synth兜底); 嫌疑=PlayClipAtPoint全3D空间化(自己脚步声钉在世界坐标里,人走声音留在身后+左右漂移)+固定节拍器(0.45s/0.32s无随机化)+切片间响度不一; 待David说清哪种怪再修。②"怪物是不是太多了"——实锤: MonsterSpawnBootstrap=每seed必出1只无人数缩放,火星6个seed=6只(塔楼3只); 选项=(a)删seed (b)按人数抽签spawn预算 (c)时间递进式。③"火星地图没什么新意"——设计反馈,选项=(a)一图一机制(气闸/断电/尘暴) (b)地标set-piece pass (c)复用现有系统做图专属hazard (d)接受现状先干UI。均待David定。
+- **仍挂**: CivicIdol Play验收+命名; 回声菌改名与否。
+
+## Session 2026-07-03 (cont.2) — 三线并进: 脚步声换源重切✅ / P0双层结算落码✅ / 怪+图设计对账✅
+- **脚步声(David"你可能切的不对"→实锤+已修)**: ①旧源#52640本地只有3.6s片段(freesound原文件41.8s·木地板厨房质感不符·页面许可Sampling+与CREDITS记的CC0不符)·四旧切片能量平铺=从连续行走里盲切; ②换源**Kinoton #546827 "Footsteps Leather Concrete"(CC0·84s·46个干净隔离步)**·瞬态对齐重切footstep_a-d.wav(冲击→衰减形·峰值0.62); ③播放层修: AudioManager加stepSource(2D专用)+PlayFootstepLocal(音高0.94-1.06抖动/音量抖动/不连续重复同片)·PlayerController owner走2D本地(修"自己脚步钉在世界坐标拖在身后")·步频±8%抖动(去节拍器)。CREDITS.md已更新(旧源退役留档)。**David当前Play里就是新声音·等他反馈**。
+- **P0双层结算(David"按优先级开发"授权)·第一阶段落码**: Core加ScavengeTier/MaterialClass(4大类)/RelicReception(NoClient/Matched/Mismatched)枚举; SettlementItem/Line加tier+reception; 计算器实现§7双层公式(relicEmotional 2.0/relicMismatch 0.8注入); ScavengingConfig加3新knob; ScavengeItemDefinition加tier/materialClass/isInspectable/targetPersonId/inspectDetail(检视数据字段一并齐了); ScavengeItem+ConfigureServer透传; OfficeTaskDefinition加favouredMaterialClassIds+relicSentimentalClient+FavoursMaterialClassId/HasRelicClient(旧favouredCategoryIds标LEGACY保留); CargoZone.TryStow按tier算favoured/reception。**新增9条EditMode测试**(TwoTierTests: 匹配×2/错配×0.8/无客户市场价/relic无视大类偏好/条件叠乘/混合求和/线携带tier/knob注入/旧ctor回归)。refresh+compile已过(间接证据:David能进Play=0编译错);**run_tests被Play挡·待跑**。**第二阶段待做**: 结算卡逐件揭示UI(SettlementLine数组RPC同步→SettlementCardOverlay逐行)+检视detail面板。
+- **怪物("太多了/不是随时间变危险吗")**: 设计权威=monster-system.md(danger_level纯时间0→SAT·4相位0/8/18/28min·相位管spawn激活·饱和强制撤离)+danger-infection-system-2026-06-18.md(还没读)。实现=MonsterSpawnBootstrap每seed必出無缩放·火星6seed全冒。**违背设计实锤**。拟修: 相位门控spawn(lean版先做:Survey期只激活1-2·相位推进逐个上·seed变候选点)——待David确认排期(P0二阶段之前or之后)。
+- **地图("不符合我的设计·随机seed固定房间")**: 设计=level-map-generation.md(图拓扑+seed+3种房间尺寸+连接器开关)。**Map2已按设计做**(MapSiteRuntime seed同步+1000-seed确定性测试)。**火星=手工静态场景跑偏**。LC调研完(DunGen瓦片制+snap点+seed全端复现——同宗思路)。拟案: 火星改造成seed驱动模块化(复用Map2管线)=独立epic待排期。
+- **顺手记的两个Play期错误(待修)**: HqMenuAudioListenerGate脚本missing引用; GUI.DrawTexture null texture刷屏(疑domain reload后MakeTex静态缓存清了OnGUI还在画)。
+- **仍挂**: CivicIdol验收+命名; 回声菌改名; EditMode全量测试(等退Play); 结算卡揭示UI(P0二阶段)。
+
+## Session 2026-07-03 (cont.3) — David「声音先放下·完成其他的·建模必须真开Blender含骨骼」→ 怪物相位激活✅ + 结算逐件揭示✅
+- **新长期指令已记忆**: 建模一律真开Blender做全流程含骨骼绑定(memory: blender-full-pipeline-required·盖过animation-pipeline-deferred旧档)。声音暂停不管。
+- **怪物相位激活(对齐danger-infection spec)**: 新纯逻辑核`Monsters/Core/DangerClock.cs`(相位0/8/18/28min·连续danger_level 0-100·多trip起始相位+1·ActiveSeedCount=Survey⌈N/3⌉/Active⌈2N/3⌉/Pursuit全部)+`DangerConfig.cs`(SO可调knob·Resources/Config/DangerConfig缺省走spec默认)+6条EditMode测试。`MonsterSpawnBootstrap`重写: seed=候选点·按相位逐步激活(名字排序=激活优先级·玩家12m内不当脸刷·坏seed不死循环)·火星6seed现在开局只出2只。**未做(下一步)**: monster_activity随danger_level平滑提速/加感官(需三只怪大脑接入)·饱和强制撤离(60s倒计时+喇叭)·infection track整条。
+- **P0二阶段·结算逐件揭示(quick-spec §4 P2)**: `ScavengeMissionManager.Settle`→`BuildRevealPayload`(host解析displayName·flags字节: bit0偏好/bit1relic/bit2-3reception)→ClientRpc(names joined+payouts+flags)全端同卡; `SettlementCardOverlay`加`ShowScavengeReveal`+revealMode(逐件0.35s/行浮现→实付行→章最后砸·>9件行距压缩20px防出屏·Tab重看=直接全揭示)。relic行副文案=占位(writer pass以后换)。空舱回退旧Show。**编译0错**(".cs("过滤=0)。
+- **两-tier内容授权缺口(挡真实体验·下一步)**: Resources/Scavenge/Items现有def全是老盐(无tier标注→全按Salvage结算·不炸); 任务asset没填favouredMaterialClassIds/relicSentimentalClient; **遗物需手工放置+建模(Blender指令适用)**——信/照片/儿童画/日记/公文5类,每图3-6件。
+- **测试欠账**: EditMode全量(新9+6条)连续三次被David的Play挡住; 编辑器一退Play就跑(0编译错·纯逻辑测试风险低)。
+- **火星图procedural改造(David拍板要做·未动工)**: 复用Map2管线(MapSiteRuntime seed同步+GridMapGenerator)——独立epic待规划,涉及房间模块化(建模走Blender)。
+- **仍挂**: CivicIdol验收+命名; 回声菌改名; null-texture刷屏bug(mid-Play domain reload后MakeTex缓存疑坏·OnGUI刷错误)+HqMenuAudioListenerGate missing script; 结算揭示Play走查截图。
+
+## Session 2026-07-03 (cont.4) — David甩票据条丑图 → 三处UI修复✅ + 全量测试终于跑上=184/184全过
+- **David截图(微信temp)诊断**: 派车/在途票据条界面三处烂: ①票据条标题label画在整条60px矩形垂直居中·状态行画y+24=两行叠印(截图里"住户清空"和"to site."糊一起); ②VoiceMicIndicator顶部居中y=10与票据条(顶部居中y=24)必撞·MIC MUTED压在票据条上; ③左上角"Black Commission/Office on standby."黑块=零信息占位chrome·浮在墙上CRT前。
+- **修复**: ①DrawTicketStrip重排=标题独立行(y+2·24px)/状态行(y+30)/墨条(y+52)各占一行永不叠+左市政青竖标▌+右红章■(对齐spec线框); ②MIC指示器挪右上角(24px边距·HUD zone map该角空闲); ③黑块改「纸条语法」DrawOfficeSlip(旧纸+青rule+墨字·待领结算时侧标变印章红)且**没话说时不显示**(待机文案砍掉·仅剩待领结算/已锁委托/终端在附近三种才出)。
+- **验证**: 编译0错(".cs("过滤空)·**EditMode 184/184全过**(169旧+9双层结算+6危险时钟——David退Play后终于跑上,cont.2/3欠的测试账清了)。
+- **待David Play走查**: 上车看票据条新排版/在途进度/右上角MIC/HQ左上角纸条(接单后才出现)。结算逐件揭示+怪物相位激活也在这局一并可验。
+
+## Session 2026-07-03 (cont.5) — David问「UIUX体验呢」→ P0最后一块(检视面板)完成 + 双层内容授权全落盘
+- **检视面板v1(InspectController)**: 占位调试文字→正式Zone-Detail面板: 撕边档案标签底衬(横条锯齿左缘·alpha 0.55·spec a11y)+displayName标题+inspectDetail正文(遗物)或"看不出值多少。"(层一·主题正确)+屏底操作微提示"拖动旋转·松开F放下"+**低头俯仰**(0.3s SmoothStep进+10°·急放瞬回·mouse-look本就被gate)。数据=按ItemId从def目录解析(host/单机即用;**客户端联机欠账**=ItemId未同步·记follow-up)。
+- **双层内容授权(17物品+3任务·直接改磁盘YAML·Unity已被David关掉)**: 5遗物(家书/全家福/蜡笔画/房契/催缴存根)标tier=Relic+isInspectable+targetPersonId+**占位检视文案**(克制1-2行·writer pass可换); 4盐货大类(工具→Labour/标本→Natural/神龛+读物→Culture·其余默认Domestic); 任务客户画像: **烂尾楼=怀旧型(relicSentimental=1·遗物×2.0)/火星=机构(0·×0.8冷淡入藏)/自由搜刮=无客户市场价**——一暖一冷给David对照。favouredMaterialClassIds都=[Domestic](hex-packed)。
+- **工具坑**: manage_scriptable_object(9.7.1)modify必"Unexpected response"→execute_code也死=Unity其实已被关(仅剩mcp-for-unity.exe·无640x监听)→改walk磁盘YAML(SO小资产非场景·安全)。
+- **⚠下次开Unity必做**: 导入+编译(InspectController改动未经编译验证!)+EditMode全量+Play走查(烂尾楼一局全验: 检视家书文本/结算揭示情感加价行/票据条排版/右上MIC/开局2怪)。
+- **UI/UX队列位置**: P0✅完(数据/公式/揭示卡/检视面板+内容)。次up P1=大厅派工名单卡(退役WaitingTerminal)+遭遇HUD spec补写(3怪)。
+
+## Session 2026-07-03 (cont.6) — David盘点UI(13界面逐个过)+ 点名Connecting加载页丑 → 已重做
+- **UI全量口头盘点交付**(13界面): 最丑=大厅WaitingTerminal(P1第一位); 最缺设计=ESC设置+怪物遭遇层; 达标=主菜单/结算/工装选人。David补刀: **第14个=开局Connecting加载页也丑**。
+- **Connecting面板重做(MainMenuUI.BuildConnectingPanel整段重写)**: 旧=560×248黑底系统框+英文"OPENING THE OFFICE/DISPATCH BOOT"+**静态假进度条**(246px定宽从不动) → 新=**盖章公文卡语法**: 480×230做旧纸底+市政青页眉带(纸色小标+「黑色委托事务所·派工接洽」)+墨字connecting正文+**活的青墨条**(锯齿扫描0.45Hz·AnimateConnectingInk挂Update·"钢笔画线"不装百分比)+页脚墨小字。▌字形防豆腐→真矩形。
+- **⚠Unity仍关着**: cont.5+cont.6全部改动(InspectController/资产标注/Connecting)未经编译! 下次开机: 导入+编译+EditMode全量+Play走查(检视文本/结算揭示/票据条/Connecting卡/开局2怪)。
+
+## Session 2026-07-03 (cont.7) — David委托14界面全量评审 → 交付评审文档(优先级+风格方向)
+- **交付**: `design/ux/ui-review-priorities-2026-07-03.md`(14屏逐个: 判定✅🔧🔴📐/优先级/风格归属/具体方向+实施节奏)。总轴=三类表面语言(CRT终端绿=世界内屏幕/盖章公文卡=一切模态/现场工单=HUD)。
+- **优先级拍板待David**: P0-1=大厅派工名单卡(唯一🔴重做·spec现成·1-1.5天) → P0-2=设置「偏好登记表」(📐先补mini spec·收编全部a11y开关) → P1=终端页签/HUD spec修订+遭遇层/图鉴卷宗spec → P2=打磨走查批 → P3=结构批(模式库/a11y文档/uGUI迁移)。
+- 图鉴方向新提案: 「案卷卷宗」语法(每怪=市政档案页·见过才解锁条目·earned-precision用在知识上)——待David点头后/ux-design。
+
+## Session 2026-07-04 — David点单「ESC+办公HUB+怪物图鉴」→ 三屏全改完(待编译)
+- **①ESC设置→「偏好登记表」**: SettingsOverlay整容: 黑底系统框→做旧纸底+市政青页眉「黑色委托事务所·偏好登记表/FORM BC-05」+墨字; 滑条全换InkSlider(墨轨+青拨块); 勾选全换InkToggle(登记表勾选栏[是/否]); **新增辅助功能区**=AccessibilityPrefs(新类·PlayerPrefs): 减弱动效/检视开关式/减弱屏闪; ResetDefaults含a11y。
+- **a11y消费者全接线**: InspectController(Toggle模式=F翻转latch·EndInspect复位; ReducedMotion俯仰归零); SettlementCardOverlay+VanTransitOverlay(章不砸落缩放); VanTransitOverlay(墨条不呼吸); MvpHud.DrawDamageFlash(ReducedFlash→四边8px红框脉冲替全屏)。各spec悬空的无障碍承诺至此全部落地。
+- **②办公HUB**: 审计错判更正——**页签制早已实现**(Z1-Z5/1-2-3直达/账本页都在),真问题=满屏硬编码英文。修法=全量walk MvpLocale(新增~46词条含a11y·EN/中双语): 顶栏/状态条/页签/待结算块/表头(改成与数据行同x的分列label·中文对齐)/详情/采购/账本/主行动(接受委托/领取结算/确认收购/已锁定)/提示。**注意: David本机语言pref若=EN仍显示英文·设置里切"中文(简体)"即全中文**。
+- **③怪物图鉴→「案卷卷宗」**: (a)进度系统重写MonsterBestiaryProgress(通用species表: echo_mold/file_warden/civic_idol·旧EchoMold双flag+PlayerPrefs自动迁移·**旧解锁API原本零调用=图鉴永锁死内容**); (b)钩子: EchoMold.StartHunt按prefab名分流Mark(FileWarden共脑)·CivicIdol Dormant→Stalk即Mark(红眼亮=遭遇)——host/solo本地生效·client端同步=follow-up; (c)UI重写: 纸质案卷夹+青页眉「异常体案卷」·每怪一份卷宗(案卷BC-M-01~03·已立案红字/待补录)·已证实行为+对策(幸存者执笔·占位文案writer可换)·未遭遇=**涂黑条**+"现场尚无可靠证词"·页脚补录规则一行。
+- **⚠Unity关着**: 本批+昨日cont.5/6全部改动未编译。下次开机顺序: 导入+编译→EditMode全量→Play走查(设置登记表/终端中文/图鉴卷宗/检视/结算揭示/票据条/Connecting/开局2怪)。
+- **仍挂**: CivicIdol验收+命名; 大厅派工名单卡(P0-1·下一个); David语言pref切中文提醒。

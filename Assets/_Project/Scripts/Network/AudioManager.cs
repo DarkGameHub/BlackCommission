@@ -31,6 +31,9 @@ public class AudioManager : MonoBehaviour
     AudioSource sfxSource;
     AudioSource ambientSource;   // scene ambience (room tone / wind)
     AudioSource engineSource;    // van engine — separate so transit doesn't fight the scene bed
+    AudioSource stepSource;      // local player's footsteps — 2D, own pitch per step
+
+    int lastFootstepIndex = -1;  // avoid back-to-back repeats of the same slice
 
     // Synth-generated clips (lazy init)
     AudioClip synthFootstepA;
@@ -93,6 +96,12 @@ public class AudioManager : MonoBehaviour
         engineSource.loop = true;
         engineSource.spatialBlend = 0f;
         engineSource.volume = 0.25f;
+
+        // Own footsteps get a dedicated 2D source: per-step pitch jitter must not bend
+        // whatever else sfxSource is playing, and 2D kills the "my steps trail behind me"
+        // panning that PlayClipAtPoint caused for the local player.
+        stepSource = gameObject.AddComponent<AudioSource>();
+        stepSource.spatialBlend = 0f;
 
         GenerateSynthClips();
 
@@ -218,11 +227,34 @@ public class AudioManager : MonoBehaviour
 
     public void PlayFootstep(Vector3 position)
     {
-        AudioClip clip = footstepClips != null && footstepClips.Length > 0
-            ? footstepClips[Random.Range(0, footstepClips.Length)]
-            : (Random.value > 0.5f ? synthFootstepA : synthFootstepB);
+        AudioClip clip = PickFootstep();
         Trace("walk_footstep", clip);
         AudioSource.PlayClipAtPoint(clip, position, 0.3f);
+    }
+
+    /// <summary>Local player's own footstep: 2D playback (no world-position panning) with
+    /// pitch/volume jitter so the walk cycle doesn't read as a metronome. Remote players
+    /// stay on the positional <see cref="PlayFootstep"/>/<see cref="PlayFootstepMetal"/>.</summary>
+    public void PlayFootstepLocal(bool metal = false)
+    {
+        AudioClip clip = metal
+            ? (Random.value > 0.5f ? synthFootstepMetalA : synthFootstepMetalB)
+            : PickFootstep();
+        Trace(metal ? "metal_footstep_local" : "walk_footstep_local", clip);
+        if (stepSource == null || clip == null) return;
+        stepSource.pitch = Random.Range(0.94f, 1.06f);
+        stepSource.PlayOneShot(clip, Random.Range(0.26f, 0.34f));
+    }
+
+    AudioClip PickFootstep()
+    {
+        if (footstepClips == null || footstepClips.Length == 0)
+            return Random.value > 0.5f ? synthFootstepA : synthFootstepB;
+        int idx = Random.Range(0, footstepClips.Length);
+        if (footstepClips.Length > 1 && idx == lastFootstepIndex)
+            idx = (idx + 1) % footstepClips.Length;
+        lastFootstepIndex = idx;
+        return footstepClips[idx];
     }
 
     /// <summary>Footstep on metal surfaces (stair ramps / scaffold bridge / drop dock).</summary>

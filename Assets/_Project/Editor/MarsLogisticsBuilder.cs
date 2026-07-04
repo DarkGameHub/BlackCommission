@@ -250,8 +250,10 @@ public static class MarsLogisticsBuilder
         Box(p, "CraneRail", new Vector3(26f, 7.2f, 16f), new Vector3(30f, 0.35f, 0.5f), Mat(RackSteel), collider: false);
         Box(p, "CraneTrolley", new Vector3(22f, 6.7f, 16f), new Vector3(1.6f, 0.7f, 1.1f), Mat(RackSteel), collider: false);
 
-        // MonsterSeed — far NE aisle
-        Seed(p, "MonsterSeed_ML_HALL", new Vector3(38f, 0.05f, 22f));
+        // MonsterSeed — far NE aisle. "IDOL" routes to the Civic Idol: the hall's long
+        // sightlines + shelf aisles are the freeze-when-watched arena (glance = frozen,
+        // aisle blocks the line of sight = it walks).
+        Seed(p, "MonsterSeed_ML_HALL_IDOL", new Vector3(38f, 0.05f, 22f));
     }
 
     static void BuildCold(Transform p)

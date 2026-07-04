@@ -24,13 +24,19 @@ public class OfficeTaskDefinition : ScriptableObject
     public int recommendedPlayersMin = 1;
     public int recommendedPlayersMax = 4;
 
-    [Header("Client Preference (scavenging — scavenging-core-loop §3.4)")]
-    [Tooltip("Free Salvage pays market rate for everything; Commissioned/Black favour the categories below.")]
+    [Header("Client Preference (scavenging — two-tier revision 2026-06-26)")]
+    [Tooltip("Free Salvage pays market rate for everything; Commissioned/Black favour the material classes below.")]
     public CommissionClientType clientType = CommissionClientType.FreeSalvage;
-    [Tooltip("Item-category IDs (cast from ScavengeCategory) this client favours — set by the commission builder. " +
-             "Items in these categories settle at ScavengingConfig.clientPreferenceMultiplier on Commissioned/Black runs; " +
-             "empty = market rate. Stored as int (not ScavengeCategory[]) so Office.Core need not reference the Scavenge assembly.")]
+    [Tooltip("LEGACY (pre two-tier): item-category IDs (cast from ScavengeCategory). Superseded by " +
+             "favouredMaterialClassIds; kept so old task assets keep working until re-authored.")]
     public int[] favouredCategoryIds;
+    [Tooltip("Material-class IDs this client favours, 1-2 (cast from MaterialClass: 0 Domestic / 1 Labour / " +
+             "2 Natural / 3 Culture). Salvage in these classes settles at ScavengingConfig.clientPreferenceMultiplier " +
+             "on Commissioned/Black runs; empty = market rate. Stored as int so Office.Core need not reference Scavenge.")]
+    public int[] favouredMaterialClassIds;
+    [Tooltip("Nostalgic personal client (first/second-gen emigrant): relics settle at the emotional multiplier " +
+             "with the moved-and-unsettling note. Off = institution/collector — detached discount and archival note.")]
+    public bool relicSentimentalClient;
 
     // TODO: gate by license stage (game-pillars.md) — requiredOfficeLevel and minimumReputation removed 2026-06-17.
 
@@ -75,4 +81,18 @@ public class OfficeTaskDefinition : ScriptableObject
             if (favouredCategoryIds[i] == categoryId) return true;
         return false;
     }
+
+    /// <summary>True when a salvage material class (cast to int from MaterialClass) earns the
+    /// client-preference multiplier this run (two-tier §2). Free Salvage favours nothing.</summary>
+    public bool FavoursMaterialClassId(int materialClassId)
+    {
+        if (clientType == CommissionClientType.FreeSalvage || favouredMaterialClassIds == null) return false;
+        for (int i = 0; i < favouredMaterialClassIds.Length; i++)
+            if (favouredMaterialClassIds[i] == materialClassId) return true;
+        return false;
+    }
+
+    /// <summary>Whether this run even HAS a client to receive relics (Free Salvage does not —
+    /// relics then settle at plain market rate, two-tier §3).</summary>
+    public bool HasRelicClient => clientType != CommissionClientType.FreeSalvage;
 }
