@@ -98,10 +98,14 @@ public class ScavengeMissionManager : NetworkBehaviour
             ? MvpMissionResultKind.Failed
             : MvpMissionResultKind.Success;
 
+        // Per-item reveal payload (quick-spec §4 P2): names resolved host-side so peers only
+        // render; payouts shipped (not recomputed) so every card matches the credited total.
+        BuildRevealPayload(result, out string namesJoined, out int[] payouts, out byte[] flags);
+
         float minTransit = Mathf.Max(1.5f, returnToOfficeDelaySeconds);
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
         {
-            ApplyResultClientRpc(money, (int)kind);
+            ApplyResultClientRpc(money, (int)kind, namesJoined, payouts, flags);
             // 全队随车: seat everyone (downed included) and ride the return transit while HQ loads.
             PlayerController.SeatAllConnectedServer();
             BeginReturnTransitClientRpc(minTransit);
@@ -109,7 +113,7 @@ public class ScavengeMissionManager : NetworkBehaviour
         }
         else
         {
-            ApplyResultLocally(money, kind);
+            ApplyResultLocally(money, kind, namesJoined, payouts, flags);
             VanTransitOverlay.ShowReturn(MvpMissionRuntime.ActiveTask?.title, null, minTransit);
             Invoke(nameof(ReturnToOffice), minTransit);
         }
@@ -117,19 +121,56 @@ public class ScavengeMissionManager : NetworkBehaviour
         Debug.Log($"[ScavengeMission] Settled {logic.State}: {money}G from {result.Lines.Count} item(s).");
     }
 
+    /// <summary>
+    /// Flatten settlement lines into RPC-friendly parallel arrays. Flag byte layout:
+    /// bit0 = class-preference applied, bit1 = relic, bits 2-3 = RelicReception.
+    /// </summary>
+    static void BuildRevealPayload(SettlementResult result,
+        out string namesJoined, out int[] payouts, out byte[] flags)
+    {
+        var lines = result.Lines;
+        var names = new string[lines.Count];
+        payouts = new int[lines.Count];
+        flags = new byte[lines.Count];
+
+        var defs = Resources.LoadAll<ScavengeItemDefinition>("Scavenge/Items");
+        for (int i = 0; i < lines.Count; i++)
+        {
+            SettlementLine line = lines[i];
+            names[i] = line.ItemId;
+            foreach (var def in defs)
+                if (def != null && def.id == line.ItemId && !string.IsNullOrWhiteSpace(def.displayName))
+                { names[i] = def.displayName; break; }
+
+            payouts[i] = line.Payout;
+            flags[i] = (byte)((line.PreferenceApplied ? 1 : 0)
+                              | (line.Tier == ScavengeTier.Relic ? 2 : 0)
+                              | ((int)line.RelicReception << 2));
+        }
+        namesJoined = string.Join("\n", names);
+    }
+
     [ClientRpc]
     void BeginReturnTransitClientRpc(float minTransitSeconds) =>
         VanTransitOverlay.ShowReturn(MvpMissionRuntime.ActiveTask?.title, null, minTransitSeconds);
 
     [ClientRpc]
-    void ApplyResultClientRpc(int money, int kind) => ApplyResultLocally(money, (MvpMissionResultKind)kind);
+    void ApplyResultClientRpc(int money, int kind, string namesJoined, int[] payouts, byte[] flags)
+        => ApplyResultLocally(money, (MvpMissionResultKind)kind, namesJoined, payouts, flags);
 
-    static void ApplyResultLocally(int money, MvpMissionResultKind kind)
+    static void ApplyResultLocally(int money, MvpMissionResultKind kind,
+        string namesJoined, int[] payouts, byte[] flags)
     {
         bool success = kind == MvpMissionResultKind.Success;
-        // Money-only payout (progression design): the per-item reveal sequence (P2) layers on later.
         MvpPendingReward.Set(money, success, 0f, success, kind);
-        SettlementCardOverlay.Show(kind, money, money, 1f);
+
+        string[] names = string.IsNullOrEmpty(namesJoined)
+            ? System.Array.Empty<string>()
+            : namesJoined.Split('\n');
+        if (names.Length > 0 && payouts != null && payouts.Length == names.Length)
+            SettlementCardOverlay.ShowScavengeReveal(kind, money, names, payouts, flags);
+        else
+            SettlementCardOverlay.Show(kind, money, money, 1f);  // empty cargo — nothing to reveal
     }
 
     void ReturnToOffice()

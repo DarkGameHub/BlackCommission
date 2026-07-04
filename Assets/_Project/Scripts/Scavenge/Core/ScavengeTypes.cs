@@ -28,6 +28,42 @@ namespace BlackCommission.Scavenge
         Wall = 5,
     }
 
+    /// <summary>
+    /// Two-tier loot architecture (quick-spec revision APPROVED 2026-06-26). Salvage is the
+    /// scavenging economy body (weight-vs-value tension, class preference multiplier);
+    /// Relics are the hand-placed emotional anchors (letters / photos / drawings / diaries /
+    /// civic papers) that settle on client emotional match instead of material class.
+    /// </summary>
+    public enum ScavengeTier
+    {
+        Salvage = 0,
+        Relic = 1,
+    }
+
+    /// <summary>
+    /// Tier-1 material class the client preference keys off (quick-spec §2, D1 resolved:
+    /// four classes — each one a side of Earth the Mars clients want to consume).
+    /// </summary>
+    public enum MaterialClass
+    {
+        Domestic = 0,   // 家居烟火 — how real Earth people lived
+        Labour = 1,     // 劳作器械 — real Earth labour
+        Natural = 2,    // 自然遗存 — (polluted) Earth ecology
+        Culture = 3,    // 文化信仰 — Earth spirit / indulgence
+    }
+
+    /// <summary>
+    /// How the run's client receives a relic at settlement (quick-spec §3): a nostalgic
+    /// personal client pays the emotional multiplier; an institution / collector applies the
+    /// detached discount; a run with no client (Free Salvage) pays plain market rate.
+    /// </summary>
+    public enum RelicReception
+    {
+        NoClient = 0,
+        Matched = 1,
+        Mismatched = 2,
+    }
+
     /// <summary>A loot anchor described as plain data for <see cref="LootSpawnPlanner"/>.</summary>
     public readonly struct LootAnchorSlot
     {

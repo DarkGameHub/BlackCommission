@@ -44,8 +44,19 @@ public class InspectController : NetworkBehaviour
     Transform inspectAnchor;
     GameObject relicView;
     ScavengeItem currentItem;
-    GUIStyle detailStyle;
+    ScavengeItemDefinition currentDef;
+    GUIStyle detailStyle, personStyle, hintStyle;
     Texture2D detailBg;
+
+    // 低头握持: camera pitches down while inspecting (spec Transitions, -8~-12°).
+    // TODO ReducedMotion: zero the pitch once the accessibility toggle exists (settings spec).
+    const float InspectPitchDown = 10f;
+    const float PitchBlendSeconds = 0.3f;
+    float pitchBlend;
+    Quaternion camBaseRotation;
+    bool inspectToggleLatched;
+
+    static ScavengeItemDefinition[] defCatalog;
 
     void Awake()
     {
@@ -90,7 +101,21 @@ public class InspectController : NetworkBehaviour
         bool blocked = VanTransitOverlay.IsActive || MvpHud.IsBlockingPanelOpen
                        || MainMenuUI.IsGameplayInputBlockedByMenu;
 
-        bool hold = !blocked && Keyboard.current != null && Keyboard.current.fKey.isPressed;
+        // A11y Toggle mode (spec Accessibility, MUST): F flips a latch instead of requiring
+        // a continuous hold; the latch reads as "hold" to the session, so armed-latch,
+        // interrupts and downed exits behave identically.
+        bool hold;
+        if (AccessibilityPrefs.InspectToggleMode)
+        {
+            if (!blocked && Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+                inspectToggleLatched = !inspectToggleLatched;
+            hold = inspectToggleLatched;
+        }
+        else
+        {
+            inspectToggleLatched = false;
+            hold = !blocked && Keyboard.current != null && Keyboard.current.fKey.isPressed;
+        }
         bool interrupt = session.IsActive && ReadInterrupt();
         ScavengeItem target = ResolveInspectable();
 
@@ -100,8 +125,20 @@ public class InspectController : NetworkBehaviour
         {
             case InspectCommand.Enter: BeginInspect(target); break;
             case InspectCommand.Exit:  EndInspect();          break;
-            default:                   if (session.IsActive) RotateRelic(); break;
+            default:                   if (session.IsActive) { RotateRelic(); BlendHeadPitch(); } break;
         }
+    }
+
+    // Ease the camera into the heads-down hold (~0.3s, spec Transitions); mouse-look is
+    // suspended while inspecting, so this controller owns the camera rotation here.
+    // Reduced Motion zeroes the pitch (spec Accessibility) — hand animation only.
+    void BlendHeadPitch()
+    {
+        if (cameraTransform == null) return;
+        float pitch = AccessibilityPrefs.ReducedMotion ? 0f : InspectPitchDown;
+        pitchBlend = Mathf.MoveTowards(pitchBlend, 1f, Time.deltaTime / PitchBlendSeconds);
+        cameraTransform.localRotation = camBaseRotation
+            * Quaternion.Euler(pitch * Mathf.SmoothStep(0f, 1f, pitchBlend), 0f, 0f);
     }
 
     // MVP: any aimed ScavengeItem. tier/isInspectable gating + held-relic entry are follow-ups.
@@ -125,17 +162,37 @@ public class InspectController : NetworkBehaviour
     void BeginInspect(ScavengeItem item)
     {
         currentItem = item;
+        currentDef = ResolveDefinition(item);
         LocalInspecting = true;
         IsInspecting.Value = true;
         BuildRelicView(item);
+
+        pitchBlend = 0f;
+        if (cameraTransform != null) camBaseRotation = cameraTransform.localRotation;
     }
 
     void EndInspect()
     {
+        inspectToggleLatched = false;
         currentItem = null;
+        currentDef = null;
         LocalInspecting = false;
         IsInspecting.Value = false;
         if (relicView != null) { Destroy(relicView); relicView = null; }
+        // 急放 (~0.1s feel): snap the pitch back; mouse-look resumes next frame.
+        if (cameraTransform != null) cameraTransform.localRotation = camBaseRotation;
+    }
+
+    // Definition lookup by item id — carries displayName/tier/targetPersonId/inspectDetail
+    // for the detail label. Host/solo resolves fine; clients need ItemId replication first
+    // (follow-up: itemId is host-stamped, not yet synced).
+    static ScavengeItemDefinition ResolveDefinition(ScavengeItem item)
+    {
+        if (item == null || string.IsNullOrEmpty(item.ItemId)) return null;
+        defCatalog ??= Resources.LoadAll<ScavengeItemDefinition>("Scavenge/Items");
+        foreach (var def in defCatalog)
+            if (def != null && def.id == item.ItemId) return def;
+        return null;
     }
 
     void RotateRelic()
@@ -189,32 +246,82 @@ public class InspectController : NetworkBehaviour
             rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     }
 
-    // Placeholder inspectDetail panel: screen-space (Zone-Detail), paper text on a dark
-    // "torn archive label" backing (撕边档案标签) for dark-scene contrast (spec Layout + a11y).
-    // The real localized one-liner + targetPersonId reveal replaces the body once
-    // ScavengeItemDefinition carries inspectDetail/targetPersonId.
+    // Zone-Detail (spec Layout): screen-space anchored right of the relic — rotation never
+    // spins the text. Paper ink on a dark semi-transparent "torn archive label" (撕边档案标签,
+    // alpha ~0.55) so the line stays WCAG-readable over a dark scene. inspectDetail is stored
+    // as raw zh text for now; the localization pass swaps it to a string-table key (spec Loc).
     void OnGUI()
     {
         if (!IsOwner || !session.IsActive) return;
-        if (detailStyle == null)
-        {
-            detailBg = new Texture2D(1, 1);
-            detailBg.SetPixel(0, 0, new Color(0.04f, 0.045f, 0.05f, 0.7f));
-            detailBg.Apply();
-            detailStyle = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 16,
-                alignment = TextAnchor.UpperLeft,
-                wordWrap = true,
-                normal = { textColor = BlackCommissionUiTheme.OldPaper, background = detailBg },
-                padding = new RectOffset(12, 12, 10, 10)
-            };
-            MvpFontProvider.ApplyToStyle(detailStyle);
-        }
+        EnsureDetailStyles();
+        if (detailStyle == null) return;
 
-        string body = currentItem != null
-            ? $"检视中\n{currentItem.ItemId}\n（视觉痕迹 · 占位）"
-            : "检视中";
-        GUI.Label(new Rect(Screen.width * 0.60f, Screen.height * 0.40f, 260f, 96f), body, detailStyle);
+        string title = currentDef != null && !string.IsNullOrWhiteSpace(currentDef.displayName)
+            ? currentDef.displayName
+            : null;
+        bool relic = currentDef != null && currentDef.tier == ScavengeTier.Relic;
+        string body = relic && !string.IsNullOrWhiteSpace(currentDef.inspectDetail)
+            ? currentDef.inspectDetail
+            : "看不出值多少。";   // 层一 salvage: value stays unreadable in hand (two-tier §1)
+
+        float w = 300f;
+        float x = Screen.width * 0.58f;
+        float y = Screen.height * 0.40f;
+        float titleH = title != null ? 26f : 0f;
+        float bodyH = detailStyle.CalcHeight(new GUIContent(body), w - 28f);
+        var label = new Rect(x, y, w, titleH + bodyH + 22f);
+
+        DrawTornLabel(label);
+        if (title != null)
+            GUI.Label(new Rect(label.x + 16f, label.y + 8f, w - 30f, 22f), title, personStyle);
+        GUI.Label(new Rect(label.x + 16f, label.y + 10f + titleH, w - 28f, bodyH + 4f), body, detailStyle);
+
+        // Zone-Hint: operation micro-hint, bottom center (fades from attention, not from screen).
+        GUI.Label(new Rect(0f, Screen.height - 46f, Screen.width, 22f),
+            "拖动旋转看不同面  ·  松开 F 放下", hintStyle);
+    }
+
+    // Horizontal strips with a jittered left edge — a cheap torn-paper silhouette that reads
+    // as an archive label rather than a UI card.
+    void DrawTornLabel(Rect r)
+    {
+        float[] tear = { 0f, 5f, 2f, 7f, 1f, 4f };
+        float stripH = r.height / tear.Length;
+        for (int i = 0; i < tear.Length; i++)
+            GUI.DrawTexture(new Rect(r.x - tear[i], r.y + i * stripH, r.width + tear[i], stripH + 1f), detailBg);
+    }
+
+    void EnsureDetailStyles()
+    {
+        if (detailStyle != null) return;
+        if (GUI.skin == null || GUI.skin.label == null) return;
+
+        detailBg = new Texture2D(1, 1);
+        detailBg.SetPixel(0, 0, new Color(0.045f, 0.05f, 0.055f, 0.55f));
+        detailBg.Apply();
+
+        detailStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 16,
+            alignment = TextAnchor.UpperLeft,
+            wordWrap = true,
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }
+        };
+        personStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 13,
+            fontStyle = FontStyle.Bold,
+            alignment = TextAnchor.UpperLeft,
+            normal = { textColor = new Color(0.78f, 0.72f, 0.58f, 0.95f) }
+        };
+        hintStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(0.84f, 0.80f, 0.68f, 0.75f) }
+        };
+        MvpFontProvider.ApplyToStyle(detailStyle);
+        MvpFontProvider.ApplyToStyle(personStyle);
+        MvpFontProvider.ApplyToStyle(hintStyle);
     }
 }

@@ -30,6 +30,23 @@ namespace BlackCommission.Scavenge
         [Tooltip("Whitebox/real prefab spawned for this item. Null until the visual pass (P1b).")]
         public GameObject prefab;
 
+        [Header("Two-Tier (quick-spec revision 2026-06-26)")]
+        [Tooltip("Salvage = economy body (class preference applies); Relic = hand-placed emotional anchor.")]
+        public ScavengeTier tier = ScavengeTier.Salvage;
+
+        [Tooltip("Salvage only: the material class the client-preference multiplier keys off.")]
+        public MaterialClass materialClass = MaterialClass.Domestic;
+
+        [Tooltip("Can be held up and inspected (relics = true; hand-held salvage inspection is v2).")]
+        public bool isInspectable;
+
+        [Tooltip("Relic only: the person this belonged to — links inspection to the settlement contrast.")]
+        public string targetPersonId;
+
+        [Tooltip("Relic only: localization KEY for the restrained one-two inspect lines. " +
+                 "UI text — never baked into the texture (modeling-brief §5.6 / G1).")]
+        public string inspectDetail;
+
         /// <summary>Pure-data view consumed by the spawn planner.</summary>
         public ScavengeItemSpec ToSpec()
             => new ScavengeItemSpec(id, weight, allowedSurfaces ?? System.Array.Empty<LootSurface>());

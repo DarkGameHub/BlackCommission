@@ -101,7 +101,7 @@ public class LootSpawner : NetworkBehaviour
             netObj.Spawn(true);
 
             if (go.TryGetComponent<ScavengeItem>(out var item))
-                item.ConfigureServer(def.id, def.weight, def.baseValue, def.category);
+                item.ConfigureServer(def.id, def.weight, def.baseValue, def.category, def.tier, def.materialClass);
 
             spawned.Add(netObj);
         }

@@ -125,12 +125,18 @@ public class ScavengeCargoZone : NetworkBehaviour
 
     void TryStow(ScavengeItem item)
     {
-        // Client preference (scavenging-core-loop §3.4): items in the run client's favoured
-        // categories settle at the preference multiplier (Free Salvage favours nothing). Condition
-        // stays Good until the condition-by-environment pass (a deeper milestone).
-        bool favoured = MvpMissionRuntime.ActiveTask != null &&
-                        MvpMissionRuntime.ActiveTask.FavoursCategoryId((int)item.Category);
-        var settlementItem = new SettlementItem(item.ItemId, item.BaseValue, ItemCondition.Good, favoured);
+        // Two-tier flags (quick-spec 2026-06-26): salvage keys the class-preference multiplier
+        // off the run client's favoured material classes; relics key emotional reception off the
+        // client persona (Free Salvage has no client → market rate). Condition stays Good until
+        // the condition-by-environment pass (a deeper milestone).
+        var task = MvpMissionRuntime.ActiveTask;
+        bool favoured = item.Tier == ScavengeTier.Salvage && task != null &&
+                        task.FavoursMaterialClassId((int)item.MaterialClass);
+        RelicReception reception = RelicReception.NoClient;
+        if (item.Tier == ScavengeTier.Relic && task != null && task.HasRelicClient)
+            reception = task.relicSentimentalClient ? RelicReception.Matched : RelicReception.Mismatched;
+        var settlementItem = new SettlementItem(item.ItemId, item.BaseValue, ItemCondition.Good, favoured,
+            item.Tier, reception);
         if (!manifest.TryLoad(settlementItem, item.Weight))
             return; // won't fit — leave it on the ground (team decides what stays)
 

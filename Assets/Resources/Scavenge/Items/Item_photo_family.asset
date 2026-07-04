@@ -19,3 +19,8 @@ MonoBehaviour:
   allowedSurfaces: 
   baseValue: 50
   prefab: {fileID: 0}
+  tier: 1
+  materialClass: 0
+  isInspectable: 1
+  targetPersonId: unit0703_family
+  inspectDetail: "四个人站在样板间门口。背面用铅笔写着：搬进来的第一天。"

@@ -19,3 +19,8 @@ MonoBehaviour:
   allowedSurfaces: 
   baseValue: 35
   prefab: {fileID: 0}
+  tier: 1
+  materialClass: 0
+  isInspectable: 1
+  targetPersonId: unit0902_child
+  inspectDetail: "蜡笔画的是这栋楼——每扇窗都涂了灯，画里的天是蓝色的。"

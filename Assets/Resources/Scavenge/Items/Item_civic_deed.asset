@@ -19,3 +19,8 @@ MonoBehaviour:
   allowedSurfaces: 
   baseValue: 65
   prefab: {fileID: 0}
+  tier: 1
+  materialClass: 0
+  isInspectable: 1
+  targetPersonId: unit0501_owner
+  inspectDetail: "房契边角盖着「作废」章，骑缝处有一片被反复摸过的油光。"

@@ -20,10 +20,15 @@ public class ScavengeItem : Carriable, IInteractable
     [Tooltip("Hidden base value (G). Read host-side at settlement; never shown during the mission.")]
     [SerializeField] int baseValue;
 
+    [SerializeField] ScavengeTier tier = ScavengeTier.Salvage;
+    [SerializeField] MaterialClass materialClass = MaterialClass.Domestic;
+
     public string ItemId => itemId;
     public WeightClass Weight => weightClass;
     public ScavengeCategory Category => category;
     public int BaseValue => baseValue;
+    public ScavengeTier Tier => tier;
+    public MaterialClass MaterialClass => materialClass;
 
     public string InteractHint => CanBeCarried ? (IsHeavy ? "扛起（重物·双手）" : "拾取") : "";
 
@@ -43,11 +48,14 @@ public class ScavengeItem : Carriable, IInteractable
     /// instance. The prefab only bakes the weight-class visual + carry style; which actual
     /// item this is (and its hidden value) is decided per spawn by the loot spawner.
     /// </summary>
-    public void ConfigureServer(string id, WeightClass weight, int value, ScavengeCategory cat)
+    public void ConfigureServer(string id, WeightClass weight, int value, ScavengeCategory cat,
+        ScavengeTier itemTier = ScavengeTier.Salvage, MaterialClass itemClass = MaterialClass.Domestic)
     {
         itemId = id;
         weightClass = weight;
         baseValue = value;
         category = cat;
+        tier = itemTier;
+        materialClass = itemClass;
     }
 }

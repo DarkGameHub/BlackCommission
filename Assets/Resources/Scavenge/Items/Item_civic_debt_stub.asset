@@ -19,3 +19,8 @@ MonoBehaviour:
   allowedSurfaces: 
   baseValue: 30
   prefab: {fileID: 0}
+  tier: 1
+  materialClass: 0
+  isInspectable: 1
+  targetPersonId: unit0501_owner
+  inspectDetail: "催缴存根，第 11 次。金额栏被人用指甲划烂了。"

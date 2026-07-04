@@ -25,12 +25,21 @@ namespace BlackCommission.Scavenge
         public readonly ItemCondition Condition;
         public readonly bool IsFavoured;
 
-        public SettlementItem(string id, int baseValue, ItemCondition condition, bool isFavoured = false)
+        /// <summary>Salvage (economy body) or Relic (emotional anchor) — two-tier revision 2026-06-26.</summary>
+        public readonly ScavengeTier Tier;
+
+        /// <summary>Relic only: how the run's client receives it (caller-computed, like <see cref="IsFavoured"/>).</summary>
+        public readonly RelicReception RelicReception;
+
+        public SettlementItem(string id, int baseValue, ItemCondition condition, bool isFavoured = false,
+            ScavengeTier tier = ScavengeTier.Salvage, RelicReception relicReception = RelicReception.NoClient)
         {
             Id = id;
             BaseValue = baseValue;
             Condition = condition;
             IsFavoured = isFavoured;
+            Tier = tier;
+            RelicReception = relicReception;
         }
     }
 
@@ -41,18 +50,27 @@ namespace BlackCommission.Scavenge
         public readonly int BaseValue;
         public readonly ItemCondition Condition;
 
-        /// <summary>True when the client-preference multiplier was applied (item in a favoured category).</summary>
+        /// <summary>True when the client-preference multiplier was applied (salvage in a favoured material class).</summary>
         public readonly bool PreferenceApplied;
         public readonly int Payout;
 
+        /// <summary>Salvage or Relic — drives the reveal's line grammar (relics get the client-reception note).</summary>
+        public readonly ScavengeTier Tier;
+
+        /// <summary>Relic only: the client reception that priced this line (settlement-text hook).</summary>
+        public readonly RelicReception RelicReception;
+
         public SettlementLine(string itemId, int baseValue, ItemCondition condition,
-            bool preferenceApplied, int payout)
+            bool preferenceApplied, int payout,
+            ScavengeTier tier = ScavengeTier.Salvage, RelicReception relicReception = RelicReception.NoClient)
         {
             ItemId = itemId;
             BaseValue = baseValue;
             Condition = condition;
             PreferenceApplied = preferenceApplied;
             Payout = payout;
+            Tier = tier;
+            RelicReception = relicReception;
         }
     }
 }

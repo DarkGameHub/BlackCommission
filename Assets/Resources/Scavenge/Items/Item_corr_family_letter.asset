@@ -19,3 +19,8 @@ MonoBehaviour:
   allowedSurfaces: 
   baseValue: 45
   prefab: {fileID: 0}
+  tier: 1
+  materialClass: 0
+  isInspectable: 1
+  targetPersonId: unit1204_mother
+  inspectDetail: "致小满：妈妈的名额批下来了，你的还在排。信封上没有邮票。"

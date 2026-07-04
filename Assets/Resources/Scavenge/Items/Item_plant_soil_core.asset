@@ -19,3 +19,8 @@ MonoBehaviour:
   allowedSurfaces: 
   baseValue: 80
   prefab: {fileID: 0}
+  tier: 0
+  materialClass: 2
+  isInspectable: 0
+  targetPersonId: 
+  inspectDetail: 
