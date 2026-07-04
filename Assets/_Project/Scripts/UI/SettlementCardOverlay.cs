@@ -16,6 +16,7 @@ public class SettlementCardOverlay : MonoBehaviour
     const float StampDelaySeconds = 0.4f;
     const float StampSlamSeconds = 0.12f;
     const float SlideSeconds = 0.25f;
+    const float RevealStepSeconds = 0.35f;   // per-item cadence of the scavenge reveal
 
     static SettlementCardOverlay current;
 
@@ -33,24 +34,50 @@ public class SettlementCardOverlay : MonoBehaviour
     bool stampSoundPlayed;
     int lastFoldFrame = -1;
 
+    // Scavenge reveal mode: item rows surface one by one, net + stamp land after the last.
+    bool revealMode;
+    int itemRowCount;
+    float itemRowHeight = 26f;
+
     string docNumber;
     string commissionTitle;
     string stampLabel;
     string clientNote;
     Row[] rows;
 
+    // The stamp waits for the full reveal in scavenge mode.
+    float StampDelay => revealMode
+        ? SlideSeconds + itemRowCount * RevealStepSeconds + 0.4f
+        : StampDelaySeconds;
+
     GUIStyle headerStyle, rowStyle, sublineStyle, netStyle, noteStyle, footerStyle, stampStyle;
 
     /// <summary>Builds and shows the card on this peer. All money values are final (post-scaling).</summary>
     public static void Show(MvpMissionResultKind kind, int baseMoney, int netMoney, float completeness)
     {
-        if (current == null)
-        {
-            var go = new GameObject("MVP_SettlementCardOverlay");
-            DontDestroyOnLoad(go);
-            current = go.AddComponent<SettlementCardOverlay>();
-        }
+        Ensure();
         current.Build(kind, baseMoney, netMoney, completeness);
+    }
+
+    /// <summary>
+    /// Scavenge run variant: per-item reveal (two-tier quick-spec §4 P2). Item rows surface one
+    /// by one; relics carry their client-reception note. Flag byte layout (mirrors
+    /// ScavengeMissionManager.BuildRevealPayload): bit0 = class preference, bit1 = relic,
+    /// bits 2-3 = RelicReception (0 none / 1 matched / 2 mismatched).
+    /// </summary>
+    public static void ShowScavengeReveal(MvpMissionResultKind kind, int netMoney,
+        string[] names, int[] payouts, byte[] flags)
+    {
+        Ensure();
+        current.BuildScavengeReveal(kind, netMoney, names, payouts, flags);
+    }
+
+    static void Ensure()
+    {
+        if (current != null) return;
+        var go = new GameObject("MVP_SettlementCardOverlay");
+        DontDestroyOnLoad(go);
+        current = go.AddComponent<SettlementCardOverlay>();
     }
 
     void Build(MvpMissionResultKind kind, int baseMoney, int netMoney, float completeness)
@@ -113,6 +140,58 @@ public class SettlementCardOverlay : MonoBehaviour
                 break;
         }
 
+        revealMode = false;
+        itemRowCount = 0;
+        hasCard = true;
+        visible = true;
+        shownAt = Time.unscaledTime;
+        stampSoundPlayed = false;
+    }
+
+    void BuildScavengeReveal(MvpMissionResultKind kind, int netMoney,
+        string[] names, int[] payouts, byte[] flags)
+    {
+        // Deterministic across peers (identical payload in → identical number/note out).
+        int seed = Mathf.Abs(netMoney * 73 + (int)kind * 131 + names.Length * 17);
+        docNumber = $"BC-2098-{seed % 10000:D4}";
+
+        OfficeTaskDefinition task = MvpMissionRuntime.SelectedTask;
+        commissionTitle = task != null && !string.IsNullOrWhiteSpace(task.title)
+            ? task.title
+            : SceneManager.GetActiveScene().name;
+        clientNote = task != null ? task.GetSettlementNote(kind, seed) : null;
+        stampLabel = kind == MvpMissionResultKind.Failed ? "失 败" : "完 成";
+
+        var built = new System.Collections.Generic.List<Row>(names.Length + 1);
+        for (int i = 0; i < names.Length; i++)
+        {
+            byte f = flags != null && i < flags.Length ? flags[i] : (byte)0;
+            bool preferred = (f & 1) != 0;
+            bool relic = (f & 2) != 0;
+            int reception = (f >> 2) & 3;
+
+            // Placeholder grammar — the satire wording is the writer pass's; structure is spec'd.
+            string subline = null;
+            if (relic)
+                subline = reception switch
+                {
+                    1 => "私人遗物 · 客户情感加价",
+                    2 => "私人遗物 · 已入藏归档，冷淡折价",
+                    _ => "私人遗物 · 市场价"
+                };
+            else if (preferred)
+                subline = "客户偏好品类，加价收购";
+
+            built.Add(new Row { label = names[i], amount = payouts[i], subline = subline });
+        }
+        itemRowCount = built.Count;
+        built.Add(new Row { label = "实付", amount = netMoney, isNet = true });
+        rows = built.ToArray();
+
+        // Long manifests compress their line spacing so the card stays on a 1080 screen.
+        itemRowHeight = itemRowCount > 9 ? 20f : 26f;
+
+        revealMode = true;
         hasCard = true;
         visible = true;
         shownAt = Time.unscaledTime;
@@ -165,12 +244,12 @@ public class SettlementCardOverlay : MonoBehaviour
         else if (!visible && keyboard.tabKey.wasPressedThisFrame)
         {
             visible = true;
-            // Re-open keeps the stamp already fallen — no second slam.
-            shownAt = Time.unscaledTime - (StampDelaySeconds + StampSlamSeconds + SlideSeconds);
+            // Re-open keeps the stamp already fallen (and the reveal complete) — no second slam.
+            shownAt = Time.unscaledTime - (StampDelay + StampSlamSeconds + SlideSeconds);
         }
 
         // 印章落纸: the settlement becomes official the moment the stamp hits the card.
-        if (visible && !stampSoundPlayed && Time.unscaledTime - shownAt >= StampDelaySeconds)
+        if (visible && !stampSoundPlayed && Time.unscaledTime - shownAt >= StampDelay)
         {
             stampSoundPlayed = true;
             AudioManager.Instance?.PlayStamp();
@@ -191,7 +270,9 @@ public class SettlementCardOverlay : MonoBehaviour
 
         float w = 440f;
         float noteH = string.IsNullOrEmpty(clientNote) ? 0f : 84f;
-        float h = 150f + rows.Length * 30f + CountSublines() * 18f + noteH + 44f;
+        float h = revealMode
+            ? 150f + itemRowCount * itemRowHeight + CountSublines() * 16f + 38f + noteH + 44f
+            : 150f + rows.Length * 30f + CountSublines() * 18f + noteH + 44f;
         float targetY = Screen.height - h - 150f;
         var card = new Rect((Screen.width - w) * 0.5f, Mathf.Lerp(Screen.height, targetY, ease), w, h);
 
@@ -207,12 +288,20 @@ public class SettlementCardOverlay : MonoBehaviour
         GUI.Label(new Rect(card.x + 16f, card.y + 30f, card.width - 32f, 20f),
             $"单号 {docNumber}    {commissionTitle}", headerStyle);
 
-        // Itemized rows.
+        // Itemized rows. In reveal mode items surface one per RevealStep; the net line waits
+        // for the full manifest and lands just before the stamp.
+        int shownItems = revealMode
+            ? Mathf.Clamp(1 + Mathf.FloorToInt((age - SlideSeconds) / RevealStepSeconds), 0, itemRowCount)
+            : int.MaxValue;
+        float rowH = revealMode ? itemRowHeight : 26f;
+        float subH = revealMode ? 16f : 18f;
         float y = card.y + 70f;
+        int itemIndex = 0;
         foreach (Row row in rows)
         {
             if (row.isNet)
             {
+                if (revealMode && age < StampDelay - 0.15f) break;
                 GUI.DrawTexture(new Rect(card.x + 16f, y + 2f, card.width - 32f, 1f),
                     BlackCommissionUiTheme.MakeTex(new Color(0.19f, 0.17f, 0.13f, 0.55f)));
                 y += 8f;
@@ -222,14 +311,17 @@ public class SettlementCardOverlay : MonoBehaviour
                 continue;
             }
 
+            if (revealMode && itemIndex >= shownItems) break;
+            itemIndex++;
+
             GUI.Label(new Rect(card.x + 16f, y, card.width - 140f, 22f), row.label, rowStyle);
             GUI.Label(new Rect(card.xMax - 156f, y, 140f, 22f),
                 row.amount >= 0 ? $"+{row.amount}G" : $"−{-row.amount}G", rowStyle);
-            y += 26f;
+            y += rowH;
             if (!string.IsNullOrEmpty(row.subline))
             {
                 GUI.Label(new Rect(card.x + 30f, y, card.width - 60f, 16f), $"· {row.subline}", sublineStyle);
-                y += 18f;
+                y += subH;
             }
         }
 
@@ -248,10 +340,11 @@ public class SettlementCardOverlay : MonoBehaviour
             "回所后凭本单至办公终端入账    [E] 收起   [Tab] 重看", footerStyle);
 
         // Outcome stamp: slams in at StampDelay, slightly rotated, over the table's top-right.
-        if (age >= StampDelaySeconds)
+        // Reduced Motion: the stamp appears at rest — no slam scaling (spec a11y).
+        if (age >= StampDelay)
         {
-            float slam = Mathf.Clamp01((age - StampDelaySeconds) / StampSlamSeconds);
-            float scale = Mathf.Lerp(1.3f, 1f, slam);
+            float slam = Mathf.Clamp01((age - StampDelay) / StampSlamSeconds);
+            float scale = AccessibilityPrefs.ReducedMotion ? 1f : Mathf.Lerp(1.3f, 1f, slam);
             DrawStamp(new Vector2(card.xMax - 86f, card.y + 92f), scale,
                 Mathf.Lerp(0.4f, 0.92f, slam));
         }

@@ -333,7 +333,19 @@ public class MvpHud : MonoBehaviour
         if (damageFlashTex == null) return;
         float alpha = (damageFlashUntil - Time.time) / 0.35f;
         GUI.color = new Color(1f, 1f, 1f, alpha * 0.55f);
-        GUI.DrawTexture(new Rect(0, 0, RefW, RefH), damageFlashTex, ScaleMode.StretchToFill);
+        if (AccessibilityPrefs.ReducedFlash)
+        {
+            // 减弱屏闪 (hud.md a11y): an 8px stamp-red edge frame instead of the full-screen wash.
+            const float t = 8f;
+            GUI.DrawTexture(new Rect(0, 0, RefW, t), damageFlashTex, ScaleMode.StretchToFill);
+            GUI.DrawTexture(new Rect(0, RefH - t, RefW, t), damageFlashTex, ScaleMode.StretchToFill);
+            GUI.DrawTexture(new Rect(0, 0, t, RefH), damageFlashTex, ScaleMode.StretchToFill);
+            GUI.DrawTexture(new Rect(RefW - t, 0, t, RefH), damageFlashTex, ScaleMode.StretchToFill);
+        }
+        else
+        {
+            GUI.DrawTexture(new Rect(0, 0, RefW, RefH), damageFlashTex, ScaleMode.StretchToFill);
+        }
         GUI.color = Color.white;
     }
 
@@ -401,26 +413,27 @@ public class MvpHud : MonoBehaviour
 
         if (!computerOpen)
         {
-            GUILayout.BeginArea(new Rect(18, 18, 320, 74), GUIContent.none, panelStyle);
-            GUILayout.Label("Black Commission", titleStyle);
-            string officeStatus;
-            GUIStyle statusStyle = accentStyle;
+            // Field-form grammar: a small paper slip, and only when it has something to say
+            // (pending reward / locked commission / terminal in reach). The old black
+            // "Office on standby." badge was zero-information chrome floating over the wall CRT.
+            string officeStatus = null;
+            bool warn = false;
             if (MvpPendingReward.HasPending)
             {
                 officeStatus = MvpLocale.T("reward_pending", MvpPendingReward.ResultLabel);
-                statusStyle = warningStyle;
+                warn = true;
             }
             else if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
             {
                 officeStatus = MvpLocale.T("task_accepted", MvpMissionRuntime.SelectedTask.title);
             }
-            else
+            else if (nearShop)
             {
-                officeStatus = nearShop ? MvpLocale.T("computer_connected") : MvpLocale.T("office_idle");
+                officeStatus = MvpLocale.T("computer_connected");
             }
 
-            GUILayout.Label(officeStatus, statusStyle);
-            GUILayout.EndArea();
+            if (officeStatus != null)
+                DrawOfficeSlip(officeStatus, warn);
             return;
         }
 
@@ -433,6 +446,40 @@ public class MvpHud : MonoBehaviour
 
         EnsureCrtTextures();
         DrawCrtOverlay(rect);
+    }
+
+    GUIStyle officeSlipStyle;
+
+    // Aged-paper slip, top-left: civic-teal rule + ink text (same grammar as the dispatch
+    // ticket strip); the side tab flips stamp-red when a settlement is waiting to be claimed.
+    void DrawOfficeSlip(string text, bool warning)
+    {
+        if (officeSlipStyle == null && GUI.skin != null && GUI.skin.label != null)
+        {
+            officeSlipStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 13,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleLeft,
+                wordWrap = false,
+                normal = { textColor = new Color(0.10f, 0.095f, 0.075f, 1f) }
+            };
+            MvpFontProvider.ApplyToStyle(officeSlipStyle);
+        }
+        if (officeSlipStyle == null) return;
+
+        var slip = new Rect(18f, 18f, 336f, 42f);
+        GUI.DrawTexture(new Rect(slip.x - 2f, slip.y - 2f, slip.width + 4f, slip.height + 4f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
+        GUI.DrawTexture(slip, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
+        GUI.DrawTexture(new Rect(slip.x, slip.y, slip.width, 2f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+        GUI.DrawTexture(new Rect(slip.x + 6f, slip.y + 7f, 4f, slip.height - 14f),
+            BlackCommissionUiTheme.MakeTex(warning
+                ? BlackCommissionUiTheme.RustWarning
+                : BlackCommissionUiTheme.MilitaryGreen));
+        GUI.Label(new Rect(slip.x + 18f, slip.y + 2f, slip.width - 28f, slip.height - 4f),
+            text, officeSlipStyle);
     }
 
     void DrawCurrentCommissionOrDemo(OfficeComputer computer)
@@ -451,7 +498,8 @@ public class MvpHud : MonoBehaviour
         DrawDemoTaskCard(computer);
     }
 
-    static readonly string[] TerminalTabLabels = { "[1] COMMISSIONS", "[2] SUPPLY", "[3] LEDGER" };
+    static string[] TerminalTabLabels => new[]
+        { MvpLocale.T("term_tab_comm"), MvpLocale.T("term_tab_supply"), MvpLocale.T("term_tab_ledger") };
 
     // Tabbed BC-DOS office management terminal (office-computer-terminal.md): single
     // monochrome-green CRT — Z1 top bar / Z2 status / Z3 tabs / Z4 content / Z5 action.
@@ -465,9 +513,9 @@ public class MvpHud : MonoBehaviour
 
         // Z1 — top bar
         GUI.Label(new Rect(x, 16f, w - 320f, 22f),
-            "BC OFFICE MANAGEMENT SYSTEM v2.1", terminalTitleStyle);
+            MvpLocale.T("term_title"), terminalTitleStyle);
         GUI.Label(new Rect(x + w - 320f, 16f, 320f, 22f),
-            "2098-11-07  09:13   USER: BC_STAFF", terminalLabelStyle);
+            MvpLocale.T("term_userline"), terminalLabelStyle);
         DrawTerminalLine(new Rect(x, 44f, w, 1f));
 
         // Z2 — status strip (funds / debt / license / connection)
@@ -521,16 +569,16 @@ public class MvpHud : MonoBehaviour
     void DrawTerminalStatusBar(Rect rect, CompanyState company)
     {
         bool broke = company.Funds < 0;
-        string funds = (broke ? "! FUNDS " : "FUNDS ") + company.Funds + "G";
+        string funds = (broke ? "! " : "") + MvpLocale.T("term_funds") + " " + company.Funds + "G";
         float fw = terminalLabelStyle.CalcSize(new GUIContent(funds)).x + 10f;
         if (broke) GUI.Box(new Rect(rect.x, rect.y - 1f, fw, rect.height + 2f), GUIContent.none, terminalSelectedButtonStyle);
         GUI.Label(new Rect(rect.x + 4f, rect.y, fw, rect.height), funds, broke ? terminalInverseStyle : terminalLabelStyle);
         float fx = rect.x + fw + 22f;
-        GUI.Label(new Rect(fx, rect.y, 150f, rect.height), "DEBT " + company.Debt + "G", terminalLabelStyle);
-        GUI.Label(new Rect(fx + 150f, rect.y, 260f, rect.height), "LICENSE: TIER 1 (PROVISIONAL)", terminalMutedStyle);
+        GUI.Label(new Rect(fx, rect.y, 150f, rect.height), MvpLocale.T("term_debt") + " " + company.Debt + "G", terminalLabelStyle);
+        GUI.Label(new Rect(fx + 150f, rect.y, 260f, rect.height), MvpLocale.T("term_license"), terminalMutedStyle);
         string conn = NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening
-            ? (NetworkManager.Singleton.IsHost ? "HOST" : "CLIENT - VIEW ONLY")
-            : "OFFLINE";
+            ? (NetworkManager.Singleton.IsHost ? MvpLocale.T("term_conn_host") : MvpLocale.T("term_conn_client"))
+            : MvpLocale.T("term_conn_offline");
         GUI.Label(new Rect(rect.x + rect.width - 220f, rect.y, 220f, rect.height), conn, terminalLabelRightStyle);
     }
 
@@ -559,14 +607,19 @@ public class MvpHud : MonoBehaviour
             Rect box = new Rect(content.x, y, content.width, 50f);
             GUI.Box(box, GUIContent.none, terminalSelectedButtonStyle);
             GUI.Label(new Rect(box.x + 12f, box.y + 5f, box.width - 24f, 20f),
-                "! SETTLEMENT PENDING - " + MvpPendingReward.ResultLabel, terminalInverseStyle);
+                MvpLocale.T("term_pending_head", MvpPendingReward.ResultLabel), terminalInverseStyle);
             GUI.Label(new Rect(box.x + 12f, box.y + 26f, box.width - 24f, 20f),
-                "PAYOUT +" + MvpPendingReward.Money + "G   CLAIM TO UNLOCK SUPPLY", terminalInverseStyle);
+                MvpLocale.T("term_pending_body", MvpPendingReward.Money), terminalInverseStyle);
             y += 60f;
         }
 
-        GUI.Label(new Rect(content.x, y, content.width, 20f),
-            "NO.   COMMISSION                       CLIENT         PAY     STATUS", terminalMutedStyle);
+        // Column captions sit at the same x offsets as the data rows (a single spaced
+        // string can't line up once the captions are CJK).
+        GUI.Label(new Rect(content.x + 8f, y, 52f, 20f), MvpLocale.T("term_col_no"), terminalMutedStyle);
+        GUI.Label(new Rect(content.x + 60f, y, content.width * 0.40f, 20f), MvpLocale.T("term_col_name"), terminalMutedStyle);
+        GUI.Label(new Rect(content.x + content.width * 0.50f, y, content.width * 0.18f, 20f), MvpLocale.T("term_col_client"), terminalMutedStyle);
+        GUI.Label(new Rect(content.x + content.width * 0.70f, y, 84f, 20f), MvpLocale.T("term_col_pay"), terminalMutedStyle);
+        GUI.Label(new Rect(content.x + content.width * 0.82f, y, content.width * 0.18f, 20f), MvpLocale.T("term_col_status"), terminalMutedStyle);
         DrawTerminalLine(new Rect(content.x, y + 22f, content.width, 1f));
         y += 30f;
 
@@ -599,14 +652,14 @@ public class MvpHud : MonoBehaviour
         else
         {
             GUI.Label(new Rect(content.x, y, content.width, 22f),
-                "NO NEW COMMISSIONS THIS CYCLE - AWAITING DISPATCH", terminalMutedStyle);
+                MvpLocale.T("term_pool_empty"), terminalMutedStyle);
             y += 30f;
         }
 
         if (company.CanShowTutorialAcquisition)
         {
             GUI.Label(new Rect(content.x + 8f, y, content.width - 16f, 22f),
-                "ACQ   OFFICE ACQUISITION FILE          BC HQ         150G    SPECIAL", terminalTitleStyle);
+                MvpLocale.T("term_acq_row"), terminalTitleStyle);
             y += 30f;
         }
 
@@ -616,13 +669,14 @@ public class MvpHud : MonoBehaviour
         if (pool != null && pool.Length > 0)
         {
             OfficeTaskDefinition t = pool[Mathf.Clamp(selectedIdx, 0, pool.Length - 1)];
-            GUI.Label(new Rect(content.x, y, content.width, 20f), $"DETAIL [{selectedIdx + 1:000}]:  " + t.title, terminalLabelStyle);
+            GUI.Label(new Rect(content.x, y, content.width, 20f),
+                MvpLocale.T("term_detail", $"{selectedIdx + 1:000}", t.title), terminalLabelStyle);
             y += 26f;
-            DrawTerminalDetailLine(content.x, y, "SITE", t.locationName, null); y += 22f;
-            DrawTerminalDetailLine(content.x, y, "PAY", t.moneyReward + "G  回收估价", null); y += 22f;
-            DrawTerminalDetailLine(content.x, y, "WINDOW", MvpMissionClock.GetScheduleSummary(t), null); y += 22f;
-            DrawTerminalDetailLine(content.x, y, "CLIENT", CommissionTierLabel(t.clientType), null); y += 24f;
-            GUI.Label(new Rect(content.x, y, content.width, 40f), "NOTE: " + t.description, terminalSmallStyle);
+            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_site"), t.locationName, null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_pay"), t.moneyReward + "G  回收估价", null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_window"), MvpMissionClock.GetScheduleSummary(t), null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_client_label"), CommissionTierLabel(t.clientType), null); y += 24f;
+            GUI.Label(new Rect(content.x, y, content.width, 40f), MvpLocale.T("term_note", t.description), terminalSmallStyle);
             if (canSwitch && pool.Length > 1)
             {
                 y += 44f;
@@ -646,11 +700,11 @@ public class MvpHud : MonoBehaviour
         {
             GUI.Box(content, GUIContent.none, terminalBoxStyle);
             GUI.Label(new Rect(content.x + 20f, content.y + content.height * 0.42f, content.width - 40f, 24f),
-                "! SUPPLY FROZEN - CLAIM PENDING SETTLEMENT FIRST", terminalTitleStyle);
+                MvpLocale.T("term_supply_frozen"), terminalTitleStyle);
             return;
         }
 
-        GUI.Label(new Rect(content.x, content.y, content.width, 20f), "SUPPLY CATALOG   (host only)", terminalMutedStyle);
+        GUI.Label(new Rect(content.x, content.y, content.width, 20f), MvpLocale.T("term_supply_head"), terminalMutedStyle);
         DrawTerminalLine(new Rect(content.x, content.y + 22f, content.width, 1f));
 
         PlayerHotbar hotbar = FindLocalHotbar();
@@ -661,16 +715,17 @@ public class MvpHud : MonoBehaviour
 
         bool ownsWatch = hotbar != null && hotbar.HasWristwatchOwned;
         GUI.Label(new Rect(content.x + 4f, y + 4f, 40f, 22f), "F3", terminalLabelStyle);
-        GUI.Label(new Rect(content.x + 48f, y + 4f, content.width * 0.5f, 22f), "Wristwatch", terminalLabelStyle);
+        GUI.Label(new Rect(content.x + 48f, y + 4f, content.width * 0.5f, 22f), MvpLocale.T("term_wristwatch"), terminalLabelStyle);
         GUI.Label(new Rect(content.x + content.width * 0.62f, y + 4f, 90f, 22f), PlayerHotbar.WristwatchCost + "G", terminalLabelStyle);
         GUI.enabled = canBuy && !ownsWatch;
-        if (GUI.Button(new Rect(content.x + content.width - 120f, y, 112f, 30f), ownsWatch ? "OWNED" : "BUY", terminalButtonStyle))
+        if (GUI.Button(new Rect(content.x + content.width - 120f, y, 112f, 30f),
+                MvpLocale.T(ownsWatch ? "term_owned" : "term_buy"), terminalButtonStyle))
             TryBuyWristwatch(hotbar);
         GUI.enabled = true;
         y += 44f;
 
         if (!nearShop)
-            GUI.Label(new Rect(content.x, y, content.width, 20f), "STAND AT THE COMPUTER TO PURCHASE.", terminalMutedStyle);
+            GUI.Label(new Rect(content.x, y, content.width, 20f), MvpLocale.T("term_stand_close"), terminalMutedStyle);
         if (!string.IsNullOrEmpty(shopMessage) && Time.time < shopMessageUntil)
             GUI.Label(new Rect(content.x, content.yMax - 24f, content.width, 22f), shopMessage,
                 shopMessage.Contains("不足") || shopMessage.Contains("only") ? terminalInverseStyle : terminalLabelStyle);
@@ -682,7 +737,8 @@ public class MvpHud : MonoBehaviour
         GUI.Label(new Rect(rect.x + 48f, rect.y + 4f, rect.width * 0.5f, 22f), label, terminalLabelStyle);
         GUI.Label(new Rect(rect.x + rect.width * 0.62f, rect.y + 4f, 90f, 22f), PlayerHotbar.GetItemCost(item) + "G", terminalLabelStyle);
         GUI.enabled = canBuy;
-        if (GUI.Button(new Rect(rect.x + rect.width - 120f, rect.y, 112f, rect.height), "BUY", terminalButtonStyle))
+        if (GUI.Button(new Rect(rect.x + rect.width - 120f, rect.y, 112f, rect.height),
+                MvpLocale.T("term_buy"), terminalButtonStyle))
             TryBuy(hotbar, item);
         GUI.enabled = true;
     }
@@ -691,18 +747,18 @@ public class MvpHud : MonoBehaviour
     // a SaveIO extension; for now this shows current balances + any pending settlement).
     void DrawTabLedger(Rect content, CompanyState company)
     {
-        GUI.Label(new Rect(content.x, content.y, content.width, 20f), "COMPANY LEDGER", terminalTitleStyle);
+        GUI.Label(new Rect(content.x, content.y, content.width, 20f), MvpLocale.T("term_ledger_head"), terminalTitleStyle);
         DrawTerminalLine(new Rect(content.x, content.y + 24f, content.width, 1f));
         float y = content.y + 34f;
-        DrawTerminalDetailLine(content.x, y, "CURRENT FUNDS", company.Funds + "G", null); y += 24f;
-        DrawTerminalDetailLine(content.x, y, "OUTSTANDING DEBT", company.Debt + "G", null); y += 34f;
-        GUI.Label(new Rect(content.x, y, content.width, 20f), "RECENT SETTLEMENTS", terminalMutedStyle); y += 26f;
+        DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_cur_funds"), company.Funds + "G", null); y += 24f;
+        DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_out_debt"), company.Debt + "G", null); y += 34f;
+        GUI.Label(new Rect(content.x, y, content.width, 20f), MvpLocale.T("term_recent"), terminalMutedStyle); y += 26f;
         if (MvpPendingReward.HasPending)
             GUI.Label(new Rect(content.x, y, content.width, 22f),
-                "PENDING:  " + MvpPendingReward.ResultLabel + "  +" + MvpPendingReward.Money + "G  (claim at [1] COMMISSIONS)",
+                MvpLocale.T("term_ledger_pending", MvpPendingReward.ResultLabel, MvpPendingReward.Money),
                 terminalLabelStyle);
         else
-            GUI.Label(new Rect(content.x, y, content.width, 22f), "NO ARCHIVED SETTLEMENTS ON FILE YET.", terminalMutedStyle);
+            GUI.Label(new Rect(content.x, y, content.width, 22f), MvpLocale.T("term_ledger_empty"), terminalMutedStyle);
     }
 
     // Z5: one primary action (priority: claim settlement -> accept -> confirm acquisition)
@@ -713,7 +769,7 @@ public class MvpHud : MonoBehaviour
             GUI.Label(new Rect(rect.x, rect.y - 22f, rect.width, 20f), officeMessage, terminalLabelStyle);
         DrawTerminalPrimaryAction(new Rect(rect.x, rect.y, rect.width * 0.58f, rect.height), computer, company);
         GUI.Label(new Rect(rect.x + rect.width * 0.6f, rect.y, rect.width * 0.4f, rect.height),
-            "[1/2/3] TAB   [E] CONFIRM   [ESC] EXIT", terminalLabelRightStyle);
+            MvpLocale.T("term_hints"), terminalLabelRightStyle);
     }
 
     // The [E] path for the single primary action — same priority as the on-screen
@@ -728,7 +784,7 @@ public class MvpHud : MonoBehaviour
             if (IsLocalHostOrSolo())
             {
                 computer.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("Settlement request submitted.");
+                SetOfficeMessage(MvpLocale.T("msg_settle_submitted"));
             }
             return;
         }
@@ -738,7 +794,7 @@ public class MvpHud : MonoBehaviour
             if (company.CanAffordTutorialAcquisition && IsLocalHostOrSolo())
             {
                 computer.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("Acquisition file submitted.");
+                SetOfficeMessage(MvpLocale.T("msg_acq_submitted"));
             }
             return;
         }
@@ -756,7 +812,7 @@ public class MvpHud : MonoBehaviour
 
     void DrawTerminalPrimaryAction(Rect rect, OfficeComputer computer, CompanyState company)
     {
-        string label = "› ACCEPT COMMISSION  [E]";
+        string label = MvpLocale.T("act_accept");
         bool enabled = CanAcceptFromTerminal(computer);
         System.Action action = () =>
         {
@@ -770,27 +826,27 @@ public class MvpHud : MonoBehaviour
 
         if (MvpPendingReward.HasPending)
         {
-            label = "› CLAIM SETTLEMENT  [E]";
+            label = MvpLocale.T("act_claim");
             enabled = IsLocalHostOrSolo();
             action = () =>
             {
                 computer?.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("Settlement request submitted.");
+                SetOfficeMessage(MvpLocale.T("msg_settle_submitted"));
             };
         }
         else if (company.CanShowTutorialAcquisition)
         {
-            label = "› CONFIRM ACQUISITION  [E]";
+            label = MvpLocale.T("act_acq");
             enabled = company.CanAffordTutorialAcquisition && IsLocalHostOrSolo();
             action = () =>
             {
                 computer?.ExecuteComputerAction(FindLocalPlayer());
-                SetOfficeMessage("Acquisition file submitted.");
+                SetOfficeMessage(MvpLocale.T("msg_acq_submitted"));
             };
         }
         else if (MvpMissionRuntime.HasSelectedTask)
         {
-            label = "› COMMISSION LOCKED";
+            label = MvpLocale.T("act_locked");
             enabled = false;
         }
 
@@ -1051,52 +1107,150 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndArea();
     }
 
+    GUIStyle dossierHeadStyle, dossierInkStyle, dossierMutedStyle, dossierStampStyle, dossierBandStyle;
+
+    struct DossierEntry
+    {
+        public string speciesId, fileNo, title, behaviour, counter;
+    }
+
+    static readonly DossierEntry[] Dossiers =
+    {
+        new DossierEntry
+        {
+            speciesId = MonsterBestiaryProgress.EchoMold, fileNo = "BC-M-01", title = "回声菌",
+            behaviour = "感染性真菌人形。录下附近的谈话，在暗处原句回放，把队员从彼此身边引开；诱捕失败即转入高速追猎。",
+            counter = "它只会重放听过的话，造不出新内容——对暗号、管住嘴。听到重复过的语句，那不是你的同事。",
+        },
+        new DossierEntry
+        {
+            speciesId = MonsterBestiaryProgress.FileWarden, fileNo = "BC-M-02", title = "档案怨灵",
+            behaviour = "盘踞在档案与货架区的同源感染体。行动比回声菌更急，被惊动后几乎不放弃追索。",
+            counter = "与回声菌同一套声音纪律。别赌你跑得过它——用货架绕行，把它甩进死角。",
+        },
+        new DossierEntry
+        {
+            speciesId = MonsterBestiaryProgress.CivicIdol, fileNo = "BC-M-03", title = "市政圣像",
+            behaviour = "铜绿雕像。被注视时纹丝不动；视线一离开就高速逼近，近身重击。红眼亮起说明它已选中猎物。",
+            counter = "盯着它，它就动不了——分工：一人盯防，其余人搬运。移开视线前先退出它的半径。",
+        },
+    };
+
+    // 案卷卷宗: the bestiary as civic paperwork — one archive page per species, entries
+    // earned by having actually been hunted (earned-precision applied to knowledge).
+    // Unwitnessed species stay as redaction bars + a 待补录 stamp.
     void DrawBestiaryPanel()
     {
         if (activeBestiary == null) return;
+        EnsureDossierStyles();
+        if (dossierHeadStyle == null) return;
 
-        float width = Mathf.Clamp(RefW - 36f, 380f, 680f);
-        float height = Mathf.Clamp(RefH - 96f, 380f, 580f);
-        Rect rect = new Rect((RefW - width) * 0.5f, 54, width, height);
+        float width = Mathf.Clamp(RefW - 36f, 420f, 640f);
+        float height = Mathf.Clamp(RefH - 96f, 420f, 600f);
+        Rect rect = new Rect((RefW - width) * 0.5f, 54f, width, height);
 
-        GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
-        GUILayout.BeginHorizontal();
-        DrawTerminalHeader("怪物图鉴", "EVIDENCE FILE");
-        if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
+        // Paper folder + civic-teal header band.
+        GUI.DrawTexture(new Rect(rect.x - 3f, rect.y - 3f, rect.width + 6f, rect.height + 6f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
+        GUI.DrawTexture(rect, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
+        GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 40f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+        GUI.Label(new Rect(rect.x + 16f, rect.y + 9f, rect.width - 120f, 24f),
+            "黑色委托事务所  ·  异常体案卷", dossierBandStyle);
+        if (GUI.Button(new Rect(rect.xMax - 92f, rect.y + 6f, 78f, 28f), "合上 [Esc]", terminalButtonStyle))
         {
             CloseBestiary();
-            GUILayout.EndHorizontal();
-            GUILayout.EndArea();
             return;
         }
+
+        var inner = new Rect(rect.x + 14f, rect.y + 50f, rect.width - 28f, rect.height - 62f);
+        GUILayout.BeginArea(inner);
+        bestiaryScrollPosition = GUILayout.BeginScrollView(bestiaryScrollPosition, false, true);
+
+        foreach (DossierEntry d in Dossiers)
+        {
+            bool known = MonsterBestiaryProgress.HasEncountered(d.speciesId);
+            DrawDossier(d, known, inner.width - 20f);
+            GUILayout.Space(12f);
+        }
+
+        GUILayout.Label("补录规则：只有被它盯上过、并活着回来的人，才有资格执笔。", dossierMutedStyle);
+        GUILayout.EndScrollView();
+        GUILayout.EndArea();
+    }
+
+    void DrawDossier(DossierEntry d, bool known, float w)
+    {
+        // Header row: file number + name (or redacted) + status stamp.
+        GUILayout.BeginHorizontal();
+        GUILayout.Label($"案卷 {d.fileNo}", dossierMutedStyle, GUILayout.Width(110f));
+        GUILayout.Label(known ? d.title : "██████", dossierHeadStyle);
+        GUILayout.FlexibleSpace();
+        GUILayout.Label(known ? "〔已立案〕" : "〔待补录〕", dossierStampStyle, GUILayout.Width(88f));
         GUILayout.EndHorizontal();
 
-        bestiaryScrollPosition = GUILayout.BeginScrollView(bestiaryScrollPosition, false, true);
-        bool unlocked = MonsterBestiaryProgress.IsEchoMoldUnlocked;
-        DrawTerminalSection(unlocked ? "VERIFIED ANOMALY" : "FILE LOCKED");
-        GUILayout.BeginVertical(unlocked ? selectedSlotStyle : slotStyle);
-        GUILayout.Label(unlocked ? "ECHO MOLD" : "— UNVERIFIED —", accentStyle);
-        if (unlocked)
+        Rect line = GUILayoutUtility.GetRect(w, 1f);
+        GUI.DrawTexture(line, BlackCommissionUiTheme.MakeTex(new Color(0.19f, 0.17f, 0.13f, 0.45f)));
+        GUILayout.Space(4f);
+
+        if (known)
         {
-            GUILayout.Label("DESCRIPTION", accentStyle);
-            GUILayout.Label("An infected fungal humanoid. Records proximity voice and replays it to deceive and split the crew. Mobile and persistent once alerted.", labelStyle);
-            GUILayout.Space(8);
-            GUILayout.Label("COUNTER", accentStyle);
-            GUILayout.Label("Learn the replay tell — it cannot generate new content, only loop what it heard. Voice discipline breaks its lure. Keep radio traffic minimal.", labelStyle);
-            GUILayout.Space(8);
-            GUILayout.Label("RECORD: Encountered. Trace collected.", mutedStyle);
+            GUILayout.Label("已证实行为", dossierMutedStyle);
+            GUILayout.Label(d.behaviour, dossierInkStyle);
+            GUILayout.Space(4f);
+            GUILayout.Label("对策（幸存者执笔）", dossierMutedStyle);
+            GUILayout.Label(d.counter, dossierInkStyle);
         }
         else
         {
-            string encounter = MonsterBestiaryProgress.HasEncounteredEchoMold ? "Encountered" : "Not encountered";
-            string trace = MonsterBestiaryProgress.HasEchoMoldTrace ? "Collected" : "Not collected";
-            GUILayout.Label($"Unlock: encounter anomaly + collect trace sample. Status: {encounter} / {trace}.", mutedStyle);
-            GUILayout.Label("The file pages are blank. Bring back enough reliable evidence.", labelStyle);
+            // Redaction bars: the page exists, the testimony doesn't.
+            float[] bars = { 0.86f, 0.62f, 0.74f, 0.4f };
+            foreach (float b in bars)
+            {
+                Rect r = GUILayoutUtility.GetRect(w * b, 12f);
+                GUI.DrawTexture(new Rect(r.x, r.y, w * b, 12f),
+                    BlackCommissionUiTheme.MakeTex(new Color(0.13f, 0.12f, 0.10f, 0.85f)));
+                GUILayout.Space(5f);
+            }
+            GUILayout.Label("现场尚无可靠证词。", dossierMutedStyle);
         }
-        GUILayout.EndVertical();
+    }
 
-        GUILayout.EndScrollView();
-        GUILayout.EndArea();
+    void EnsureDossierStyles()
+    {
+        if (dossierHeadStyle != null) return;
+        if (GUI.skin == null || GUI.skin.label == null) return;
+
+        Color ink = new Color(0.10f, 0.095f, 0.075f, 1f);
+        Color inkSoft = new Color(0.19f, 0.17f, 0.13f, 0.85f);
+
+        dossierBandStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 15, fontStyle = FontStyle.Bold,
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }
+        };
+        dossierHeadStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 17, fontStyle = FontStyle.Bold, normal = { textColor = ink }
+        };
+        dossierInkStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 14, wordWrap = true, normal = { textColor = ink }
+        };
+        dossierMutedStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 12, wordWrap = true, normal = { textColor = inkSoft }
+        };
+        dossierStampStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 14, fontStyle = FontStyle.Bold,
+            normal = { textColor = BlackCommissionUiTheme.RustWarning }
+        };
+        MvpFontProvider.ApplyToStyle(dossierBandStyle);
+        MvpFontProvider.ApplyToStyle(dossierHeadStyle);
+        MvpFontProvider.ApplyToStyle(dossierInkStyle);
+        MvpFontProvider.ApplyToStyle(dossierMutedStyle);
+        MvpFontProvider.ApplyToStyle(dossierStampStyle);
     }
 
 

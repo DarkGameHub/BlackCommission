@@ -109,9 +109,11 @@ public class VoiceMicIndicator : MonoBehaviour
         else if (ptt) { label = MvpLocale.T("mic_ptt_ready"); color = Dim; }
         else { label = MvpLocale.T("mic_ready"); color = Dim; }
 
+        // Top-right corner: top-center belongs to the dispatch ticket strip (they used to
+        // overlap during boarding/transit), and the HUD zone map keeps this corner free.
         const float w = 172f, h = 30f;
-        float x = (Screen.width - w) * 0.5f;
-        float y = 10f;
+        float x = Screen.width - w - 24f;
+        float y = 24f;
         var box = new Rect(x, y, w, h);
         Fill(box, Panel);
 

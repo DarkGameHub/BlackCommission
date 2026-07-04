@@ -23,7 +23,8 @@ public class SettingsOverlay : MonoBehaviour
     bool stylesReady;
     float quitToMenuArmedAt = float.NegativeInfinity;
     GUIStyle panelStyle, titleStyle, labelStyle, accentStyle, buttonStyle, headerTextStyle;
-    Texture2D panelTex, headerBandTex;
+    GUIStyle sliderRailStyle, sliderThumbStyle;
+    Texture2D panelTex, headerBandTex, railTex, thumbTex;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Bootstrap() => EnsureInstance();
@@ -100,34 +101,62 @@ public class SettingsOverlay : MonoBehaviour
         if (stylesReady) return;
         stylesReady = true;
 
+        // 偏好登记表 (main-menu spec sub-page identity): aged-paper form, civic-teal header
+        // band, ink text, ink-rail sliders with a teal caliper thumb — a filled-in municipal
+        // form, not a system panel.
+        Color ink = new Color(0.10f, 0.095f, 0.075f, 1f);
+        Color inkSoft = new Color(0.19f, 0.17f, 0.13f, 0.9f);
+
         panelTex = new Texture2D(1, 1);
-        panelTex.SetPixel(0, 0, BlackCommissionUiTheme.ConcreteBlack);
+        panelTex.SetPixel(0, 0, BlackCommissionUiTheme.OldPaper);
         panelTex.Apply();
 
         headerBandTex = new Texture2D(1, 1);
-        headerBandTex.SetPixel(0, 0, BlackCommissionUiTheme.MilitaryGreen);  // = oxblood now
+        headerBandTex.SetPixel(0, 0, BlackCommissionUiTheme.MilitaryGreen);
         headerBandTex.Apply();
+
+        railTex = new Texture2D(1, 1);
+        railTex.SetPixel(0, 0, new Color(0.19f, 0.17f, 0.13f, 0.30f));
+        railTex.Apply();
+
+        thumbTex = new Texture2D(1, 1);
+        thumbTex.SetPixel(0, 0, BlackCommissionUiTheme.MilitaryGreen);
+        thumbTex.Apply();
 
         panelStyle = new GUIStyle(GUI.skin.box)
         {
             normal = { background = panelTex },
-            padding = new RectOffset(16, 16, 14, 14)
+            padding = new RectOffset(18, 18, 14, 14)
         };
         titleStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 20, fontStyle = FontStyle.Bold,
-            normal = { textColor = BlackCommissionUiTheme.OldPaper }, wordWrap = true
+            normal = { textColor = ink }, wordWrap = true
         };
-        headerTextStyle = new GUIStyle(titleStyle) { fontSize = 18, alignment = TextAnchor.MiddleLeft };
+        headerTextStyle = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 16, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleLeft,
+            normal = { textColor = BlackCommissionUiTheme.OldPaper }
+        };
         labelStyle = new GUIStyle(GUI.skin.label)
         {
-            fontSize = 15, normal = { textColor = BlackCommissionUiTheme.Text }, wordWrap = true
+            fontSize = 15, normal = { textColor = ink }, wordWrap = true
         };
-        // Section headers use tungsten amber (the UI accent) — green is reserved for
-        // electronic screens only (terminal), never UI chrome.
         accentStyle = new GUIStyle(labelStyle)
         {
-            fontStyle = FontStyle.Bold, normal = { textColor = BlackCommissionUiTheme.OldWood }
+            fontStyle = FontStyle.Bold, normal = { textColor = inkSoft }
+        };
+        sliderRailStyle = new GUIStyle
+        {
+            normal = { background = railTex },
+            fixedHeight = 8f,
+            margin = new RectOffset(0, 0, 8, 8)
+        };
+        sliderThumbStyle = new GUIStyle
+        {
+            normal = { background = thumbTex },
+            fixedWidth = 12f,
+            fixedHeight = 18f
         };
         buttonStyle = BlackCommissionUiTheme.ButtonStyle(15);
 
@@ -137,6 +166,21 @@ public class SettingsOverlay : MonoBehaviour
         MvpFontProvider.ApplyToStyle(labelStyle);
         MvpFontProvider.ApplyToStyle(accentStyle);
         MvpFontProvider.ApplyToStyle(buttonStyle);
+    }
+
+    float InkSlider(float value, float min, float max)
+        => GUILayout.HorizontalSlider(value, min, max, sliderRailStyle, sliderThumbStyle);
+
+    // 登记表勾选栏: label + a stamped 是/否 cell (touch target is the cell itself).
+    bool InkToggle(bool value, string label)
+    {
+        GUILayout.BeginHorizontal();
+        GUILayout.Label(label, labelStyle);
+        if (GUILayout.Button(MvpLocale.T(value ? "toggle_yes" : "toggle_no"),
+                buttonStyle, GUILayout.Width(56f), GUILayout.Height(26f)))
+            value = !value;
+        GUILayout.EndHorizontal();
+        return value;
     }
 
     void OnGUI()
@@ -149,12 +193,14 @@ public class SettingsOverlay : MonoBehaviour
         float height = Mathf.Clamp(Screen.height - 80f, 420f, 680f);
         Rect rect = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
 
-        // Oxblood "stamped document" header band across the top of the panel.
+        // Civic-teal header band over the paper form (盖章公文卡 grammar).
+        GUI.DrawTexture(new Rect(rect.x - 3f, rect.y - 3f, rect.width + 6f, rect.height + 6f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
         GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 46f), headerBandTex);
-        GUI.Label(new Rect(rect.x + 18f, rect.y + 10f, rect.width - 120f, 28f),
-            "PREFERENCE RECORD", headerTextStyle);
-        GUI.Label(new Rect(rect.x + 18f, rect.y + 28f, rect.width - 120f, 16f),
-            "FORM BC-05", labelStyle);
+        GUI.Label(new Rect(rect.x + 18f, rect.y + 6f, rect.width - 120f, 26f),
+            "黑色委托事务所  ·  偏好登记表", headerTextStyle);
+        GUI.Label(new Rect(rect.x + 18f, rect.y + 26f, rect.width - 120f, 16f),
+            "FORM BC-05", headerTextStyle);
         if (GUI.Button(new Rect(rect.xMax - 96f, rect.y + 8f, 80f, 30f), MvpLocale.T("resume"), buttonStyle))
         {
             Close();
@@ -173,13 +219,13 @@ public class SettingsOverlay : MonoBehaviour
         if (selectedLanguage != MvpHud.LanguageIndexStatic)
             MvpHud.LanguageIndexStatic = selectedLanguage;
         GUILayout.Label(MvpLocale.T("master_volume", $"{MvpHud.MasterVolumeStatic:0.00}"), labelStyle);
-        MvpHud.MasterVolumeStatic = GUILayout.HorizontalSlider(MvpHud.MasterVolumeStatic, 0f, 1f);
+        MvpHud.MasterVolumeStatic = InkSlider(MvpHud.MasterVolumeStatic, 0f, 1f);
 
         // ─── Display ───
         GUILayout.Space(10);
         GUILayout.Label(MvpLocale.T("display"), accentStyle);
         GUILayout.Label(MvpLocale.T("brightness", $"{DisplaySettings.Brightness:0.0}"), labelStyle);
-        float newBrightness = GUILayout.HorizontalSlider(DisplaySettings.Brightness,
+        float newBrightness = InkSlider(DisplaySettings.Brightness,
             DisplaySettings.MinBrightness, DisplaySettings.MaxBrightness);
         if (!Mathf.Approximately(newBrightness, DisplaySettings.Brightness))
         {
@@ -187,14 +233,14 @@ public class SettingsOverlay : MonoBehaviour
             BrightnessController.Apply();
         }
         GUILayout.Label(MvpLocale.T("gamma", $"{DisplaySettings.Gamma:0.00}"), labelStyle);
-        float newGamma = GUILayout.HorizontalSlider(DisplaySettings.Gamma,
+        float newGamma = InkSlider(DisplaySettings.Gamma,
             DisplaySettings.MinGamma, DisplaySettings.MaxGamma);
         if (!Mathf.Approximately(newGamma, DisplaySettings.Gamma))
         {
             DisplaySettings.Gamma = newGamma;
             BrightnessController.Apply();
         }
-        bool newFullscreen = GUILayout.Toggle(DisplaySettings.Fullscreen, MvpLocale.T("fullscreen"));
+        bool newFullscreen = InkToggle(DisplaySettings.Fullscreen, MvpLocale.T("fullscreen"));
         if (newFullscreen != DisplaySettings.Fullscreen)
         {
             DisplaySettings.Fullscreen = newFullscreen;
@@ -206,26 +252,33 @@ public class SettingsOverlay : MonoBehaviour
         GUILayout.Space(10);
         GUILayout.Label(MvpLocale.T("camera"), accentStyle);
         GUILayout.Label(MvpLocale.T("h_sensitivity", $"{PlayerCameraController.HorizontalSensitivity:0.00}"), labelStyle);
-        PlayerCameraController.HorizontalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.HorizontalSensitivity, 0.25f, 8f);
+        PlayerCameraController.HorizontalSensitivity = InkSlider(PlayerCameraController.HorizontalSensitivity, 0.25f, 8f);
         GUILayout.Label(MvpLocale.T("v_sensitivity", $"{PlayerCameraController.VerticalSensitivity:0.00}"), labelStyle);
-        PlayerCameraController.VerticalSensitivity = GUILayout.HorizontalSlider(PlayerCameraController.VerticalSensitivity, 0.25f, 8f);
-        PlayerCameraController.InvertY = GUILayout.Toggle(PlayerCameraController.InvertY, MvpLocale.T("invert_y"));
+        PlayerCameraController.VerticalSensitivity = InkSlider(PlayerCameraController.VerticalSensitivity, 0.25f, 8f);
+        PlayerCameraController.InvertY = InkToggle(PlayerCameraController.InvertY, MvpLocale.T("invert_y"));
         GUILayout.Label(MvpLocale.T("fov", $"{PlayerCameraController.FieldOfView:0}"), labelStyle);
-        PlayerCameraController.FieldOfView = GUILayout.HorizontalSlider(PlayerCameraController.FieldOfView, 55f, 95f);
+        PlayerCameraController.FieldOfView = InkSlider(PlayerCameraController.FieldOfView, 55f, 95f);
 
         // ─── Voice ───
         GUILayout.Space(10);
         GUILayout.Label(MvpLocale.T("voice"), accentStyle);
-        ProximityVoiceChat.VoiceEnabled = GUILayout.Toggle(ProximityVoiceChat.VoiceEnabled, MvpLocale.T("voice_default_on"));
-        ProximityVoiceChat.Muted = GUILayout.Toggle(ProximityVoiceChat.Muted, MvpLocale.T("mute_self"));
-        ProximityVoiceChat.PushToTalk = GUILayout.Toggle(ProximityVoiceChat.PushToTalk, MvpLocale.T("push_to_talk"));
+        ProximityVoiceChat.VoiceEnabled = InkToggle(ProximityVoiceChat.VoiceEnabled, MvpLocale.T("voice_default_on"));
+        ProximityVoiceChat.Muted = InkToggle(ProximityVoiceChat.Muted, MvpLocale.T("mute_self"));
+        ProximityVoiceChat.PushToTalk = InkToggle(ProximityVoiceChat.PushToTalk, MvpLocale.T("push_to_talk"));
         DrawMicrophoneSelector();
         GUILayout.Label(MvpLocale.T("mic_gain", $"{ProximityVoiceChat.MicGain:0.0}"), labelStyle);
-        ProximityVoiceChat.MicGain = GUILayout.HorizontalSlider(ProximityVoiceChat.MicGain, 0f, 2f);
+        ProximityVoiceChat.MicGain = InkSlider(ProximityVoiceChat.MicGain, 0f, 2f);
         GUILayout.Label(MvpLocale.T("voice_volume", $"{ProximityVoiceChat.OutputVolume:0.0}"), labelStyle);
-        ProximityVoiceChat.OutputVolume = GUILayout.HorizontalSlider(ProximityVoiceChat.OutputVolume, 0f, 2f);
+        ProximityVoiceChat.OutputVolume = InkSlider(ProximityVoiceChat.OutputVolume, 0f, 2f);
         GUILayout.Label(MvpLocale.T("voice_distance", $"{ProximityVoiceChat.MaxDistance:0}"), labelStyle);
-        ProximityVoiceChat.MaxDistance = GUILayout.HorizontalSlider(ProximityVoiceChat.MaxDistance, 4f, 40f);
+        ProximityVoiceChat.MaxDistance = InkSlider(ProximityVoiceChat.MaxDistance, 4f, 40f);
+
+        // ─── Accessibility (辅助功能) — the switches every UX spec promised this form ───
+        GUILayout.Space(10);
+        GUILayout.Label(MvpLocale.T("a11y_section"), accentStyle);
+        AccessibilityPrefs.ReducedMotion = InkToggle(AccessibilityPrefs.ReducedMotion, MvpLocale.T("a11y_reduced_motion"));
+        AccessibilityPrefs.InspectToggleMode = InkToggle(AccessibilityPrefs.InspectToggleMode, MvpLocale.T("a11y_inspect_toggle"));
+        AccessibilityPrefs.ReducedFlash = InkToggle(AccessibilityPrefs.ReducedFlash, MvpLocale.T("a11y_reduced_flash"));
 
         // ─── Buttons ───
         GUILayout.Space(14);
@@ -298,6 +351,7 @@ public class SettingsOverlay : MonoBehaviour
         ProximityVoiceChat.OutputVolume = 1f;
         ProximityVoiceChat.MaxDistance = 18f;
         ProximityVoiceChat.MicrophoneDeviceIndex = 0;
+        AccessibilityPrefs.ResetDefaults();
         DisplaySettings.ResetDefaults();
         DisplaySettings.ApplyFullscreen();
         DisplaySettings.ApplyQuality();

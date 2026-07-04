@@ -184,6 +184,7 @@ public class MainMenuUI : MonoBehaviour
         UpdateGameplayInputBlock();
         UpdateMenuVisibilityFlag();
         UpdateResponsiveMenuPanels();
+        AnimateConnectingInk();
     }
 
     // ─── Layout build ─────────────────────────────────────────────────────
@@ -1335,48 +1336,67 @@ public class MainMenuUI : MonoBehaviour
         return panel;
     }
 
+    RectTransform connectingInkFillRt;
+    const float ConnectingRailWidth = 400f;
+
     GameObject BuildConnectingPanel(Transform parent)
     {
-        var panel = CreatePanel(parent, "ConnectingPanel", new Vector2(560f, 248f));
+        // 盖章公文卡 grammar (main-menu spec, sub-page table): aged-paper card, civic-teal
+        // header band, ink text, and a LIVE teal ink bar — the old build was dark system
+        // chrome with English boot copy and a progress fill that never moved.
+        var panel = CreatePanel(parent, "ConnectingPanel", new Vector2(480f, 230f));
+        panel.GetComponent<Image>().color = AgedPaper;
         panel.SetActive(false);
 
-        // System-chrome loading screen reworked to mock 02b "OPENING THE OFFICE" (PM 2026-06-13):
-        // tungsten amber + aged paper, NOT CRT green — green is reserved for in-world terminals
-        // per the art bible, so it must not appear in menu-layer chrome.
-        Color amberDim = new Color(SodiumAmber.r, SodiumAmber.g, SodiumAmber.b, 0.55f);
-        AddInsetFrame(panel.transform, "BootFrame", amberDim, 7f, 2f);
+        Color ink = new Color(0.10f, 0.095f, 0.075f, 1f);
+        Color inkSoft = new Color(0.19f, 0.17f, 0.13f, 0.85f);
 
-        var header = AddText(panel.transform, "Header", "OPENING THE OFFICE", 17,
-            SodiumAmber, TextAlignmentOptions.Center);
+        AddRect(panel.transform, "HeaderBand", new Vector2(0f, 98f), new Vector2(480f, 34f),
+            CivicTeal, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        // Paper tab as a real rect — the ▌ glyph is not guaranteed in the TMP font.
+        AddRect(panel.transform, "HeaderTab", new Vector2(-222f, 98f), new Vector2(4f, 18f),
+            AgedPaper, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f));
+        var header = AddText(panel.transform, "Header", "黑色委托事务所  ·  派工接洽", 14,
+            AgedPaper, TextAlignmentOptions.Left);
         header.fontStyle = FontStyles.Bold;
-        header.characterSpacing = 3f;
-        header.rectTransform.anchoredPosition = new Vector2(0f, 84f);
-        header.rectTransform.sizeDelta = new Vector2(500f, 24f);
+        header.rectTransform.anchoredPosition = new Vector2(24f, 98f);
+        header.rectTransform.sizeDelta = new Vector2(430f, 22f);
 
-        var sub = AddText(panel.transform, "Sub", "DISPATCH BOOT", 12,
-            HintText, TextAlignmentOptions.Center);
-        sub.characterSpacing = 4f;
-        sub.rectTransform.anchoredPosition = new Vector2(0f, 58f);
-        sub.rectTransform.sizeDelta = new Vector2(420f, 18f);
-
-        connectingText = AddText(panel.transform, "ConnText", "", 28,
-            AgedPaper, TextAlignmentOptions.Center);
+        connectingText = AddText(panel.transform, "ConnText", "", 22,
+            ink, TextAlignmentOptions.Center);
         connectingText.fontStyle = FontStyles.Bold;
-        connectingText.characterSpacing = 1f;
-        connectingText.rectTransform.anchoredPosition = new Vector2(0f, 8f);
-        connectingText.rectTransform.sizeDelta = new Vector2(470f, 40f);
+        connectingText.rectTransform.anchoredPosition = new Vector2(0f, 26f);
+        connectingText.rectTransform.sizeDelta = new Vector2(440f, 34f);
 
-        var wait = AddText(panel.transform, "PleaseWait", MvpLocale.T("please_wait"), 14,
-            HintText, TextAlignmentOptions.Center);
-        wait.rectTransform.anchoredPosition = new Vector2(0f, -34f);
-        wait.rectTransform.sizeDelta = new Vector2(470f, 22f);
+        var wait = AddText(panel.transform, "PleaseWait", MvpLocale.T("please_wait"), 13,
+            inkSoft, TextAlignmentOptions.Center);
+        wait.rectTransform.anchoredPosition = new Vector2(0f, -10f);
+        wait.rectTransform.sizeDelta = new Vector2(440f, 20f);
 
-        AddRect(panel.transform, "ProgressRail", new Vector2(0f, -74f), new Vector2(410f, 8f),
-            new Color(0.090f, 0.078f, 0.055f, 0.92f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        AddRect(panel.transform, "ProgressFill", new Vector2(-82f, -74f), new Vector2(246f, 8f),
-            new Color(SodiumAmber.r, SodiumAmber.g, SodiumAmber.b, 0.88f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        // Ink bar: dark rail, teal fill sweeping left→right (ink being drawn, not a loading bar).
+        AddRect(panel.transform, "InkRail", new Vector2(0f, -58f), new Vector2(ConnectingRailWidth, 8f),
+            new Color(0.19f, 0.17f, 0.13f, 0.22f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        var fill = AddRect(panel.transform, "InkFill",
+            new Vector2(-ConnectingRailWidth * 0.5f, -58f), new Vector2(0f, 8f),
+            CivicTeal, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f));
+        connectingInkFillRt = fill.GetComponent<RectTransform>();
+
+        var foot = AddText(panel.transform, "Foot", "接洽期间请勿离开窗口 · 单据将自动签发", 11,
+            inkSoft, TextAlignmentOptions.Center);
+        foot.rectTransform.anchoredPosition = new Vector2(0f, -92f);
+        foot.rectTransform.sizeDelta = new Vector2(440f, 18f);
 
         return panel;
+    }
+
+    // Sawtooth sweep: the ink line draws to full, lifts, draws again — deliberately a pen
+    // stroke loop, not a fake percentage.
+    void AnimateConnectingInk()
+    {
+        if (connectingInkFillRt == null || state != MenuState.Connecting) return;
+        if (!connectingInkFillRt.gameObject.activeInHierarchy) return;
+        float p = (Time.unscaledTime * 0.45f) % 1f;
+        connectingInkFillRt.sizeDelta = new Vector2(ConnectingRailWidth * p, 8f);
     }
 
     GameObject BuildHostCodePanel(Transform parent)

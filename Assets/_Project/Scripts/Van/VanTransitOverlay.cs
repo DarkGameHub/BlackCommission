@@ -583,9 +583,12 @@ public class VanTransitOverlay : MonoBehaviour
     // 就位 N/M → 在途里程 → 已抵达.
     void DrawTicketStrip()
     {
+        // Strict line bands — the header, status line and ink bar each own a row so nothing
+        // can overprint (the old layout centered the title over the full strip and drew the
+        // status line straight through it).
         float w = 520f;
-        var rect = new Rect((Screen.width - w) * 0.5f, 24f, w, 60f);
-        var ticket = new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, rect.height + 18f);
+        var rect = new Rect((Screen.width - w) * 0.5f, 24f, w, 64f);
+        var ticket = new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, rect.height + 14f);
         GUI.DrawTexture(new Rect(ticket.x - 2f, ticket.y - 2f, ticket.width + 4f, ticket.height + 4f),
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
         GUI.DrawTexture(ticket, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
@@ -593,15 +596,18 @@ public class VanTransitOverlay : MonoBehaviour
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
         GUI.DrawTexture(new Rect(ticket.x, ticket.yMax - 2f, ticket.width, 2f),
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreenDim));
-        GUI.DrawTexture(new Rect(ticket.x + 8f, ticket.y + 10f, 14f, 14f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.RustWarning)); // 章
+        // ▌ civic tab left, red seal right (spec wireframe: ▌题头 … ■).
+        GUI.DrawTexture(new Rect(ticket.x + 6f, ticket.y + 8f, 4f, ticket.height - 16f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+        GUI.DrawTexture(new Rect(ticket.xMax - 28f, ticket.y + 12f, 16f, 16f),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.RustWarning));
 
         string header = string.IsNullOrEmpty(taskTitle)
             ? MvpLocale.T("van_cabin")
             : $"{taskTitle}  ·  {locationName}";
-        GUI.Label(rect, header, headingStyle);
+        GUI.Label(new Rect(rect.x, rect.y + 2f, w, 24f), header, headingStyle);
 
-        var statusRect = new Rect(rect.x, rect.y + 30f, w, 22f);
+        var statusRect = new Rect(rect.x, rect.y + 30f, w, 20f);
         if (phase == Phase.Transit)
         {
             DrawTransitProgress(rect, w);
@@ -634,7 +640,10 @@ public class VanTransitOverlay : MonoBehaviour
         float displayed;
         if (raw >= 1f && !DestinationSceneReady)
         {
-            displayed = ProgressCap + 0.02f * Mathf.Sin(now * 2.4f);
+            // Reduced Motion: the bar rests at the cap instead of breathing (spec a11y).
+            displayed = AccessibilityPrefs.ReducedMotion
+                ? ProgressCap
+                : ProgressCap + 0.02f * Mathf.Sin(now * 2.4f);
             line = "即将抵达…";
         }
         else
@@ -646,7 +655,7 @@ public class VanTransitOverlay : MonoBehaviour
                    $"    {Mathf.RoundToInt(displayed * 100f)}%    ~{eta}s";
         }
 
-        GUI.Label(new Rect(rect.x, rect.y + 24f, w, 20f), line, smallStyle);
+        GUI.Label(new Rect(rect.x, rect.y + 30f, w, 20f), line, smallStyle);
         DrawProgressBar(rect, w, displayed);
     }
 
@@ -654,7 +663,7 @@ public class VanTransitOverlay : MonoBehaviour
     // glowing bar — CRT green stays on actual screens).
     void DrawProgressBar(Rect rect, float w, float fill01)
     {
-        float barY = rect.y + 46f;
+        float barY = rect.y + 52f;
         var bg = new Rect(rect.x, barY, w, 9f);
         GUI.DrawTexture(bg, BlackCommissionUiTheme.MakeTex(new Color(0.18f, 0.17f, 0.13f, 0.30f)));
         GUI.DrawTexture(new Rect(bg.x, bg.y, Mathf.Clamp(w * fill01, 2f, w), 9f),
@@ -679,7 +688,8 @@ public class VanTransitOverlay : MonoBehaviour
         {
             float slam = Mathf.Clamp01((Time.unscaledTime - signedAt) / StampSlamSeconds);
             DrawStamp(stampCenter, "已签发", BlackCommissionUiTheme.RustWarning, stampStyle,
-                Mathf.Lerp(1.3f, 1f, slam), Mathf.Lerp(0.4f, 0.92f, slam));
+                AccessibilityPrefs.ReducedMotion ? 1f : Mathf.Lerp(1.3f, 1f, slam),
+                Mathf.Lerp(0.4f, 0.92f, slam));
         }
         else
         {
