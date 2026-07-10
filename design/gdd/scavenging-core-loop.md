@@ -135,9 +135,16 @@ ledger, wrong about the fixture."
 
 ### 3.1 The Loop (the dispatch van ritual — Pillar 2)
 
-`HQ office → office computer (accept job / buy gear) → board dispatch van → in-van transit →
-mission site → scavenge + deposit into the van → depart (voluntary) → van return → HQ
-settlement → debt ledger updates.`
+`HQ office → office computer (accept job / buy gear) → printer spits the work order → tear
+the order off (departure-gating; the paper is a carried item) → board dispatch van → in-van
+transit → mission site → scavenge + deposit into the van → depart (voluntary) → van return →
+HQ settlement → debt ledger updates.`
+
+The accept step is physical: accepting on the terminal prints a work order on the office
+dot-matrix printer, and a player must tear it off before the van will depart. The torn order
+is the mission's only in-field information carrier (weight 0, hand-slot, transferable,
+losable, reprintable at the van for a fee) — see
+`design/quick-specs/work-order-in-hand-2026-07-04.md` (APPROVED 2026-07-04).
 
 This ritual is the same shape for Free Salvage, Commissioned Job, and Black Commission. The
 mission type changes the client, the satire register, and which item categories the client pays a
@@ -240,7 +247,9 @@ The money payload is the scavenged sum from §4. `ScavengeMissionManager.Settle(
 displayed in emotional weight order, with the one-dispute step) is specified in
 `design/quick-specs/scavenging-item-system-2026-06-16.md` §§4–6. This is **Core content,
 not a deferred Presentation task**: it is Pillar 3 ("the contract speaks") in its most direct
-mechanical expression. The current build shows a total-only settlement card; the per-item
+mechanical expression. Pillar 3's in-field carrier is the printed work order itself (client
+scrawl and print quirks live on the paper the crew carries into the dark — the contract
+literally speaks from your hand; `work-order-in-hand-2026-07-04.md`). The current build shows a total-only settlement card; the per-item
 reveal is the next required build milestone for the loop to carry its full satirical weight.
 
 ## 4. Formulas

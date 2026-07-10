@@ -30,6 +30,21 @@ public static class BlackCommissionUiTheme
     public static readonly Color RustWarning = new(0.761f, 0.227f, 0.169f, 1f);         // stamp red #C23A2B
     public static readonly Color Shadow = new(0f, 0f, 0f, 0.62f);
 
+    // ─── E2 「一台机器·一条时间线」 tokens ─────────────────────────────────
+    // design/ux/e2-style-concept.md (LOCKED 2026-07-04). One broken office machine:
+    // everything that changes lives on the phosphor screen, everything frozen goes
+    // on dot-matrix paper. PhosGreen is the signature yellow-green (#C8B830, H≈55 —
+    // deliberately NOT the blue-green CRT of Lethal Company). E2StampRed is for
+    // seals/alert lines only, ≤5% of any screen. CrtGreen above is retired for UI
+    // chrome — world lamps/props may still use it until the art-bible sync.
+    public static readonly Color PhosGreen = new(0.784f, 0.722f, 0.188f, 1f);   // #C8B830
+    public static readonly Color PhosDim = new(0.494f, 0.455f, 0.125f, 1f);     // #7E7420
+    public static readonly Color ScreenBlack = new(0.071f, 0.075f, 0.027f, 1f); // #121307
+    public static readonly Color Paper = new(0.886f, 0.863f, 0.788f, 1f);       // #E2DCC9
+    public static readonly Color InkFaded = new(0.243f, 0.227f, 0.180f, 1f);    // #3E3A2E
+    public static readonly Color E2StampRed = new(0.710f, 0.216f, 0.165f, 1f);  // #B5372A
+    public static readonly Color DeadBlack = new(0.043f, 0.043f, 0.035f, 1f);   // #0B0B09
+
     public static Texture2D MakeTex(Color color)
     {
         Color32 c = color;

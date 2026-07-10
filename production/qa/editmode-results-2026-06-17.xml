@@ -1,0 +1,1451 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" testcasecount="191" result="Failed(Child)" total="191" passed="184" failed="7" inconclusive="0" skipped="0" asserts="0" engine-version="3.5.0.0" clr-version="4.0.30319.42000" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:38Z" duration="12.3992517">
+  <test-suite type="TestSuite" id="1000" name="Black Commission" fullname="Black Commission" runstate="Runnable" testcasecount="191" result="Failed" site="Child" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:38Z" duration="12.399252" total="191" passed="184" failed="7" inconclusive="0" skipped="0" asserts="0">
+    <properties>
+      <property name="platform" value="EditMode" />
+    </properties>
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="1020" name="BlackCommission.Level.Topology.Tests.dll" fullname="/Users/yanfeidai/Desktop/code/BlackCommission/Library/ScriptAssemblies/BlackCommission.Level.Topology.Tests.dll" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:27Z" duration="0.694473" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="75235" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1021" name="BlackCommission" fullname="BlackCommission" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:27Z" duration="0.694105" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1022" name="Level" fullname="BlackCommission.Level" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:27Z" duration="0.693849" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1023" name="Tests" fullname="BlackCommission.Level.Tests" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:27Z" duration="0.693575" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1002" name="TowerTopologyTests" fullname="BlackCommission.Level.Tests.TowerTopologyTests" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" testcasecount="17" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:27Z" duration="0.692743" total="17" passed="17" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1011" name="Canonical_BackboneOnly_PassesAllInvariants" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Canonical_BackboneOnly_PassesAllInvariants" methodname="Canonical_BackboneOnly_PassesAllInvariants" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="163357774" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.009350" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1014" name="Canonical_EverySeed_AtLeastTwoDescentsOpen" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Canonical_EverySeed_AtLeastTwoDescentsOpen" methodname="Canonical_EverySeed_AtLeastTwoDescentsOpen" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="414131896" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.171712" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1013" name="Canonical_EverySeed_NoIslandRooms" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Canonical_EverySeed_NoIslandRooms" methodname="Canonical_EverySeed_NoIslandRooms" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="87146347" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.288637" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1012" name="Canonical_EverySeed_ResolvesValidWithoutFallback" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Canonical_EverySeed_ResolvesValidWithoutFallback" methodname="Canonical_EverySeed_ResolvesValidWithoutFallback" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="1716368246" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.154942" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1010" name="PlanV8_CarryReturn_BiasesTowardAStair" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_CarryReturn_BiasesTowardAStair" methodname="PlanV8_CarryReturn_BiasesTowardAStair" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="479031177" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.000491" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1009" name="PlanV8_CriticalPath_CrossesPlateBridgeAndIsland" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_CriticalPath_CrossesPlateBridgeAndIsland" methodname="PlanV8_CriticalPath_CrossesPlateBridgeAndIsland" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="1440701416" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.000137" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1007" name="PlanV8_HasLockedRoomDensityAndToggleCount" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_HasLockedRoomDensityAndToggleCount" methodname="PlanV8_HasLockedRoomDensityAndToggleCount" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="1760606168" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.001365" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1004" name="PlanV8_PassThroughRooms_AreClassifiedAsHubs" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_PassThroughRooms_AreClassifiedAsHubs" methodname="PlanV8_PassThroughRooms_AreClassifiedAsHubs" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="450141079" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.001623" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1005" name="PlanV8_RoomSizes_UseOnlyTheThreeLockedClasses" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_RoomSizes_UseOnlyTheThreeLockedClasses" methodname="PlanV8_RoomSizes_UseOnlyTheThreeLockedClasses" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="1664660648" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.000374" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1008" name="PlanV8_SeedGatedBonusRooms_AreNotRequiredButStillFillable" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_SeedGatedBonusRooms_AreNotRequiredButStillFillable" methodname="PlanV8_SeedGatedBonusRooms_AreNotRequiredButStillFillable" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="98130832" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.000194" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1006" name="PlanV8_StairAnchors_AreLockedAndVerticallyAligned" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_StairAnchors_AreLockedAndVerticallyAligned" methodname="PlanV8_StairAnchors_AreLockedAndVerticallyAligned" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="1644596639" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.001252" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1003" name="PlanV8_Validate_ReportsNoErrors" fullname="BlackCommission.Level.Tests.TowerTopologyTests.PlanV8_Validate_ReportsNoErrors" methodname="PlanV8_Validate_ReportsNoErrors" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="2056949089" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.002842" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1016" name="Resolve_DifferentSeeds_ProduceDifferentMazes" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Resolve_DifferentSeeds_ProduceDifferentMazes" methodname="Resolve_DifferentSeeds_ProduceDifferentMazes" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="1141213279" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.031594" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1019" name="Resolve_FallsBackToAllOpen_WhenRollsCannotSatisfy" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Resolve_FallsBackToAllOpen_WhenRollsCannotSatisfy" methodname="Resolve_FallsBackToAllOpen_WhenRollsCannotSatisfy" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="811626733" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:26Z" duration="0.000301" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1015" name="Resolve_IsDeterministic_ForTheSameSeed" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Resolve_IsDeterministic_ForTheSameSeed" methodname="Resolve_IsDeterministic_ForTheSameSeed" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="328894779" result="Passed" start-time="2026-06-17 21:25:26Z" end-time="2026-06-17 21:25:27Z" duration="0.015430" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1018" name="Validator_CatchesBrokenCriticalPath" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Validator_CatchesBrokenCriticalPath" methodname="Validator_CatchesBrokenCriticalPath" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="1483543648" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000240" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1017" name="Validator_CatchesIslandRoom" fullname="BlackCommission.Level.Tests.TowerTopologyTests.Validator_CatchesIslandRoom" methodname="Validator_CatchesIslandRoom" classname="BlackCommission.Level.Tests.TowerTopologyTests" runstate="Runnable" seed="629272560" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000155" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1045" name="BlackCommission.Mission.Core.Tests.dll" fullname="/Users/yanfeidai/Desktop/code/BlackCommission/Library/ScriptAssemblies/BlackCommission.Mission.Core.Tests.dll" runstate="Runnable" testcasecount="19" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.011350" total="19" passed="19" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="75235" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1046" name="BlackCommission" fullname="BlackCommission" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.003596" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1047" name="Mission" fullname="BlackCommission.Mission" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.003417" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1048" name="Tests" fullname="BlackCommission.Mission.Tests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.003259" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1035" name="PowerGateLogicTests" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.003042" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1043" name="ApplyRestored_ForLateJoiner_LatchesWithoutTicking" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.ApplyRestored_ForLateJoiner_LatchesWithoutTicking" methodname="ApplyRestored_ForLateJoiner_LatchesWithoutTicking" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="1538191934" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000892" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1044" name="Constructor_TinyOrZeroHoldTime_IsClampedNotBroken" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.Constructor_TinyOrZeroHoldTime_IsClampedNotBroken" methodname="Constructor_TinyOrZeroHoldTime_IsClampedNotBroken" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="2046548076" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000079" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1042" name="NormalizedProgress_TracksFraction" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.NormalizedProgress_TracksFraction" methodname="NormalizedProgress_TracksFraction" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="115085773" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000068" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1040" name="Tick_AccumulatesAcrossManySmallFrames" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.Tick_AccumulatesAcrossManySmallFrames" methodname="Tick_AccumulatesAcrossManySmallFrames" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="1004151548" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000078" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1039" name="Tick_AfterRestore_IgnoresReleaseAndHold" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.Tick_AfterRestore_IgnoresReleaseAndHold" methodname="Tick_AfterRestore_IgnoresReleaseAndHold" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="270153252" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000098" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1041" name="Tick_NegativeDeltaTime_DoesNotRegressOrComplete" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.Tick_NegativeDeltaTime_DoesNotRegressOrComplete" methodname="Tick_NegativeDeltaTime_DoesNotRegressOrComplete" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="273644477" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000094" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1038" name="Tick_ReachingThreshold_CompletesExactlyOnce" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.Tick_ReachingThreshold_CompletesExactlyOnce" methodname="Tick_ReachingThreshold_CompletesExactlyOnce" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="1868470504" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000085" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1037" name="Tick_ReleasedEarly_ResetsProgressToZero" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.Tick_ReleasedEarly_ResetsProgressToZero" methodname="Tick_ReleasedEarly_ResetsProgressToZero" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="1874117457" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000326" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1036" name="Tick_WhileHeld_AccumulatesProgress" fullname="BlackCommission.Mission.Tests.PowerGateLogicTests.Tick_WhileHeld_AccumulatesProgress" methodname="Tick_WhileHeld_AccumulatesProgress" classname="BlackCommission.Mission.Tests.PowerGateLogicTests" runstate="Runnable" seed="1295805842" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000070" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+      <test-suite type="TestFixture" id="1024" name="TowerMissionLogicTests" fullname="TowerMissionLogicTests" classname="TowerMissionLogicTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.002176" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1032" name="test_all_downed_fails_once_and_latches" fullname="TowerMissionLogicTests.test_all_downed_fails_once_and_latches" methodname="test_all_downed_fails_once_and_latches" classname="TowerMissionLogicTests" runstate="Runnable" seed="1971624089" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000269" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1028" name="test_completeness_clamps_at_zero" fullname="TowerMissionLogicTests.test_completeness_clamps_at_zero" methodname="test_completeness_clamps_at_zero" classname="TowerMissionLogicTests" runstate="Runnable" seed="947086916" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000112" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1030" name="test_departure_below_threshold_rejected_to_partial" fullname="TowerMissionLogicTests.test_departure_below_threshold_rejected_to_partial" methodname="test_departure_below_threshold_rejected_to_partial" classname="TowerMissionLogicTests" runstate="Runnable" seed="566801826" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000078" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1029" name="test_departure_with_column_at_threshold_delivers" fullname="TowerMissionLogicTests.test_departure_with_column_at_threshold_delivers" methodname="test_departure_with_column_at_threshold_delivers" classname="TowerMissionLogicTests" runstate="Runnable" seed="1423008816" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000074" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1031" name="test_departure_without_column_is_partial" fullname="TowerMissionLogicTests.test_departure_without_column_is_partial" methodname="test_departure_without_column_is_partial" classname="TowerMissionLogicTests" runstate="Runnable" seed="599149993" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000058" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1026" name="test_first_pickup_latches_objective_secured_once" fullname="TowerMissionLogicTests.test_first_pickup_latches_objective_secured_once" methodname="test_first_pickup_latches_objective_secured_once" classname="TowerMissionLogicTests" runstate="Runnable" seed="660127506" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000074" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1025" name="test_initial_state_in_progress_full_completeness" fullname="TowerMissionLogicTests.test_initial_state_in_progress_full_completeness" methodname="test_initial_state_in_progress_full_completeness" classname="TowerMissionLogicTests" runstate="Runnable" seed="1243996538" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000074" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1034" name="test_money_scaling_rounds_away_from_zero" fullname="TowerMissionLogicTests.test_money_scaling_rounds_away_from_zero" methodname="test_money_scaling_rounds_away_from_zero" classname="TowerMissionLogicTests" runstate="Runnable" seed="844333709" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000173" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1033" name="test_terminal_state_ignores_late_events" fullname="TowerMissionLogicTests.test_terminal_state_ignores_late_events" methodname="test_terminal_state_ignores_late_events" classname="TowerMissionLogicTests" runstate="Runnable" seed="2115024266" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000105" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1027" name="test_three_drops_yield_91_percent_and_273g" fullname="TowerMissionLogicTests.test_three_drops_yield_91_percent_and_273g" methodname="test_three_drops_yield_91_percent_and_273g" classname="TowerMissionLogicTests" runstate="Runnable" seed="1506633084" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000101" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1108" name="BlackCommission.Office.Core.Tests.dll" fullname="/Users/yanfeidai/Desktop/code/BlackCommission/Library/ScriptAssemblies/BlackCommission.Office.Core.Tests.dll" runstate="Runnable" testcasecount="55" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.018644" total="55" passed="55" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="75235" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestSuite" id="1109" name="BlackCommission" fullname="BlackCommission" runstate="Runnable" testcasecount="55" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.018204" total="55" passed="55" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-suite type="TestSuite" id="1110" name="Office" fullname="BlackCommission.Office" runstate="Runnable" testcasecount="55" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.017776" total="55" passed="55" failed="0" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <test-suite type="TestSuite" id="1111" name="Tests" fullname="BlackCommission.Office.Tests" runstate="Runnable" testcasecount="55" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.017311" total="55" passed="55" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-suite type="TestFixture" id="1049" name="CompanyStateTests" fullname="BlackCommission.Office.Tests.CompanyStateTests" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" testcasecount="23" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.004674" total="23" passed="23" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1061" name="Failure_AtPressure100WhileBroke_IssuesUltimatumFirst" fullname="BlackCommission.Office.Tests.CompanyStateTests.Failure_AtPressure100WhileBroke_IssuesUltimatumFirst" methodname="Failure_AtPressure100WhileBroke_IssuesUltimatumFirst" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1085560253" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000345" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1063" name="Failure_AtPressure100WithPositiveFunds_DoesNotIssueUltimatum" fullname="BlackCommission.Office.Tests.CompanyStateTests.Failure_AtPressure100WithPositiveFunds_DoesNotIssueUltimatum" methodname="Failure_AtPressure100WithPositiveFunds_DoesNotIssueUltimatum" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="190422081" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000077" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1059" name="Failure_NeverGrantsExperience" fullname="BlackCommission.Office.Tests.CompanyStateTests.Failure_NeverGrantsExperience" methodname="Failure_NeverGrantsExperience" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="828292593" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000105" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1062" name="Failure_SecondStrikeUnderUltimatum_ExecutesHostileTakeover" fullname="BlackCommission.Office.Tests.CompanyStateTests.Failure_SecondStrikeUnderUltimatum_ExecutesHostileTakeover" methodname="Failure_SecondStrikeUnderUltimatum_ExecutesHostileTakeover" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="413247443" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000244" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1060" name="Failure_WhileInDebtAndDisreputable_GainsMaximumPressure" fullname="BlackCommission.Office.Tests.CompanyStateTests.Failure_WhileInDebtAndDisreputable_GainsMaximumPressure" methodname="Failure_WhileInDebtAndDisreputable_GainsMaximumPressure" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1482669042" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000098" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1072" name="IsHostileTakeoverRisk_TrueAtHighPressureWhileBroke" fullname="BlackCommission.Office.Tests.CompanyStateTests.IsHostileTakeoverRisk_TrueAtHighPressureWhileBroke" methodname="IsHostileTakeoverRisk_TrueAtHighPressureWhileBroke" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="233865391" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000115" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1064" name="LevelUp_At300Experience_ReachesLevel2" fullname="BlackCommission.Office.Tests.CompanyStateTests.LevelUp_At300Experience_ReachesLevel2" methodname="LevelUp_At300Experience_ReachesLevel2" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1310195621" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000123" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1065" name="LevelUp_CarriesOverflowExperienceAcrossMultipleLevels" fullname="BlackCommission.Office.Tests.CompanyStateTests.LevelUp_CarriesOverflowExperienceAcrossMultipleLevels" methodname="LevelUp_CarriesOverflowExperienceAcrossMultipleLevels" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="753439330" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000075" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1066" name="LevelUp_StopsAtLevelCap8" fullname="BlackCommission.Office.Tests.CompanyStateTests.LevelUp_StopsAtLevelCap8" methodname="LevelUp_StopsAtLevelCap8" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="638558897" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000058" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1055" name="Partial_AddsExperienceButNoJobProgress" fullname="BlackCommission.Office.Tests.CompanyStateTests.Partial_AddsExperienceButNoJobProgress" methodname="Partial_AddsExperienceButNoJobProgress" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="148398577" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000111" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1058" name="Partial_PressureIsCappedAt100" fullname="BlackCommission.Office.Tests.CompanyStateTests.Partial_PressureIsCappedAt100" methodname="Partial_PressureIsCappedAt100" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1718397875" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000064" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1056" name="Partial_WhileStillInDebt_GainsSurchargedPressure" fullname="BlackCommission.Office.Tests.CompanyStateTests.Partial_WhileStillInDebt_GainsSurchargedPressure" methodname="Partial_WhileStillInDebt_GainsSurchargedPressure" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="912343998" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000056" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1057" name="Partial_WithPositiveFundsAndReputation_GainsBasePressureOnly" fullname="BlackCommission.Office.Tests.CompanyStateTests.Partial_WithPositiveFundsAndReputation_GainsBasePressureOnly" methodname="Partial_WithPositiveFundsAndReputation_GainsBasePressureOnly" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1898355845" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000060" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1050" name="Success_AddsMoneyReputationAndExperience" fullname="BlackCommission.Office.Tests.CompanyStateTests.Success_AddsMoneyReputationAndExperience" methodname="Success_AddsMoneyReputationAndExperience" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="231923900" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000101" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1054" name="Success_BelowPressure70_ClearsUltimatum" fullname="BlackCommission.Office.Tests.CompanyStateTests.Success_BelowPressure70_ClearsUltimatum" methodname="Success_BelowPressure70_ClearsUltimatum" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="2089303717" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000066" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1051" name="Success_IncrementsLostItemJobCounter" fullname="BlackCommission.Office.Tests.CompanyStateTests.Success_IncrementsLostItemJobCounter" methodname="Success_IncrementsLostItemJobCounter" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="385544712" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000053" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1053" name="Success_ReducesPressureBy25_FloorAtZero" fullname="BlackCommission.Office.Tests.CompanyStateTests.Success_ReducesPressureBy25_FloorAtZero" methodname="Success_ReducesPressureBy25_FloorAtZero" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1727710150" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000070" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1052" name="Success_WithoutLostItemProgressFlag_DoesNotIncrementJobCounter" fullname="BlackCommission.Office.Tests.CompanyStateTests.Success_WithoutLostItemProgressFlag_DoesNotIncrementJobCounter" methodname="Success_WithoutLostItemProgressFlag_DoesNotIncrementJobCounter" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1027080352" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000051" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1069" name="TutorialAcquisition_BlockedAtPressure70" fullname="BlackCommission.Office.Tests.CompanyStateTests.TutorialAcquisition_BlockedAtPressure70" methodname="TutorialAcquisition_BlockedAtPressure70" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1340355279" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000146" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1071" name="TutorialAcquisition_BlockedWhenAlreadyAcquired" fullname="BlackCommission.Office.Tests.CompanyStateTests.TutorialAcquisition_BlockedWhenAlreadyAcquired" methodname="TutorialAcquisition_BlockedWhenAlreadyAcquired" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="2083385816" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000072" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1070" name="TutorialAcquisition_BlockedWithOnlyOneCompletedJob" fullname="BlackCommission.Office.Tests.CompanyStateTests.TutorialAcquisition_BlockedWithOnlyOneCompletedJob" methodname="TutorialAcquisition_BlockedWithOnlyOneCompletedJob" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="2081714880" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000055" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1067" name="TutorialAcquisition_Costs150" fullname="BlackCommission.Office.Tests.CompanyStateTests.TutorialAcquisition_Costs150" methodname="TutorialAcquisition_Costs150" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1662707449" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000056" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1068" name="TutorialAcquisition_RequiresTwoJobsFundsAndLowPressure" fullname="BlackCommission.Office.Tests.CompanyStateTests.TutorialAcquisition_RequiresTwoJobsFundsAndLowPressure" methodname="TutorialAcquisition_RequiresTwoJobsFundsAndLowPressure" classname="BlackCommission.Office.Tests.CompanyStateTests" runstate="Runnable" seed="1685410813" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000102" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1073" name="MissionRewardCalculatorTests" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.006175" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1080" name="BonusEvidence_OnFailure_AddsNothing" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.BonusEvidence_OnFailure_AddsNothing" methodname="BonusEvidence_OnFailure_AddsNothing" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1409361601" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.002035" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1079" name="BonusEvidence_OnPartial_AddsMoneyAndExperienceButNoReputation" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.BonusEvidence_OnPartial_AddsMoneyAndExperienceButNoReputation" methodname="BonusEvidence_OnPartial_AddsMoneyAndExperienceButNoReputation" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="799652310" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000225" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1078" name="BonusEvidence_OnSuccess_AddsMoneyReputationAndExperience" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.BonusEvidence_OnSuccess_AddsMoneyReputationAndExperience" methodname="BonusEvidence_OnSuccess_AddsMoneyReputationAndExperience" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="755788624" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000176" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1077" name="Failure_PaysConsolationAndReputationPenalty" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.Failure_PaysConsolationAndReputationPenalty" methodname="Failure_PaysConsolationAndReputationPenalty" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1562950708" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000139" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1085" name="NullTask_Calculate_DoesNotThrow" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.NullTask_Calculate_DoesNotThrow" methodname="NullTask_Calculate_DoesNotThrow" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="955569901" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000791" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1084" name="NullTask_UsesFallbackRewardTable" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.NullTask_UsesFallbackRewardTable" methodname="NullTask_UsesFallbackRewardTable" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1930802177" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000210" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1081" name="Overtime_90MinutesPastWindow_DeductsCeiledMoneyOnly" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.Overtime_90MinutesPastWindow_DeductsCeiledMoneyOnly" methodname="Overtime_90MinutesPastWindow_DeductsCeiledMoneyOnly" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1972021564" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000148" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1083" name="Overtime_AppliesEvenToFailedRuns" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.Overtime_AppliesEvenToFailedRuns" methodname="Overtime_AppliesEvenToFailedRuns" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="399141441" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000129" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1082" name="Overtime_TwoFullHours_AlsoDeductsReputation" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.Overtime_TwoFullHours_AlsoDeductsReputation" methodname="Overtime_TwoFullHours_AlsoDeductsReputation" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1348897047" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000144" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1076" name="Partial_ConsolationFloorWinsWhenHigherThanPercentage" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.Partial_ConsolationFloorWinsWhenHigherThanPercentage" methodname="Partial_ConsolationFloorWinsWhenHigherThanPercentage" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1947864545" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000123" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1075" name="Partial_Pays22PercentMoneyAnd20PercentExperience_NoReputation" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.Partial_Pays22PercentMoneyAnd20PercentExperience_NoReputation" methodname="Partial_Pays22PercentMoneyAnd20PercentExperience_NoReputation" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1990282742" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000150" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1074" name="Success_InsideContractWindow_PaysFullReward" fullname="BlackCommission.Office.Tests.MissionRewardCalculatorTests.Success_InsideContractWindow_PaysFullReward" methodname="Success_InsideContractWindow_PaysFullReward" classname="BlackCommission.Office.Tests.MissionRewardCalculatorTests" runstate="Runnable" seed="1604972917" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000142" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1086" name="MvpMissionClockTests" fullname="BlackCommission.Office.Tests.MvpMissionClockTests" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" testcasecount="14" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.003450" total="14" passed="14" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1089" name="CurrentClockHour_AdvancesFromStartHour" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.CurrentClockHour_AdvancesFromStartHour" methodname="CurrentClockHour_AdvancesFromStartHour" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="1937487612" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000234" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1100" name="DaylightLabel_MapsClockHourToDaylightBands" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.DaylightLabel_MapsClockHourToDaylightBands" methodname="DaylightLabel_MapsClockHourToDaylightBands" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="1986898549" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000200" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1090" name="DeadlineClockHour_IsStartPlusContractWindow" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.DeadlineClockHour_IsStartPlusContractWindow" methodname="DeadlineClockHour_IsStartPlusContractWindow" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="2007082582" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000113" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1087" name="ElapsedGameHours_ConvertsRealSecondsAtTaskRate" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.ElapsedGameHours_ConvertsRealSecondsAtTaskRate" methodname="ElapsedGameHours_ConvertsRealSecondsAtTaskRate" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="289497981" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000109" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1088" name="ElapsedGameHours_NegativeSecondsClampToZero" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.ElapsedGameHours_NegativeSecondsClampToZero" methodname="ElapsedGameHours_NegativeSecondsClampToZero" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="206266841" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000101" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1097" name="FormatClock_PastMidnightShowsNextDayPrefix" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.FormatClock_PastMidnightShowsNextDayPrefix" methodname="FormatClock_PastMidnightShowsNextDayPrefix" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="576210695" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000192" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1096" name="FormatClock_SameDayShowsHourMinute" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.FormatClock_SameDayShowsHourMinute" methodname="FormatClock_SameDayShowsHourMinute" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="2096611257" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000093" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1098" name="FormatClock_TwoDaysOutShowsDayCounter" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.FormatClock_TwoDaysOutShowsDayCounter" methodname="FormatClock_TwoDaysOutShowsDayCounter" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="301908424" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000101" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1099" name="FormatGameHours_RoundsMinutesAndCarriesToWholeHours" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.FormatGameHours_RoundsMinutesAndCarriesToWholeHours" methodname="FormatGameHours_RoundsMinutesAndCarriesToWholeHours" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="1669316836" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000165" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1095" name="NullTask_UsesDefaultScheduleConstants" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.NullTask_UsesDefaultScheduleConstants" methodname="NullTask_UsesDefaultScheduleConstants" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="1354596170" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000143" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1093" name="Overtime_MoneyPenaltyCeilsPartialHours" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.Overtime_MoneyPenaltyCeilsPartialHours" methodname="Overtime_MoneyPenaltyCeilsPartialHours" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="291752854" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000101" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1094" name="Overtime_ReputationPenaltyFloorsByTwoHourBlocks" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.Overtime_ReputationPenaltyFloorsByTwoHourBlocks" methodname="Overtime_ReputationPenaltyFloorsByTwoHourBlocks" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="1658408207" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000145" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1092" name="Overtime_ZeroInsideContractWindow" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.Overtime_ZeroInsideContractWindow" methodname="Overtime_ZeroInsideContractWindow" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="42182422" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000147" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1091" name="RemainingGameHours_ClampsToZeroPastDeadline" fullname="BlackCommission.Office.Tests.MvpMissionClockTests.RemainingGameHours_ClampsToZeroPastDeadline" methodname="RemainingGameHours_ClampsToZeroPastDeadline" classname="BlackCommission.Office.Tests.MvpMissionClockTests" runstate="Runnable" seed="1181848806" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000124" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+            <test-suite type="TestFixture" id="1101" name="OfficeTaskSettlementNoteTests" fullname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" classname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" runstate="Runnable" testcasecount="6" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.002073" total="6" passed="6" failed="0" inconclusive="0" skipped="0" asserts="0">
+              <properties />
+              <test-case id="1106" name="GetSettlementNote_EmptyPool_ReturnsNull" fullname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests.GetSettlementNote_EmptyPool_ReturnsNull" methodname="GetSettlementNote_EmptyPool_ReturnsNull" classname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" runstate="Runnable" seed="785810826" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000370" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1105" name="GetSettlementNote_NegativeSeed_StillPicksValidEntry" fullname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests.GetSettlementNote_NegativeSeed_StillPicksValidEntry" methodname="GetSettlementNote_NegativeSeed_StillPicksValidEntry" classname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" runstate="Runnable" seed="1133221972" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000488" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1107" name="GetSettlementNote_NullPool_ReturnsNull" fullname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests.GetSettlementNote_NullPool_ReturnsNull" methodname="GetSettlementNote_NullPool_ReturnsNull" classname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" runstate="Runnable" seed="1776951806" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000096" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1102" name="GetSettlementNote_RoutesByResultKind" fullname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests.GetSettlementNote_RoutesByResultKind" methodname="GetSettlementNote_RoutesByResultKind" classname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" runstate="Runnable" seed="2084611471" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000122" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1103" name="GetSettlementNote_SameSeed_SamePick" fullname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests.GetSettlementNote_SameSeed_SamePick" methodname="GetSettlementNote_SameSeed_SamePick" classname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" runstate="Runnable" seed="1517717512" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000115" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+              <test-case id="1104" name="GetSettlementNote_SeedWrapsAroundPool" fullname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests.GetSettlementNote_SeedWrapsAroundPool" methodname="GetSettlementNote_SeedWrapsAroundPool" classname="BlackCommission.Office.Tests.OfficeTaskSettlementNoteTests" runstate="Runnable" seed="39622501" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000125" asserts="0">
+                <properties>
+                  <property name="retryIteration" value="0" />
+                  <property name="repeatIteration" value="0" />
+                </properties>
+              </test-case>
+            </test-suite>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1161" name="BlackCommission.Scavenge.Core.Tests.dll" fullname="/Users/yanfeidai/Desktop/code/BlackCommission/Library/ScriptAssemblies/BlackCommission.Scavenge.Core.Tests.dll" runstate="Runnable" testcasecount="45" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.015349" total="45" passed="45" failed="0" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="75235" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <test-suite type="TestFixture" id="1112" name="LootSpawnPlannerTests" fullname="LootSpawnPlannerTests" classname="LootSpawnPlannerTests" runstate="Runnable" testcasecount="10" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.005671" total="10" passed="10" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1118" name="test_anchor_with_no_matching_item_is_skipped" fullname="LootSpawnPlannerTests.test_anchor_with_no_matching_item_is_skipped" methodname="test_anchor_with_no_matching_item_is_skipped" classname="LootSpawnPlannerTests" runstate="Runnable" seed="159779526" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.001461" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1114" name="test_different_seeds_produce_more_than_one_distinct_plan" fullname="LootSpawnPlannerTests.test_different_seeds_produce_more_than_one_distinct_plan" methodname="test_different_seeds_produce_more_than_one_distinct_plan" classname="LootSpawnPlannerTests" runstate="Runnable" seed="1014787698" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.001351" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1120" name="test_empty_or_null_inputs_return_empty_plan" fullname="LootSpawnPlannerTests.test_empty_or_null_inputs_return_empty_plan" methodname="test_empty_or_null_inputs_return_empty_plan" classname="LootSpawnPlannerTests" runstate="Runnable" seed="678108731" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000218" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1115" name="test_item_count_stays_within_target_range" fullname="LootSpawnPlannerTests.test_item_count_stays_within_target_range" methodname="test_item_count_stays_within_target_range" classname="LootSpawnPlannerTests" runstate="Runnable" seed="146682947" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000249" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1117" name="test_item_never_spawns_on_disallowed_surface" fullname="LootSpawnPlannerTests.test_item_never_spawns_on_disallowed_surface" methodname="test_item_never_spawns_on_disallowed_surface" classname="LootSpawnPlannerTests" runstate="Runnable" seed="1717150556" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000456" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1122" name="test_item_with_no_surface_restriction_is_allowed_anywhere" fullname="LootSpawnPlannerTests.test_item_with_no_surface_restriction_is_allowed_anywhere" methodname="test_item_with_no_surface_restriction_is_allowed_anywhere" classname="LootSpawnPlannerTests" runstate="Runnable" seed="1527598452" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000068" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1121" name="test_min_greater_than_max_is_clamped_not_throwing" fullname="LootSpawnPlannerTests.test_min_greater_than_max_is_clamped_not_throwing" methodname="test_min_greater_than_max_is_clamped_not_throwing" classname="LootSpawnPlannerTests" runstate="Runnable" seed="421001617" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000124" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1119" name="test_no_anchor_used_twice" fullname="LootSpawnPlannerTests.test_no_anchor_used_twice" methodname="test_no_anchor_used_twice" classname="LootSpawnPlannerTests" runstate="Runnable" seed="1237106346" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000271" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1113" name="test_same_seed_yields_identical_plan" fullname="LootSpawnPlannerTests.test_same_seed_yields_identical_plan" methodname="test_same_seed_yields_identical_plan" classname="LootSpawnPlannerTests" runstate="Runnable" seed="1480068770" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000095" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1116" name="test_target_clamps_to_anchor_count" fullname="LootSpawnPlannerTests.test_target_clamps_to_anchor_count" methodname="test_target_clamps_to_anchor_count" classname="LootSpawnPlannerTests" runstate="Runnable" seed="1916774543" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000186" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1123" name="ScavengeSettlementCalculatorTests" fullname="ScavengeSettlementCalculatorTests" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.003352" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1130" name="test_commissioned_bonus_stacks_with_condition" fullname="ScavengeSettlementCalculatorTests.test_commissioned_bonus_stacks_with_condition" methodname="test_commissioned_bonus_stacks_with_condition" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="1480802317" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000852" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1129" name="test_commissioned_target_gets_bonus" fullname="ScavengeSettlementCalculatorTests.test_commissioned_target_gets_bonus" methodname="test_commissioned_target_gets_bonus" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="827817528" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000104" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1135" name="test_condition_multiplier_lookup_defaults" fullname="ScavengeSettlementCalculatorTests.test_condition_multiplier_lookup_defaults" methodname="test_condition_multiplier_lookup_defaults" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="1926884730" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000081" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1127" name="test_condition_multipliers_applied" fullname="ScavengeSettlementCalculatorTests.test_condition_multipliers_applied" methodname="test_condition_multipliers_applied" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="248834409" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000102" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1134" name="test_custom_knobs_are_respected" fullname="ScavengeSettlementCalculatorTests.test_custom_knobs_are_respected" methodname="test_custom_knobs_are_respected" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="1279935232" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000061" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1124" name="test_empty_delivery_settles_to_zero" fullname="ScavengeSettlementCalculatorTests.test_empty_delivery_settles_to_zero" methodname="test_empty_delivery_settles_to_zero" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="1001425680" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000116" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1126" name="test_good_item_pays_full_base_value" fullname="ScavengeSettlementCalculatorTests.test_good_item_pays_full_base_value" methodname="test_good_item_pays_full_base_value" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="801078740" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000076" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1133" name="test_negative_base_value_clamped_to_zero" fullname="ScavengeSettlementCalculatorTests.test_negative_base_value_clamped_to_zero" methodname="test_negative_base_value_clamped_to_zero" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="389478708" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000078" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1131" name="test_no_commissioned_target_no_bonus_flag" fullname="ScavengeSettlementCalculatorTests.test_no_commissioned_target_no_bonus_flag" methodname="test_no_commissioned_target_no_bonus_flag" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="27030740" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000068" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1125" name="test_null_delivery_is_safe" fullname="ScavengeSettlementCalculatorTests.test_null_delivery_is_safe" methodname="test_null_delivery_is_safe" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="1646342136" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000070" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1132" name="test_payout_rounds_half_away_from_zero" fullname="ScavengeSettlementCalculatorTests.test_payout_rounds_half_away_from_zero" methodname="test_payout_rounds_half_away_from_zero" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="1609457240" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000063" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1128" name="test_total_is_sum_of_line_payouts" fullname="ScavengeSettlementCalculatorTests.test_total_is_sum_of_line_payouts" methodname="test_total_is_sum_of_line_payouts" classname="ScavengeSettlementCalculatorTests" runstate="Runnable" seed="242719514" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000457" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1136" name="VanCargoManifestTests" fullname="VanCargoManifestTests" classname="VanCargoManifestTests" runstate="Runnable" testcasecount="11" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.003362" total="11" passed="11" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1141" name="test_can_load_matches_remaining_capacity_per_class" fullname="VanCargoManifestTests.test_can_load_matches_remaining_capacity_per_class" methodname="test_can_load_matches_remaining_capacity_per_class" classname="VanCargoManifestTests" runstate="Runnable" seed="1027807340" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000619" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1139" name="test_load_order_is_preserved" fullname="VanCargoManifestTests.test_load_order_is_preserved" methodname="test_load_order_is_preserved" classname="VanCargoManifestTests" runstate="Runnable" seed="2030691467" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000128" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1147" name="test_manifest_feeds_settlement_total" fullname="VanCargoManifestTests.test_manifest_feeds_settlement_total" methodname="test_manifest_feeds_settlement_total" classname="VanCargoManifestTests" runstate="Runnable" seed="1494295011" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000235" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1137" name="test_new_manifest_is_empty_with_full_remaining" fullname="VanCargoManifestTests.test_new_manifest_is_empty_with_full_remaining" methodname="test_new_manifest_is_empty_with_full_remaining" classname="VanCargoManifestTests" runstate="Runnable" seed="563119848" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000122" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1140" name="test_rejected_item_does_not_change_load_or_manifest" fullname="VanCargoManifestTests.test_rejected_item_does_not_change_load_or_manifest" methodname="test_rejected_item_does_not_change_load_or_manifest" classname="VanCargoManifestTests" runstate="Runnable" seed="927784612" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000140" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1145" name="test_reset_empties_items_and_ledger" fullname="VanCargoManifestTests.test_reset_empties_items_and_ledger" methodname="test_reset_empties_items_and_ledger" classname="VanCargoManifestTests" runstate="Runnable" seed="917892282" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000175" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1146" name="test_to_settlement_items_is_a_defensive_copy" fullname="VanCargoManifestTests.test_to_settlement_items_is_a_defensive_copy" methodname="test_to_settlement_items_is_a_defensive_copy" classname="VanCargoManifestTests" runstate="Runnable" seed="1456514340" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000110" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1138" name="test_try_load_records_item_and_consumes_weight" fullname="VanCargoManifestTests.test_try_load_records_item_and_consumes_weight" methodname="test_try_load_records_item_and_consumes_weight" classname="VanCargoManifestTests" runstate="Runnable" seed="27728162" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000116" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1142" name="test_unload_frees_weight_and_removes_the_right_item" fullname="VanCargoManifestTests.test_unload_frees_weight_and_removes_the_right_item" methodname="test_unload_frees_weight_and_removes_the_right_item" classname="VanCargoManifestTests" runstate="Runnable" seed="2095410730" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000350" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1143" name="test_unload_out_of_range_is_ignored" fullname="VanCargoManifestTests.test_unload_out_of_range_is_ignored" methodname="test_unload_out_of_range_is_ignored" classname="VanCargoManifestTests" runstate="Runnable" seed="9244405" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000094" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1144" name="test_unload_then_reload_uses_freed_capacity" fullname="VanCargoManifestTests.test_unload_then_reload_uses_freed_capacity" methodname="test_unload_then_reload_uses_freed_capacity" classname="VanCargoManifestTests" runstate="Runnable" seed="372477658" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000106" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+      <test-suite type="TestFixture" id="1148" name="VanWeightLedgerTests" fullname="VanWeightLedgerTests" classname="VanWeightLedgerTests" runstate="Runnable" testcasecount="12" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.002159" total="12" passed="12" failed="0" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <test-case id="1151" name="test_can_fit_rejects_nonpositive_and_overflow" fullname="VanWeightLedgerTests.test_can_fit_rejects_nonpositive_and_overflow" methodname="test_can_fit_rejects_nonpositive_and_overflow" classname="VanWeightLedgerTests" runstate="Runnable" seed="64604177" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000075" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1154" name="test_exact_fill_is_allowed_and_marks_full" fullname="VanWeightLedgerTests.test_exact_fill_is_allowed_and_marks_full" methodname="test_exact_fill_is_allowed_and_marks_full" classname="VanWeightLedgerTests" runstate="Runnable" seed="1793305395" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000077" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1150" name="test_negative_capacity_clamps_to_zero_and_is_full" fullname="VanWeightLedgerTests.test_negative_capacity_clamps_to_zero_and_is_full" methodname="test_negative_capacity_clamps_to_zero_and_is_full" classname="VanWeightLedgerTests" runstate="Runnable" seed="1065105945" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000064" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1149" name="test_new_ledger_starts_empty_with_full_remaining" fullname="VanWeightLedgerTests.test_new_ledger_starts_empty_with_full_remaining" methodname="test_new_ledger_starts_empty_with_full_remaining" classname="VanWeightLedgerTests" runstate="Runnable" seed="1113870108" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000102" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1157" name="test_remove_decrements_and_clamps_at_zero" fullname="VanWeightLedgerTests.test_remove_decrements_and_clamps_at_zero" methodname="test_remove_decrements_and_clamps_at_zero" classname="VanWeightLedgerTests" runstate="Runnable" seed="1272244650" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000082" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1158" name="test_remove_ignores_nonpositive" fullname="VanWeightLedgerTests.test_remove_ignores_nonpositive" methodname="test_remove_ignores_nonpositive" classname="VanWeightLedgerTests" runstate="Runnable" seed="675853421" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000071" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1159" name="test_reset_empties_the_van" fullname="VanWeightLedgerTests.test_reset_empties_the_van" methodname="test_reset_empties_the_van" classname="VanWeightLedgerTests" runstate="Runnable" seed="1701480465" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000068" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1160" name="test_spec_scenario_capacity_12_mixed_load_rejects_when_tight" fullname="VanWeightLedgerTests.test_spec_scenario_capacity_12_mixed_load_rejects_when_tight" methodname="test_spec_scenario_capacity_12_mixed_load_rejects_when_tight" classname="VanWeightLedgerTests" runstate="Runnable" seed="1838336266" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000133" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1152" name="test_try_add_loads_when_it_fits" fullname="VanWeightLedgerTests.test_try_add_loads_when_it_fits" methodname="test_try_add_loads_when_it_fits" classname="VanWeightLedgerTests" runstate="Runnable" seed="1744536515" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000080" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1153" name="test_try_add_rejects_and_preserves_load_when_over_capacity" fullname="VanWeightLedgerTests.test_try_add_rejects_and_preserves_load_when_over_capacity" methodname="test_try_add_rejects_and_preserves_load_when_over_capacity" classname="VanWeightLedgerTests" runstate="Runnable" seed="1052735732" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000080" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1156" name="test_try_add_weight_class_overload_uses_unit_cost" fullname="VanWeightLedgerTests.test_try_add_weight_class_overload_uses_unit_cost" methodname="test_try_add_weight_class_overload_uses_unit_cost" classname="VanWeightLedgerTests" runstate="Runnable" seed="965684108" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000069" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+        <test-case id="1155" name="test_weight_class_units_are_1_2_4" fullname="VanWeightLedgerTests.test_weight_class_units_are_1_2_4" methodname="test_weight_class_units_are_1_2_4" classname="VanWeightLedgerTests" runstate="Runnable" seed="1307481089" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000070" asserts="0">
+          <properties>
+            <property name="retryIteration" value="0" />
+            <property name="repeatIteration" value="0" />
+          </properties>
+        </test-case>
+      </test-suite>
+    </test-suite>
+    <test-suite type="Assembly" id="1223" name="McpUnity.Editor.Tests.dll" fullname="/Users/yanfeidai/Desktop/code/BlackCommission/Library/ScriptAssemblies/McpUnity.Editor.Tests.dll" runstate="Runnable" testcasecount="55" result="Failed" site="Child" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:38Z" duration="11.652361" total="55" passed="48" failed="7" inconclusive="0" skipped="0" asserts="0">
+      <properties>
+        <property name="_PID" value="75235" />
+        <property name="_APPDOMAIN" value="Unity Child Domain" />
+        <property name="platform" value="EditMode" />
+        <property name="EditorOnly" value="True" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="1224" name="McpUnity" fullname="McpUnity" runstate="Runnable" testcasecount="55" result="Failed" site="Child" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:38Z" duration="11.651871" total="55" passed="48" failed="7" inconclusive="0" skipped="0" asserts="0">
+        <properties />
+        <failure>
+          <message><![CDATA[One or more child tests had errors]]></message>
+        </failure>
+        <test-suite type="TestSuite" id="1225" name="Tests" fullname="McpUnity.Tests" runstate="Runnable" testcasecount="55" result="Failed" site="Child" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:38Z" duration="11.651297" total="55" passed="48" failed="7" inconclusive="0" skipped="0" asserts="0">
+          <properties />
+          <failure>
+            <message><![CDATA[One or more child tests had errors]]></message>
+          </failure>
+          <test-suite type="TestFixture" id="1164" name="BatchExecuteToolTests" fullname="McpUnity.Tests.BatchExecuteToolTests" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" testcasecount="14" result="Failed" site="Child" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.019512" total="14" passed="7" failed="7" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-case id="1165" name="BatchExecuteTool_HasCorrectName" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_HasCorrectName" methodname="BatchExecuteTool_HasCorrectName" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="1811717493" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000246" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1167" name="BatchExecuteTool_HasDescription" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_HasDescription" methodname="BatchExecuteTool_HasDescription" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="1349685085" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000139" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1166" name="BatchExecuteTool_IsAsync" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_IsAsync" methodname="BatchExecuteTool_IsAsync" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="918868918" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000096" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1178" name="BatchExecuteTool_OperationResultsHaveCorrectFormat" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_OperationResultsHaveCorrectFormat" methodname="BatchExecuteTool_OperationResultsHaveCorrectFormat" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="46217955" result="Failed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.008706" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[Unhandled log message: '[Exception] NullReferenceException: Object reference not set to an instance of an object'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                <stack-trace><![CDATA[McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[NullReferenceException: Object reference not set to an instance of an object
+McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></output>
+            </test-case>
+            <test-case id="1177" name="BatchExecuteTool_ResponseContainsRequiredFields" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_ResponseContainsRequiredFields" methodname="BatchExecuteTool_ResponseContainsRequiredFields" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="690847168" result="Failed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000865" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[Unhandled log message: '[Exception] NullReferenceException: Object reference not set to an instance of an object'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                <stack-trace><![CDATA[McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[NullReferenceException: Object reference not set to an instance of an object
+McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></output>
+            </test-case>
+            <test-case id="1176" name="BatchExecuteTool_StopOnErrorFalse_ContinuesAfterError" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_StopOnErrorFalse_ContinuesAfterError" methodname="BatchExecuteTool_StopOnErrorFalse_ContinuesAfterError" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="1802957001" result="Failed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.001522" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[Unhandled log message: '[Exception] NullReferenceException: Object reference not set to an instance of an object'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                <stack-trace><![CDATA[McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[NullReferenceException: Object reference not set to an instance of an object
+McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></output>
+            </test-case>
+            <test-case id="1175" name="BatchExecuteTool_StopOnErrorTrue_StopsAtFirstError" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_StopOnErrorTrue_StopsAtFirstError" methodname="BatchExecuteTool_StopOnErrorTrue_StopsAtFirstError" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="1613968506" result="Failed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000967" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[Unhandled log message: '[Exception] NullReferenceException: Object reference not set to an instance of an object'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                <stack-trace><![CDATA[McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[NullReferenceException: Object reference not set to an instance of an object
+McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></output>
+            </test-case>
+            <test-case id="1168" name="BatchExecuteTool_WithEmptyOperations_ReturnsError" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_WithEmptyOperations_ReturnsError" methodname="BatchExecuteTool_WithEmptyOperations_ReturnsError" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="780323927" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000659" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1174" name="BatchExecuteTool_WithMultipleOperations_Succeeds" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_WithMultipleOperations_Succeeds" methodname="BatchExecuteTool_WithMultipleOperations_Succeeds" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="359608382" result="Failed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000946" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[Unhandled log message: '[Exception] NullReferenceException: Object reference not set to an instance of an object'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                <stack-trace><![CDATA[McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[NullReferenceException: Object reference not set to an instance of an object
+McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></output>
+            </test-case>
+            <test-case id="1171" name="BatchExecuteTool_WithNestedBatchExecute_ReturnsError" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_WithNestedBatchExecute_ReturnsError" methodname="BatchExecuteTool_WithNestedBatchExecute_ReturnsError" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="377504016" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000732" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1169" name="BatchExecuteTool_WithNullOperations_ReturnsError" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_WithNullOperations_ReturnsError" methodname="BatchExecuteTool_WithNullOperations_ReturnsError" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="2086978670" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000373" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1173" name="BatchExecuteTool_WithSingleOperation_Succeeds" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_WithSingleOperation_Succeeds" methodname="BatchExecuteTool_WithSingleOperation_Succeeds" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="1884369983" result="Failed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000813" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[Unhandled log message: '[Exception] NullReferenceException: Object reference not set to an instance of an object'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                <stack-trace><![CDATA[McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[NullReferenceException: Object reference not set to an instance of an object
+McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></output>
+            </test-case>
+            <test-case id="1170" name="BatchExecuteTool_WithTooManyOperations_ReturnsError" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_WithTooManyOperations_ReturnsError" methodname="BatchExecuteTool_WithTooManyOperations_ReturnsError" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="954139817" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000815" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1172" name="BatchExecuteTool_WithUnknownTool_ReturnsError" fullname="McpUnity.Tests.BatchExecuteToolTests.BatchExecuteTool_WithUnknownTool_ReturnsError" methodname="BatchExecuteTool_WithUnknownTool_ReturnsError" classname="McpUnity.Tests.BatchExecuteToolTests" runstate="Runnable" seed="1524345400" result="Failed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000810" asserts="0">
+              <properties>
+                <property name="_JOINTYPE" value="UnityCombinatorial" />
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <failure>
+                <message><![CDATA[Unhandled log message: '[Exception] NullReferenceException: Object reference not set to an instance of an object'. Use UnityEngine.TestTools.LogAssert.Expect]]></message>
+                <stack-trace><![CDATA[McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[NullReferenceException: Object reference not set to an instance of an object
+McpUnity.Tools.BatchExecuteTool+<ExecuteBatchCoroutine>d__3.MoveNext () (at ./Packages/com.gamelovers.mcp-unity/Editor/Tools/BatchExecuteTool.cs:122)
+Unity.EditorCoroutines.Editor.EditorCoroutine+YieldProcessor.MoveNext (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:159)
+Unity.EditorCoroutines.Editor.EditorCoroutine.ProcessIEnumeratorRecursive (System.Collections.IEnumerator enumerator) (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:229)
+Unity.EditorCoroutines.Editor.EditorCoroutine.MoveNext () (at ./Library/PackageCache/com.unity.editorcoroutines@87a15ed012c2/Editor/EditorCoroutine.cs:210)
+UnityEditor.EditorApplication.Internal_CallUpdateFunctions () (at /Users/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:401)
+
+]]></output>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1179" name="GetGameObjectResourceTests" fullname="McpUnity.Tests.GetGameObjectResourceTests" classname="McpUnity.Tests.GetGameObjectResourceTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.012760" total="5" passed="5" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1180" name="GameObjectToJObject_WithCollider_SkipsDetailedPropertiesForSafety" fullname="McpUnity.Tests.GetGameObjectResourceTests.GameObjectToJObject_WithCollider_SkipsDetailedPropertiesForSafety" methodname="GameObjectToJObject_WithCollider_SkipsDetailedPropertiesForSafety" classname="McpUnity.Tests.GetGameObjectResourceTests" runstate="Runnable" seed="1381395994" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.008511" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1184" name="GameObjectToJObject_WithIncludeComponentPropertiesFalse_OmitsProperties" fullname="McpUnity.Tests.GetGameObjectResourceTests.GameObjectToJObject_WithIncludeComponentPropertiesFalse_OmitsProperties" methodname="GameObjectToJObject_WithIncludeComponentPropertiesFalse_OmitsProperties" classname="McpUnity.Tests.GetGameObjectResourceTests" runstate="Runnable" seed="1414952037" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.001260" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1183" name="GameObjectToJObject_WithIncludeComponentsFalse_OmitsComponents" fullname="McpUnity.Tests.GetGameObjectResourceTests.GameObjectToJObject_WithIncludeComponentsFalse_OmitsComponents" methodname="GameObjectToJObject_WithIncludeComponentsFalse_OmitsComponents" classname="McpUnity.Tests.GetGameObjectResourceTests" runstate="Runnable" seed="1726204043" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000157" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1182" name="GameObjectToJObject_WithMaxDepthOne_StopsAtGrandchildren" fullname="McpUnity.Tests.GetGameObjectResourceTests.GameObjectToJObject_WithMaxDepthOne_StopsAtGrandchildren" methodname="GameObjectToJObject_WithMaxDepthOne_StopsAtGrandchildren" classname="McpUnity.Tests.GetGameObjectResourceTests" runstate="Runnable" seed="2013248254" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.001555" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1181" name="GameObjectToJObject_WithMaxDepthZero_HasNoChildrenAndIsTruncated" fullname="McpUnity.Tests.GetGameObjectResourceTests.GameObjectToJObject_WithMaxDepthZero_HasNoChildrenAndIsTruncated" methodname="GameObjectToJObject_WithMaxDepthZero_HasNoChildrenAndIsTruncated" classname="McpUnity.Tests.GetGameObjectResourceTests" runstate="Runnable" seed="92877006" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.000613" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1185" name="MaterialToolsTests" fullname="McpUnity.Tests.MaterialToolsTests" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" testcasecount="27" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:38Z" duration="11.584620" total="27" passed="27" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1212" name="AssignMaterialTool_WithGameObjectWithoutRenderer_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.AssignMaterialTool_WithGameObjectWithoutRenderer_ReturnsError" methodname="AssignMaterialTool_WithGameObjectWithoutRenderer_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1330161823" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:27Z" duration="0.588906" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1211" name="AssignMaterialTool_WithInvalidSlot_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.AssignMaterialTool_WithInvalidSlot_ReturnsError" methodname="AssignMaterialTool_WithInvalidSlot_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="2016218937" result="Passed" start-time="2026-06-17 21:25:27Z" end-time="2026-06-17 21:25:28Z" duration="0.431596" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1206" name="AssignMaterialTool_WithMissingGameObjectIdentifier_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.AssignMaterialTool_WithMissingGameObjectIdentifier_ReturnsError" methodname="AssignMaterialTool_WithMissingGameObjectIdentifier_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1233680591" result="Passed" start-time="2026-06-17 21:25:28Z" end-time="2026-06-17 21:25:28Z" duration="0.321771" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1207" name="AssignMaterialTool_WithMissingMaterialPath_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.AssignMaterialTool_WithMissingMaterialPath_ReturnsError" methodname="AssignMaterialTool_WithMissingMaterialPath_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1023110195" result="Passed" start-time="2026-06-17 21:25:28Z" end-time="2026-06-17 21:25:28Z" duration="0.325663" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1208" name="AssignMaterialTool_WithNonExistentGameObject_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.AssignMaterialTool_WithNonExistentGameObject_ReturnsError" methodname="AssignMaterialTool_WithNonExistentGameObject_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="904342252" result="Passed" start-time="2026-06-17 21:25:28Z" end-time="2026-06-17 21:25:29Z" duration="0.455445" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1209" name="AssignMaterialTool_WithNonExistentMaterial_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.AssignMaterialTool_WithNonExistentMaterial_ReturnsError" methodname="AssignMaterialTool_WithNonExistentMaterial_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="718607365" result="Passed" start-time="2026-06-17 21:25:29Z" end-time="2026-06-17 21:25:29Z" duration="0.343620" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1210" name="AssignMaterialTool_WithValidParameters_AssignsMaterial" fullname="McpUnity.Tests.MaterialToolsTests.AssignMaterialTool_WithValidParameters_AssignsMaterial" methodname="AssignMaterialTool_WithValidParameters_AssignsMaterial" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1169416326" result="Passed" start-time="2026-06-17 21:25:29Z" end-time="2026-06-17 21:25:29Z" duration="0.423461" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Assigned material 'TestMaterial' to 'TestCube' at slot 0
+]]></output>
+            </test-case>
+            <test-case id="1197" name="CreateMaterialTool_WithDefaultShader_UsesAutoDetectedShader" fullname="McpUnity.Tests.MaterialToolsTests.CreateMaterialTool_WithDefaultShader_UsesAutoDetectedShader" methodname="CreateMaterialTool_WithDefaultShader_UsesAutoDetectedShader" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1895859577" result="Passed" start-time="2026-06-17 21:25:29Z" end-time="2026-06-17 21:25:30Z" duration="0.701071" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Created material 'TestMaterial' with shader 'Universal Render Pipeline/Lit' at 'Assets/TestMaterials/TestMaterial.mat'
+]]></output>
+            </test-case>
+            <test-case id="1196" name="CreateMaterialTool_WithInvalidShader_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.CreateMaterialTool_WithInvalidShader_ReturnsError" methodname="CreateMaterialTool_WithInvalidShader_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1657814169" result="Passed" start-time="2026-06-17 21:25:30Z" end-time="2026-06-17 21:25:31Z" duration="0.322300" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1194" name="CreateMaterialTool_WithMissingName_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.CreateMaterialTool_WithMissingName_ReturnsError" methodname="CreateMaterialTool_WithMissingName_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1771998757" result="Passed" start-time="2026-06-17 21:25:31Z" end-time="2026-06-17 21:25:31Z" duration="0.321719" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1195" name="CreateMaterialTool_WithMissingSavePath_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.CreateMaterialTool_WithMissingSavePath_ReturnsError" methodname="CreateMaterialTool_WithMissingSavePath_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1964565464" result="Passed" start-time="2026-06-17 21:25:31Z" end-time="2026-06-17 21:25:31Z" duration="0.313861" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1193" name="CreateMaterialTool_WithProperties_AppliesProperties" fullname="McpUnity.Tests.MaterialToolsTests.CreateMaterialTool_WithProperties_AppliesProperties" methodname="CreateMaterialTool_WithProperties_AppliesProperties" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1191530803" result="Passed" start-time="2026-06-17 21:25:31Z" end-time="2026-06-17 21:25:32Z" duration="0.643777" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Created material 'TestMaterialWithProps' with shader 'Standard' at 'Assets/TestMaterials/TestMaterial.mat'
+]]></output>
+            </test-case>
+            <test-case id="1192" name="CreateMaterialTool_WithValidParameters_CreatesMaterial" fullname="McpUnity.Tests.MaterialToolsTests.CreateMaterialTool_WithValidParameters_CreatesMaterial" methodname="CreateMaterialTool_WithValidParameters_CreatesMaterial" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="126907755" result="Passed" start-time="2026-06-17 21:25:32Z" end-time="2026-06-17 21:25:32Z" duration="0.642609" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Created material 'TestMaterial' with shader 'Standard' at 'Assets/TestMaterials/TestMaterial.mat'
+]]></output>
+            </test-case>
+            <test-case id="1188" name="FindShader_WithNonExistentShader_ReturnsNull" fullname="McpUnity.Tests.MaterialToolsTests.FindShader_WithNonExistentShader_ReturnsNull" methodname="FindShader_WithNonExistentShader_ReturnsNull" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="928322487" result="Passed" start-time="2026-06-17 21:25:32Z" end-time="2026-06-17 21:25:33Z" duration="0.322980" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1186" name="FindShader_WithStandardShader_ReturnsShader" fullname="McpUnity.Tests.MaterialToolsTests.FindShader_WithStandardShader_ReturnsShader" methodname="FindShader_WithStandardShader_ReturnsShader" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="580377520" result="Passed" start-time="2026-06-17 21:25:33Z" end-time="2026-06-17 21:25:33Z" duration="0.328248" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1187" name="FindShader_WithUnlitColor_ReturnsShader" fullname="McpUnity.Tests.MaterialToolsTests.FindShader_WithUnlitColor_ReturnsShader" methodname="FindShader_WithUnlitColor_ReturnsShader" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="452589538" result="Passed" start-time="2026-06-17 21:25:33Z" end-time="2026-06-17 21:25:33Z" duration="0.317513" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1201" name="GetMaterialInfoTool_ReturnsCorrectPropertyTypes" fullname="McpUnity.Tests.MaterialToolsTests.GetMaterialInfoTool_ReturnsCorrectPropertyTypes" methodname="GetMaterialInfoTool_ReturnsCorrectPropertyTypes" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="48856652" result="Passed" start-time="2026-06-17 21:25:33Z" end-time="2026-06-17 21:25:34Z" duration="0.517658" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Retrieved info for material 'TestMaterial'
+]]></output>
+            </test-case>
+            <test-case id="1199" name="GetMaterialInfoTool_WithMissingMaterialPath_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.GetMaterialInfoTool_WithMissingMaterialPath_ReturnsError" methodname="GetMaterialInfoTool_WithMissingMaterialPath_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="763344983" result="Passed" start-time="2026-06-17 21:25:34Z" end-time="2026-06-17 21:25:34Z" duration="0.545503" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1200" name="GetMaterialInfoTool_WithNonExistentMaterial_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.GetMaterialInfoTool_WithNonExistentMaterial_ReturnsError" methodname="GetMaterialInfoTool_WithNonExistentMaterial_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1897701856" result="Passed" start-time="2026-06-17 21:25:34Z" end-time="2026-06-17 21:25:35Z" duration="0.320300" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1198" name="GetMaterialInfoTool_WithValidMaterial_ReturnsInfo" fullname="McpUnity.Tests.MaterialToolsTests.GetMaterialInfoTool_WithValidMaterial_ReturnsInfo" methodname="GetMaterialInfoTool_WithValidMaterial_ReturnsInfo" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1470909632" result="Passed" start-time="2026-06-17 21:25:35Z" end-time="2026-06-17 21:25:35Z" duration="0.405049" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Retrieved info for material 'TestMaterial'
+]]></output>
+            </test-case>
+            <test-case id="1191" name="LoadMaterial_WithEmptyPath_ReturnsNull" fullname="McpUnity.Tests.MaterialToolsTests.LoadMaterial_WithEmptyPath_ReturnsNull" methodname="LoadMaterial_WithEmptyPath_ReturnsNull" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="143619235" result="Passed" start-time="2026-06-17 21:25:35Z" end-time="2026-06-17 21:25:36Z" duration="0.317844" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1189" name="LoadMaterial_WithNonExistentPath_ReturnsNull" fullname="McpUnity.Tests.MaterialToolsTests.LoadMaterial_WithNonExistentPath_ReturnsNull" methodname="LoadMaterial_WithNonExistentPath_ReturnsNull" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1294346585" result="Passed" start-time="2026-06-17 21:25:36Z" end-time="2026-06-17 21:25:36Z" duration="0.312178" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1190" name="LoadMaterial_WithNullPath_ReturnsNull" fullname="McpUnity.Tests.MaterialToolsTests.LoadMaterial_WithNullPath_ReturnsNull" methodname="LoadMaterial_WithNullPath_ReturnsNull" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="1369100991" result="Passed" start-time="2026-06-17 21:25:36Z" end-time="2026-06-17 21:25:36Z" duration="0.337222" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1204" name="ModifyMaterialTool_WithEmptyProperties_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.ModifyMaterialTool_WithEmptyProperties_ReturnsError" methodname="ModifyMaterialTool_WithEmptyProperties_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="287074163" result="Passed" start-time="2026-06-17 21:25:36Z" end-time="2026-06-17 21:25:36Z" duration="0.320055" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1203" name="ModifyMaterialTool_WithMissingMaterialPath_ReturnsError" fullname="McpUnity.Tests.MaterialToolsTests.ModifyMaterialTool_WithMissingMaterialPath_ReturnsError" methodname="ModifyMaterialTool_WithMissingMaterialPath_ReturnsError" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="122629424" result="Passed" start-time="2026-06-17 21:25:36Z" end-time="2026-06-17 21:25:37Z" duration="0.335393" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1205" name="ModifyMaterialTool_WithUnknownProperty_ReportsUnknown" fullname="McpUnity.Tests.MaterialToolsTests.ModifyMaterialTool_WithUnknownProperty_ReportsUnknown" methodname="ModifyMaterialTool_WithUnknownProperty_ReportsUnknown" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="61858562" result="Passed" start-time="2026-06-17 21:25:37Z" end-time="2026-06-17 21:25:37Z" duration="0.684120" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Modified material 'TestMaterial': _Color
+]]></output>
+            </test-case>
+            <test-case id="1202" name="ModifyMaterialTool_WithValidProperties_ModifiesMaterial" fullname="McpUnity.Tests.MaterialToolsTests.ModifyMaterialTool_WithValidProperties_ModifiesMaterial" methodname="ModifyMaterialTool_WithValidProperties_ModifiesMaterial" classname="McpUnity.Tests.MaterialToolsTests" runstate="Runnable" seed="221375493" result="Passed" start-time="2026-06-17 21:25:37Z" end-time="2026-06-17 21:25:38Z" duration="0.677826" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] [MCP Unity] Modified material 'TestMaterial': _Color
+]]></output>
+            </test-case>
+          </test-suite>
+          <test-suite type="TestFixture" id="1213" name="PathHandlingTests" fullname="McpUnity.Tests.PathHandlingTests" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" testcasecount="9" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.033068" total="9" passed="9" failed="0" inconclusive="0" skipped="0" asserts="0">
+            <properties />
+            <test-case id="1222" name="EncodePathForFileUrl_WithMultipleSpaces_EncodesAll" fullname="McpUnity.Tests.PathHandlingTests.EncodePathForFileUrl_WithMultipleSpaces_EncodesAll" methodname="EncodePathForFileUrl_WithMultipleSpaces_EncodesAll" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="1106236620" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.000453" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1221" name="EncodePathForFileUrl_WithoutSpaces_ReturnsUnchanged" fullname="McpUnity.Tests.PathHandlingTests.EncodePathForFileUrl_WithoutSpaces_ReturnsUnchanged" methodname="EncodePathForFileUrl_WithoutSpaces_ReturnsUnchanged" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="429781157" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.000164" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1220" name="EncodePathForFileUrl_WithSpaces_EncodesCorrectly" fullname="McpUnity.Tests.PathHandlingTests.EncodePathForFileUrl_WithSpaces_EncodesCorrectly" methodname="EncodePathForFileUrl_WithSpaces_EncodesCorrectly" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="1962177750" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.000160" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1219" name="ValidateServerPath_WithEmptyPath_ReturnsFalse" fullname="McpUnity.Tests.PathHandlingTests.ValidateServerPath_WithEmptyPath_ReturnsFalse" methodname="ValidateServerPath_WithEmptyPath_ReturnsFalse" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="1087338331" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.001494" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] Server path is null or empty. Cannot validate.
+]]></output>
+            </test-case>
+            <test-case id="1217" name="ValidateServerPath_WithMissingPackageJson_ReturnsFalse" fullname="McpUnity.Tests.PathHandlingTests.ValidateServerPath_WithMissingPackageJson_ReturnsFalse" methodname="ValidateServerPath_WithMissingPackageJson_ReturnsFalse" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="1736237301" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.001375" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] package.json not found in server path: /var/folders/s2/m4yjpl4x36lfv5rzhcwmyl480000gn/T/McpUnityTest
+]]></output>
+            </test-case>
+            <test-case id="1216" name="ValidateServerPath_WithNonExistentPath_ReturnsFalse" fullname="McpUnity.Tests.PathHandlingTests.ValidateServerPath_WithNonExistentPath_ReturnsFalse" methodname="ValidateServerPath_WithNonExistentPath_ReturnsFalse" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="986592168" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.000762" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] Server path does not exist: /var/folders/s2/m4yjpl4x36lfv5rzhcwmyl480000gn/T/NonExistentMcpUnityPath12345
+]]></output>
+            </test-case>
+            <test-case id="1218" name="ValidateServerPath_WithNullPath_ReturnsFalse" fullname="McpUnity.Tests.PathHandlingTests.ValidateServerPath_WithNullPath_ReturnsFalse" methodname="ValidateServerPath_WithNullPath_ReturnsFalse" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="150711003" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.000568" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[[MCP Unity] Server path is null or empty. Cannot validate.
+]]></output>
+            </test-case>
+            <test-case id="1215" name="ValidateServerPath_WithSpacesInPath_ReturnsTrue" fullname="McpUnity.Tests.PathHandlingTests.ValidateServerPath_WithSpacesInPath_ReturnsTrue" methodname="ValidateServerPath_WithSpacesInPath_ReturnsTrue" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="1213202910" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.000693" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+            </test-case>
+            <test-case id="1214" name="ValidateServerPath_WithValidPath_ReturnsTrue" fullname="McpUnity.Tests.PathHandlingTests.ValidateServerPath_WithValidPath_ReturnsTrue" methodname="ValidateServerPath_WithValidPath_ReturnsTrue" classname="McpUnity.Tests.PathHandlingTests" runstate="Runnable" seed="794911783" result="Passed" start-time="2026-06-17 21:25:38Z" end-time="2026-06-17 21:25:38Z" duration="0.000597" asserts="0">
+              <properties>
+                <property name="retryIteration" value="0" />
+                <property name="repeatIteration" value="0" />
+              </properties>
+              <output><![CDATA[<b><color=#2EA3FF>MCP-FOR-UNITY</color></b>: [TestRunnerNoThrottle] Restored Interaction Mode after test run.
+Saving results to: /Users/yanfeidai/Library/Application Support/DefaultCompany/Black Commission/TestResults.xml
+]]></output>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

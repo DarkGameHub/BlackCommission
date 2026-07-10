@@ -2886,3 +2886,39 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
 - **③怪物图鉴→「案卷卷宗」**: (a)进度系统重写MonsterBestiaryProgress(通用species表: echo_mold/file_warden/civic_idol·旧EchoMold双flag+PlayerPrefs自动迁移·**旧解锁API原本零调用=图鉴永锁死内容**); (b)钩子: EchoMold.StartHunt按prefab名分流Mark(FileWarden共脑)·CivicIdol Dormant→Stalk即Mark(红眼亮=遭遇)——host/solo本地生效·client端同步=follow-up; (c)UI重写: 纸质案卷夹+青页眉「异常体案卷」·每怪一份卷宗(案卷BC-M-01~03·已立案红字/待补录)·已证实行为+对策(幸存者执笔·占位文案writer可换)·未遭遇=**涂黑条**+"现场尚无可靠证词"·页脚补录规则一行。
 - **⚠Unity关着**: 本批+昨日cont.5/6全部改动未编译。下次开机顺序: 导入+编译→EditMode全量→Play走查(设置登记表/终端中文/图鉴卷宗/检视/结算揭示/票据条/Connecting/开局2怪)。
 - **仍挂**: CivicIdol验收+命名; 大厅派工名单卡(P0-1·下一个); David语言pref切中文提醒。
+
+## Session 2026-07-04 (下午) — 本机接手: UI风格方向大讨论 → E2「一台机器·一条时间线」定稿 + 工单在手 spec
+- **机器切换**: 本机(原Yan Dai机)git checkout到 scavenge-settlement-reveal 分支(HEAD c1f5efd)覆盖本地·LFS坑已清(~/bin/git-lfs+残留index.lock)。
+- **P0-1大厅卡走查演变成风格方向重开**: 纸卡v2(oxblood公文)→"不好看不高级"→三方向(NieR米灰/黑金/瑞士)→"不喜欢市政概念"→黑卷宗v4→"像动漫游戏·先出概念图统一风格"→**4张真材质概念板**(A桌面实物/B军规冷硬/C工业lofi/D军事档案·tools/generate_style_concepts_v1.py)→PM"都用terminal? LC用什么"→**E全终端生态**(concept_e_terminal)→PM追问"电脑和纸user看哪"→分配律成形。
+- **四学科评审**(ux/game-designer/level/art并行agent): 3有条件支持+1有条件反对(ux反对"全生态"范围)。共识: 打印纸层=皇冠·办公电脑全终端·硫磺黄太近LC橙(策划克隆感知7/10)→**磷光绿黄#C8B830**·字体统一解=思源等宽。
+- **E2定稿**(PM"出发吧"): `design/ux/mockups/style-concepts/concept_e2_timeline.png`(tools/generate_style_concept_e2.py)。**分配律: 会变的住屏幕·定格的上纸·拿走的进手里·纸上永远没有按钮**。四拍: 磷光屏→Enter打印→撕纸(怪客户手写批注长在纸上)→纸在手上带进黑暗。
+- **PM关键拍板**: ①去"市政"概念(AGENTS.md身份词待改·CivicIdol命名连带) ②**英文=默认语言**(MvpLocale默认ZH→EN待实装·3270拉丁齐全→字体分裂自动解毒) ③接任务=接打印纸+纸=手持物品(PM本人提议=真正的LC玩法级切割)。
+- **「工单在手」quick-spec APPROVED**: `design/quick-specs/work-order-in-hand-2026-07-04.md`(New Small System·~2.5-3天·打印/撕纸/手持互斥/检视复用/丢失重打reprintCost/clientScrawl怪客户载体/host权威)。**GDD update(scavenging-core-loop.md循环描述)待PM单独批准**。
+- **渲染管线**: SVG(程序化材质feTurbulence/位移/混合模式)→无头Chrome→PNG·概念板工具三件套在tools/。
+- **下一步队列**: ①E2风格概念文档(色token/材质规则/字体制度/14屏三表面归属) ②大厅(屏幕态)按E2重做+派工单打印过场 ③工单在手实装(story化) ④MvpLocale默认EN ⑤上批未编译改动(cont.5/6/07-04三批)开Unity验证仍欠着。
+- **注意**: 之前所有oxblood公文卡UI(结算/登记表/票据条/图鉴卷宗)将向E2迁移——已实现≠白做(逻辑全保留)·换皮层。
+
+## Session 2026-07-04 (续) — E2 正式风格文档落盘
+- PM 确认 E2 方向("还行·你继续")。**GDD 更新(scavenging-core-loop.md)仍待单独批准·未动**。
+- 队列①完成: `design/ux/e2-style-concept.md` v1 LOCKED——虚构(一台机器)/分配律/7色token/字体制度(3270+思源等宽·EN默认)/材质红线(反动漫感)/LC三刀切割/14屏三表面归属+迁移量/世界美术边界/a11y裁决/Do-Not清单。取代旧"三类表面语言"总纲。
+- 文档内两处**载体改判**(逻辑全保留只换皮): ①ESC设置从"偏好登记表纸卡"改BC-DOS SETUP页(滑条在纸上违反零按钮律) ②大厅从纸卡改BC-DOS ROSTER屏+派工单打印过场(lobby.md信息结构保留)。
+- 下一步: 队列② 大厅按E2重做(P0-1·先出mockup给PM过目再动代码)。
+
+## Session 2026-07-04 (续2) — 大厅E2 mockup获批 + GDD/lobby.md 更新 + 实装启动
+- PM"可以"三连批: ①大厅E2方向 ②马甲色改字母位`<A> B C D`(单色屏虚构·撞色=PhosDim置灰) ③GDD更新。
+- **GDD已改**(scavenging-core-loop.md): §3.1循环加"printer spits the work order → tear off(出发门槛)"+工单说明段; Pillar3段补"工单=contract-speaks现场载体"。
+- **lobby.md → Approved**: 加"修订2026-07-04 E2载体版"节(全屏BC-DOS ROSTER页取代纸卡·术语替换表·Enter打印过场5条=派工单为演出道具非拾取物·MVP降级线=先屏幕侧·退役清单·a11y补充)。信息结构/交互/事件/验收标准沿用原文。
+- **Mockup定稿**: design/ux/mockups/lobby_e2_roster.png + lobby_e2_print.png (tools/generate_lobby_e2.py)。
+- **渲染管线固化**: tools/render_mockup.sh——本机Chrome headless三坑(视口=window高-87px/直开svg白边/sips cropOffset失效→python bmp顶部裁切)。
+- 进行中: Explore agent 扫大厅实装面(MainMenuUI WaitingTerminal/QuickNetworkUI/CharacterIndex同步/MvpLocale/主题字体/推镜交棒)→ 之后动代码。
+
+## Session 2026-07-05 — BC-DOS ROSTER 大厅实装（4件套·未编译）
+- **代码已写·Unity未开未编译**（加入验证欠账）: 
+  1. `MvpLocale.cs` 默认语言 ZH→EN（队列④完成）+ 19条 BC-DOS 大厅新词条（roster/mute/hold-remove/copy/report-in/print/jam/tear/footer）。
+  2. `BlackCommissionUiTheme.cs` 新增 E2 七色 token（PhosGreen/PhosDim/ScreenBlack/Paper/InkFaded/E2StampRed/DeadBlack，带 hex 注释；旧 CrtGreen 注明 UI chrome 退役）。
+  3. `MainMenuUI.BuildLobbyWaitingPanel` 整体重建：全屏 BC-DOS ROSTER 页（1920×1080 设计空间 1:1 对 mockup，UpdateResponsiveMenuPanels 等比缩放，DeadBlack 补边）。header/`> roster`/4行名单/ROOM CODE 框/`> report-in _`/双 footer/静态扫描线。
+  4. 字母位色板 A–F 直选（PlayerCharacterPalette.Count=6）：当前 `<X>` 高亮、他人占用置灰+不可点（撞色独占仍 owner-side，ServerRpc 仲裁仍是后续架构项）；旧 ‹› 循环箭头 + CycleOwnCharacter 删除，换 SelectOwnCharacter(index)。
+  5. 行内 [MUTE]/[MUTED]（本地静音）+ 房主 [HOLD — REMOVE] 按住0.8s 墨条填充→DisconnectClient（EventTrigger down/up/exit）。
+  6. Enter → ReportInSequence 协程：REPORTED IN → PRINTING DISPATCH SLIP 进度条(#/-) → 中途 [JAM] 0.55s（红字=告警线合规）→ TEAR THE SLIP 提示 → FinishReportIn（推镜交棒不变）。断线中途自动中止。spec 降级线：世界侧打印机道具后续。
+  7. C 键在大厅=复制房间号（mockup [C] COPY CODE·PM批过）；菜单根屏 C 仍开 CrewPicker。**偏差上报**: mockup 的 [F1] INVITE FRIEND 未实装（无 Steam 邀请后端，不放死按钮）。
+- 进度条字符用 ASCII #/-（3270 块元素字形风险规避）；光标用 `_`。

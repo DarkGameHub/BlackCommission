@@ -3,10 +3,11 @@ using UnityEngine;
 
 public static class MvpLocale
 {
-    // Default 1 = 中文: mission/commission content is authored in Chinese only, so English mode
-    // mixes EN UI chrome with ZH job data ("…to site. 地球海岸壹号"). Until content is localised,
-    // Chinese is the consistent default. (Players can still switch in Settings.)
-    static int Lang => PlayerPrefs.GetInt("AS.Settings.Language", 1);
+    // Default 0 = English (PM 2026-07-04, E2 style lock): the terminal fiction is
+    // English-first and the 3270 face only covers Latin, so EN default keeps one
+    // typeface per screen. ZH stays fully available in Settings; remaining ZH-only
+    // job content reads as "weird local client" flavour until localised.
+    static int Lang => PlayerPrefs.GetInt("AS.Settings.Language", 0);
 
     static readonly Dictionary<string, string[]> Strings = new()
     {
@@ -57,6 +58,27 @@ public static class MvpLocale
         ["lobby_enter_office"] = new[] { "Enter Office", "进入事务所" },
         ["lobby_client_note"] = new[] { "Wait for the host to pick a job; you can enter and check gear.", "等待主机接单；你可以进入检查装备。" },
         ["lobby_empty_slot"] = new[] { "Empty - waiting", "空位 - 等待中" },
+
+        // ─── BC-DOS ROSTER lobby (design/ux/lobby.md E2 revision 2026-07-04) ───
+        ["lobby_dos_banner"] = new[] { "BC-DOS v2.2 — BLACK COMMISSION DISPATCH SYSTEM", "BC-DOS v2.2 — 黑色委托派遣系统" },
+        ["lobby_mem_ok"] = new[] { "MEM 384KB OK", "MEM 384KB OK" },
+        ["lobby_roster_cmd"] = new[] { "> roster", "> roster" },
+        ["lobby_roster_title"] = new[] { "DISPATCH ROSTER", "派工名单" },
+        ["lobby_lead_tag"] = new[] { "[LEAD]", "[队长]" },
+        ["lobby_vacant"] = new[] { "-- VACANT --", "-- 空位 --" },
+        ["lobby_mute"] = new[] { "[MUTE]", "[静音]" },
+        ["lobby_muted"] = new[] { "[MUTED]", "[已静音]" },
+        ["lobby_hold_remove"] = new[] { "[HOLD — REMOVE]", "[按住 — 除名]" },
+        ["lobby_copy_code"] = new[] { "[C] COPY CODE", "[C] 复制房间号" },
+        ["lobby_code_copied"] = new[] { "ROOM CODE COPIED.", "房间号已复制。" },
+        ["lobby_report_in"] = new[] { "ENTER = REPORT IN", "ENTER = 到岗登记" },
+        ["lobby_nobody_waits"] = new[] { "AGENTS REPORT IN INDIVIDUALLY — NOBODY WAITS FOR NOBODY.", "探员各自到岗 — 谁也不等谁。" },
+        ["lobby_link_ok"] = new[] { "LINK OK · HOST: {0}", "链路正常 · 主机：{0}" },
+        ["lobby_no_funds"] = new[] { "NO FUNDS. NO EXCUSES.", "没钱。没借口。" },
+        ["lobby_reported_in"] = new[] { "{0} … REPORTED IN", "{0} … 已到岗" },
+        ["lobby_printing_slip"] = new[] { "PRINTING DISPATCH SLIP", "正在打印派工单" },
+        ["lobby_jam"] = new[] { "[JAM] FEED ERROR … RETRY", "[卡纸] 进纸错误 … 重试" },
+        ["lobby_tear_slip"] = new[] { "TEAR THE SLIP AT THE PRINTER TO PROCEED.", "到打印机撕下派工单后出发。" },
 
         // ─── Main menu (flat LC-style, mockup B) ───
         ["crt_terminal_header"] = new[] { "BC-DOS v2.2 — BLACK COMMISSION", "BC-DOS v2.2 — 黑色委托事务所" },

@@ -100,12 +100,31 @@ public class MainMenuUI : MonoBehaviour
     readonly ulong[] rosterClientIds = new ulong[4];
     float nextRosterRefresh;
 
-    readonly Image[] lobbySwatches = new Image[4];
+    // BC-DOS ROSTER page (lobby.md E2 revision 2026-07-04): rows are phosphor text;
+    // the vest palette is a letter slot A–F on your own row (monochrome-screen
+    // fiction — 撞色独占 shows as a dimmed letter, not a greyed colour dot).
+    readonly Image[] lobbyRowFills = new Image[4];
     readonly TMP_Text[] lobbyNames = new TMP_Text[4];
-    readonly TMP_Text[] lobbyRoles = new TMP_Text[4];
-    // Own-row vest colour cycling (lobby.md: 色板可改+撞色独占, shown on your row only).
-    readonly Button[] lobbyPrevBtns = new Button[4];
-    readonly Button[] lobbyNextBtns = new Button[4];
+    readonly TMP_Text[] lobbyRoles = new TMP_Text[4]; // [LEAD] tag column
+    readonly Button[][] lobbyLetterBtns = new Button[4][];
+    readonly TMP_Text[][] lobbyLetterLabels = new TMP_Text[4][];
+    readonly Button[] lobbyMuteBtns = new Button[4];
+    readonly TMP_Text[] lobbyMuteLabels = new TMP_Text[4];
+    readonly GameObject[] lobbyKickHolds = new GameObject[4];
+    readonly Image[] lobbyKickFills = new Image[4];
+    readonly ulong[] lobbyClientIds = new ulong[4];
+    TMP_Text lobbyCopyLabel;
+    TMP_Text lobbyFooterLeftText;
+    int lobbyKickHoldRow = -1;
+    float lobbyKickHoldStart;
+    // Enter → screen-side print echo (dispatch slip beat) before the HQ handoff.
+    GameObject lobbyPrintOverlay;
+    TMP_Text lobbyPrintLine1;
+    TMP_Text lobbyPrintLine2;
+    TMP_Text lobbyPrintBar;
+    TMP_Text lobbyPrintJam;
+    TMP_Text lobbyPrintTear;
+    bool lobbyPrinting;
     Button lobbyEnterBtn;
     TMP_Text lobbyEnterLabel;
     bool wasListening;
@@ -181,6 +200,7 @@ public class MainMenuUI : MonoBehaviour
         UpdateStatusVisibility();
         RefreshCharacterSelector();
         HandleKeyboardShortcuts();
+        HandleLobbyKickHold();
         UpdateGameplayInputBlock();
         UpdateMenuVisibilityFlag();
         UpdateResponsiveMenuPanels();
@@ -251,8 +271,9 @@ public class MainMenuUI : MonoBehaviour
 
         if (lobbyWaitingTerminalRt != null && lobbyWaitingTerminalRt.gameObject.activeInHierarchy)
         {
-            float lobbyScale = Mathf.Min(canvasSize.x * 0.88f / 940f, canvasSize.y * 0.82f / 620f);
-            lobbyScale = Mathf.Clamp(lobbyScale, 0.58f, 1.18f);
+            // Full-bleed BC-DOS page authored in 1920x1080 design space (matches the
+            // approved mockup 1:1); uniform fit, DeadBlack root covers any letterbox.
+            float lobbyScale = Mathf.Min(canvasSize.x / 1920f, canvasSize.y / 1080f);
             lobbyWaitingTerminalRt.localScale = new Vector3(lobbyScale, lobbyScale, 1f);
         }
     }
@@ -1717,207 +1738,302 @@ public class MainMenuUI : MonoBehaviour
 
     GameObject BuildLobbyWaitingPanel(Transform parent)
     {
-        // Keep the waiting room readable in the dark office. The joke is in the
-        // bureaucratic details, not in making the whole screen look like wet paper.
-        Color screenFill = new(0.018f, 0.024f, 0.021f, 0.970f);
-        Color paperFill = new(0.120f, 0.118f, 0.090f, 0.360f);
-        Color fieldFill = new(0.013f, 0.018f, 0.015f, 0.920f);
-        Color rowFill = new(0.018f, 0.028f, 0.022f, 0.940f);
-        Color rowDivider = new(0.310f, 0.360f, 0.230f, 0.32f);
-        Color textMain = BlackCommissionUiTheme.OldPaper;
+        // BC-DOS ROSTER page (design/ux/lobby.md, E2 revision 2026-07-04): the lobby
+        // is a full-screen page on the one office machine, not a floating paper card.
+        // Mockup 1:1 reference: design/ux/mockups/lobby_e2_roster.png.
+        Color phos = BlackCommissionUiTheme.PhosGreen;
+        Color phosDim = BlackCommissionUiTheme.PhosDim;
+        Color phosFaint = new(phosDim.r, phosDim.g, phosDim.b, 0.35f);
 
         var root = new GameObject("LobbyWaitingPanel", typeof(RectTransform), typeof(Image));
         root.transform.SetParent(parent, false);
-        var rootRt = root.GetComponent<RectTransform>();
-        rootRt.anchorMin = Vector2.zero;
-        rootRt.anchorMax = Vector2.one;
-        rootRt.offsetMin = Vector2.zero;
-        rootRt.offsetMax = Vector2.zero;
+        Stretch(root.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
         var veil = root.GetComponent<Image>();
-        veil.color = new Color(0f, 0f, 0f, 0.72f);
+        veil.color = BlackCommissionUiTheme.DeadBlack; // covers any letterbox around the page
         veil.raycastTarget = true;
 
-        // ─── Dispatch dossier, aspect-fitted so the page never stretches ───
-        Vector2 screenSize = new(940f, 620f);
-        var screen = new GameObject("WaitingTerminal", typeof(RectTransform), typeof(Image));
-        screen.transform.SetParent(root.transform, false);
-        screen.GetComponent<Image>().color = screenFill;
-        var panelRt = screen.GetComponent<RectTransform>();
-        panelRt.anchorMin = new Vector2(0.5f, 0.5f);
-        panelRt.anchorMax = new Vector2(0.5f, 0.5f);
-        panelRt.pivot = new Vector2(0.5f, 0.5f);
-        panelRt.anchoredPosition = Vector2.zero;
-        panelRt.sizeDelta = screenSize;
-        lobbyWaitingTerminalRt = panelRt;
-        var panel = screen; // content parent; keeps the rest of the method readable
+        // Page authored in 1920x1080 design space (matches the approved mockup);
+        // uniformly scaled to fit in UpdateResponsiveMenuPanels.
+        Vector2 pageSize = new(1920f, 1080f);
+        var page = new GameObject("RosterPage", typeof(RectTransform), typeof(Image));
+        page.transform.SetParent(root.transform, false);
+        page.GetComponent<Image>().color = BlackCommissionUiTheme.ScreenBlack;
+        var pageRt = page.GetComponent<RectTransform>();
+        pageRt.anchorMin = new Vector2(0.5f, 0.5f);
+        pageRt.anchorMax = new Vector2(0.5f, 0.5f);
+        pageRt.pivot = new Vector2(0.5f, 0.5f);
+        pageRt.sizeDelta = pageSize;
+        lobbyWaitingTerminalRt = pageRt;
 
-        AddInsetFrame(panel.transform, "DossierFrame", DispatchGreenDark, 9f, 2f);
-        AddInsetFrame(panel.transform, "PaperHairline", BlackCommissionUiTheme.OldPaper, 19f, 1f);
+        // ─── Header: OS banner + memory check + divider ─────────────────────
+        var banner = AddText(page.transform, "DosBanner", MvpLocale.T("lobby_dos_banner"), 22,
+            phos, TextAlignmentOptions.Left);
+        banner.fontStyle = FontStyles.Bold;
+        banner.characterSpacing = 1.5f;
+        AnchorLeftCenter(banner.rectTransform, 100f, 482f, new Vector2(1300f, 32f));
 
-        float halfW = screenSize.x * 0.5f; // 470
-        float halfH = screenSize.y * 0.5f; // 310
+        var mem = AddText(page.transform, "MemOk", MvpLocale.T("lobby_mem_ok"), 18,
+            phosDim, TextAlignmentOptions.Right);
+        var memRt = mem.rectTransform;
+        memRt.anchorMin = new Vector2(1f, 0.5f);
+        memRt.anchorMax = new Vector2(1f, 0.5f);
+        memRt.pivot = new Vector2(1f, 0.5f);
+        memRt.anchoredPosition = new Vector2(-100f, 482f);
+        memRt.sizeDelta = new Vector2(300f, 26f);
 
-        // ─── Header bar: OS banner + live status dot ───────────────────────
-        AddRect(panel.transform, "HeaderBand", new Vector2(0f, halfH - 30f), new Vector2(884f, 52f),
-            new Color(0.030f, 0.046f, 0.034f, 0.92f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        AddRect(panel.transform, "LeftDossier", new Vector2(-230f, -46f), new Vector2(410f, 410f),
-            paperFill, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        AddRect(panel.transform, "LeftReadout", new Vector2(-230f, 92f), new Vector2(372f, 76f),
-            fieldFill, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        AddRect(page.transform, "HeaderDivider", new Vector2(0f, 452f), new Vector2(1720f, 2f),
+            phosFaint, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
 
-        var header = AddText(panel.transform, "CrtHeader", "BLACK COMMISSION / SURFACE RECOVERY DISPATCH", 15,
-            BlackCommissionUiTheme.OldPaper, TextAlignmentOptions.Left);
-        header.fontStyle = FontStyles.Bold;
-        header.characterSpacing = 1.2f;
-        header.rectTransform.anchoredPosition = new Vector2(-190f, halfH - 30f);
-        header.rectTransform.sizeDelta = new Vector2(500f, 28f);
+        // ─── Command echo + roster title + squad count ──────────────────────
+        var cmd = AddText(page.transform, "RosterCmd", MvpLocale.T("lobby_roster_cmd"), 20,
+            phosDim, TextAlignmentOptions.Left);
+        AnchorLeftCenter(cmd.rectTransform, 100f, 410f, new Vector2(400f, 26f));
 
-        AddRect(panel.transform, "StatusDot", new Vector2(halfW - 40f, halfH - 30f), new Vector2(14f, 14f),
-            DispatchGreen, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        AddRect(panel.transform, "HeaderDivider", new Vector2(0f, halfH - 52f), new Vector2(884f, 2f),
-            new Color(0.42f, 0.36f, 0.23f, 0.50f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        // ─── Left column: standby title + room code + hint ─────────────────
-        lobbyTitleText = AddText(panel.transform, "Title", MvpLocale.T("lobby_waiting_title"), 32,
-            textMain, TextAlignmentOptions.Left);
+        lobbyTitleText = AddText(page.transform, "Title", MvpLocale.T("lobby_roster_title"), 30,
+            phos, TextAlignmentOptions.Left);
         lobbyTitleText.fontStyle = FontStyles.Bold;
-        lobbyTitleText.characterSpacing = 2f;
-        AnchorLeftCenter(lobbyTitleText.rectTransform, 40f, 200f, new Vector2(380f, 46f));
+        lobbyTitleText.characterSpacing = 3f;
+        AnchorLeftCenter(lobbyTitleText.rectTransform, 100f, 356f, new Vector2(600f, 40f));
 
-        lobbyRoomCodeLabelText = AddText(panel.transform, "RoomCodeLabel", MvpLocale.T("lobby_room_code"), 14,
-            BlackCommissionUiTheme.RustWarning, TextAlignmentOptions.Left);
-        lobbyRoomCodeLabelText.fontStyle = FontStyles.Bold;
-        lobbyRoomCodeLabelText.characterSpacing = 2f;
-        AnchorLeftCenter(lobbyRoomCodeLabelText.rectTransform, 42f, 146f, new Vector2(360f, 22f));
-
-        lobbyCodeText = AddText(panel.transform, "RoomCode", "", 42,
-            SodiumAmber, TextAlignmentOptions.Left);
-        lobbyCodeText.fontStyle = FontStyles.Bold;
-        lobbyCodeText.characterSpacing = 6f;
-        AnchorLeftCenter(lobbyCodeText.rectTransform, 40f, 102f, new Vector2(400f, 54f));
-
-        AddRect(panel.transform, "LeftDivider", new Vector2(-halfW + 240f, 56f), new Vector2(396f, 2f),
-            DispatchGreenDark, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        lobbyHintText = AddText(panel.transform, "Hint", MvpLocale.T("lobby_waiting_hint"), 16,
-            textMain, TextAlignmentOptions.Left);
-        lobbyHintText.enableWordWrapping = true;
-        lobbyHintText.lineSpacing = 8f;
-        AnchorLeftCenter(lobbyHintText.rectTransform, 42f, 8f, new Vector2(380f, 132f));
-
-        var procedure = AddText(panel.transform, "Procedure",
-            "01  Stamp commission at terminal\n02  Buy gear from supply cabinet\n03  All aboard — dispatch to restricted zone", 14,
-            BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Left);
-        procedure.lineSpacing = 10f;
-        AnchorLeftCenter(procedure.rectTransform, 42f, -150f, new Vector2(380f, 92f));
-
-        var debtStamp = AddText(panel.transform, "DebtStamp", "DEBT\nACTIVE", 24,
-            new Color(0.420f, 0.245f, 0.155f, 0.24f), TextAlignmentOptions.Center);
-        debtStamp.fontStyle = FontStyles.Bold;
-        debtStamp.characterSpacing = 2f;
-        debtStamp.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -8f);
-        debtStamp.rectTransform.anchoredPosition = new Vector2(-100f, 54f);
-        debtStamp.rectTransform.sizeDelta = new Vector2(138f, 78f);
-
-        // ─── Right column: crew roster header + slots + enter button ───────
-        float colX = 226f; // centre of the right column
-        lobbyCountText = AddText(panel.transform, "Count", "", 18,
-            DispatchGreen, TextAlignmentOptions.Right);
+        lobbyCountText = AddText(page.transform, "Count", "", 20,
+            phosDim, TextAlignmentOptions.Right);
         lobbyCountText.fontStyle = FontStyles.Bold;
-        lobbyCountText.characterSpacing = 2f;
-        var countRt = lobbyCountText.rectTransform;
-        countRt.anchorMin = new Vector2(1f, 0.5f);
-        countRt.anchorMax = new Vector2(1f, 0.5f);
-        countRt.pivot = new Vector2(1f, 0.5f);
-        countRt.anchoredPosition = new Vector2(-40f, 200f);
-        countRt.sizeDelta = new Vector2(340f, 30f);
+        AnchorLeftCenter(lobbyCountText.rectTransform, 780f, 356f, new Vector2(380f, 28f));
 
+        // ─── Four roster rows ───────────────────────────────────────────────
         for (int i = 0; i < 4; i++)
         {
-            float y = 146f - i * 70f;
+            int idx = i;
+            float y = 248f - i * 112f;
             var row = new GameObject($"LobbySlot{i}", typeof(RectTransform), typeof(Image));
-            row.transform.SetParent(panel.transform, false);
+            row.transform.SetParent(page.transform, false);
             var rowImage = row.GetComponent<Image>();
-            rowImage.color = rowFill;
+            rowImage.color = Color.clear; // own-row highlight set in RefreshLobbyWaiting
             rowImage.raycastTarget = false;
-            var rowRt = row.GetComponent<RectTransform>();
-            rowRt.anchorMin = new Vector2(0.5f, 0.5f);
-            rowRt.anchorMax = new Vector2(0.5f, 0.5f);
-            rowRt.pivot = new Vector2(0.5f, 0.5f);
-            rowRt.anchoredPosition = new Vector2(colX, y);
-            rowRt.sizeDelta = new Vector2(420f, 60f);
+            AnchorLeftCenter(row.GetComponent<RectTransform>(), 100f, y, new Vector2(1060f, 100f));
+            lobbyRowFills[i] = rowImage;
 
-            AddRect(row.transform, "RowDivider", new Vector2(0f, -30f), new Vector2(420f, 1f),
-                rowDivider, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            AddRect(row.transform, "RowDivider", new Vector2(0f, -50f), new Vector2(1060f, 1f),
+                phosFaint, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f));
 
-            // Vest-colour bar on the left edge (set per occupant in RefreshLobbyWaiting).
-            var swatch = new GameObject("Swatch", typeof(RectTransform), typeof(Image));
-            swatch.transform.SetParent(row.transform, false);
-            var swatchImage = swatch.GetComponent<Image>();
-            swatchImage.color = Color.clear;
-            swatchImage.raycastTarget = false;
-            var swatchRt = swatch.GetComponent<RectTransform>();
-            swatchRt.anchorMin = new Vector2(0f, 0.5f);
-            swatchRt.anchorMax = new Vector2(0f, 0.5f);
-            swatchRt.pivot = new Vector2(0f, 0.5f);
-            swatchRt.anchoredPosition = new Vector2(14f, 0f);
-            swatchRt.sizeDelta = new Vector2(8f, 44f);
-            lobbySwatches[i] = swatchImage;
-
-            var slotIndex = AddText(row.transform, "Index", $"0{i + 1}", 15,
-                BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Center);
-            slotIndex.fontStyle = FontStyles.Bold;
+            var slotIndex = AddText(row.transform, "Index", $"0{i + 1}", 20,
+                phosDim, TextAlignmentOptions.Left);
             slotIndex.raycastTarget = false;
-            slotIndex.rectTransform.anchorMin = new Vector2(0f, 0.5f);
-            slotIndex.rectTransform.anchorMax = new Vector2(0f, 0.5f);
-            slotIndex.rectTransform.pivot = new Vector2(0f, 0.5f);
-            slotIndex.rectTransform.anchoredPosition = new Vector2(30f, 0f);
-            slotIndex.rectTransform.sizeDelta = new Vector2(34f, 28f);
+            AnchorLeftCenter(slotIndex.rectTransform, 10f, 16f, new Vector2(50f, 28f));
 
-            var name = AddText(row.transform, "Name", "", 17,
-                DispatchGreen, TextAlignmentOptions.Left);
+            var name = AddText(row.transform, "Name", "", 24, phos, TextAlignmentOptions.Left);
             name.fontStyle = FontStyles.Bold;
-            name.rectTransform.anchorMin = new Vector2(0f, 0.5f);
-            name.rectTransform.anchorMax = new Vector2(1f, 0.5f);
-            name.rectTransform.pivot = new Vector2(0f, 0.5f);
-            name.rectTransform.anchoredPosition = new Vector2(76f, 10f);
-            name.rectTransform.sizeDelta = new Vector2(-90f, 26f);
+            name.raycastTarget = false;
+            AnchorLeftCenter(name.rectTransform, 70f, 18f, new Vector2(460f, 32f));
             lobbyNames[i] = name;
 
-            var role = AddText(row.transform, "Role", "", 13,
-                BlackCommissionUiTheme.PaperDim, TextAlignmentOptions.Left);
-            role.rectTransform.anchorMin = new Vector2(0f, 0.5f);
-            role.rectTransform.anchorMax = new Vector2(1f, 0.5f);
-            role.rectTransform.pivot = new Vector2(0f, 0.5f);
-            role.rectTransform.anchoredPosition = new Vector2(76f, -13f);
-            role.rectTransform.sizeDelta = new Vector2(-90f, 20f);
-            lobbyRoles[i] = role;
+            var tag = AddText(row.transform, "LeadTag", "", 18, phosDim, TextAlignmentOptions.Left);
+            tag.raycastTarget = false;
+            AnchorLeftCenter(tag.rectTransform, 540f, 18f, new Vector2(200f, 26f));
+            lobbyRoles[i] = tag;
 
-            // ‹ › vest-colour cycling, visible on the local player's row only.
-            lobbyPrevBtns[i] = BuildLobbySwatchArrow(row.transform, "PrevColor", "‹", -58f, -1);
-            lobbyNextBtns[i] = BuildLobbySwatchArrow(row.transform, "NextColor", "›", -28f, +1);
+            // Letter slots A–F, own row only: current letter bracketed, letters other
+            // players hold are dimmed and refuse the click (撞色独占, owner-side guard).
+            lobbyLetterBtns[i] = new Button[PlayerCharacterPalette.Count];
+            lobbyLetterLabels[i] = new TMP_Text[PlayerCharacterPalette.Count];
+            for (int j = 0; j < PlayerCharacterPalette.Count; j++)
+            {
+                int slot = j;
+                var letterBtn = CreateButton(row.transform, $"Letter{j}", "", 20,
+                    BlackCommissionUiTheme.ScreenBlack,
+                    new Color(0.16f, 0.16f, 0.07f, 1f),
+                    new Color(0.21f, 0.21f, 0.09f, 1f));
+                var lRt = letterBtn.GetComponent<RectTransform>();
+                lRt.anchorMin = new Vector2(0f, 0.5f);
+                lRt.anchorMax = new Vector2(0f, 0.5f);
+                lRt.pivot = new Vector2(0f, 0.5f);
+                lRt.anchoredPosition = new Vector2(70f + j * 52f, -24f);
+                lRt.sizeDelta = new Vector2(46f, 32f);
+                letterBtn.onClick.AddListener(() => SelectOwnCharacter(slot));
+                letterBtn.gameObject.SetActive(false);
+                lobbyLetterBtns[i][j] = letterBtn;
+                lobbyLetterLabels[i][j] = letterBtn.GetComponentInChildren<TMP_Text>();
+            }
+
+            // In-row mute toggle (other players' rows; local-only voice mute).
+            var muteBtn = CreateButton(row.transform, "Mute", MvpLocale.T("lobby_mute"), 16,
+                BlackCommissionUiTheme.ScreenBlack,
+                new Color(0.16f, 0.16f, 0.07f, 1f),
+                new Color(0.21f, 0.21f, 0.09f, 1f));
+            var mRt = muteBtn.GetComponent<RectTransform>();
+            mRt.anchorMin = new Vector2(1f, 0.5f);
+            mRt.anchorMax = new Vector2(1f, 0.5f);
+            mRt.pivot = new Vector2(1f, 0.5f);
+            mRt.anchoredPosition = new Vector2(-210f, 16f);
+            mRt.sizeDelta = new Vector2(130f, 32f);
+            muteBtn.onClick.AddListener(() =>
+            {
+                ProximityVoiceChat.ToggleClientMuted(lobbyClientIds[idx]);
+                nextLobbyRefresh = 0f;
+            });
+            muteBtn.gameObject.SetActive(false);
+            lobbyMuteBtns[i] = muteBtn;
+            lobbyMuteLabels[i] = muteBtn.GetComponentInChildren<TMP_Text>();
+            if (lobbyMuteLabels[i] != null) lobbyMuteLabels[i].color = phosDim;
+
+            // Host-only removal: hold 0.8s while an ink bar fills under the label
+            // (lobby.md E2 revision — no instant ✕ on the roster page).
+            var hold = new GameObject("HoldRemove", typeof(RectTransform), typeof(Image));
+            hold.transform.SetParent(row.transform, false);
+            var holdImg = hold.GetComponent<Image>();
+            holdImg.color = BlackCommissionUiTheme.ScreenBlack;
+            holdImg.raycastTarget = true;
+            var hRt = hold.GetComponent<RectTransform>();
+            hRt.anchorMin = new Vector2(1f, 0.5f);
+            hRt.anchorMax = new Vector2(1f, 0.5f);
+            hRt.pivot = new Vector2(1f, 0.5f);
+            hRt.anchoredPosition = new Vector2(-10f, 16f);
+            hRt.sizeDelta = new Vector2(190f, 32f);
+
+            var fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
+            fill.transform.SetParent(hold.transform, false);
+            var fillImg = fill.GetComponent<Image>();
+            fillImg.color = new Color(BlackCommissionUiTheme.E2StampRed.r,
+                BlackCommissionUiTheme.E2StampRed.g, BlackCommissionUiTheme.E2StampRed.b, 0.4f);
+            fillImg.raycastTarget = false;
+            var fRt = fill.GetComponent<RectTransform>();
+            fRt.anchorMin = new Vector2(0f, 0f);
+            fRt.anchorMax = new Vector2(0f, 1f);
+            fRt.pivot = new Vector2(0f, 0.5f);
+            fRt.anchoredPosition = Vector2.zero;
+            fRt.sizeDelta = Vector2.zero;
+            lobbyKickFills[i] = fillImg;
+
+            var holdLabel = AddText(hold.transform, "Label", MvpLocale.T("lobby_hold_remove"), 15,
+                phosDim, TextAlignmentOptions.Center);
+            Stretch(holdLabel.rectTransform, Vector2.zero, Vector2.one);
+            holdLabel.raycastTarget = false;
+
+            var trigger = hold.AddComponent<EventTrigger>();
+            var down = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+            down.callback.AddListener(_ =>
+            {
+                lobbyKickHoldRow = idx;
+                lobbyKickHoldStart = Time.unscaledTime;
+            });
+            var up = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+            up.callback.AddListener(_ => CancelLobbyKickHold());
+            var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            exit.callback.AddListener(_ => CancelLobbyKickHold());
+            trigger.triggers.Add(down);
+            trigger.triggers.Add(up);
+            trigger.triggers.Add(exit);
+            hold.SetActive(false);
+            lobbyKickHolds[i] = hold;
         }
 
-        // Primary action: a stamped dispatch button, not a neon app CTA.
-        lobbyEnterBtn = CreateButton(panel.transform, "EnterOffice",
-            MvpLocale.T("lobby_enter_office") + "   ›", 20,
-            new Color(0.075f, 0.140f, 0.070f, 0.96f),
-            new Color(0.105f, 0.210f, 0.095f, 0.98f),
-            new Color(0.040f, 0.080f, 0.040f, 1f));
+        // ─── Room code box (right column) ───────────────────────────────────
+        var codeBox = new GameObject("RoomCodeBox", typeof(RectTransform), typeof(Image));
+        codeBox.transform.SetParent(page.transform, false);
+        codeBox.GetComponent<Image>().color = new Color(phos.r, phos.g, phos.b, 0.045f);
+        AnchorLeftCenter(codeBox.GetComponent<RectTransform>(), 1250f, 210f, new Vector2(560f, 230f));
+        AddInsetFrame(codeBox.transform, "CodeFrame", phosDim, 0f, 2f);
+
+        lobbyRoomCodeLabelText = AddText(codeBox.transform, "RoomCodeLabel",
+            MvpLocale.T("lobby_room_code"), 18, phosDim, TextAlignmentOptions.Left);
+        lobbyRoomCodeLabelText.characterSpacing = 2f;
+        AnchorLeftCenter(lobbyRoomCodeLabelText.rectTransform, 36f, 76f, new Vector2(300f, 24f));
+
+        lobbyCodeText = AddText(codeBox.transform, "RoomCode", "", 58, phos, TextAlignmentOptions.Left);
+        lobbyCodeText.fontStyle = FontStyles.Bold;
+        lobbyCodeText.characterSpacing = 10f;
+        AnchorLeftCenter(lobbyCodeText.rectTransform, 34f, 4f, new Vector2(500f, 72f));
+
+        lobbyCopyLabel = AddText(codeBox.transform, "CopyHint", MvpLocale.T("lobby_copy_code"), 18,
+            phosDim, TextAlignmentOptions.Left);
+        AnchorLeftCenter(lobbyCopyLabel.rectTransform, 36f, -70f, new Vector2(400f, 24f));
+
+        lobbyHintText = AddText(page.transform, "Hint", "", 18, phosDim, TextAlignmentOptions.Left);
+        lobbyHintText.enableWordWrapping = true;
+        lobbyHintText.lineSpacing = 6f;
+        AnchorLeftCenter(lobbyHintText.rectTransform, 1250f, 10f, new Vector2(560f, 130f));
+
+        // ─── Bottom command line + report-in + footer ───────────────────────
+        var reportCmd = AddText(page.transform, "ReportCmd", "> report-in _", 20,
+            phos, TextAlignmentOptions.Left);
+        AnchorLeftCenter(reportCmd.rectTransform, 100f, -300f, new Vector2(500f, 26f));
+
+        lobbyEnterBtn = CreateButton(page.transform, "EnterOffice",
+            MvpLocale.T("lobby_report_in"), 24,
+            new Color(0.14f, 0.14f, 0.06f, 1f),
+            new Color(0.20f, 0.20f, 0.085f, 1f),
+            new Color(0.26f, 0.25f, 0.11f, 1f));
         var enterRt = lobbyEnterBtn.GetComponent<RectTransform>();
-        enterRt.anchoredPosition = new Vector2(330f, -158f);
-        enterRt.sizeDelta = new Vector2(230f, 54f);
+        enterRt.anchorMin = new Vector2(0f, 0.5f);
+        enterRt.anchorMax = new Vector2(0f, 0.5f);
+        enterRt.pivot = new Vector2(0f, 0.5f);
+        enterRt.anchoredPosition = new Vector2(100f, -372f);
+        enterRt.sizeDelta = new Vector2(420f, 62f);
         lobbyEnterLabel = lobbyEnterBtn.GetComponentInChildren<TMP_Text>();
         if (lobbyEnterLabel != null)
         {
-            lobbyEnterLabel.color = BlackCommissionUiTheme.OldPaper;
+            lobbyEnterLabel.color = phos;
             lobbyEnterLabel.fontStyle = FontStyles.Bold;
             lobbyEnterLabel.characterSpacing = 2f;
         }
 
-        // Scanline / vignette pass on top of all content for the CRT feel.
-        BuildCrtOverlay(panel.transform, screenSize);
+        var nobody = AddText(page.transform, "NobodyWaits", MvpLocale.T("lobby_nobody_waits"), 16,
+            phosDim, TextAlignmentOptions.Left);
+        AnchorLeftCenter(nobody.rectTransform, 560f, -372f, new Vector2(1000f, 24f));
+
+        AddRect(page.transform, "FooterDivider", new Vector2(0f, -478f), new Vector2(1720f, 2f),
+            phosFaint, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        lobbyFooterLeftText = AddText(page.transform, "FooterLeft", "", 16,
+            phosDim, TextAlignmentOptions.Left);
+        AnchorLeftCenter(lobbyFooterLeftText.rectTransform, 100f, -506f, new Vector2(700f, 24f));
+
+        var footerRight = AddText(page.transform, "FooterRight", MvpLocale.T("lobby_no_funds"), 16,
+            phosDim, TextAlignmentOptions.Right);
+        footerRight.fontStyle = FontStyles.Bold;
+        var frRt = footerRight.rectTransform;
+        frRt.anchorMin = new Vector2(1f, 0.5f);
+        frRt.anchorMax = new Vector2(1f, 0.5f);
+        frRt.pivot = new Vector2(1f, 0.5f);
+        frRt.anchoredPosition = new Vector2(-100f, -506f);
+        frRt.sizeDelta = new Vector2(500f, 24f);
+
+        // ─── Print echo overlay (Enter → dispatch slip beat, then push-in) ──
+        // MVP degrade line per lobby.md E2 revision: screen-side echo only, the
+        // world-side printer prop is a follow-up Blender/prop task.
+        lobbyPrintOverlay = new GameObject("PrintEcho", typeof(RectTransform), typeof(Image));
+        lobbyPrintOverlay.transform.SetParent(page.transform, false);
+        lobbyPrintOverlay.GetComponent<Image>().color = BlackCommissionUiTheme.ScreenBlack;
+        Stretch(lobbyPrintOverlay.GetComponent<RectTransform>(), Vector2.zero, Vector2.one);
+
+        lobbyPrintLine1 = AddText(lobbyPrintOverlay.transform, "Line1", "", 26,
+            phos, TextAlignmentOptions.Left);
+        lobbyPrintLine1.fontStyle = FontStyles.Bold;
+        AnchorLeftCenter(lobbyPrintLine1.rectTransform, 560f, 120f, new Vector2(900f, 34f));
+
+        lobbyPrintLine2 = AddText(lobbyPrintOverlay.transform, "Line2", "", 22,
+            phosDim, TextAlignmentOptions.Left);
+        AnchorLeftCenter(lobbyPrintLine2.rectTransform, 560f, 56f, new Vector2(900f, 30f));
+
+        lobbyPrintBar = AddText(lobbyPrintOverlay.transform, "Bar", "", 22,
+            phos, TextAlignmentOptions.Left);
+        AnchorLeftCenter(lobbyPrintBar.rectTransform, 560f, 0f, new Vector2(900f, 30f));
+
+        lobbyPrintJam = AddText(lobbyPrintOverlay.transform, "Jam", MvpLocale.T("lobby_jam"), 20,
+            BlackCommissionUiTheme.E2StampRed, TextAlignmentOptions.Left);
+        AnchorLeftCenter(lobbyPrintJam.rectTransform, 560f, -52f, new Vector2(900f, 28f));
+        lobbyPrintJam.gameObject.SetActive(false);
+
+        lobbyPrintTear = AddText(lobbyPrintOverlay.transform, "Tear", MvpLocale.T("lobby_tear_slip"), 22,
+            phos, TextAlignmentOptions.Left);
+        lobbyPrintTear.fontStyle = FontStyles.Bold;
+        AnchorLeftCenter(lobbyPrintTear.rectTransform, 560f, -128f, new Vector2(1100f, 30f));
+        lobbyPrintTear.gameObject.SetActive(false);
+
+        lobbyPrintOverlay.SetActive(false);
+
+        // Static scanlines/vignette (E2 a11y ruling: static, never scrolling).
+        BuildCrtOverlay(page.transform, pageSize);
 
         root.SetActive(false);
         return root;
@@ -2081,32 +2197,15 @@ public class MainMenuUI : MonoBehaviour
         }
     }
 
-    Button BuildLobbySwatchArrow(Transform row, string name, string glyph, float xFromRight, int dir)
-    {
-        var btn = CreateButton(row, name, glyph, 18,
-            new Color(0.030f, 0.046f, 0.034f, 0.92f),
-            new Color(0.105f, 0.165f, 0.158f, 0.96f),
-            new Color(0.060f, 0.095f, 0.090f, 1f));
-        var rt = btn.GetComponent<RectTransform>();
-        rt.anchorMin = new Vector2(1f, 0.5f);
-        rt.anchorMax = new Vector2(1f, 0.5f);
-        rt.pivot = new Vector2(1f, 0.5f);
-        rt.anchoredPosition = new Vector2(xFromRight, -13f);
-        rt.sizeDelta = new Vector2(26f, 24f);
-        var label = btn.GetComponentInChildren<TMP_Text>();
-        if (label != null) label.color = DispatchGreen;
-        btn.onClick.AddListener(() => CycleOwnCharacter(dir));
-        btn.gameObject.SetActive(false);
-        return btn;
-    }
-
     /// <summary>
-    /// Cycles the local player's vest colour, skipping colours other players already
-    /// registered (lobby.md: 撞色独占 — first come, first served; server arbitration
-    /// is a follow-up architecture item, this is the owner-side guard).
+    /// Selects the local player's palette slot directly (lobby.md E2 revision:
+    /// letter slots A–F on the roster page). Letters other players hold are refused
+    /// — 撞色独占, first come, first served; server arbitration is a follow-up
+    /// architecture item, this is the owner-side guard.
     /// </summary>
-    void CycleOwnCharacter(int dir)
+    void SelectOwnCharacter(int index)
     {
+        if (index < 0 || index >= PlayerCharacterPalette.Count) return;
         var players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
         PlayerController own = null;
         var taken = new HashSet<int>();
@@ -2115,20 +2214,55 @@ public class MainMenuUI : MonoBehaviour
             if (p.IsOwner) own = p;
             else taken.Add(p.CharacterIndex.Value);
         }
-        if (own == null) return;
+        if (own == null || taken.Contains(index)) return;
 
-        int n = PlayerCharacterPalette.Count;
-        int idx = own.CharacterIndex.Value;
-        for (int step = 1; step <= n; step++)
-        {
-            int cand = ((idx + dir * step) % n + n) % n;
-            if (taken.Contains(cand)) continue;
-            own.CharacterIndex.Value = cand;       // owner-write NV, syncs to every peer
-            PlayerCharacterPalette.SavedIndex = cand; // persists for the next session
-            break;
-        }
+        own.CharacterIndex.Value = index;          // owner-write NV, syncs to every peer
+        PlayerCharacterPalette.SavedIndex = index; // persists for the next session
         PlayMenuHover();
         nextLobbyRefresh = 0f;
+    }
+
+    // Copies the room code to the system clipboard ([C] on the roster page).
+    void CopyLobbyCode()
+    {
+        string code = !string.IsNullOrEmpty(hostJoinCode) ? hostJoinCode
+            : lobbyCodeText != null ? lobbyCodeText.text : "";
+        if (string.IsNullOrEmpty(code)) return;
+        GUIUtility.systemCopyBuffer = code;
+        if (lobbyCopyLabel != null) lobbyCopyLabel.text = MvpLocale.T("lobby_code_copied");
+        nextLobbyRefresh = Time.unscaledTime + 1.4f; // let the COPIED echo linger
+        PlayMenuHover();
+    }
+
+    // Hold-to-remove (host only): 0.8s press on a roster row's [HOLD — REMOVE]
+    // fills the ink bar, then disconnects that client. Releasing/leaving cancels.
+    void HandleLobbyKickHold()
+    {
+        if (lobbyKickHoldRow < 0) return;
+        if (lobbyWaitingPanel == null || !lobbyWaitingPanel.activeSelf)
+        {
+            CancelLobbyKickHold();
+            return;
+        }
+
+        float t = (Time.unscaledTime - lobbyKickHoldStart) / 0.8f;
+        var fill = lobbyKickFills[lobbyKickHoldRow];
+        if (fill != null)
+            fill.rectTransform.sizeDelta = new Vector2(190f * Mathf.Clamp01(t), 0f);
+
+        if (t < 1f) return;
+        ulong target = lobbyClientIds[lobbyKickHoldRow];
+        CancelLobbyKickHold();
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost)
+            NetworkManager.Singleton.DisconnectClient(target, MvpLocale.T("you_were_kicked"));
+        nextLobbyRefresh = 0f;
+    }
+
+    void CancelLobbyKickHold()
+    {
+        if (lobbyKickHoldRow >= 0 && lobbyKickFills[lobbyKickHoldRow] != null)
+            lobbyKickFills[lobbyKickHoldRow].rectTransform.sizeDelta = Vector2.zero;
+        lobbyKickHoldRow = -1;
     }
 
     void RefreshLobbyWaiting()
@@ -2153,40 +2287,91 @@ public class MainMenuUI : MonoBehaviour
                 lobbyCodeText.text = MvpLocale.T("lobby_lan_only");
         }
 
+        bool isHost = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost;
         if (lobbyHintText != null)
-            lobbyHintText.text = NetworkManager.Singleton != null && NetworkManager.Singleton.IsHost
+            lobbyHintText.text = isHost
                 ? MvpLocale.T("lobby_waiting_hint")
                 : MvpLocale.T("lobby_client_note");
 
+        if (lobbyCopyLabel != null)
+            lobbyCopyLabel.text = MvpLocale.T("lobby_copy_code");
+
+        Color phos = BlackCommissionUiTheme.PhosGreen;
+        Color phosDim = BlackCommissionUiTheme.PhosDim;
+        Color phosTaken = new(phosDim.r, phosDim.g, phosDim.b, 0.35f);
+
+        // Letters other players hold + the local selection (撞色独占 letter states).
+        var taken = new HashSet<int>();
+        int ownIndex = -1;
+        string hostName = "?";
+        foreach (var p in players)
+        {
+            if (p.IsOwner) ownIndex = p.CharacterIndex.Value;
+            else taken.Add(p.CharacterIndex.Value);
+            if (p.OwnerClientId == NetworkManager.ServerClientId)
+            {
+                string hn = p.DisplayName.Value.ToString();
+                hostName = string.IsNullOrEmpty(hn)
+                    ? $"AGENT {p.OwnerClientId}" : hn.ToUpperInvariant();
+            }
+        }
+        if (lobbyFooterLeftText != null)
+            lobbyFooterLeftText.text = MvpLocale.T("lobby_link_ok", hostName);
+
         for (int i = 0; i < 4; i++)
         {
-            if (i < players.Length)
+            bool occupied = i < players.Length;
+            PlayerController player = occupied ? players[i] : null;
+            bool own = occupied && player.IsOwner;
+            bool rowIsHost = occupied && player.OwnerClientId == NetworkManager.ServerClientId;
+
+            lobbyClientIds[i] = occupied ? player.OwnerClientId : 0UL;
+            lobbyRowFills[i].color = own ? new Color(phos.r, phos.g, phos.b, 0.06f) : Color.clear;
+
+            if (occupied)
             {
-                PlayerController player = players[i];
-                var colors = PlayerCharacterPalette.Get(player.CharacterIndex.Value);
                 string name = player.DisplayName.Value.ToString();
                 if (string.IsNullOrEmpty(name))
                     name = $"Agent {player.OwnerClientId}";
-                if (player.IsOwner)
+                if (own)
                     name += " " + MvpLocale.T("you_tag");
-
-                bool host = NetworkManager.Singleton != null &&
-                    player.OwnerClientId == NetworkManager.ServerClientId;
-                lobbySwatches[i].color = colors.vest;
                 lobbyNames[i].text = name;
-                lobbyRoles[i].text = host ? MvpLocale.T("host") : MvpLocale.T("client");
-                lobbyRoles[i].color = host ? DispatchGreen : HintText;
-                lobbyPrevBtns[i].gameObject.SetActive(player.IsOwner);
-                lobbyNextBtns[i].gameObject.SetActive(player.IsOwner);
+                lobbyNames[i].color = phos;
+                lobbyRoles[i].text = rowIsHost ? MvpLocale.T("lobby_lead_tag") : "";
             }
             else
             {
-                lobbySwatches[i].color = BlackCommissionUiTheme.MilitaryGreenDim;
-                lobbyNames[i].text = MvpLocale.T("lobby_empty_slot");
+                lobbyNames[i].text = MvpLocale.T("lobby_vacant");
+                lobbyNames[i].color = phosTaken;
                 lobbyRoles[i].text = "";
-                lobbyPrevBtns[i].gameObject.SetActive(false);
-                lobbyNextBtns[i].gameObject.SetActive(false);
             }
+
+            for (int j = 0; j < PlayerCharacterPalette.Count; j++)
+            {
+                var btn = lobbyLetterBtns[i][j];
+                btn.gameObject.SetActive(own);
+                if (!own) continue;
+                char letter = (char)('A' + j);
+                bool current = j == ownIndex;
+                bool blocked = taken.Contains(j) && !current;
+                lobbyLetterLabels[i][j].text = current ? $"<{letter}>" : letter.ToString();
+                lobbyLetterLabels[i][j].color = current ? phos : blocked ? phosTaken : phosDim;
+                btn.interactable = !blocked;
+            }
+
+            bool showMute = occupied && !own;
+            lobbyMuteBtns[i].gameObject.SetActive(showMute);
+            if (showMute && lobbyMuteLabels[i] != null)
+            {
+                bool muted = ProximityVoiceChat.IsClientMuted(player.OwnerClientId);
+                lobbyMuteLabels[i].text = MvpLocale.T(muted ? "lobby_muted" : "lobby_mute");
+                lobbyMuteLabels[i].color = muted ? BlackCommissionUiTheme.E2StampRed : phosDim;
+            }
+
+            bool showKick = occupied && isHost && !own;
+            lobbyKickHolds[i].gameObject.SetActive(showKick);
+            if (!showKick && lobbyKickHoldRow == i)
+                CancelLobbyKickHold();
         }
     }
 
@@ -2603,8 +2788,18 @@ public class MainMenuUI : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
-        // C opens the crew/appearance picker (design/ux/lobby.md). Available at the
-        // menu root and in the lobby; ignored while a modal card is open.
+        // On the BC-DOS ROSTER page, C copies the room code (lobby.md E2 revision,
+        // approved mockup shows [C] COPY CODE). The crew picker keeps C at the
+        // menu root only — in the lobby the vest letter slots live in your row.
+        if (keyboard.cKey.wasPressedThisFrame &&
+            lobbyWaitingPanel != null && lobbyWaitingPanel.activeSelf)
+        {
+            CopyLobbyCode();
+            return;
+        }
+
+        // C opens the crew/appearance picker (design/ux/lobby.md) at the menu root;
+        // ignored while a modal card is open.
         if (keyboard.cKey.wasPressedThisFrame && !CrewPickerScreen.IsOpen && !AnyModalOpen)
         {
             CrewPickerScreen.Open();
@@ -2710,6 +2905,73 @@ public class MainMenuUI : MonoBehaviour
     }
 
     void DismissLobbyWaiting()
+    {
+        // Enter = report in → screen-side dispatch-slip print echo first (lobby.md
+        // E2 revision: ~2s per-player beat with the JAM stutter), then hand off.
+        if (lobbyPrinting) return;
+        if (lobbyPrintOverlay == null)
+        {
+            FinishReportIn();
+            return;
+        }
+        StartCoroutine(ReportInSequence());
+    }
+
+    System.Collections.IEnumerator ReportInSequence()
+    {
+        lobbyPrinting = true;
+        bool Gone() => lobbyWaitingPanel == null || !lobbyWaitingPanel.activeSelf;
+
+        string who = "AGENT";
+        var players = FindObjectsByType<PlayerController>(FindObjectsSortMode.None);
+        foreach (var p in players)
+        {
+            if (!p.IsOwner) continue;
+            string n = p.DisplayName.Value.ToString();
+            who = string.IsNullOrEmpty(n) ? $"AGENT {p.OwnerClientId}" : n.ToUpperInvariant();
+        }
+
+        lobbyPrintOverlay.SetActive(true);
+        lobbyPrintLine1.text = MvpLocale.T("lobby_reported_in", who);
+        lobbyPrintLine2.text = "";
+        lobbyPrintBar.text = "";
+        lobbyPrintJam.gameObject.SetActive(false);
+        lobbyPrintTear.gameObject.SetActive(false);
+        PlayMenuSelect();
+
+        float hold = Time.unscaledTime + 0.35f;
+        while (Time.unscaledTime < hold && !Gone()) yield return null;
+
+        lobbyPrintLine2.text = MvpLocale.T("lobby_printing_slip");
+        const int cells = 24;
+        for (int c = 1; c <= cells && !Gone(); c++)
+        {
+            lobbyPrintBar.text = new string('#', c) + new string('-', cells - c);
+            if (c == 13)
+            {
+                // The office printer never feeds clean — the jam IS the ceremony.
+                lobbyPrintJam.gameObject.SetActive(true);
+                hold = Time.unscaledTime + 0.55f;
+                while (Time.unscaledTime < hold && !Gone()) yield return null;
+                lobbyPrintJam.gameObject.SetActive(false);
+            }
+            hold = Time.unscaledTime + 0.045f;
+            while (Time.unscaledTime < hold && !Gone()) yield return null;
+        }
+
+        if (!Gone())
+        {
+            lobbyPrintTear.gameObject.SetActive(true);
+            hold = Time.unscaledTime + 0.6f;
+            while (Time.unscaledTime < hold && !Gone()) yield return null;
+        }
+
+        lobbyPrintOverlay.SetActive(false);
+        lobbyPrinting = false;
+        if (!Gone()) FinishReportIn();
+    }
+
+    void FinishReportIn()
     {
         lobbyWaitingDismissed = true;
         if (lobbyWaitingPanel != null)
@@ -2912,10 +3174,9 @@ public class MainMenuUI : MonoBehaviour
     void RebuildAllLabels()
     {
         if (subtitleText != null) subtitleText.text = MvpLocale.T("subtitle");
-        if (lobbyTitleText != null) lobbyTitleText.text = MvpLocale.T("lobby_waiting_title");
+        if (lobbyTitleText != null) lobbyTitleText.text = MvpLocale.T("lobby_roster_title");
         if (lobbyRoomCodeLabelText != null) lobbyRoomCodeLabelText.text = MvpLocale.T("lobby_room_code");
-        if (lobbyHintText != null) lobbyHintText.text = MvpLocale.T("lobby_waiting_hint");
-        if (lobbyEnterLabel != null) lobbyEnterLabel.text = MvpLocale.T("lobby_enter_office") + "   ›";
-        nextLobbyRefresh = 0f;
+        if (lobbyEnterLabel != null) lobbyEnterLabel.text = MvpLocale.T("lobby_report_in");
+        nextLobbyRefresh = 0f; // hint/rows/footer re-localise in RefreshLobbyWaiting
     }
 }
