@@ -36,13 +36,14 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     int localSelectedCommission;          // offline/solo fallback (no NetworkManager listening)
     OfficeTaskDefinition[] resolvedCommissions;
+    float nextPrinterEnsureTime;
 
     public OfficeTaskDefinition DemoTask => ResolveDemoTask();
     public bool HasSelectedDemoTask => ResolveDemoTask() != null && MvpMissionRuntime.SelectedTask == ResolveDemoTask();
-    public string DemoTaskTitle => ResolveDemoTask()?.title ?? "No commission available";
-    public string DemoTaskClient => ResolveDemoTask()?.client ?? "Unknown client";
-    public string DemoTaskDescription => ResolveDemoTask()?.description ?? "No commission is available right now.";
-    public string DemoTaskLocation => ResolveDemoTask()?.locationName ?? "Unknown site";
+    public string DemoTaskTitle => ResolveDemoTask() != null ? OfficeTaskText.Title(ResolveDemoTask()) : "No commission available";
+    public string DemoTaskClient => ResolveDemoTask() != null ? OfficeTaskText.Client(ResolveDemoTask()) : "Unknown client";
+    public string DemoTaskDescription => ResolveDemoTask() != null ? OfficeTaskText.Description(ResolveDemoTask()) : "No commission is available right now.";
+    public string DemoTaskLocation => ResolveDemoTask() != null ? OfficeTaskText.Location(ResolveDemoTask()) : "Unknown site";
     public int DemoTaskMoneyReward => ResolveDemoTask()?.moneyReward ?? 0;
 
     /// <summary>The selectable commission pool (commissions[] → demoTask → Resources/Tasks), stably ordered.</summary>
@@ -119,12 +120,24 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         RestoreGroundStorageCounts();
         NetworkManager.Singleton.OnClientConnectedCallback += HandleClientConnected;
         BroadcastCompanyState();
+        WorkOrderPrinterSpawner.EnsureHqPrinter(this);
     }
 
     public override void OnNetworkDespawn()
     {
         if (NetworkManager.Singleton != null)
             NetworkManager.Singleton.OnClientConnectedCallback -= HandleClientConnected;
+    }
+
+    void Update()
+    {
+        // OnNetworkSpawn can be missed when scripts are recompiled while the Editor keeps the
+        // network session alive. Retry cheaply so accepting a commission can never leave the van
+        // gate waiting on a printer that does not exist.
+        if (!IsSpawned || !IsServer || Time.unscaledTime < nextPrinterEnsureTime) return;
+        nextPrinterEnsureTime = Time.unscaledTime + 0.5f;
+        if (WorkOrderPrinterSpawner.EnsureHqPrinter(this))
+            nextPrinterEnsureTime = float.PositiveInfinity;
     }
 
     public string InteractHint
@@ -158,13 +171,14 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     // way out in front of the glass at eye height and looks straight back at the screen centre —
     // PlayerCameraController pushes the local camera here while the terminal is open (no more
     // off-axis side view of the CRT). Tunable: how far back the seat sits and how high the eye is.
-    const float TerminalSeatDistance = 0.82f;
-    const float TerminalEyeLift = 0.12f;
+    const float TerminalSeatDistance = 0.98f;
+    const float TerminalEyeLift = 0.04f;
+    const float ScaledMonitorCentreLift = 0.10f;
 
     public void GetTerminalCameraPose(out Vector3 position, out Quaternion rotation)
     {
         Transform t = transform;
-        Vector3 screenCentre = t.position;
+        Vector3 screenCentre = t.position + Vector3.up * ScaledMonitorCentreLift;
         position = screenCentre + t.forward * TerminalSeatDistance + Vector3.up * TerminalEyeLift;
         rotation = Quaternion.LookRotation((screenCentre - position).normalized, Vector3.up);
     }
@@ -241,6 +255,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
             return false;
 
         QueueDemoTask();
+        WorkOrderPrinterSpawner.EnsureHqPrinter(this);
         bool accepted = MvpMissionRuntime.HasSelectedTask;
         message = accepted ? $"Commission accepted: {DemoTaskTitle}" : "Commission lock failed.";
         return accepted;
@@ -308,6 +323,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
     {
         if (missionLaunching) return;
         if (!HasSelectedDemoTask) return;
+        if (!WorkOrderPrinter.IsOutboundOrderTorn) return;
 
         // Solo / no network: keep the old direct local launch.
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
@@ -366,7 +382,7 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
 
         missionLaunching = true;
         MvpMissionRuntime.BeginMission(task, returnOfficeScene);
-        VanTransitOverlay.ShowOutbound(task.title, task.locationName, Mathf.Max(1.5f, dispatchTransitSeconds));
+        VanTransitOverlay.ShowOutbound(OfficeTaskText.Title(task), OfficeTaskText.Location(task), Mathf.Max(1.5f, dispatchTransitSeconds));
         StartCoroutine(LoadMissionLocalAfterSignature(task.sceneName));
     }
 
@@ -386,8 +402,8 @@ public class OfficeComputer : NetworkBehaviour, IInteractable
         missionLaunching = true;
         MvpMissionRuntime.BeginMission(task, returnOfficeScene);
         ShowDispatchTransitClientRpc(
-            task.title,
-            task.locationName,
+            OfficeTaskText.Title(task),
+            OfficeTaskText.Location(task),
             Mathf.Max(1.5f, dispatchTransitSeconds));
         StartCoroutine(LoadMissionAfterSignature(task.sceneName));
     }

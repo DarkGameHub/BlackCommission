@@ -45,6 +45,7 @@ public class InspectController : NetworkBehaviour
     GameObject relicView;
     ScavengeItem currentItem;
     ScavengeItemDefinition currentDef;
+    bool currentHotbarWorkOrder;
     GUIStyle detailStyle, personStyle, hintStyle;
     Texture2D detailBg;
 
@@ -118,12 +119,13 @@ public class InspectController : NetworkBehaviour
         }
         bool interrupt = session.IsActive && ReadInterrupt();
         ScavengeItem target = ResolveInspectable();
+        bool hotbarWorkOrder = HasSelectedHotbarWorkOrder();
 
-        InspectCommand cmd = session.Tick(new InspectInput(hold, interrupt, downed, target != null));
+        InspectCommand cmd = session.Tick(new InspectInput(hold, interrupt, downed, target != null || hotbarWorkOrder));
 
         switch (cmd)
         {
-            case InspectCommand.Enter: BeginInspect(target); break;
+            case InspectCommand.Enter: BeginInspect(target, hotbarWorkOrder); break;
             case InspectCommand.Exit:  EndInspect();          break;
             default:                   if (session.IsActive) { RotateRelic(); BlendHeadPitch(); } break;
         }
@@ -143,7 +145,18 @@ public class InspectController : NetworkBehaviour
 
     // MVP: any aimed ScavengeItem. tier/isInspectable gating + held-relic entry are follow-ups.
     ScavengeItem ResolveInspectable()
-        => interaction != null ? interaction.CurrentTarget as ScavengeItem : null;
+    {
+        if (TryGetComponent<CarrySystem>(out var carry) && carry.CarriedItem is WorkOrderItem order)
+            return order;
+        return interaction != null ? interaction.CurrentTarget as ScavengeItem : null;
+    }
+
+    bool HasSelectedHotbarWorkOrder()
+    {
+        if (!TryGetComponent<PlayerHotbar>(out var hotbar)) return false;
+        HotbarSlot slot = hotbar.GetSlot(hotbar.SelectedSlot.Value);
+        return slot != null && !slot.IsEmpty && slot.itemId == MvpHotbarItemId.WorkOrder;
+    }
 
     // Any move / sprint / attack / flashlight / hotbar input = instant interrupt (decision ②).
     static bool ReadInterrupt()
@@ -159,13 +172,14 @@ public class InspectController : NetworkBehaviour
         return m != null && m.leftButton.isPressed; // attack
     }
 
-    void BeginInspect(ScavengeItem item)
+    void BeginInspect(ScavengeItem item, bool hotbarWorkOrder)
     {
         currentItem = item;
         currentDef = ResolveDefinition(item);
+        currentHotbarWorkOrder = hotbarWorkOrder;
         LocalInspecting = true;
         IsInspecting.Value = true;
-        BuildRelicView(item);
+        BuildRelicView(item, hotbarWorkOrder);
 
         pitchBlend = 0f;
         if (cameraTransform != null) camBaseRotation = cameraTransform.localRotation;
@@ -176,6 +190,7 @@ public class InspectController : NetworkBehaviour
         inspectToggleLatched = false;
         currentItem = null;
         currentDef = null;
+        currentHotbarWorkOrder = false;
         LocalInspecting = false;
         IsInspecting.Value = false;
         if (relicView != null) { Destroy(relicView); relicView = null; }
@@ -205,14 +220,25 @@ public class InspectController : NetworkBehaviour
 
     // View-only clone at the eye anchor. The world item is never picked up, moved, or read
     // for value — inspection is decoupled from the economy (contract).
-    void BuildRelicView(ScavengeItem item)
+    void BuildRelicView(ScavengeItem item, bool hotbarWorkOrder)
     {
         if (inspectAnchor == null) return;
         if (relicView != null) Destroy(relicView);
 
         Mesh mesh = null;
         Material mat = null;
-        if (item != null)
+        if (hotbarWorkOrder)
+        {
+            GameObject prefab = Resources.Load<GameObject>("WorkOrder/WorkOrderItem");
+            if (prefab != null)
+            {
+                MeshFilter mf = prefab.GetComponentInChildren<MeshFilter>();
+                if (mf != null) mesh = mf.sharedMesh;
+                Renderer r = prefab.GetComponentInChildren<Renderer>();
+                if (r != null) mat = r.sharedMaterial;
+            }
+        }
+        else if (item != null)
         {
             MeshFilter mf = item.GetComponentInChildren<MeshFilter>();
             if (mf != null) mesh = mf.sharedMesh;
@@ -256,17 +282,22 @@ public class InspectController : NetworkBehaviour
         EnsureDetailStyles();
         if (detailStyle == null) return;
 
-        string title = currentDef != null && !string.IsNullOrWhiteSpace(currentDef.displayName)
-            ? currentDef.displayName
-            : null;
+        bool isWorkOrder = currentHotbarWorkOrder || currentItem is WorkOrderItem;
+        string title = isWorkOrder
+            ? "DISPATCH WORK ORDER"
+            : currentDef != null && !string.IsNullOrWhiteSpace(currentDef.displayName)
+                ? currentDef.displayName
+                : null;
         bool relic = currentDef != null && currentDef.tier == ScavengeTier.Relic;
-        string body = relic && !string.IsNullOrWhiteSpace(currentDef.inspectDetail)
-            ? currentDef.inspectDetail
-            : "看不出值多少。";   // 层一 salvage: value stays unreadable in hand (two-tier §1)
+        string body = isWorkOrder
+            ? WorkOrderItem.BuildReadableTextForActiveTask()
+            : relic && !string.IsNullOrWhiteSpace(currentDef.inspectDetail)
+                ? currentDef.inspectDetail
+                : MvpLocale.Pick("Its value is impossible to judge by sight alone.", "看不出值多少。");
 
-        float w = 300f;
-        float x = Screen.width * 0.58f;
-        float y = Screen.height * 0.40f;
+        float w = isWorkOrder ? Mathf.Min(460f, Screen.width * 0.44f) : 300f;
+        float x = Mathf.Min(Screen.width - w - 28f, Screen.width * 0.56f);
+        float y = isWorkOrder ? Screen.height * 0.22f : Screen.height * 0.40f;
         float titleH = title != null ? 26f : 0f;
         float bodyH = detailStyle.CalcHeight(new GUIContent(body), w - 28f);
         var label = new Rect(x, y, w, titleH + bodyH + 22f);
@@ -278,7 +309,7 @@ public class InspectController : NetworkBehaviour
 
         // Zone-Hint: operation micro-hint, bottom center (fades from attention, not from screen).
         GUI.Label(new Rect(0f, Screen.height - 46f, Screen.width, 22f),
-            "拖动旋转看不同面  ·  松开 F 放下", hintStyle);
+            isWorkOrder ? "DRAG TO TILT  ·  RELEASE F TO FILE" : MvpLocale.Pick("DRAG TO ROTATE  ·  RELEASE F TO LOWER", "拖动旋转看不同面  ·  松开 F 放下"), hintStyle);
     }
 
     // Horizontal strips with a jittered left edge — a cheap torn-paper silhouette that reads

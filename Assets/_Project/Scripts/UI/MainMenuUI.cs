@@ -1377,7 +1377,7 @@ public class MainMenuUI : MonoBehaviour
         // Paper tab as a real rect — the ▌ glyph is not guaranteed in the TMP font.
         AddRect(panel.transform, "HeaderTab", new Vector2(-222f, 98f), new Vector2(4f, 18f),
             AgedPaper, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f));
-        var header = AddText(panel.transform, "Header", "黑色委托事务所  ·  派工接洽", 14,
+        var header = AddText(panel.transform, "Header", MvpLocale.Pick("BLACK COMMISSION OFFICE  ·  DISPATCH INTAKE", "黑色委托事务所  ·  派工接洽"), 14,
             AgedPaper, TextAlignmentOptions.Left);
         header.fontStyle = FontStyles.Bold;
         header.rectTransform.anchoredPosition = new Vector2(24f, 98f);
@@ -1402,7 +1402,7 @@ public class MainMenuUI : MonoBehaviour
             CivicTeal, new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f));
         connectingInkFillRt = fill.GetComponent<RectTransform>();
 
-        var foot = AddText(panel.transform, "Foot", "接洽期间请勿离开窗口 · 单据将自动签发", 11,
+        var foot = AddText(panel.transform, "Foot", MvpLocale.Pick("DO NOT LEAVE THE WINDOW DURING INTAKE · DOCUMENTS ISSUE AUTOMATICALLY", "接洽期间请勿离开窗口 · 单据将自动签发"), 11,
             inkSoft, TextAlignmentOptions.Center);
         foot.rectTransform.anchoredPosition = new Vector2(0f, -92f);
         foot.rectTransform.sizeDelta = new Vector2(440f, 18f);
@@ -1504,7 +1504,7 @@ public class MainMenuUI : MonoBehaviour
         enBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(160f, 38f);
         enBtn.onClick.AddListener(() => { MvpHud.LanguageIndexStatic = 0; RebuildAllLabels(); });
 
-        var zhBtn = CreateButton(parent, "ZhBtn", "中文 (简体)", 16,
+        var zhBtn = CreateButton(parent, "ZhBtn", MvpLocale.IsEnglish ? "Chinese (Simplified)" : "中文（简体）", 16,
             BtnSecondary, BtnSecondaryHover, BtnSecondaryPressed);
         zhBtn.GetComponent<RectTransform>().anchoredPosition = position + new Vector2(90f, -10f);
         zhBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(160f, 38f);
@@ -1942,7 +1942,16 @@ public class MainMenuUI : MonoBehaviour
         lobbyCodeText = AddText(codeBox.transform, "RoomCode", "", 58, phos, TextAlignmentOptions.Left);
         lobbyCodeText.fontStyle = FontStyles.Bold;
         lobbyCodeText.characterSpacing = 10f;
-        AnchorLeftCenter(lobbyCodeText.rectTransform, 34f, 4f, new Vector2(500f, 72f));
+        // Relay codes are short, but the LAN fallback is a full "LAN Direct : 7778" string.
+        // TMP's default Overflow mode let that string paint beyond the 560 px card. Preserve
+        // the approved 58 px hero size for short codes and shrink only when the measured line
+        // needs it; ellipsis remains a final safety net for future localized formats.
+        lobbyCodeText.enableAutoSizing = true;
+        lobbyCodeText.fontSizeMin = 24f;
+        lobbyCodeText.fontSizeMax = 58f;
+        lobbyCodeText.enableWordWrapping = false;
+        lobbyCodeText.overflowMode = TextOverflowModes.Ellipsis;
+        AnchorLeftCenter(lobbyCodeText.rectTransform, 34f, 4f, new Vector2(490f, 72f));
 
         lobbyCopyLabel = AddText(codeBox.transform, "CopyHint", MvpLocale.T("lobby_copy_code"), 18,
             phosDim, TextAlignmentOptions.Left);

@@ -20,6 +20,11 @@ public class OfficeTaskDefinition : ScriptableObject
     [TextArea] public string client = "私人收藏家";
     [TextArea] public string description = "潜入地球海岸壹号烂尾楼，取回封存的「真实海岸」生态柱并撤离。";
     public string locationName = "地球海岸壹号·烂尾楼";
+    [Header("English Localization (default language)")]
+    public string titleEnglish;
+    [TextArea] public string clientEnglish;
+    [TextArea] public string descriptionEnglish;
+    public string locationNameEnglish;
     public string sceneName = "Tower_EarthCoast_01";
     public int recommendedPlayersMin = 1;
     public int recommendedPlayersMax = 4;
@@ -37,6 +42,13 @@ public class OfficeTaskDefinition : ScriptableObject
     [Tooltip("Nostalgic personal client (first/second-gen emigrant): relics settle at the emotional multiplier " +
              "with the moved-and-unsettling note. Off = institution/collector — detached discount and archival note.")]
     public bool relicSentimentalClient;
+
+    [Header("Printed Work Order")]
+    [Tooltip("Client handwriting printed onto the physical dispatch order. Keep it short and unsettling.")]
+    [TextArea] public string clientScrawl;
+    [TextArea] public string clientScrawlChinese;
+    [Tooltip("Deterministic dirt/skew/correction seed for the printed sheet presentation.")]
+    public int printQuirkSeed;
 
     // TODO: gate by license stage (game-pillars.md) — requiredOfficeLevel and minimumReputation removed 2026-06-17.
 

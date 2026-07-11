@@ -9,7 +9,8 @@ public enum MvpHotbarItemId
 {
     None,
     Flashlight,
-    Battery
+    Battery,
+    WorkOrder
 }
 
 [Serializable]
@@ -132,9 +133,9 @@ public class PlayerHotbar : NetworkBehaviour
         if (TryGetComponent<PlayerHealth>(out var health) && health.IsDowned.Value)
             return;
 
-        // Heavy two-hand carry locks the hotbar — both hands are on the objective
-        // (GDD: carrier hotbar lock while carrying = true).
-        if (TryGetComponent<CarrySystem>(out var carry) && carry.IsCarryingHeavy)
+        // Heavy objectives and information objects such as the work order occupy the equipment hand.
+        if (TryGetComponent<CarrySystem>(out var carry) && carry.CarriedItem != null &&
+            carry.CarriedItem.BlocksHotbar)
             return;
 
         UseSlotServerRpc(index, slots[index].itemId);
@@ -155,6 +156,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (computer == null) return false;
 
         MvpHotbarItemId itemId = slots[index].itemId;
+        if (itemId == MvpHotbarItemId.WorkOrder) return false;
         Vector3 dropPos = transform.position + transform.forward * 0.4f + Vector3.up * 0.08f;
 
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
@@ -236,6 +238,7 @@ public class PlayerHotbar : NetworkBehaviour
         if (!IsValidSlot(index)) return false;
         HotbarSlot slot = slots[index];
         if (slot.IsEmpty || slot.itemId != expectedItemId) return false;
+        if (slot.itemId == MvpHotbarItemId.WorkOrder) return false;
 
         if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening && !IsServer)
             RemoveOneFromSlotForStorageServerRpc(index, expectedItemId);
@@ -256,6 +259,21 @@ public class PlayerHotbar : NetworkBehaviour
 
         SyncHotbar();
         return true;
+    }
+
+    public void RemoveAllOfTypeServer(MvpHotbarItemId itemId)
+    {
+        if (!IsServer || itemId == MvpHotbarItemId.None) return;
+        EnsureSlots();
+        bool changed = false;
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i].itemId != itemId) continue;
+            slots[i].itemId = MvpHotbarItemId.None;
+            slots[i].quantity = 0;
+            changed = true;
+        }
+        if (changed) SyncHotbar();
     }
 
     /// <summary>
@@ -293,6 +311,12 @@ public class PlayerHotbar : NetworkBehaviour
         if (itemId == MvpHotbarItemId.Flashlight && HasItem(MvpHotbarItemId.Flashlight))
         {
             reason = "Already have a flashlight.";
+            return false;
+        }
+
+        if (itemId == MvpHotbarItemId.WorkOrder && HasItem(MvpHotbarItemId.WorkOrder))
+        {
+            reason = "Already carrying the active work order.";
             return false;
         }
 
@@ -635,7 +659,7 @@ public class PlayerHotbar : NetworkBehaviour
     void SetSlotFromNetwork(int index, int itemId, int quantity)
     {
         if (!IsValidSlot(index)) return;
-        slots[index].itemId = (MvpHotbarItemId)Mathf.Clamp(itemId, 0, (int)MvpHotbarItemId.Battery);
+        slots[index].itemId = (MvpHotbarItemId)Mathf.Clamp(itemId, 0, (int)MvpHotbarItemId.WorkOrder);
         slots[index].quantity = Mathf.Max(0, quantity);
         if (slots[index].quantity <= 0)
             slots[index].itemId = MvpHotbarItemId.None;

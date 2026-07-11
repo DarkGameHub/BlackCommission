@@ -91,6 +91,7 @@ public class ScavengeMissionManager : NetworkBehaviour
             : new SettlementResult(System.Array.Empty<SettlementLine>(), 0);
 
         int money = result.Total;
+        WorkOrderItem.DespawnAllServer();
         SyncedState.Value = (int)logic.State;
         SyncedTotal.Value = money;
 
@@ -114,7 +115,7 @@ public class ScavengeMissionManager : NetworkBehaviour
         else
         {
             ApplyResultLocally(money, kind, namesJoined, payouts, flags);
-            VanTransitOverlay.ShowReturn(MvpMissionRuntime.ActiveTask?.title, null, minTransit);
+            VanTransitOverlay.ShowReturn(OfficeTaskText.Title(MvpMissionRuntime.ActiveTask), null, minTransit);
             Invoke(nameof(ReturnToOffice), minTransit);
         }
 
@@ -152,7 +153,7 @@ public class ScavengeMissionManager : NetworkBehaviour
 
     [ClientRpc]
     void BeginReturnTransitClientRpc(float minTransitSeconds) =>
-        VanTransitOverlay.ShowReturn(MvpMissionRuntime.ActiveTask?.title, null, minTransitSeconds);
+        VanTransitOverlay.ShowReturn(OfficeTaskText.Title(MvpMissionRuntime.ActiveTask), null, minTransitSeconds);
 
     [ClientRpc]
     void ApplyResultClientRpc(int money, int kind, string namesJoined, int[] payouts, byte[] flags)

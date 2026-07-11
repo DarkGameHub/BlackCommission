@@ -360,12 +360,12 @@ public class CrtMenuStage : MonoBehaviour
         AnchorTop(headText.rectTransform, 4f, 18f, 8f);
         headText.fontStyle = FontStyles.Bold;
 
-        var title = AddText(noteGo.transform, "Title", task.title, 14, Ink, TextAlignmentOptions.TopLeft);
+        var title = AddText(noteGo.transform, "Title", OfficeTaskText.Title(task), 14, Ink, TextAlignmentOptions.TopLeft);
         AnchorTop(title.rectTransform, 34f, 64f, 10f);
         title.fontStyle = FontStyles.Bold;
         title.enableWordWrapping = true;
 
-        var client = AddText(noteGo.transform, "Client", MvpLocale.T("job_note_client", task.client), 10,
+        var client = AddText(noteGo.transform, "Client", MvpLocale.T("job_note_client", OfficeTaskText.Client(task)), 10,
             new Color(0.35f, 0.30f, 0.22f, 1f), TextAlignmentOptions.TopLeft);
         AnchorTop(client.rectTransform, 102f, 30f, 10f);
         client.enableWordWrapping = true;

@@ -20,6 +20,8 @@ public class Carriable : NetworkBehaviour
 
     public bool IsHeavy => isHeavy;
     public bool RequiresTwoPlayers => requiresTwoPlayers;
+    /// <summary>Whether holding this object occupies the equipment hand.</summary>
+    public virtual bool BlocksHotbar => isHeavy;
     public NetworkVariable<bool> IsBeingCarried = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public bool CanBeCarried => !IsBeingCarried.Value && !requiresTwoPlayers;

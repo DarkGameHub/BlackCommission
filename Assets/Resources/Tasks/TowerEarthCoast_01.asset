@@ -18,6 +18,10 @@ MonoBehaviour:
   client: "\u706B\u661F \xB7 \u5730\u7403\u9057\u4EA7\u5F81\u96C6\u4E8B\u52A1\u6240"
   description: "\u5BA2\u6237\u662F\u706B\u661F\u7684\u300C\u5730\u7403\u9057\u4EA7\u5F81\u96C6\u300D\u673A\u6784\u2014\u2014\u4ED6\u4EEC\u5C24\u5176\u60F3\u8981\u539F\u4F4F\u6237\u7559\u4E0B\u7684\u4E1C\u897F:\u79C1\u4EBA\u7269\u4EF6\u3001\u516C\u4EA7\u6587\u4EF6\u3001\u4F4F\u5B85\u5BB6\u5177\u3002\u628A\u70C2\u5C3E\u697C\u91CC\u503C\u94B1\u7684\u90FD\u5E26\u56DE\u6765,\u4ED6\u4EEC\u6309\u504F\u597D\u4F30\u4EF7\u3002"
   locationName: "\u5730\u7403\u6D77\u5CB8\u58F9\u53F7 \xB7 \u70C2\u5C3E\u697C"
+  titleEnglish: "Real Coast - Tenant Clearance"
+  clientEnglish: "Mars Heritage Office"
+  descriptionEnglish: "Recover valuable belongings left by former residents: personal effects, property records, and domestic furniture. The client prices by preference."
+  locationNameEnglish: "Earth Coast 01 - Unfinished Tower"
   sceneName: Tower_EarthCoast_01
   recommendedPlayersMin: 1
   recommendedPlayersMax: 4
@@ -25,6 +29,9 @@ MonoBehaviour:
   favouredCategoryIds: 06000000040000000b000000
   favouredMaterialClassIds: 00000000
   relicSentimentalClient: 1
+  clientScrawl: "Photographs first. Do not clean them. Dust is provenance."
+  clientScrawlChinese: "\u7167\u7247\u4F18\u5148\u3002\u4E0D\u8981\u6E05\u6D01\u3002\u7070\u5C18\u4E5F\u662F\u6765\u5386\u3002"
+  printQuirkSeed: 17041
   missionStartClockHour: 8
   contractWindowGameHours: 12
   realSecondsPerGameHour: 60

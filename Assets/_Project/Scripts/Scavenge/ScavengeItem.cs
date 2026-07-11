@@ -29,8 +29,12 @@ public class ScavengeItem : Carriable, IInteractable
     public int BaseValue => baseValue;
     public ScavengeTier Tier => tier;
     public MaterialClass MaterialClass => materialClass;
+    /// <summary>False for information-only objects such as a dispatch work order.</summary>
+    public virtual bool CanEnterCargo => true;
 
-    public string InteractHint => CanBeCarried ? (IsHeavy ? "扛起（重物·双手）" : "拾取") : "";
+    public string InteractHint => CanBeCarried
+        ? (IsHeavy ? MvpLocale.Pick("LIFT (HEAVY · TWO HANDS)", "扛起（重物·双手）") : MvpLocale.Pick("PICK UP", "拾取"))
+        : "";
 
     public void OnInteractStart(PlayerController player)
     {

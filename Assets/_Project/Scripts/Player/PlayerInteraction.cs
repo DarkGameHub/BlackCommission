@@ -187,6 +187,7 @@ public class PlayerInteraction : NetworkBehaviour
                 fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
+                wordWrap = false,
                 // Aged paper on rubber black: world-prompt grammar (green = screens only).
                 normal = { textColor = BlackCommissionUiTheme.OldPaper, background = hintBg },
                 padding = new RectOffset(16, 16, 8, 8)
@@ -194,7 +195,9 @@ public class PlayerInteraction : NetworkBehaviour
             MvpFontProvider.ApplyToStyle(hintStyle);
         }
 
-        float w = 340, h = 38;
+        float measured = hintStyle.CalcSize(new GUIContent($"[E] {hint}")).x + 34f;
+        float w = Mathf.Clamp(measured, 340f, Mathf.Min(680f, Screen.width - 48f));
+        float h = 38;
         GUI.Label(new Rect((Screen.width - w) / 2f, Screen.height * 0.7f, w, h),
             $"[E] {hint}", hintStyle);
     }

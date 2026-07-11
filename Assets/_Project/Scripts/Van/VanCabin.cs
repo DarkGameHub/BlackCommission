@@ -13,38 +13,32 @@ public static class VanCabin
     // Parked 80m up, away from scene geometry/lights — same offset the overlay always used.
     public static readonly Vector3 Origin = new(0f, 80f, 0f);
 
-    // The procedural cabin mesh is authored small; scale it up so full-size players fit.
-    public const float Scale = 2.2f;
+    // Real-scale high-roof cargo bay. The old 2.2x uniform scale made a 1.36 m whitebox
+    // almost 3 m wide and pushed seated cameras into the ceiling.
+    public const float Scale = 1f;
 
-    // ── Optional imported interior model ──
-    // The interior is PROCEDURAL by default (benches authored in the same space as the seat
-    // offsets below, so seating is exact by construction — nothing to hand-tune). Only flip
-    // UseModeledInterior to true once a real interior mesh exists at InteriorResourcePath;
-    // VanTransitOverlay then AUTO-FITS it from its measured bounds (no guessed transform) so
-    // it lands centred on the bay with its floor at the seat height. ModelEuler is the only
-    // manual hint — set it if the mesh imports facing the wrong way (bounds can't infer facing).
-    // OFF since 2026-06-10: the ASV4 model predates style-lock v2 (lo-fi) and read as a
-    // different game than the tower (PM: UI/UX 前后不一致). The procedural cabin now uses
-    // the tower's V8 palette so the van speaks the map's material language.
-    public static bool UseModeledInterior = false;
-    public const string InteriorResourcePath = "GeneratedArt/ASV4_VanTransitInterior";
+    // ── Imported real-scale interior model ──
+    // The Blender cabin is authored to the same coordinates as the seats below and auto-fitted
+    // from measured bounds. The procedural box cabin remains only as a missing-asset fallback.
+    public static bool UseModeledInterior = true;
+    public const string InteriorResourcePath = "GeneratedArt/BC_VanTransitInterior";
     public static readonly Vector3 ModelEuler = Vector3.zero;
 
     // Target the auto-fitter scales the model into (world units), matched to the procedural
     // cabin so a modeled interior occupies the same volume the seats are placed in.
-    public static readonly Vector3 InteriorSize = new(2f * Scale, 1.08f * Scale, 1.36f * Scale);
-    public static Vector3 InteriorCenter => Origin + new Vector3(0.45f * Scale, 0f, 0f);
-    public static float FloorWorldY => Origin.y + 0.36f * Scale;
+    public static readonly Vector3 InteriorSize = new(3.42f, 1.93f, 1.78f);
+    public static Vector3 InteriorCenter => Origin;
+    public static float FloorWorldY => Origin.y;
 
     // Seat offsets in the cabin's UNSCALED local space (matches the procedural benches:
     // floor top ~y0.37, benches at z = ±0.52, passenger bay along +x of the cage).
     // Two benches facing each other across the aisle (z): 0 faces 1, 2 faces 3.
     static readonly Vector3[] LocalSeats =
     {
-        new(0.15f, 0.37f, -0.52f),
-        new(0.15f, 0.37f,  0.52f),
-        new(0.80f, 0.37f, -0.52f),
-        new(0.80f, 0.37f,  0.52f),
+        new(-0.72f, 0.44f, -0.61f),
+        new(-0.72f, 0.44f,  0.61f),
+        new( 0.72f, 0.44f, -0.61f),
+        new( 0.72f, 0.44f,  0.61f),
     };
 
     // Yaw so each player faces across the aisle toward the opposite bench.

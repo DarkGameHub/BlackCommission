@@ -116,6 +116,7 @@ public class ScavengeCargoZone : NetworkBehaviour
         foreach (var item in items)
         {
             if (item == null) continue;
+            if (!item.CanEnterCargo) continue;
             if (item.IsBeingCarried.Value) continue;                 // still in hand — not deposited
             if (!bounds.Contains(item.transform.position)) continue; // not in the bay
             TryStow(item);
@@ -233,7 +234,9 @@ public class ScavengeCargoZone : NetworkBehaviour
         stripStyle.normal.textColor = full
             ? BlackCommissionUiTheme.RustWarning
             : new Color(0.10f, 0.095f, 0.075f, 1f);
-        string label = full ? $"舱位已满 {load}/{cap}" : $"舱位 {load}/{cap}";
+        string label = full
+            ? MvpLocale.Pick($"FULL {load}/{cap}", $"舱位已满 {load}/{cap}")
+            : MvpLocale.Pick($"CAPACITY {load}/{cap}", $"舱位 {load}/{cap}");
         GUI.Label(new Rect(rect.xMax - 92f, rect.y + 4f, 86f, 22f), label, stripStyle);
 
         GUI.matrix = savedMatrix;

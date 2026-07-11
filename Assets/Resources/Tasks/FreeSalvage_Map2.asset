@@ -18,6 +18,10 @@ MonoBehaviour:
   client: "\u4E8B\u52A1\u6240\u81EA\u7559"
   description: "\u6CA1\u6709\u5BA2\u6237\u3001\u6CA1\u6709\u504F\u597D\u2014\u2014\u5E02\u4EF7\u56DE\u6536\u3002\u80FD\u642C\u591A\u5C11\u662F\u591A\u5C11,\u591F\u4ED8\u8FD9\u4E2A\u6708\u7684\u5B89\u5168\u5F00\u9500\u5C31\u884C\u3002"
   locationName: "\u5916\u56F4 \xB7 \u7A0B\u5E8F\u751F\u6210\u5E9F\u5740"
+  titleEnglish: "Free Salvage - Perimeter Ruins"
+  clientEnglish: "Office Reserve"
+  descriptionEnglish: "No client and no preference schedule. Recover whatever the market will buy, but leave enough van capacity to get home."
+  locationNameEnglish: "Perimeter - Procedural Ruins"
   sceneName: Map2_Procedural
   recommendedPlayersMin: 1
   recommendedPlayersMax: 4
@@ -25,6 +29,9 @@ MonoBehaviour:
   favouredCategoryIds: 
   favouredMaterialClassIds: 
   relicSentimentalClient: 0
+  clientScrawl: "Anything that pays. Leave room for fuel."
+  clientScrawlChinese: "\u80FD\u5356\u94B1\u7684\u90FD\u884C\u3002\u8BB0\u5F97\u7ED9\u71C3\u6599\u7559\u4F4D\u7F6E\u3002"
+  printQuirkSeed: 6026
   missionStartClockHour: 8
   contractWindowGameHours: 12
   realSecondsPerGameHour: 60

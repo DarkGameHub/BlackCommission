@@ -198,7 +198,7 @@ public class SettingsOverlay : MonoBehaviour
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
         GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 46f), headerBandTex);
         GUI.Label(new Rect(rect.x + 18f, rect.y + 6f, rect.width - 120f, 26f),
-            "黑色委托事务所  ·  偏好登记表", headerTextStyle);
+            MvpLocale.Pick("BLACK COMMISSION OFFICE  ·  PREFERENCE FORM", "黑色委托事务所  ·  偏好登记表"), headerTextStyle);
         GUI.Label(new Rect(rect.x + 18f, rect.y + 26f, rect.width - 120f, 16f),
             "FORM BC-05", headerTextStyle);
         if (GUI.Button(new Rect(rect.xMax - 96f, rect.y + 8f, 80f, 30f), MvpLocale.T("resume"), buttonStyle))
@@ -213,7 +213,9 @@ public class SettingsOverlay : MonoBehaviour
         // ─── Game ───
         GUILayout.Space(8);
         GUILayout.Label(MvpLocale.T("game"), accentStyle);
-        string[] languageLabels = { "English", "中文 (简体)" };
+        string[] languageLabels = MvpLocale.IsEnglish
+            ? new[] { "English", "Chinese (Simplified)" }
+            : new[] { "英文", "中文（简体）" };
         GUILayout.Label(MvpLocale.T("language", languageLabels[Mathf.Clamp(MvpHud.LanguageIndexStatic, 0, 1)]), labelStyle);
         int selectedLanguage = GUILayout.SelectionGrid(MvpHud.LanguageIndexStatic, languageLabels, 2);
         if (selectedLanguage != MvpHud.LanguageIndexStatic)

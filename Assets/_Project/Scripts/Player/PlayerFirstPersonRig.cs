@@ -10,6 +10,7 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     [SerializeField] Vector3 fpModelScale = new(0.55f, 1.1f, 1.1f);
 
     PlayerHotbar hotbar;
+    CarrySystem carry;
     PlayerController controller;
     Transform cameraTransform;
     Transform heldItemRoot;
@@ -43,6 +44,7 @@ public class PlayerFirstPersonRig : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         hotbar = GetComponent<PlayerHotbar>();
+        carry = GetComponent<CarrySystem>();
         controller = GetComponent<PlayerController>();
         HideCapsuleBodyMesh();
 
@@ -104,6 +106,9 @@ public class PlayerFirstPersonRig : NetworkBehaviour
         MvpHotbarItemId itemId = selected == null || selected.IsEmpty
             ? MvpHotbarItemId.None
             : selected.itemId;
+
+        if (carry != null && carry.CarriedItem != null && carry.CarriedItem.BlocksHotbar)
+            itemId = MvpHotbarItemId.None;
 
         SetActiveItem(itemId);
 

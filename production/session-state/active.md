@@ -2922,3 +2922,13 @@ tinted/distorted AS_Character worker ("infected host") + amber eye point — zer
   6. Enter → ReportInSequence 协程：REPORTED IN → PRINTING DISPATCH SLIP 进度条(#/-) → 中途 [JAM] 0.55s（红字=告警线合规）→ TEAR THE SLIP 提示 → FinishReportIn（推镜交棒不变）。断线中途自动中止。spec 降级线：世界侧打印机道具后续。
   7. C 键在大厅=复制房间号（mockup [C] COPY CODE·PM批过）；菜单根屏 C 仍开 CrewPicker。**偏差上报**: mockup 的 [F1] INVITE FRIEND 未实装（无 Steam 邀请后端，不放死按钮）。
 - 进度条字符用 ASCII #/-（3270 块元素字形风险规避）；光标用 `_`。
+
+## Session 2026-07-10 — 同步 main +「工单在手」完整实现
+- 当前 `scavenge-settlement-reveal` 已 fast-forward 到 `origin/main` 的 `ff08076`；未 push/未 commit。
+- **基线先验**：Unity `6000.4.7f1` headless 导入+编译成功，改动前 EditMode `184/184` 全绿。
+- **工单闭环**：HQ 接受委托后网络打印机自动走 3.5s 送纸/卡纸节拍；任何玩家 E 撕取后原子生成并进手；未撕时 HQ van 服务器侧拒绝出发。工单走既有 `Carriable`，可丢/可捡/倒地掉落，且 `BlocksHotbar` 隐藏并锁住装备手；F 检视显示任务、客户批注与货舱铅笔勾。
+- **车载重打**：任务地图 bootstrap 在 van 边生成 reprint printer；host 权威扣 `WorkOrderConfig.reprintCost=5G` 后打印副本，余额同步客户端；钱不足拒绝。副本 `Spawn(false)` 可随持有者跨出发换场景，结算时统一 despawn。
+- **结算/货舱**：`WorkOrderItem.CanEnterCargo=false`，货舱扫描直接跳过，不计重、不进逐件揭示。
+- **内容**：3 个任务资产都补 `clientScrawl` + `printQuirkSeed`；新增 `WorkOrderConfig.asset`。
+- **Blender 真资产**：`tools/rigging/build_work_order_printer.py` 生成原创低模针式打印机、独立工单纸、`.blend`/FBX；打印机含 `PaperFeed` 骨骼和 baked 送纸 action。Unity builder 生成并注册 `WorkOrderPrinter`/`WorkOrderItem` NGO prefabs。
+- **验证**：最终 Unity 编译成功，EditMode `190/190` 全绿（新增工单状态机 6 条），`git diff --check` 通过，模型 preview 已目检。仍建议下一次可视 Play 做双端感受走查（打印机实际落位、撕纸手感、跨场景持有、重打扣费）。

@@ -8,6 +8,9 @@ public static class MvpLocale
     // typeface per screen. ZH stays fully available in Settings; remaining ZH-only
     // job content reads as "weird local client" flavour until localised.
     static int Lang => PlayerPrefs.GetInt("AS.Settings.Language", 0);
+    public static bool IsEnglish => Lang == 0;
+    public static bool IsChinese => !IsEnglish;
+    public static string Pick(string english, string chinese) => IsEnglish ? english : chinese;
 
     static readonly Dictionary<string, string[]> Strings = new()
     {

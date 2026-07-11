@@ -6,20 +6,21 @@ using BlackCommission.Level;
 /// <summary>
 /// Mission map 3 — the Mars logistics hub (David-approved theme, 2026-07-02; design:
 /// <c>design/levels/mars-logistics-01.md</c>). A seized freight transfer station on the
-/// Martian surface: dust-storm exterior with a small drop-off pad, an airlock reception
-/// plastered in seizure notices, a tall sodium-lit warehouse hall of rack aisles, a cold
-/// storage annex (relic crates, monster nest) and an office mezzanine. Reuses the StageA
+/// Martian surface: dust-storm exterior with a small drop-off pad, then a sequence of
+/// receiving, processing, office, quarantine and sealed-storage rooms. Low connector
+/// corridors and offset doors prevent long through-sightlines. Reuses the StageA
 /// Mars panel-seam textures (<c>Art/Textures/MarsShellPanels{,_N}.png</c>).
 ///
 /// Builds static geometry + LootAnchors + MonsterSeeds + the van exit point into the OPEN
 /// scene. Run <c>MissionMapFinalizer</c> afterwards for the van visual + persisted NavMesh
 /// + save. Idempotent: re-running replaces the previous build root.
 ///
-/// Menu: <c>Tools ▸ Black Commission ▸ Map ▸ Build Mars Logistics (v1)</c>.
+/// Menu: <c>Tools ▸ Black Commission ▸ Map ▸ Build Mars Logistics (v3 Rooms)</c>.
 /// </summary>
 public static class MarsLogisticsBuilder
 {
-    const string RootName = "MarsLogistics_v1";
+    const string RootName = "MarsLogistics_v3_Rooms";
+    const string ScenePath = "Assets/_Project/Scenes/Mars_Logistics_01.unity";
 
     // ── palette (Municipal Debt Noir on Mars: butterscotch storm, sodium amber, seizure red) ──
     static readonly Color Regolith = new Color(0.30f, 0.17f, 0.11f);
@@ -39,7 +40,7 @@ public static class MarsLogisticsBuilder
 
     static readonly Dictionary<Color, Material> MatCache = new Dictionary<Color, Material>();
 
-    [MenuItem("Tools/Black Commission/Map/Build Mars Logistics (v1)")]
+    [MenuItem("Tools/Black Commission/Map/Build Mars Logistics (v3 Rooms)")]
     public static void Build()
     {
         if (Application.isPlaying)
@@ -49,39 +50,184 @@ public static class MarsLogisticsBuilder
         }
         MatCache.Clear();
 
-        var old = GameObject.Find(RootName);
-        if (old != null) Object.DestroyImmediate(old);
+        foreach (string legacyRoot in new[] { "MarsLogistics_v1", "MarsLogistics_v2", RootName })
+        {
+            var old = GameObject.Find(legacyRoot);
+            if (old != null) Object.DestroyImmediate(old);
+        }
 
         var root = new GameObject(RootName).transform;
 
         BuildExterior(Child(root, "Exterior"));
-        BuildShell(Child(root, "Shell"));
-        BuildAirlock(Child(root, "Airlock"));
-        BuildHall(Child(root, "Hall"));
-        BuildCold(Child(root, "ColdStorage"));
-        BuildMezzanine(Child(root, "Mezzanine"));
-        // v2 expansion (David 2026-07-02: "每张图要玩到15min" — Mars only): container yard,
-        // loading dock, quarantine sublevel, upper catwalk loop. Existing sections untouched.
-        BuildYard(Child(root, "ContainerYard"));
-        BuildDock(Child(root, "LoadingDock"));
-        BuildSublevel(Child(root, "QuarantineSublevel"));
-        BuildCatwalk(Child(root, "Catwalk"));
-        BuildLights(Child(root, "Lights"));
+        BuildCompartmentRoute(Child(root, "CompartmentRoute"));
+        BuildCompartmentLights(Child(root, "Lights"));
         BuildMissionAnchors(Child(root, "Mission"));
         ApplyAtmosphere();
 
-        // per-map loot budget: ~2x the global 10–14 so the bigger floor plan stays dense
+        // The room chain uses a lower count than the former open warehouse so each find reads.
         var profile = new GameObject("ScavengeMapProfile").AddComponent<ScavengeMapProfile>();
         profile.transform.SetParent(root, false);
-        profile.itemsMin = 26;
-        profile.itemsMax = 32;
+        profile.itemsMin = 18;
+        profile.itemsMax = 24;
 
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
             UnityEngine.SceneManagement.SceneManager.GetActiveScene());
-        Debug.Log("[MarsLogistics] Build complete. Run MissionMapFinalizer to bake navmesh + van, then save.");
+        Debug.Log("[MarsLogistics] v3 room route built. Run MissionMapFinalizer to bake navmesh + van, then save.");
+    }
+
+    [MenuItem("Tools/Black Commission/Map/Rebuild Mars Logistics Scene (v3 Rooms) %#9")]
+    public static void RebuildSceneV3()
+    {
+        if (Application.isPlaying)
+        {
+            Debug.LogError("[MarsLogistics] Exit Play mode before rebuilding the saved scene.");
+            return;
+        }
+
+        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            ScenePath, UnityEditor.SceneManagement.OpenSceneMode.Single);
+        Build();
+        MissionMapFinalizer.FinalizeActiveScene();
+        Selection.activeGameObject = GameObject.Find(RootName);
+        if (SceneView.lastActiveSceneView != null) SceneView.lastActiveSceneView.FrameSelected();
     }
 
     // ── exterior: regolith apron, drop pad, storm backdrop ─────────────────────────
+    /// <summary>Room-by-room route with offset doors and low connector corridors.</summary>
+    static void BuildCompartmentRoute(Transform p)
+    {
+        Material wall = PanelMat();
+        Material floor = Mat(FloorGray);
+        Material roof = Mat(new Color(0.16f, 0.17f, 0.18f));
+        Material threshold = Mat(new Color(0.50f, 0.38f, 0.12f));
+
+        RoomShell(p, "Airlock", 17f, 25f, 0f, 6f, 3.2f, 21f, 22f, 2f, wall, floor, roof);
+        RoomShell(p, "Receiving", 14f, 28f, 6f, 14f, 4.5f, 22f, 17f, 2f, wall, floor, roof);
+        CorridorShell(p, "CorridorA", 15f, 19f, 14f, 20f, wall, floor, roof);
+        RoomShell(p, "Sorting", 15f, 29f, 20f, 28f, 4.8f, 17f, 28f, 2f, wall, floor, roof);
+        CorridorShell(p, "CorridorB", 27f, 31f, 28f, 34f, wall, floor, roof);
+        RoomShell(p, "FreightOffice", 19f, 31f, 34f, 42f, 3.2f, 29f, 20f, 2f, wall, floor, roof);
+        CorridorShell(p, "CorridorC", 18f, 22f, 42f, 48f, wall, floor, roof);
+        RoomShell(p, "Quarantine", 17f, 31f, 48f, 56f, 4f, 20f, 30f, 2f, wall, floor, roof);
+        CorridorShell(p, "CorridorD", 28f, 32f, 56f, 62f, wall, floor, roof);
+        RoomShell(p, "SealedBay", 15f, 33f, 62f, 72f, 5.5f, 30f, float.NaN, 2.8f, wall, floor, roof);
+
+        foreach (Vector3 t in new[]
+        {
+            new Vector3(22f, .07f, 6f), new Vector3(17f, .07f, 14f),
+            new Vector3(17f, .07f, 20f), new Vector3(28f, .07f, 28f),
+            new Vector3(29f, .07f, 34f), new Vector3(20f, .07f, 42f),
+            new Vector3(20f, .07f, 48f), new Vector3(30f, .07f, 56f),
+            new Vector3(30f, .07f, 62f)
+        }) Box(p, "Threshold", t, new Vector3(2f, .03f, .35f), threshold, collider: false);
+
+        Box(p, "ReceivingCounter", new Vector3(25.5f, .55f, 9f), new Vector3(3.2f, 1.1f, .8f), Mat(ShelfWood));
+        Loot(p, "LA_entry_counter", new Vector3(25.5f, 1.15f, 9f), DressingSurface.DeskSurface);
+        Crate(p, "EntryCrate", new Vector3(16f, .5f, 11.5f), 1f, CrateBrown, 8f);
+        Loot(p, "LA_entry_crate", new Vector3(16f, 1.05f, 11.5f), DressingSurface.CrateTop);
+        TapeX(p, new Vector3(24.7f, 1.45f, 5.82f));
+
+        RackRun(p, 17f, 21f, 23f);
+        RackRun(p, 23f, 27f, 26f);
+        Loot(p, "LA_sort_0", new Vector3(18f, .78f, 23f), DressingSurface.ShelfSlot);
+        Loot(p, "LA_sort_1", new Vector3(20f, 1.78f, 23f), DressingSurface.ShelfSlot);
+        Loot(p, "LA_sort_2", new Vector3(24f, .78f, 26f), DressingSurface.ShelfSlot);
+        Loot(p, "LA_sort_3", new Vector3(26f, 1.78f, 26f), DressingSurface.ShelfSlot);
+        Seed(p, "MonsterSeed_ML_MID", new Vector3(26f, .05f, 22f));
+
+        Desk(p, "FreightDesk_A", new Vector3(22f, .08f, 37f), 0f);
+        Desk(p, "FreightDesk_B", new Vector3(28f, .08f, 39.5f), 180f);
+        Loot(p, "LA_office_0", new Vector3(22f, .9f, 37f), DressingSurface.DeskSurface);
+        Loot(p, "LA_office_1", new Vector3(28f, .9f, 39.5f), DressingSurface.DeskSurface);
+        Box(p, "ManifestCabinet", new Vector3(20f, .8f, 40.5f), new Vector3(.7f, 1.6f, .6f), Mat(RackSteel));
+        Loot(p, "LA_office_2", new Vector3(20f, 1.65f, 40.5f), DressingSurface.Cabinet);
+
+        foreach (float x in new[] { 19f, 23f, 27f })
+        {
+            Crate(p, $"Quarantine_{x:0}", new Vector3(x, .65f, 53.5f), 1.3f, CrateOlive, x * 3f);
+            Loot(p, $"LA_quarantine_{x:0}", new Vector3(x, 1.35f, 53.5f), DressingSurface.CrateTop);
+        }
+        TapeX(p, new Vector3(29f, 1.45f, 55.82f));
+        Seed(p, "MonsterSeed_ML_QUARANTINE_WARDEN", new Vector3(28f, .05f, 50f));
+
+        Box(p, "SealedContainer", new Vector3(24f, 1.35f, 68f), new Vector3(6.2f, 2.7f, 2.8f),
+            Mat(new Color(0.22f, 0.27f, 0.25f)));
+        TapeX(p, new Vector3(24f, 1.4f, 66.55f));
+        foreach (Vector3 q in new[]
+        {
+            new Vector3(17f, .6f, 64f), new Vector3(31f, .6f, 70f), new Vector3(18f, .6f, 70f)
+        })
+        {
+            Crate(p, "DeepCrate", q, 1.2f, CrateBrown, q.x * 9f);
+            Loot(p, "LA_deep", q + Vector3.up * .65f, DressingSurface.CrateTop);
+        }
+        Loot(p, "LA_deep_floor_0", new Vector3(20f, .12f, 66f), DressingSurface.Floor);
+        Loot(p, "LA_deep_floor_1", new Vector3(29f, .12f, 65f), DressingSurface.Floor);
+        Seed(p, "MonsterSeed_ML_DEEP_IDOL", new Vector3(24f, .05f, 70f));
+    }
+
+    static void RoomShell(Transform p, string name, float x0, float x1, float z0, float z1,
+        float height, float southDoorX, float northDoorX, float doorWidth,
+        Material wall, Material floor, Material roof)
+    {
+        float cx = (x0 + x1) * .5f;
+        float cz = (z0 + z1) * .5f;
+        Box(p, name + "_Floor", new Vector3(cx, -.08f, cz), new Vector3(x1 - x0, .25f, z1 - z0), floor);
+        Box(p, name + "_Roof", new Vector3(cx, height + .05f, cz),
+            new Vector3(x1 - x0 + .3f, .2f, z1 - z0 + .3f), roof);
+        DoorWallX(p, wall, name + "_South", x0, x1, z0, height, southDoorX, doorWidth);
+        DoorWallX(p, wall, name + "_North", x0, x1, z1, height, northDoorX, doorWidth);
+        WallZ(p, wall, name + "_West", z0, z1, x0, 0f, height);
+        WallZ(p, wall, name + "_East", z0, z1, x1, 0f, height);
+    }
+
+    static void CorridorShell(Transform p, string name, float x0, float x1, float z0, float z1,
+        Material wall, Material floor, Material roof)
+    {
+        float cx = (x0 + x1) * .5f;
+        float cz = (z0 + z1) * .5f;
+        Box(p, name + "_Floor", new Vector3(cx, -.08f, cz), new Vector3(x1 - x0, .25f, z1 - z0), floor);
+        Box(p, name + "_Roof", new Vector3(cx, 2.45f, cz), new Vector3(x1 - x0 + .3f, .2f, z1 - z0 + .3f), roof);
+        WallZ(p, wall, name + "_West", z0, z1, x0, 0f, 2.4f);
+        WallZ(p, wall, name + "_East", z0, z1, x1, 0f, 2.4f);
+        Box(p, name + "_CableTray", new Vector3(x0 + .35f, 2.15f, cz),
+            new Vector3(.25f, .18f, z1 - z0), Mat(RackSteel), collider: false);
+    }
+
+    static void DoorWallX(Transform p, Material wall, string name, float x0, float x1,
+        float z, float height, float doorCenter, float doorWidth)
+    {
+        if (float.IsNaN(doorCenter))
+        {
+            WallX(p, wall, name, x0, x1, z, 0f, height);
+            return;
+        }
+        float d0 = Mathf.Max(x0, doorCenter - doorWidth * .5f);
+        float d1 = Mathf.Min(x1, doorCenter + doorWidth * .5f);
+        if (d0 > x0) WallX(p, wall, name + "_L", x0, d0, z, 0f, height);
+        if (d1 < x1) WallX(p, wall, name + "_R", d1, x1, z, 0f, height);
+        WallX(p, wall, name + "_Lintel", d0, d1, z, 2.4f, height);
+    }
+
+    static void BuildCompartmentLights(Transform p)
+    {
+        var sun = new GameObject("StormSun");
+        sun.transform.SetParent(p, false);
+        sun.transform.rotation = Quaternion.Euler(38f, 155f, 0f);
+        var dl = sun.AddComponent<Light>();
+        dl.type = LightType.Directional;
+        dl.color = new Color(1f, .62f, .35f);
+        dl.intensity = .45f;
+        dl.shadows = LightShadows.Soft;
+        Point(p, "PadBeacon", new Vector3(21f, 3.2f, -8f), SodiumAmber, 2.4f, 11f);
+        Point(p, "AirlockUtility", new Vector3(21f, 2.7f, 3f), new Color(.9f, .85f, .7f), 2.4f, 7f);
+        Point(p, "ReceivingAmber", new Vector3(24f, 3.8f, 10f), SodiumAmber, 3.2f, 9f);
+        Point(p, "SortWorklight", new Vector3(20f, 4f, 24f), new Color(.78f, .82f, .74f), 3f, 9f);
+        Point(p, "OfficeCrt", new Vector3(27f, 2.5f, 38f), new Color(.32f, .9f, .48f), 2f, 7f);
+        Point(p, "QuarantineCold", new Vector3(23f, 3.2f, 52f), ColdCyan, 3f, 9f);
+        Point(p, "DeepSealRed", new Vector3(24f, 4.2f, 68f), StampRed, 3.6f, 10f);
+    }
+
     static void BuildExterior(Transform p)
     {
         // regolith in four pieces, leaving a shaft slot (x−9..0.5, z7.8..10.7) so the
@@ -114,14 +260,14 @@ public static class MarsLogisticsBuilder
         // enclosing storm walls + lid: guarantee every sightline ends in butterscotch, whatever
         // the player camera's clear flags are (no skybox dependency)
         Material storm = Mat(StormSky);
-        Box(p, "Storm_N", new Vector3(21f, 34f, 68f), new Vector3(130f, 70f, 0.5f), storm, collider: false);
+        Box(p, "Storm_N", new Vector3(21f, 34f, 88f), new Vector3(130f, 70f, 0.5f), storm, collider: false);
         Box(p, "Storm_S", new Vector3(21f, 34f, -48f), new Vector3(130f, 70f, 0.5f), storm, collider: false);
         Box(p, "Storm_E", new Vector3(79f, 34f, 10f), new Vector3(0.5f, 70f, 130f), storm, collider: false);
         Box(p, "Storm_W", new Vector3(-37f, 34f, 10f), new Vector3(0.5f, 70f, 130f), storm, collider: false);
         Box(p, "Storm_Lid", new Vector3(21f, 66f, 10f), new Vector3(130f, 0.5f, 130f), storm, collider: false);
 
         // invisible perimeter blockers keep players inside the diegetic bowl
-        Blocker(p, "Bound_N", new Vector3(21f, 3f, 55f), new Vector3(120f, 6f, 0.5f));
+        Blocker(p, "Bound_N", new Vector3(21f, 3f, 82f), new Vector3(120f, 6f, 0.5f));
         Blocker(p, "Bound_S", new Vector3(21f, 3f, -30f), new Vector3(120f, 6f, 0.5f));
         Blocker(p, "Bound_E", new Vector3(78f, 3f, 10f), new Vector3(0.5f, 6f, 120f)); // v2: past the yard
         Blocker(p, "Bound_W", new Vector3(-26f, 3f, 10f), new Vector3(0.5f, 6f, 120f));

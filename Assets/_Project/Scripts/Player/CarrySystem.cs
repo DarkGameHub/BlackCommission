@@ -134,6 +134,19 @@ public class CarrySystem : NetworkBehaviour
             playerController.IsCarrying.Value = true;
     }
 
+    /// <summary>
+    /// Server-side atomic handoff used by a printer tearing a freshly spawned sheet directly
+    /// into the interacting player's hand. The normal owner input path still uses PickUpServerRpc.
+    /// </summary>
+    public bool TryPickUpSpawnedServer(Carriable carriable)
+    {
+        if (!IsServer || carriable == null || !carriable.CanBeCarried) return false;
+        if (Carriable.FindCarriedBy(NetworkObject) != null) return false;
+        carriable.SetCarried(NetworkObject, true);
+        PickUpClientRpc(carriable.NetworkObject);
+        return true;
+    }
+
     public void Drop()
     {
         if (IsGameplayBlocked()) return;
@@ -174,6 +187,9 @@ public class CarrySystem : NetworkBehaviour
     }
 
     public bool IsCarrying => carriedObject != null;
+
+    /// <summary>Authority-safe occupied-hand check; does not depend on owner-only client cache.</summary>
+    public bool HasCarriedItemServer => IsServer && Carriable.FindCarriedBy(NetworkObject) != null;
 
     /// <summary>Two-hand carry: while true the carrier's hotbar is locked (GDD tuning knob).</summary>
     public bool IsCarryingHeavy => carriedObject != null && carriedObject.IsHeavy;

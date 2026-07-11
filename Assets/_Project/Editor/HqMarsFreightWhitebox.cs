@@ -314,7 +314,7 @@ public static class HqMarsFreightWhitebox
         var p = Sub(root, "Interior");
 
         // In the nest: the CRT job/settlement terminal (the only live signal), debt board, folding table + lamp, sofa.
-        Prop(p, GA + "AS_OfficeComputer", "Computer_CRT", new Vector3(0.7f, 0f, 1.3f), 90f, new Vector3(1.4f, 1.05f, 0.9f));
+        Prop(p, GA + "AS_OfficeComputer", "Computer_CRT", new Vector3(0.7f, 0f, 1.3f), 90f, new Vector3(1.80f, 1.35f, 1.16f));
         Prop(p, GA + "AS_OfficeDebtBoard", "DebtBoard", new Vector3(-0.7f, 1.3f, 3.3f), 90f, new Vector3(0.1f, 0.9f, 1.6f));
         Prop(p, GA + "AS_OfficeGasMaskSentinel", "Sentinel", new Vector3(0.6f, 0f, 5.6f), 35f, new Vector3(0.7f, 1.7f, 0.7f));
         Prop(p, GA + "AS_OfficeToolSet", "FileBoxes", new Vector3(0.8f, 0f, 4.7f), 20f, new Vector3(0.8f, 0.6f, 0.8f));

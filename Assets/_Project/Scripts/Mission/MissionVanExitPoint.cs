@@ -25,7 +25,7 @@ public class MissionVanExitPoint : NetworkBehaviour, IInteractable
         get
         {
             if (VanTransitOverlay.IsActive) return "";
-            return "上车";
+            return MvpLocale.Pick("Board van", "上车");
         }
     }
 
@@ -45,8 +45,8 @@ public class MissionVanExitPoint : NetworkBehaviour, IInteractable
             player.RequestSeat();
 
         bool isHost = NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening || NetworkManager.Singleton.IsHost;
-        string title = MvpMissionRuntime.ActiveTask?.title ?? MvpLocale.T("commission");
-        string loc = MvpMissionRuntime.ActiveTask?.locationName ?? MvpLocale.T("mission_location");
+        string title = MvpMissionRuntime.ActiveTask != null ? OfficeTaskText.Title(MvpMissionRuntime.ActiveTask) : MvpLocale.T("commission");
+        string loc = MvpMissionRuntime.ActiveTask != null ? OfficeTaskText.Location(MvpMissionRuntime.ActiveTask) : MvpLocale.T("mission_location");
         VanTransitOverlay.ShowBoarding(title, loc, isHost);
     }
 
@@ -76,19 +76,20 @@ public class MissionVanExitPoint : NetworkBehaviour, IInteractable
     {
         var cargo = ScavengeCargoZone.Instance;
         if (cargo == null || cargo.Capacity.Value <= 0)
-            return "委托车已停在前院。发车即按车上现有货物结算。";
-        return $"已装载 {cargo.ItemCount.Value} 件，舱位 {cargo.LoadUnits.Value}/{cargo.Capacity.Value}。" +
-               "发车即按车上现有货物结算——发车后全队随车返回事务所。";
+            return MvpLocale.Pick("The commission van is in the forecourt. Departure settles its current cargo.", "委托车已停在前院。发车即按车上现有货物结算。");
+        return MvpLocale.Pick(
+            $"Loaded {cargo.ItemCount.Value} items, capacity {cargo.LoadUnits.Value}/{cargo.Capacity.Value}. Departure settles current cargo and returns the crew.",
+            $"已装载 {cargo.ItemCount.Value} 件，舱位 {cargo.LoadUnits.Value}/{cargo.Capacity.Value}。发车即按车上现有货物结算——发车后全队随车返回事务所。");
     }
 
-    public string GetReturnButtonLabel() => "关门返程 - 发车结算";
+    public string GetReturnButtonLabel() => MvpLocale.Pick("Close doors — settle and return", "关门返程 - 发车结算");
 
     public bool IsPartialReturnRequest() => false;
 
     public bool CanLocalPlayerRequestReturn() => IsLocalHostOrSolo();
 
     public string GetReturnBlockedReason() =>
-        IsLocalHostOrSolo() ? "" : "发车会拉全队回事务所，需要房主确认。";
+        IsLocalHostOrSolo() ? "" : MvpLocale.Pick("Departure returns the whole crew and requires host confirmation.", "发车会拉全队回事务所，需要房主确认。");
 
     public void TryTakeLockerItem(int slotIndex)
     {

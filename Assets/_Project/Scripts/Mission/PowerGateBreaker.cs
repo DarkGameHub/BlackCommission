@@ -58,8 +58,8 @@ public class PowerGateBreaker : NetworkBehaviour, IInteractable
                 ? Mathf.Clamp01(RestoreProgress.Value / requiredHoldSeconds)
                 : 0f;
             return normalized > 0.01f
-                ? $"按住恢复供电 {Mathf.RoundToInt(normalized * 100f)}%"
-                : "按住恢复供电（断路器）";
+                ? MvpLocale.Pick($"RESTORING POWER {Mathf.RoundToInt(normalized * 100f)}%", $"按住恢复供电 {Mathf.RoundToInt(normalized * 100f)}%")
+                : MvpLocale.Pick("HOLD TO RESTORE POWER (BREAKER)", "按住恢复供电（断路器）");
         }
     }
 

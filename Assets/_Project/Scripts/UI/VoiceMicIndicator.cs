@@ -113,7 +113,9 @@ public class VoiceMicIndicator : MonoBehaviour
         // overlap during boarding/transit), and the HUD zone map keeps this corner free.
         const float w = 172f, h = 30f;
         float x = Screen.width - w - 24f;
-        float y = 24f;
+        // Keep the badge below the BC-DOS header line. At 16:9/Free Aspect the previous
+        // 24 px offset sat directly over the page's MEM OK text and looked like overflow.
+        float y = 70f;
         var box = new Rect(x, y, w, h);
         Fill(box, Panel);
 

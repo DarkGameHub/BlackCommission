@@ -87,16 +87,16 @@ public class SettlementCardOverlay : MonoBehaviour
         docNumber = $"BC-2098-{seed % 10000:D4}";
 
         OfficeTaskDefinition task = MvpMissionRuntime.SelectedTask;
-        commissionTitle = task != null && !string.IsNullOrWhiteSpace(task.title)
-            ? task.title
+        commissionTitle = task != null && !string.IsNullOrWhiteSpace(OfficeTaskText.Title(task))
+            ? OfficeTaskText.Title(task)
             : SceneManager.GetActiveScene().name; // fallback: 委托名退化为场景名 (spec States)
         clientNote = task != null ? task.GetSettlementNote(kind, seed) : null;
 
         stampLabel = kind switch
         {
-            MvpMissionResultKind.Success => "完 成",
-            MvpMissionResultKind.Partial => "部分结算",
-            _ => "失 败"
+            MvpMissionResultKind.Success => MvpLocale.Pick("COMPLETE", "完 成"),
+            MvpMissionResultKind.Partial => MvpLocale.Pick("PARTIAL", "部分结算"),
+            _ => MvpLocale.Pick("FAILED", "失 败")
         };
 
         switch (kind)
@@ -106,18 +106,18 @@ public class SettlementCardOverlay : MonoBehaviour
                 rows = deduction > 0
                     ? new[]
                     {
-                        new Row { label = "委托报酬", amount = baseMoney },
+                        new Row { label = MvpLocale.Pick("COMMISSION PAY", "委托报酬"), amount = baseMoney },
                         new Row
                         {
-                            label = "运输磕碰扣损（条款C-7）", amount = -deduction,
-                            subline = $"封装完整度 {completeness:P0}，每次硬性磕碰扣 3%"
+                            label = MvpLocale.Pick("TRANSIT DAMAGE (CLAUSE C-7)", "运输磕碰扣损（条款C-7）"), amount = -deduction,
+                            subline = MvpLocale.Pick($"Packaging integrity {completeness:P0}; each hard impact deducts 3%", $"封装完整度 {completeness:P0}，每次硬性磕碰扣 3%")
                         },
-                        new Row { label = "实付", amount = netMoney, isNet = true }
+                        new Row { label = MvpLocale.Pick("NET PAY", "实付"), amount = netMoney, isNet = true }
                     }
                     : new[]
                     {
-                        new Row { label = "委托报酬", amount = baseMoney },
-                        new Row { label = "实付", amount = netMoney, isNet = true }
+                        new Row { label = MvpLocale.Pick("COMMISSION PAY", "委托报酬"), amount = baseMoney },
+                        new Row { label = MvpLocale.Pick("NET PAY", "实付"), amount = netMoney, isNet = true }
                     };
                 break;
             case MvpMissionResultKind.Partial:
@@ -125,17 +125,17 @@ public class SettlementCardOverlay : MonoBehaviour
                 {
                     new Row
                     {
-                        label = "提前收工折算（条款B-2）", amount = netMoney,
-                        subline = "按委托报酬 22% 折算，不低于慰问金"
+                        label = MvpLocale.Pick("EARLY RETURN (CLAUSE B-2)", "提前收工折算（条款B-2）"), amount = netMoney,
+                        subline = MvpLocale.Pick("22% of commission pay, never below consolation minimum", "按委托报酬 22% 折算，不低于慰问金")
                     },
-                    new Row { label = "实付", amount = netMoney, isNet = true }
+                    new Row { label = MvpLocale.Pick("NET PAY", "实付"), amount = netMoney, isNet = true }
                 };
                 break;
             default:
                 rows = new[]
                 {
-                    new Row { label = "慰问金（条款D-1）", amount = netMoney },
-                    new Row { label = "实付", amount = netMoney, isNet = true }
+                    new Row { label = MvpLocale.Pick("CONSOLATION PAY (CLAUSE D-1)", "慰问金（条款D-1）"), amount = netMoney },
+                    new Row { label = MvpLocale.Pick("NET PAY", "实付"), amount = netMoney, isNet = true }
                 };
                 break;
         }
@@ -156,11 +156,11 @@ public class SettlementCardOverlay : MonoBehaviour
         docNumber = $"BC-2098-{seed % 10000:D4}";
 
         OfficeTaskDefinition task = MvpMissionRuntime.SelectedTask;
-        commissionTitle = task != null && !string.IsNullOrWhiteSpace(task.title)
-            ? task.title
+        commissionTitle = task != null && !string.IsNullOrWhiteSpace(OfficeTaskText.Title(task))
+            ? OfficeTaskText.Title(task)
             : SceneManager.GetActiveScene().name;
         clientNote = task != null ? task.GetSettlementNote(kind, seed) : null;
-        stampLabel = kind == MvpMissionResultKind.Failed ? "失 败" : "完 成";
+        stampLabel = kind == MvpMissionResultKind.Failed ? MvpLocale.Pick("FAILED", "失 败") : MvpLocale.Pick("COMPLETE", "完 成");
 
         var built = new System.Collections.Generic.List<Row>(names.Length + 1);
         for (int i = 0; i < names.Length; i++)
@@ -175,17 +175,17 @@ public class SettlementCardOverlay : MonoBehaviour
             if (relic)
                 subline = reception switch
                 {
-                    1 => "私人遗物 · 客户情感加价",
-                    2 => "私人遗物 · 已入藏归档，冷淡折价",
-                    _ => "私人遗物 · 市场价"
+                    1 => MvpLocale.Pick("PERSONAL RELIC · CLIENT SENTIMENT PREMIUM", "私人遗物 · 客户情感加价"),
+                    2 => MvpLocale.Pick("PERSONAL RELIC · ARCHIVED, REDUCED RATE", "私人遗物 · 已入藏归档，冷淡折价"),
+                    _ => MvpLocale.Pick("PERSONAL RELIC · MARKET RATE", "私人遗物 · 市场价")
                 };
             else if (preferred)
-                subline = "客户偏好品类，加价收购";
+                subline = MvpLocale.Pick("Preferred client category; premium applied", "客户偏好品类，加价收购");
 
             built.Add(new Row { label = names[i], amount = payouts[i], subline = subline });
         }
         itemRowCount = built.Count;
-        built.Add(new Row { label = "实付", amount = netMoney, isNet = true });
+        built.Add(new Row { label = MvpLocale.Pick("NET PAY", "实付"), amount = netMoney, isNet = true });
         rows = built.ToArray();
 
         // Long manifests compress their line spacing so the card stays on a 1080 screen.
@@ -284,9 +284,9 @@ public class SettlementCardOverlay : MonoBehaviour
         GUI.DrawTexture(headerBand, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
 
         GUI.Label(new Rect(card.x + 16f, card.y + 8f, card.width - 32f, 22f),
-            "黑色委托事务所  ·  委托结算单", headerStyle);
+            MvpLocale.Pick("BLACK COMMISSION OFFICE  ·  SETTLEMENT STATEMENT", "黑色委托事务所  ·  委托结算单"), headerStyle);
         GUI.Label(new Rect(card.x + 16f, card.y + 30f, card.width - 32f, 20f),
-            $"单号 {docNumber}    {commissionTitle}", headerStyle);
+            MvpLocale.Pick($"FILE {docNumber}    {commissionTitle}", $"单号 {docNumber}    {commissionTitle}"), headerStyle);
 
         // Itemized rows. In reveal mode items surface one per RevealStep; the net line waits
         // for the full manifest and lands just before the stamp.
@@ -330,14 +330,14 @@ public class SettlementCardOverlay : MonoBehaviour
         {
             var note = new Rect(card.x + 16f, y + 6f, card.width - 32f, noteH - 12f);
             DrawDashedFrame(note);
-            GUI.Label(new Rect(note.x + 8f, note.y + 4f, note.width - 16f, 16f), "客户使用备注", sublineStyle);
+            GUI.Label(new Rect(note.x + 8f, note.y + 4f, note.width - 16f, 16f), MvpLocale.Pick("CLIENT USE NOTE", "客户使用备注"), sublineStyle);
             GUI.Label(new Rect(note.x + 10f, note.y + 22f, note.width - 20f, note.height - 26f),
                 $"“{clientNote}”", noteStyle);
             y += noteH;
         }
 
         GUI.Label(new Rect(card.x + 16f, card.yMax - 32f, card.width - 32f, 20f),
-            "回所后凭本单至办公终端入账    [E] 收起   [Tab] 重看", footerStyle);
+            MvpLocale.Pick("FILE AT OFFICE TERMINAL AFTER RETURN    [E] CLOSE   [TAB] REVIEW", "回所后凭本单至办公终端入账    [E] 收起   [Tab] 重看"), footerStyle);
 
         // Outcome stamp: slams in at StampDelay, slightly rotated, over the table's top-right.
         // Reduced Motion: the stamp appears at rest — no slam scaling (spec a11y).

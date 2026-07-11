@@ -17,7 +17,7 @@ public class ScavengeVanDepartTrigger : MonoBehaviour, IInteractable
         get
         {
             var m = Manager;
-            return m == null || m.IsTerminalState ? "" : "发车结算（搬完上车）";
+            return m == null || m.IsTerminalState ? "" : MvpLocale.Pick("Depart and settle cargo", "发车结算（搬完上车）");
         }
     }
 

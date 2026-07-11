@@ -63,6 +63,8 @@ public class VanTransitOverlay : MonoBehaviour
     bool drivePending;           // signed → waiting the stamp beat before driving off
     float pendingDriveDuration;
     float signHold;              // early-return ink (now unused after early-return removal)
+    string boardingBlockReason;
+    float boardingBlockUntil;
 
     // Transit gate: the ride ends when BOTH the minimum duration elapsed AND a scene
     // load finished after the signature (the destination loading underneath us).
@@ -446,7 +448,7 @@ public class VanTransitOverlay : MonoBehaviour
     {
         if (arrivalGlow != null || interiorRoot == null) return;
 
-        rearDoor = interiorRoot.transform.Find("Interior_WallRear");
+        rearDoor = FindDeepChild(interiorRoot.transform, "Interior_WallRear");
         if (rearDoor != null) rearDoorClosedPos = rearDoor.localPosition;
 
         bool atOffice = SceneManager.GetActiveScene().name.Contains("HQ");
@@ -456,20 +458,28 @@ public class VanTransitOverlay : MonoBehaviour
         arrivalGlow.name = "Interior_ArrivalGlow";
         Destroy(arrivalGlow.GetComponent<Collider>());
         arrivalGlow.transform.SetParent(interiorRoot.transform, false);
-        arrivalGlow.transform.localPosition = new Vector3(1.52f, 0.92f, 0f);
-        arrivalGlow.transform.localScale = new Vector3(0.012f, 0.56f, 1.36f);
+        arrivalGlow.transform.localPosition = new Vector3(1.72f, 0.96f, 0f);
+        arrivalGlow.transform.localScale = new Vector3(0.012f, 1.82f, 1.70f);
         var mat = new Material(Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color"));
         mat.color = glow;
         arrivalGlow.GetComponent<Renderer>().material = mat;
 
         var lightGo = new GameObject("ArrivalDoorLight");
         lightGo.transform.SetParent(interiorRoot.transform, false);
-        lightGo.transform.localPosition = new Vector3(1.30f, 1.0f, 0f);
+        lightGo.transform.localPosition = new Vector3(1.42f, 1.0f, 0f);
         arrivalLight = lightGo.AddComponent<Light>();
         arrivalLight.type = LightType.Point;
         arrivalLight.color = glow;
         arrivalLight.intensity = 0f;
-        arrivalLight.range = 5f * VanCabin.Scale;
+        arrivalLight.range = 3.2f;
+    }
+
+    static Transform FindDeepChild(Transform root, string childName)
+    {
+        if (root == null) return null;
+        foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            if (child.name == childName) return child;
+        return null;
     }
 
     // ─── Input ───
@@ -517,8 +527,15 @@ public class VanTransitOverlay : MonoBehaviour
 
         // Outbound from HQ — server validates "everyone aboard" before launching.
         var computer = Object.FindAnyObjectByType<OfficeComputer>();
-        if (computer != null)
-            computer.RequestDepart(local);
+        if (computer == null) return;
+        if (!WorkOrderPrinter.IsOutboundOrderTorn)
+        {
+            boardingBlockReason = "WORK ORDER REQUIRED — LEAVE SEAT AND COLLECT IT";
+            boardingBlockUntil = Time.unscaledTime + 2.5f;
+            AudioManager.Instance?.PlayComputerBeep(local.transform.position);
+            return;
+        }
+        computer.RequestDepart(local);
     }
 
     // (提前收工申请单 / partial-settlement input removed — scavenge depart settles current cargo)
@@ -569,13 +586,13 @@ public class VanTransitOverlay : MonoBehaviour
         EnsureStyles();
         if (headingStyle == null) return;
 
+        int previousDepth = GUI.depth;
+        GUI.depth = -80; // above normal HUD/roster, below settlement and modal paperwork
         DrawTicketStrip();
-
-        switch (card)
-        {
-            case Card.Dispatch: DrawDispatchCard(false); break;
-            case Card.DispatchSigned: DrawDispatchCard(true); break;
-        }
+        GUI.depth = previousDepth;
+        // The former centre-screen dispatch card was a fake floating paper surface. Dispatch
+        // paperwork now exists as a wall-mounted 3D clipboard inside the cabin; the screen owns
+        // only this small status strip and never paints buttons onto paper.
     }
 
     // 派遣票据条: aged-paper slip with a civic-teal rule and a stamp-red seal — the same
@@ -586,45 +603,47 @@ public class VanTransitOverlay : MonoBehaviour
         // Strict line bands — the header, status line and ink bar each own a row so nothing
         // can overprint (the old layout centered the title over the full strip and drew the
         // status line straight through it).
-        float w = 520f;
-        var rect = new Rect((Screen.width - w) * 0.5f, 24f, w, 64f);
-        var ticket = new Rect(rect.x - 12f, rect.y - 6f, rect.width + 24f, rect.height + 14f);
-        GUI.DrawTexture(new Rect(ticket.x - 2f, ticket.y - 2f, ticket.width + 4f, ticket.height + 4f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
-        GUI.DrawTexture(ticket, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
-        GUI.DrawTexture(new Rect(ticket.x, ticket.y, ticket.width, 3f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
-        GUI.DrawTexture(new Rect(ticket.x, ticket.yMax - 2f, ticket.width, 2f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreenDim));
-        // ▌ civic tab left, red seal right (spec wireframe: ▌题头 … ■).
-        GUI.DrawTexture(new Rect(ticket.x + 6f, ticket.y + 8f, 4f, ticket.height - 16f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
-        GUI.DrawTexture(new Rect(ticket.xMax - 28f, ticket.y + 12f, 16f, 16f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.RustWarning));
+        float w = Mathf.Max(320f, Mathf.Min(680f, Screen.width - 48f));
+        var rect = new Rect((Screen.width - w) * 0.5f, 48f, w, 78f);
+        var ticket = new Rect(rect.x - 10f, rect.y - 5f, rect.width + 20f, rect.height + 10f);
+        GUI.DrawTexture(ticket, BlackCommissionUiTheme.MakeTex(
+            new Color(BlackCommissionUiTheme.ScreenBlack.r, BlackCommissionUiTheme.ScreenBlack.g,
+                BlackCommissionUiTheme.ScreenBlack.b, 0.90f)));
+        Texture2D rule = BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.PhosDim);
+        GUI.DrawTexture(new Rect(ticket.x, ticket.y, ticket.width, 1f), rule);
+        GUI.DrawTexture(new Rect(ticket.x, ticket.yMax - 1f, ticket.width, 1f), rule);
+        GUI.DrawTexture(new Rect(ticket.x, ticket.y, 1f, ticket.height), rule);
+        GUI.DrawTexture(new Rect(ticket.xMax - 1f, ticket.y, 1f, ticket.height), rule);
 
-        string header = string.IsNullOrEmpty(taskTitle)
-            ? MvpLocale.T("van_cabin")
-            : $"{taskTitle}  ·  {locationName}";
-        GUI.Label(new Rect(rect.x, rect.y + 2f, w, 24f), header, headingStyle);
+        string header = string.IsNullOrEmpty(taskTitle) ? MvpLocale.T("van_cabin") : taskTitle;
+        string subheader = string.IsNullOrEmpty(taskTitle) ? "" : locationName;
+        DrawSingleLineFitted(new Rect(rect.x + 12f, rect.y + 2f, w - 24f, 22f), header, headingStyle, 18, 13);
+        DrawSingleLineFitted(new Rect(rect.x + 12f, rect.y + 24f, w - 24f, 18f), subheader, smallStyle, 13, 11);
 
-        var statusRect = new Rect(rect.x, rect.y + 30f, w, 20f);
+        var statusRect = new Rect(rect.x + 10f, rect.y + 46f, w - 20f, 18f);
         if (phase == Phase.Transit)
         {
             DrawTransitProgress(rect, w);
         }
         else if (phase == Phase.Arrived)
         {
-            string line = doorFullyOpen ? "已抵达    [E] 下车" : "已抵达";
-            GUI.Label(statusRect, line, smallStyle);
+            string line = doorFullyOpen ? MvpLocale.Pick("ARRIVED    [E] DISEMBARK", "已抵达    [E] 下车") : MvpLocale.Pick("ARRIVED", "已抵达");
+            DrawSingleLineFitted(statusRect, line, smallStyle, 13, 10);
             DrawProgressBar(rect, w,
                 Mathf.Lerp(ProgressCap, 1f, Mathf.Clamp01((Time.unscaledTime - arrivalStartedAt) / ArrivalFillSeconds)));
         }
         else
         {
-            string status = allSeated
-                ? MvpLocale.T("all_aboard", seatedCount, neededCount)
-                : MvpLocale.T("waiting_team", seatedCount, neededCount);
-            GUI.Label(statusRect, status + "    " + MvpLocale.T("press_x_leave"), smallStyle);
+            string status;
+            if (Time.unscaledTime < boardingBlockUntil)
+                status = boardingBlockReason;
+            else if (Object.FindAnyObjectByType<OfficeComputer>() != null && !WorkOrderPrinter.IsOutboundOrderTorn)
+                status = "WORK ORDER REQUIRED    [X] LEAVE SEAT";
+            else if (allSeated && IsLocalHost())
+                status = $"{seatedCount}/{neededCount} ABOARD    [SPACE] DEPART    [X] LEAVE";
+            else
+                status = MvpLocale.T("waiting_team", seatedCount, neededCount) + "    " + MvpLocale.T("press_x_leave");
+            DrawSingleLineFitted(statusRect, status, smallStyle, 13, 10);
         }
 
     }
@@ -644,7 +663,7 @@ public class VanTransitOverlay : MonoBehaviour
             displayed = AccessibilityPrefs.ReducedMotion
                 ? ProgressCap
                 : ProgressCap + 0.02f * Mathf.Sin(now * 2.4f);
-            line = "即将抵达…";
+            line = MvpLocale.Pick("ARRIVING…", "即将抵达…");
         }
         else
         {
@@ -655,7 +674,7 @@ public class VanTransitOverlay : MonoBehaviour
                    $"    {Mathf.RoundToInt(displayed * 100f)}%    ~{eta}s";
         }
 
-        GUI.Label(new Rect(rect.x, rect.y + 30f, w, 20f), line, smallStyle);
+        DrawSingleLineFitted(new Rect(rect.x + 10f, rect.y + 46f, w - 20f, 18f), line, smallStyle, 13, 10);
         DrawProgressBar(rect, w, displayed);
     }
 
@@ -663,11 +682,25 @@ public class VanTransitOverlay : MonoBehaviour
     // glowing bar — CRT green stays on actual screens).
     void DrawProgressBar(Rect rect, float w, float fill01)
     {
-        float barY = rect.y + 52f;
-        var bg = new Rect(rect.x, barY, w, 9f);
+        float barY = rect.y + 69f;
+        var bg = new Rect(rect.x + 10f, barY, w - 20f, 5f);
         GUI.DrawTexture(bg, BlackCommissionUiTheme.MakeTex(new Color(0.18f, 0.17f, 0.13f, 0.30f)));
-        GUI.DrawTexture(new Rect(bg.x, bg.y, Mathf.Clamp(w * fill01, 2f, w), 9f),
-            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
+        GUI.DrawTexture(new Rect(bg.x, bg.y, Mathf.Clamp(bg.width * fill01, 2f, bg.width), bg.height),
+            BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.PhosDim));
+    }
+
+    static void DrawSingleLineFitted(Rect rect, string text, GUIStyle source, int preferredSize, int minimumSize)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        var fitted = new GUIStyle(source)
+        {
+            wordWrap = false,
+            clipping = TextClipping.Clip,
+            fontSize = preferredSize
+        };
+        while (fitted.fontSize > minimumSize && fitted.CalcSize(new GUIContent(text)).x > rect.width)
+            fitted.fontSize--;
+        GUI.Label(rect, text, fitted);
     }
 
     // 派车单: the stamped dispatch card, pops when the whole living crew is aboard.
@@ -675,30 +708,30 @@ public class VanTransitOverlay : MonoBehaviour
     {
         float w = 400f, h = 252f;
         Rect cardRect = SlideCardRect(w, h);
-        DrawCardPaper(cardRect, "黑色委托事务所  ·  派 车 单");
+        DrawCardPaper(cardRect, MvpLocale.Pick("BLACK COMMISSION OFFICE  ·  DISPATCH ORDER", "黑色委托事务所  ·  派 车 单"));
 
         float y = cardRect.y + 64f;
-        DrawCardRow(cardRect, ref y, "委托事项", taskTitle);
-        DrawCardRow(cardRect, ref y, "目的地", locationName);
-        DrawCardRow(cardRect, ref y, "乘员", allSeated ? $"{seatedCount}/{neededCount}  全员就位" : $"{seatedCount}/{neededCount}");
+        DrawCardRow(cardRect, ref y, MvpLocale.Pick("COMMISSION", "委托事项"), taskTitle);
+        DrawCardRow(cardRect, ref y, MvpLocale.Pick("DESTINATION", "目的地"), locationName);
+        DrawCardRow(cardRect, ref y, MvpLocale.Pick("CREW", "乘员"), allSeated ? MvpLocale.Pick($"{seatedCount}/{neededCount}  ALL ABOARD", $"{seatedCount}/{neededCount}  全员就位") : $"{seatedCount}/{neededCount}");
 
         // Stamp block, lower right: hollow ink 待签发 → red 已签发 slamming in (1.3→1.0).
         var stampCenter = new Vector2(cardRect.xMax - 90f, cardRect.yMax - 84f);
         if (signed)
         {
             float slam = Mathf.Clamp01((Time.unscaledTime - signedAt) / StampSlamSeconds);
-            DrawStamp(stampCenter, "已签发", BlackCommissionUiTheme.RustWarning, stampStyle,
+            DrawStamp(stampCenter, MvpLocale.Pick("ISSUED", "已签发"), BlackCommissionUiTheme.RustWarning, stampStyle,
                 AccessibilityPrefs.ReducedMotion ? 1f : Mathf.Lerp(1.3f, 1f, slam),
                 Mathf.Lerp(0.4f, 0.92f, slam));
         }
         else
         {
-            DrawStamp(stampCenter, "待签发", new Color(0.19f, 0.17f, 0.13f, 0.55f), stampPendingStyle, 1f, 0.55f);
+            DrawStamp(stampCenter, MvpLocale.Pick("PENDING", "待签发"), new Color(0.19f, 0.17f, 0.13f, 0.55f), stampPendingStyle, 1f, 0.55f);
         }
 
-        string footer = signed ? "已签发 — 发车"
-            : IsLocalHost() ? "[Space] 签发发车      [X] 离座"
-            : "等待房主签发      [X] 离座";
+        string footer = signed ? MvpLocale.Pick("ISSUED — DEPARTING", "已签发 — 发车")
+            : IsLocalHost() ? MvpLocale.Pick("[Space] ISSUE & DEPART      [X] LEAVE SEAT", "[Space] 签发发车      [X] 离座")
+            : MvpLocale.Pick("WAITING FOR HOST      [X] LEAVE SEAT", "等待房主签发      [X] 离座");
         GUI.Label(new Rect(cardRect.x + 18f, cardRect.yMax - 32f, cardRect.width - 36f, 20f), footer, cardSublineStyle);
     }
 
@@ -758,21 +791,25 @@ public class VanTransitOverlay : MonoBehaviour
         if (headingStyle != null) return;
         if (GUI.skin == null || GUI.skin.label == null) return;
 
-        // Ink on paper (the ticket background is aged paper, so text is dark ink).
-        Color ink = new Color(0.10f, 0.095f, 0.075f, 1f);
-        Color inkSoft = new Color(0.19f, 0.17f, 0.13f, 0.9f);
+        // The remaining overlay is a BC-DOS status surface, not simulated paper.
+        Color ink = BlackCommissionUiTheme.PhosGreen;
+        Color inkSoft = BlackCommissionUiTheme.PhosDim;
 
         headingStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 18,
             fontStyle = FontStyle.Bold,
             alignment = TextAnchor.MiddleCenter,
+            wordWrap = false,
+            clipping = TextClipping.Clip,
             normal = { textColor = ink }
         };
         smallStyle = new GUIStyle(GUI.skin.label)
         {
             fontSize = 13,
             alignment = TextAnchor.MiddleCenter,
+            wordWrap = false,
+            clipping = TextClipping.Clip,
             normal = { textColor = inkSoft }
         };
         // Sizes match SettlementCardOverlay exactly — all civic cards share one type scale.
@@ -820,12 +857,11 @@ public class VanTransitOverlay : MonoBehaviour
 
         // Textured (procedurally grimed) materials for the big surfaces so the cabin reads as
         // worn painted metal instead of flat plastic cubes; small props stay flat-shaded.
-        // Colors match the tower's V8 whitebox palette exactly (TowerV8WhiteboxBuilder
-        // EnsureMaterials) so the van and the map read as the same world: civic teal paint
-        // #3F5F5C, dark steel #4A4845 / #2A2826, aged paper #D6CCAE, stamp red #C23A2B.
-        Material wallMat = MakeGrimeMaterial(new Color(0.247f, 0.373f, 0.361f), 0.26f, 5f);   // V8_Civic_TealPaint
-        Material metalMat = MakeGrimeMaterial(new Color(0.290f, 0.282f, 0.271f), 0.32f, 7f);  // V8_Steel_Dark
-        Material benchMat = MakeGrimeMaterial(new Color(0.165f, 0.157f, 0.149f), 0.28f, 6f);  // tray steel, darker
+        // Van-specific E2 world palette: dead charcoal + dirty contractor green. The old
+        // saturated civic teal made the cabin look like a flat prototype from another game.
+        Material wallMat = MakeGrimeMaterial(new Color(0.125f, 0.150f, 0.132f), 0.38f, 5f);
+        Material metalMat = MakeGrimeMaterial(new Color(0.105f, 0.110f, 0.102f), 0.40f, 7f);
+        Material benchMat = MakeGrimeMaterial(new Color(0.070f, 0.075f, 0.068f), 0.34f, 6f);
         Material blackMat = MakeFlatMaterial(new Color(0.035f, 0.04f, 0.037f));
         Material tungstenMat = MakeFlatMaterial(BlackCommissionUiTheme.OldPaper);
 
@@ -855,8 +891,11 @@ public class VanTransitOverlay : MonoBehaviour
             new Vector3(0.35f, 0.95f, -0.66f), new Vector3(0.32f, 0.22f, 0.01f), paperMat);
         CreateInteriorBox("SafetyNoticeStamp", root.transform,
             new Vector3(0.42f, 0.88f, -0.655f), new Vector3(0.1f, 0.06f, 0.008f), debtMat);
+        // A paper notice with a small red stamp, never a large glowing red rectangle.
         CreateInteriorBox("NoSmokingSign", root.transform,
-            new Vector3(0.72f, 1.05f, 0.665f), new Vector3(0.18f, 0.12f, 0.01f), debtMat);
+            new Vector3(0.72f, 1.05f, 0.665f), new Vector3(0.18f, 0.12f, 0.01f), paperMat);
+        CreateInteriorBox("NoSmokingStamp", root.transform,
+            new Vector3(0.79f, 1.01f, 0.651f), new Vector3(0.045f, 0.025f, 0.006f), debtMat);
         // Bulkhead: company plate in paper + a single small dispatch-green status lamp
         // (CRT green is restricted to screens/lamps per the art bible — no glowing bars).
         CreateInteriorBox("CompanyPlate", root.transform,
@@ -869,6 +908,8 @@ public class VanTransitOverlay : MonoBehaviour
         CreateInteriorBox("FloorGrimeB", root.transform,
             new Vector3(0.85f, 0.372f, 0.32f), new Vector3(0.22f, 0.005f, 0.18f), grimeMat);
 
+        CreateMountedDispatchClipboards(root.transform);
+
         // Grab rail + poles down the aisle — sells the "standing transit van" read.
         Material railMat = MakeFlatMaterial(BlackCommissionUiTheme.Text);
         CreateInteriorBox("GrabRail", root.transform,
@@ -879,6 +920,30 @@ public class VanTransitOverlay : MonoBehaviour
             new Vector3(1.20f, 0.9f, 0f), new Vector3(0.035f, 0.95f, 0.035f), railMat);
 
         return root;
+    }
+
+    static void CreateMountedDispatchClipboards(Transform parent)
+    {
+        GameObject prefab = Resources.Load<GameObject>("WorkOrder/VanDispatchClipboard");
+        if (prefab == null)
+        {
+            Debug.LogWarning("[VanCabin] Missing Resources/WorkOrder/VanDispatchClipboard; Blender asset not imported yet.");
+            return;
+        }
+
+        // One on each bench wall so either facing direction sees a physical order. The FBX is
+        // authored upright at real scale; only a 180-degree wall-facing rotation differs.
+        GameObject right = Object.Instantiate(prefab, parent);
+        right.name = "Interior_DispatchClipboard_R";
+        right.transform.localPosition = new Vector3(0.38f, 1.00f, 0.648f);
+        right.transform.localRotation = Quaternion.identity;
+        right.transform.localScale = Vector3.one * 0.82f;
+
+        GameObject left = Object.Instantiate(prefab, parent);
+        left.name = "Interior_DispatchClipboard_L";
+        left.transform.localPosition = new Vector3(0.38f, 1.00f, -0.648f);
+        left.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+        left.transform.localScale = Vector3.one * 0.82f;
     }
 
     static GameObject CreateInteriorBox(string name, Transform parent, Vector3 pos, Vector3 scale, Material mat)
@@ -960,20 +1025,20 @@ public class VanTransitOverlay : MonoBehaviour
 
         var domeGo = new GameObject("TransitCabinLight");
         domeGo.transform.SetParent(interiorRoot.transform, false);
-        domeGo.transform.localPosition = new Vector3(0.45f, 1.30f, 0f);
+        domeGo.transform.localPosition = new Vector3(0.35f, 1.72f, 0f);
         var dome = domeGo.AddComponent<Light>();
         dome.type = LightType.Point;
         dome.color = new Color(1.0f, 0.92f, 0.78f);
-        dome.intensity = 3.2f;
-        dome.range = 4.5f * VanCabin.Scale;
+        dome.intensity = 0.85f;
+        dome.range = 3.0f;
 
         var fillGo = new GameObject("TransitCabinFillLight");
         fillGo.transform.SetParent(interiorRoot.transform, false);
-        fillGo.transform.localPosition = new Vector3(-0.2f, 1.05f, 0f);
+        fillGo.transform.localPosition = new Vector3(-1.20f, 1.15f, 0f);
         var fill = fillGo.AddComponent<Light>();
         fill.type = LightType.Point;
         fill.color = new Color(1.0f, 0.88f, 0.72f);
-        fill.intensity = 2.0f;
-        fill.range = 3.5f * VanCabin.Scale;
+        fill.intensity = 0.32f;
+        fill.range = 2.4f;
     }
 }

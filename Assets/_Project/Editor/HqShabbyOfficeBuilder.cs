@@ -205,8 +205,8 @@ public static class HqShabbyOfficeBuilder
         // Rest corner: the L sofa hugs the SW corner; folding table beside it carries the lamp +
         // bestiary notebook (both resting on the measured 0.75 m top); bedrolls under the windows.
         Prop(p, GA + "AS_OfficeSofa", "Sofa", new Vector3(0.95f, 0f, 1.0f), 0f, new Vector3(1.78f, 0.85f, 1.88f));
-        Prop(p, GA + "AS_OfficeDesk", "FoldingTable", new Vector3(2.0f, 0f, 2.5f), 0f, new Vector3(1.11f, 0.75f, 0.57f));
-        Prop(p, GA + "AS_LampDesk", "TableLamp", new Vector3(2.35f, 0.75f, 2.6f), 0f, new Vector3(0.32f, 0.45f, 0.32f));
+        Prop(p, GA + "AS_OfficeDesk", "FoldingTable", new Vector3(2.40f, 0f, 0.38f), 0f, new Vector3(1.11f, 0.75f, 0.57f));
+        Prop(p, GA + "AS_LampDesk", "TableLamp", new Vector3(2.60f, 0.75f, 0.40f), 0f, new Vector3(0.32f, 0.45f, 0.32f));
         BuildBestiaryNotebook(p);
         float[] sx = { 4.2f, 5.0f, 4.2f, 5.0f };
         float[] sz = { 0.75f, 0.75f, 1.65f, 1.65f };
@@ -214,7 +214,7 @@ public static class HqShabbyOfficeBuilder
             Box(p, $"Bedroll_{i + 1}", new Vector3(sx[i], 0.03f, sz[i]), new Vector3(0.7f, 0.06f, 0.8f), mAmber, collider: false);
 
         // West wall: the CRT desk UNIT sits on the floor (screen faces +X); debt board at eye height.
-        Prop(p, GA + "AS_OfficeComputer", "Computer_CRT", new Vector3(0.6f, 0f, 4.4f), 90f, new Vector3(0.89f, 1.05f, 1.69f));
+        Prop(p, GA + "AS_OfficeComputer", "Computer_CRT", new Vector3(0.6f, 0f, 4.4f), 90f, new Vector3(1.14f, 1.35f, 2.17f));
         Prop(p, GA + "AS_OfficeDebtBoard", "DebtBoard", new Vector3(0.2f, 1.1f, 5.4f), 90f, new Vector3(0.07f, 0.9f, 1.55f));
 
         // Sentinel guards the sealed door's east side (the office's grim joke).
@@ -235,10 +235,9 @@ public static class HqShabbyOfficeBuilder
         Box(p, "Paperwork_StampA", new Vector3(0.7f, 1.7f, 0.17f), new Vector3(0.1f, 0.1f, 0.01f), mSeal, collider: false);
         Box(p, "Paperwork_StampB", new Vector3(1.35f, 1.35f, 0.17f), new Vector3(0.1f, 0.1f, 0.01f), mSeal, collider: false);
 
-        // Clutter pinching the aisles: primitive carton stacks (the ToolSet prefab measures
-        // 2.3×2.06 m — a room-blocker, not a carton) + fitted Tirgames debris.
-        CartonStack(p, "BoxStack_A", new Vector3(6.9f, 0f, 1.1f), 15f);
-        CartonStack(p, "BoxStack_B", new Vector3(3.3f, 0f, 5.3f), -25f);
+        // One controlled clutter pocket against the east wall. The previous two stacks pinched
+        // both the terminal and entry aisles and made a small office read like a storage maze.
+        CartonStack(p, "BoxStack_A", new Vector3(7.35f, 0f, 2.15f), 5f);
         FitPrefab(p, TIRP + "Debris01_4.prefab", "Clutter_E", new Vector3(7.3f, 0f, 5.9f), 40f, new Vector3(0.8f, 0.5f, 1.4f));
         Prop(p, GA + "AS_OfficeFireExtinguisher", "FireExt", new Vector3(7.76f, 1.1f, 5.9f), -90f, new Vector3(0.16f, 0.55f, 0.78f));
     }
@@ -260,7 +259,7 @@ public static class HqShabbyOfficeBuilder
     // non-host crew; OfficeMonsterBestiary is IInteractable and needs an aimable collider).
     static void BuildBestiaryNotebook(Transform p)
     {
-        var cover = Box(p, "BestiaryNotebook", new Vector3(1.7f, 0.775f, 2.4f), new Vector3(0.34f, 0.05f, 0.26f),
+        var cover = Box(p, "BestiaryNotebook", new Vector3(2.17f, 0.775f, 0.36f), new Vector3(0.34f, 0.05f, 0.26f),
             Flat(new Color(0.28f, 0.31f, 0.25f)));
         Box(cover.transform, "Pages", new Vector3(0f, 0.55f, 0f), new Vector3(0.92f, 0.5f, 0.92f),
             Flat(new Color(0.72f, 0.68f, 0.56f)), collider: false);

@@ -61,6 +61,7 @@ public class MvpHud : MonoBehaviour
     Texture2D emptyIcon;
     Texture2D flashlightIcon;
     Texture2D decoyIcon; // reused for battery
+    Texture2D workOrderIcon;
     string shopMessage;
     float shopMessageUntil;
     string officeMessage;
@@ -90,7 +91,7 @@ public class MvpHud : MonoBehaviour
 
     static int LanguageIndex
     {
-        get => PlayerPrefs.GetInt("AS.Settings.Language", 1); // default 中文 (content is ZH-only)
+        get => PlayerPrefs.GetInt("AS.Settings.Language", 0); // English default (E2 style lock)
         set => PlayerPrefs.SetInt("AS.Settings.Language", Mathf.Clamp(value, 0, 1));
     }
 
@@ -187,6 +188,24 @@ public class MvpHud : MonoBehaviour
             else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame) terminalTab = 1;
             else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame) terminalTab = 2;
 
+            // Keyboard commission navigation. Selection wraps and uses the same host-authoritative
+            // path as clicking a row; locked/pending files deliberately cannot be changed.
+            if (terminalTab == 0 && !MvpMissionRuntime.HasSelectedTask && !MvpPendingReward.HasPending)
+            {
+                int direction = 0;
+                if (keyboard.downArrowKey.wasPressedThisFrame || keyboard.sKey.wasPressedThisFrame)
+                    direction = 1;
+                else if (keyboard.upArrowKey.wasPressedThisFrame || keyboard.wKey.wasPressedThisFrame)
+                    direction = -1;
+
+                OfficeTaskDefinition[] pool = activeComputer.Commissions;
+                if (direction != 0 && pool != null && pool.Length > 1 && IsLocalHostOrSolo())
+                {
+                    int next = (activeComputer.CurrentCommissionIndex + direction + pool.Length) % pool.Length;
+                    activeComputer.SelectCommission(next);
+                }
+            }
+
             // E triggers the single primary action (claim / accept / confirm). Debounced
             // so the same E press that opened the terminal doesn't instantly fire it.
             if (keyboard.eKey.wasPressedThisFrame && Time.unscaledTime - computerOpenedAt > 0.25f)
@@ -209,22 +228,22 @@ public class MvpHud : MonoBehaviour
         int cost = PlayerHotbar.GetItemCost(itemId);
         if (CompanyData.Current.Funds < cost)
         {
-            SetShopMessage($"资金不足: {GetShopItemLabel(itemId)} 需要 {cost}G。");
+            SetShopMessage(MvpLocale.T("insufficient_funds", GetShopItemLabel(itemId), cost));
             return;
         }
 
         if (!hotbar.CanReceiveItem(itemId, out string reason))
         {
-            SetShopMessage($"{GetShopItemLabel(itemId)}无法入库: {reason}");
+            SetShopMessage(MvpLocale.T("cant_store", GetShopItemLabel(itemId), reason));
             return;
         }
 
         if (hotbar.TryPurchaseItem(itemId))
             SetShopMessage(IsNetworkedPlay()
-                ? $"采购申请已提交: {GetShopItemLabel(itemId)}，等待账本同步。"
-                : $"采购申请已盖章: {GetShopItemLabel(itemId)} -{cost}G。");
+                ? MvpLocale.T("purchase_submitted", GetShopItemLabel(itemId))
+                : MvpLocale.T("purchase_stamped", GetShopItemLabel(itemId), cost));
         else
-            SetShopMessage($"{GetShopItemLabel(itemId)}采购失败。");
+            SetShopMessage(MvpLocale.T("purchase_failed", GetShopItemLabel(itemId)));
     }
 
     void TryBuyWristwatch(PlayerHotbar hotbar)
@@ -232,22 +251,22 @@ public class MvpHud : MonoBehaviour
         if (hotbar == null) return;
         if (hotbar.HasWristwatchOwned)
         {
-            SetShopMessage("你已经戴着一块廉价工时表。");
+            SetShopMessage(MvpLocale.T("watch_owned"));
             return;
         }
 
         if (CompanyData.Current.Funds < PlayerHotbar.WristwatchCost)
         {
-            SetShopMessage($"资金不足: 廉价工时表需要 {PlayerHotbar.WristwatchCost}G。");
+            SetShopMessage(MvpLocale.T("watch_no_funds", PlayerHotbar.WristwatchCost));
             return;
         }
 
         if (hotbar.TryPurchaseWristwatch())
             SetShopMessage(IsNetworkedPlay()
-                ? "采购申请已提交: 廉价工时表，等待账本同步。"
-                : $"采购申请已盖章: 廉价工时表 -{PlayerHotbar.WristwatchCost}G。");
+                ? MvpLocale.T("watch_submitted")
+                : MvpLocale.T("watch_stamped", PlayerHotbar.WristwatchCost));
         else
-            SetShopMessage("廉价工时表采购失败。");
+            SetShopMessage(MvpLocale.T("watch_failed"));
     }
 
     void SetShopMessage(string message)
@@ -425,7 +444,7 @@ public class MvpHud : MonoBehaviour
             }
             else if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
             {
-                officeStatus = MvpLocale.T("task_accepted", MvpMissionRuntime.SelectedTask.title);
+                officeStatus = MvpLocale.T("task_accepted", OfficeTaskText.Title(MvpMissionRuntime.SelectedTask));
             }
             else if (nearShop)
             {
@@ -438,8 +457,10 @@ public class MvpHud : MonoBehaviour
         }
 
         OfficeComputer computer = activeComputer;
-        float computerWidth = Mathf.Clamp(RefW - 48f, 760f, 1050f);
-        float computerHeight = Mathf.Clamp(RefH - 76f, 560f, 720f);
+        // Keep the terminal inside the physical CRT instead of reading as a full-screen app.
+        // The previous 1050x720 cap left a huge empty lower half and dwarfed the real desk.
+        float computerWidth = Mathf.Clamp(RefW - 96f, 720f, 940f);
+        float computerHeight = Mathf.Clamp(RefH - 118f, 540f, 640f);
         Rect rect = new Rect((RefW - computerWidth) * 0.5f, 38f, computerWidth, computerHeight);
 
         DrawOfficeManagementTerminal(rect, computer, company, nearShop);
@@ -468,7 +489,8 @@ public class MvpHud : MonoBehaviour
         }
         if (officeSlipStyle == null) return;
 
-        var slip = new Rect(18f, 18f, 336f, 42f);
+        float desiredWidth = officeSlipStyle.CalcSize(new GUIContent(text)).x + 52f;
+        var slip = new Rect(18f, 18f, Mathf.Clamp(desiredWidth, 336f, Mathf.Min(620f, RefW - 36f)), 42f);
         GUI.DrawTexture(new Rect(slip.x - 2f, slip.y - 2f, slip.width + 4f, slip.height + 4f),
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.Shadow));
         GUI.DrawTexture(slip, BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.OldPaper));
@@ -486,11 +508,11 @@ public class MvpHud : MonoBehaviour
     {
         if (MvpMissionRuntime.HasSelectedTask && MvpMissionRuntime.SelectedTask != null)
         {
-            DrawTerminalSection("已锁定委托 / ACTIVE FILE");
+            DrawTerminalSection(MvpLocale.Pick("ACTIVE COMMISSION", "已锁定委托 / ACTIVE FILE"));
             DrawTerminalBlock(() =>
             {
-                GUILayout.Label($"已接受委托: {MvpMissionRuntime.SelectedTask.title}", accentStyle);
-                GUILayout.Label("采购完道具后，去外面的公司车出发。", mutedStyle);
+                GUILayout.Label(MvpLocale.T("task_accepted", OfficeTaskText.Title(MvpMissionRuntime.SelectedTask)), accentStyle);
+                GUILayout.Label(MvpLocale.IsEnglish ? "Collect the printed order, then board the van." : "领取打印工单后，前往厢式车。", mutedStyle);
             });
             return;
         }
@@ -639,8 +661,8 @@ public class MvpHud : MonoBehaviour
                 if (sel) GUI.Box(row, GUIContent.none, terminalSelectedButtonStyle);
                 GUIStyle rs = sel ? terminalInverseStyle : terminalLabelStyle;
                 GUI.Label(new Rect(content.x + 8f, y, 52f, 22f), $"{i + 1:000}", rs);
-                GUI.Label(new Rect(content.x + 60f, y, content.width * 0.40f, 22f), t.title, rs);
-                GUI.Label(new Rect(content.x + content.width * 0.50f, y, content.width * 0.18f, 22f), t.client, rs);
+                GUI.Label(new Rect(content.x + 60f, y, content.width * 0.40f, 22f), OfficeTaskText.Title(t), rs);
+                GUI.Label(new Rect(content.x + content.width * 0.50f, y, content.width * 0.18f, 22f), OfficeTaskText.Client(t), rs);
                 GUI.Label(new Rect(content.x + content.width * 0.70f, y, 84f, 22f), t.moneyReward + "G", rs);
                 GUI.Label(new Rect(content.x + content.width * 0.82f, y, content.width * 0.18f, 22f),
                     sel ? GetDemoTaskStatus(computer) : "—", rs);
@@ -670,27 +692,32 @@ public class MvpHud : MonoBehaviour
         {
             OfficeTaskDefinition t = pool[Mathf.Clamp(selectedIdx, 0, pool.Length - 1)];
             GUI.Label(new Rect(content.x, y, content.width, 20f),
-                MvpLocale.T("term_detail", $"{selectedIdx + 1:000}", t.title), terminalLabelStyle);
+                MvpLocale.T("term_detail", $"{selectedIdx + 1:000}", OfficeTaskText.Title(t)), terminalLabelStyle);
             y += 26f;
-            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_site"), t.locationName, null); y += 22f;
-            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_pay"), t.moneyReward + "G  回收估价", null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_site"), OfficeTaskText.Location(t), null); y += 22f;
+            DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_pay"), t.moneyReward + (MvpLocale.IsEnglish ? "G  ESTIMATE" : "G  回收估价"), null); y += 22f;
             DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_window"), MvpMissionClock.GetScheduleSummary(t), null); y += 22f;
             DrawTerminalDetailLine(content.x, y, MvpLocale.T("term_client_label"), CommissionTierLabel(t.clientType), null); y += 24f;
-            GUI.Label(new Rect(content.x, y, content.width, 40f), MvpLocale.T("term_note", t.description), terminalSmallStyle);
+            GUI.Label(new Rect(content.x, y, content.width, 54f), MvpLocale.T("term_note", OfficeTaskText.Description(t)), terminalSmallStyle);
             if (canSwitch && pool.Length > 1)
             {
                 y += 44f;
-                GUI.Label(new Rect(content.x, y, content.width, 20f), "[ 点击上方任一行切换委托 ]", terminalMutedStyle);
+                GUI.Label(new Rect(content.x, y, content.width, 20f),
+                    MvpLocale.IsEnglish ? "[ ↑/↓ OR W/S: SELECT COMMISSION   E: ACCEPT ]" : "[ ↑/↓ 或 W/S：切换委托   E：接受 ]",
+                    terminalMutedStyle);
             }
         }
     }
 
-    static string CommissionTierLabel(CommissionClientType type) => type switch
+    static string CommissionTierLabel(CommissionClientType type) => (type, MvpLocale.IsEnglish) switch
     {
-        CommissionClientType.FreeSalvage => "自由采集 (市价回收)",
-        CommissionClientType.Commissioned => "指定委托 (客户偏好加价)",
-        CommissionClientType.BlackCommission => "黑色委托 (客户偏好加价)",
-        _ => "委托"
+        (CommissionClientType.FreeSalvage, true) => "FREE SALVAGE (MARKET RATE)",
+        (CommissionClientType.Commissioned, true) => "COMMISSIONED (CLIENT PREMIUM)",
+        (CommissionClientType.BlackCommission, true) => "BLACK COMMISSION (CLIENT PREMIUM)",
+        (CommissionClientType.FreeSalvage, false) => "自由采集 (市价回收)",
+        (CommissionClientType.Commissioned, false) => "指定委托 (客户偏好加价)",
+        (CommissionClientType.BlackCommission, false) => "黑色委托 (客户偏好加价)",
+        _ => MvpLocale.IsEnglish ? "COMMISSION" : "委托"
     };
 
     // [2] Supply — gear catalog (host only). Frozen until a pending settlement is claimed.
@@ -858,11 +885,11 @@ public class MvpHud : MonoBehaviour
 
     void DrawOfficeTableHeader(float x, float y, float width)
     {
-        GUI.Label(new Rect(x + 8f, y, 54f, 20f), "编号", terminalSmallStyle);
-        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 20f), "委托名称", terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.47f, y, width * 0.20f, 20f), "委托人", terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.68f, y, width * 0.14f, 20f), "状态", terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.83f, y, width * 0.16f, 20f), "截止日期", terminalSmallStyle);
+        GUI.Label(new Rect(x + 8f, y, 54f, 20f), MvpLocale.T("term_col_no"), terminalSmallStyle);
+        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 20f), MvpLocale.T("term_col_name"), terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.47f, y, width * 0.20f, 20f), MvpLocale.T("term_col_client"), terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.68f, y, width * 0.14f, 20f), MvpLocale.T("term_col_status"), terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.83f, y, width * 0.16f, 20f), MvpLocale.Pick("DUE", "截止日期"), terminalSmallStyle);
         DrawTerminalLine(new Rect(x, y + 22f, width, 1f));
     }
 
@@ -872,10 +899,10 @@ public class MvpHud : MonoBehaviour
             GUI.Box(new Rect(x, y - 2f, width, 28f), GUIContent.none, terminalSelectedButtonStyle);
         DrawTerminalLine(new Rect(x, y + 27f, width, 1f));
         GUI.Label(new Rect(x + 8f, y + 2f, 54f, 22f), id, terminalSmallStyle);
-        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 24f), title + "\n" + EnglishTaskName(id), terminalSmallStyle);
+        GUI.Label(new Rect(x + 70f, y, width * 0.32f, 24f), MvpLocale.IsEnglish ? EnglishTaskName(id) : title, terminalSmallStyle);
         GUI.Label(new Rect(x + width * 0.47f, y + 2f, width * 0.20f, 22f), client, terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.68f, y + 2f, width * 0.14f, 22f), status, status == "已锁定" ? warningStyle : terminalSmallStyle);
-        GUI.Label(new Rect(x + width * 0.83f, y + 2f, width * 0.16f, 22f), due, due.Contains("天") ? warningStyle : terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.68f, y + 2f, width * 0.14f, 22f), status, MvpMissionRuntime.HasSelectedTask ? warningStyle : terminalSmallStyle);
+        GUI.Label(new Rect(x + width * 0.83f, y + 2f, width * 0.16f, 22f), due, terminalSmallStyle);
     }
 
     static string EnglishTaskName(string id)
@@ -899,7 +926,7 @@ public class MvpHud : MonoBehaviour
     {
         string message = !string.IsNullOrEmpty(officeMessage) && Time.time < officeMessageUntil
             ? officeMessage
-            : $"资金 {company.Funds}G   债务 {company.Debt}G   电脑连接 {(nearShop ? "稳定" : "本地")}";
+            : MvpLocale.Pick($"FUNDS {company.Funds}G   DEBT {company.Debt}G   LINK {(nearShop ? "STABLE" : "LOCAL")}", $"资金 {company.Funds}G   债务 {company.Debt}G   电脑连接 {(nearShop ? "稳定" : "本地")}");
         GUI.Label(new Rect(rect.x + 28f, rect.yMax - 30f, rect.width - 56f, 22f), message,
             message.Contains("失败") || message.Contains("不足") || message.Contains("只有") ? warningStyle : terminalSmallStyle);
     }
@@ -915,15 +942,17 @@ public class MvpHud : MonoBehaviour
     string GetDemoTaskStatus(OfficeComputer computer)
     {
         if (MvpMissionRuntime.HasSelectedTask)
-            return "已锁定";
+            return MvpLocale.IsEnglish ? "LOCKED" : "已锁定";
         if (MvpPendingReward.HasPending)
-            return "待结算";
+            return MvpLocale.IsEnglish ? "SETTLEMENT" : "待结算";
         if (computer == null)
-            return "离线";
+            return MvpLocale.IsEnglish ? "OFFLINE" : "离线";
         NetworkManager network = NetworkManager.Singleton;
         if (network == null || !network.IsListening)
-            return "待联机";
-        return network.IsHost ? "可接受" : "等房主";
+            return MvpLocale.IsEnglish ? "NO LINK" : "待联机";
+        return network.IsHost
+            ? (MvpLocale.IsEnglish ? "AVAILABLE" : "可接受")
+            : (MvpLocale.IsEnglish ? "WAIT HOST" : "等房主");
     }
 
     void DrawTerminalLine(Rect rect)
@@ -939,12 +968,12 @@ public class MvpHud : MonoBehaviour
             return;
         }
 
-        DrawTerminalSection("可用委托 / COMMISSION FILE");
+        DrawTerminalSection(MvpLocale.Pick("COMMISSION FILE", "可用委托 / COMMISSION FILE"));
         GUILayout.BeginVertical(selectedSlotStyle);
         GUILayout.Label(computer.DemoTaskTitle, titleStyle);
-        DrawLedgerLine("委托人 / 地点", $"{computer.DemoTaskClient} / {computer.DemoTaskLocation}");
+        DrawLedgerLine(MvpLocale.Pick("CLIENT / SITE", "委托人 / 地点"), $"{computer.DemoTaskClient} / {computer.DemoTaskLocation}");
         GUILayout.Label(computer.DemoTaskDescription, mutedStyle);
-        DrawLedgerLine("报酬 / REWARD", $"{computer.DemoTaskMoneyReward}G");
+        DrawLedgerLine(MvpLocale.Pick("REWARD", "报酬 / REWARD"), $"{computer.DemoTaskMoneyReward}G");
         DrawLedgerLine("TIME WINDOW", MvpMissionClock.GetScheduleSummary(computer.DemoTask));
         GUILayout.Label(MvpMissionClock.GetOvertimeRuleSummary(computer.DemoTask), mutedStyle);
         GUILayout.Space(8);
@@ -983,7 +1012,7 @@ public class MvpHud : MonoBehaviour
 
     void DrawOfficeShop(bool nearShop)
     {
-        DrawTerminalSection("旧货采购 / USED GEAR");
+        DrawTerminalSection(MvpLocale.Pick("USED GEAR", "旧货采购 / USED GEAR"));
         PlayerHotbar activeHotbar = FindLocalHotbar();
         GUILayout.BeginVertical(slotStyle);
         GUILayout.Label(MvpLocale.T("shop_title"), accentStyle);
@@ -1025,7 +1054,7 @@ public class MvpHud : MonoBehaviour
     {
         bool alreadyOwned = hotbar != null && hotbar.HasWristwatchOwned;
         GUI.enabled = canBuy && !alreadyOwned;
-        string label = alreadyOwned ? "廉价工时表 已佩戴" : $"廉价工时表  {PlayerHotbar.WristwatchCost}G";
+        string label = alreadyOwned ? MvpLocale.T("watch_owned_label") : MvpLocale.T("watch_buy_label", PlayerHotbar.WristwatchCost);
         if (GUILayout.Button(label, GUILayout.Height(30)))
             TryBuyWristwatch(hotbar);
         GUI.enabled = true;
@@ -1043,8 +1072,8 @@ public class MvpHud : MonoBehaviour
 
         GUILayout.BeginArea(rect, GUIContent.none, panelStyle);
         GUILayout.BeginHorizontal();
-        DrawTerminalHeader("补给柜", "STORAGE");
-        if (GUILayout.Button("关闭", GUILayout.Width(72), GUILayout.Height(30)))
+        DrawTerminalHeader(MvpLocale.Pick("SUPPLY CABINET", "补给柜"), "STORAGE");
+        if (GUILayout.Button(MvpLocale.T("close_computer"), GUILayout.Width(72), GUILayout.Height(30)))
         {
             CloseCabinet();
             GUILayout.EndHorizontal();
@@ -1054,17 +1083,17 @@ public class MvpHud : MonoBehaviour
         GUILayout.EndHorizontal();
 
         cabinetScrollPosition = GUILayout.BeginScrollView(cabinetScrollPosition, false, true);
-        DrawTerminalSection("柜内库存 / CABINET");
+        DrawTerminalSection(MvpLocale.Pick("CABINET INVENTORY", "柜内库存 / CABINET"));
         for (int i = 0; i < OfficeCabinetStorage.SlotCount; i++)
         {
             HotbarSlot slot = cabinet.GetSlot(i);
             bool empty = slot == null || slot.IsEmpty;
             GUILayout.BeginHorizontal(empty ? slotStyle : selectedSlotStyle);
-            GUILayout.Label($"{i + 1}. {(empty ? "空" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
+            GUILayout.Label($"{i + 1}. {(empty ? MvpLocale.Pick("EMPTY", "空") : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
             GUILayout.FlexibleSpace();
             GUILayout.Label(empty ? "" : $"x{slot.quantity}", mutedStyle, GUILayout.Width(48));
             GUI.enabled = !empty && hotbar != null;
-            if (GUILayout.Button("取出", GUILayout.Width(72), GUILayout.Height(28)))
+            if (GUILayout.Button(MvpLocale.Pick("TAKE", "取出"), GUILayout.Width(72), GUILayout.Height(28)))
             {
                 cabinet.TryTakeToHotbar(hotbar, i, out cabinetMessage);
                 cabinetMessageUntil = Time.time + 2.5f;
@@ -1073,10 +1102,10 @@ public class MvpHud : MonoBehaviour
             GUILayout.EndHorizontal();
         }
 
-        DrawTerminalSection("个人热栏 / HOTBAR");
+        DrawTerminalSection(MvpLocale.Pick("PERSONAL HOTBAR", "个人热栏 / HOTBAR"));
         if (hotbar == null)
         {
-            GUILayout.Label("没有找到本地玩家热栏。", warningStyle);
+            GUILayout.Label(MvpLocale.Pick("LOCAL PLAYER HOTBAR NOT FOUND.", "没有找到本地玩家热栏。"), warningStyle);
         }
         else
         {
@@ -1086,11 +1115,11 @@ public class MvpHud : MonoBehaviour
                 bool empty = slot == null || slot.IsEmpty;
                 bool selected = hotbar.SelectedSlot.Value == i;
                 GUILayout.BeginHorizontal(selected ? selectedSlotStyle : slotStyle);
-                GUILayout.Label($"{i + 1}. {(empty ? "空" : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
+                GUILayout.Label($"{i + 1}. {(empty ? MvpLocale.Pick("EMPTY", "空") : OfficeCabinetStorage.GetItemLabel(slot.itemId))}", labelStyle);
                 GUILayout.FlexibleSpace();
                 GUILayout.Label(empty ? "" : $"x{slot.quantity}", mutedStyle, GUILayout.Width(48));
                 GUI.enabled = !empty;
-                if (GUILayout.Button("存入", GUILayout.Width(72), GUILayout.Height(28)))
+                if (GUILayout.Button(MvpLocale.Pick("STORE", "存入"), GUILayout.Width(72), GUILayout.Height(28)))
                 {
                     cabinet.TryStoreFromHotbar(hotbar, i, out cabinetMessage);
                     cabinetMessageUntil = Time.time + 2.5f;
@@ -1114,25 +1143,27 @@ public class MvpHud : MonoBehaviour
         public string speciesId, fileNo, title, behaviour, counter;
     }
 
-    static readonly DossierEntry[] Dossiers =
+    // Re-evaluate localized copy whenever the panel draws so changing language in Settings
+    // takes effect immediately instead of preserving the language active at class load.
+    static DossierEntry[] Dossiers => new[]
     {
         new DossierEntry
         {
-            speciesId = MonsterBestiaryProgress.EchoMold, fileNo = "BC-M-01", title = "回声菌",
-            behaviour = "感染性真菌人形。录下附近的谈话，在暗处原句回放，把队员从彼此身边引开；诱捕失败即转入高速追猎。",
-            counter = "它只会重放听过的话，造不出新内容——对暗号、管住嘴。听到重复过的语句，那不是你的同事。",
+            speciesId = MonsterBestiaryProgress.EchoMold, fileNo = "BC-M-01", title = MvpLocale.Pick("ECHO MOLD", "回声菌"),
+            behaviour = MvpLocale.Pick("An infected fungal humanoid. It records nearby speech and replays exact phrases in darkness to separate the crew; failed lures become high-speed pursuit.", "感染性真菌人形。录下附近的谈话，在暗处原句回放，把队员从彼此身边引开；诱捕失败即转入高速追猎。"),
+            counter = MvpLocale.Pick("It can only repeat what it heard. Use challenge phrases and control your voice. A repeated line is not your teammate.", "它只会重放听过的话，造不出新内容——对暗号、管住嘴。听到重复过的语句，那不是你的同事。"),
         },
         new DossierEntry
         {
-            speciesId = MonsterBestiaryProgress.FileWarden, fileNo = "BC-M-02", title = "档案怨灵",
-            behaviour = "盘踞在档案与货架区的同源感染体。行动比回声菌更急，被惊动后几乎不放弃追索。",
-            counter = "与回声菌同一套声音纪律。别赌你跑得过它——用货架绕行，把它甩进死角。",
+            speciesId = MonsterBestiaryProgress.FileWarden, fileNo = "BC-M-02", title = MvpLocale.Pick("FILE WARDEN", "档案怨灵"),
+            behaviour = MvpLocale.Pick("A related infection nesting among archives and shelving. More aggressive than Echo Mold and extremely persistent once disturbed.", "盘踞在档案与货架区的同源感染体。行动比回声菌更急，被惊动后几乎不放弃追索。"),
+            counter = MvpLocale.Pick("Follow the same voice discipline. Do not race it in open ground—break pursuit around shelving and dead corners.", "与回声菌同一套声音纪律。别赌你跑得过它——用货架绕行，把它甩进死角。"),
         },
         new DossierEntry
         {
-            speciesId = MonsterBestiaryProgress.CivicIdol, fileNo = "BC-M-03", title = "市政圣像",
-            behaviour = "铜绿雕像。被注视时纹丝不动；视线一离开就高速逼近，近身重击。红眼亮起说明它已选中猎物。",
-            counter = "盯着它，它就动不了——分工：一人盯防，其余人搬运。移开视线前先退出它的半径。",
+            speciesId = MonsterBestiaryProgress.CivicIdol, fileNo = "BC-M-03", title = MvpLocale.Pick("CIVIC IDOL", "市政圣像"),
+            behaviour = MvpLocale.Pick("A verdigris statue. It freezes under observation, closes distance rapidly when unseen, and strikes at close range. Red eyes mark its chosen target.", "铜绿雕像。被注视时纹丝不动；视线一离开就高速逼近，近身重击。红眼亮起说明它已选中猎物。"),
+            counter = MvpLocale.Pick("Keep eyes on it. Assign one watcher while the rest carry. Leave its reach before breaking line of sight.", "盯着它，它就动不了——分工：一人盯防，其余人搬运。移开视线前先退出它的半径。"),
         },
     };
 
@@ -1156,8 +1187,8 @@ public class MvpHud : MonoBehaviour
         GUI.DrawTexture(new Rect(rect.x, rect.y, rect.width, 40f),
             BlackCommissionUiTheme.MakeTex(BlackCommissionUiTheme.MilitaryGreen));
         GUI.Label(new Rect(rect.x + 16f, rect.y + 9f, rect.width - 120f, 24f),
-            "黑色委托事务所  ·  异常体案卷", dossierBandStyle);
-        if (GUI.Button(new Rect(rect.xMax - 92f, rect.y + 6f, 78f, 28f), "合上 [Esc]", terminalButtonStyle))
+            MvpLocale.Pick("BLACK COMMISSION OFFICE  ·  ANOMALY FILES", "黑色委托事务所  ·  异常体案卷"), dossierBandStyle);
+        if (GUI.Button(new Rect(rect.xMax - 92f, rect.y + 6f, 78f, 28f), MvpLocale.Pick("CLOSE [Esc]", "合上 [Esc]"), terminalButtonStyle))
         {
             CloseBestiary();
             return;
@@ -1174,7 +1205,7 @@ public class MvpHud : MonoBehaviour
             GUILayout.Space(12f);
         }
 
-        GUILayout.Label("补录规则：只有被它盯上过、并活着回来的人，才有资格执笔。", dossierMutedStyle);
+        GUILayout.Label(MvpLocale.Pick("FILING RULE: ONLY A SURVIVOR WHO DREW ITS ATTENTION MAY AUTHOR A RECORD.", "补录规则：只有被它盯上过、并活着回来的人，才有资格执笔。"), dossierMutedStyle);
         GUILayout.EndScrollView();
         GUILayout.EndArea();
     }
@@ -1183,10 +1214,10 @@ public class MvpHud : MonoBehaviour
     {
         // Header row: file number + name (or redacted) + status stamp.
         GUILayout.BeginHorizontal();
-        GUILayout.Label($"案卷 {d.fileNo}", dossierMutedStyle, GUILayout.Width(110f));
+        GUILayout.Label(MvpLocale.Pick($"FILE {d.fileNo}", $"案卷 {d.fileNo}"), dossierMutedStyle, GUILayout.Width(110f));
         GUILayout.Label(known ? d.title : "██████", dossierHeadStyle);
         GUILayout.FlexibleSpace();
-        GUILayout.Label(known ? "〔已立案〕" : "〔待补录〕", dossierStampStyle, GUILayout.Width(88f));
+        GUILayout.Label(known ? MvpLocale.Pick("[FILED]", "〔已立案〕") : MvpLocale.Pick("[PENDING]", "〔待补录〕"), dossierStampStyle, GUILayout.Width(88f));
         GUILayout.EndHorizontal();
 
         Rect line = GUILayoutUtility.GetRect(w, 1f);
@@ -1195,10 +1226,10 @@ public class MvpHud : MonoBehaviour
 
         if (known)
         {
-            GUILayout.Label("已证实行为", dossierMutedStyle);
+            GUILayout.Label(MvpLocale.Pick("CONFIRMED BEHAVIOUR", "已证实行为"), dossierMutedStyle);
             GUILayout.Label(d.behaviour, dossierInkStyle);
             GUILayout.Space(4f);
-            GUILayout.Label("对策（幸存者执笔）", dossierMutedStyle);
+            GUILayout.Label(MvpLocale.Pick("COUNTERMEASURES (SURVIVOR ACCOUNT)", "对策（幸存者执笔）"), dossierMutedStyle);
             GUILayout.Label(d.counter, dossierInkStyle);
         }
         else
@@ -1212,7 +1243,7 @@ public class MvpHud : MonoBehaviour
                     BlackCommissionUiTheme.MakeTex(new Color(0.13f, 0.12f, 0.10f, 0.85f)));
                 GUILayout.Space(5f);
             }
-            GUILayout.Label("现场尚无可靠证词。", dossierMutedStyle);
+            GUILayout.Label(MvpLocale.Pick("NO RELIABLE FIELD TESTIMONY ON FILE.", "现场尚无可靠证词。"), dossierMutedStyle);
         }
     }
 
@@ -1266,7 +1297,7 @@ public class MvpHud : MonoBehaviour
             int load = cargo.LoadUnits.Value;
             int cap = cargo.Capacity.Value;
             bool full = load >= cap;
-            GUILayout.Label($"舱位: {load}/{cap}　已装 {cargo.ItemCount.Value} 件",
+            GUILayout.Label(MvpLocale.Pick($"CAPACITY: {load}/{cap}   LOADED: {cargo.ItemCount.Value}", $"舱位: {load}/{cap}　已装 {cargo.ItemCount.Value} 件"),
                 full ? warningStyle : mutedStyle);
         }
         if (!string.IsNullOrEmpty(missionMessage) && Time.time < missionMessageUntil)
@@ -1278,8 +1309,8 @@ public class MvpHud : MonoBehaviour
     static string GetMissionObjective(ScavengeMissionManager mission)
     {
         if (mission != null && mission.IsTerminalState)
-            return "目标: 已发车结算，正在返回事务所。";
-        return "目标: 搜刮值钱物件 → 放进货舱 → 搬完上车，拉杆发车结算。";
+            return MvpLocale.Pick("OBJECTIVE: CARGO SETTLED — RETURNING TO OFFICE.", "目标: 已发车结算，正在返回事务所。");
+        return MvpLocale.Pick("OBJECTIVE: SALVAGE VALUABLES → LOAD VAN → BOARD → DEPART AND SETTLE.", "目标: 搜刮值钱物件 → 放进货舱 → 搬完上车，拉杆发车结算。");
     }
 
     void DrawSpectatorHint()
@@ -1335,7 +1366,7 @@ public class MvpHud : MonoBehaviour
         }
         GUILayout.EndHorizontal();
 
-        DrawTerminalSection("返程决策 / RETURN");
+        DrawTerminalSection(MvpLocale.Pick("RETURN DECISION", "返程决策 / RETURN"));
         GUILayout.Label(van.GetReturnSummary(), accentStyle);
 
         GUILayout.Label(MvpLocale.T("van_decide_hint"), mutedStyle);
@@ -1361,7 +1392,7 @@ public class MvpHud : MonoBehaviour
             if (GUILayout.Button(MvpLocale.T("take_item"), GUILayout.Width(88), GUILayout.Height(28)))
             {
                 van.TryTakeLockerItem(i);
-                SetMissionMessage($"车载物资申请: {GetShopItemLabel(itemId)}。");
+                SetMissionMessage(MvpLocale.T("locker_request", GetShopItemLabel(itemId)));
             }
             GUI.enabled = true;
             if (quantity > 0 && localHotbar != null && !canReceive)
@@ -1390,7 +1421,7 @@ public class MvpHud : MonoBehaviour
             {
                 partialReturnConfirmVan = van;
                 partialReturnConfirmUntil = Time.unscaledTime + 4f;
-                SetMissionMessage("警告: 再次点击返程会让全队提前回事务所，只做部分结算。");
+                SetMissionMessage(MvpLocale.T("partial_return_warn"));
                 GUI.enabled = true;
                 return false;
             }
@@ -1480,6 +1511,10 @@ public class MvpHud : MonoBehaviour
             if (selected)
                 DrawSlotCornerBrackets(rect, BlackCommissionUiTheme.OldWood, 8f, 2f);
         }
+
+        HotbarSlot selectedSlot = hotbar.GetSlot(hotbar.SelectedSlot.Value);
+        if (selectedSlot != null && !selectedSlot.IsEmpty && selectedSlot.itemId == MvpHotbarItemId.WorkOrder)
+            GUI.Label(new Rect(0f, y - 24f, RefW, 20f), "HOLD [F] TO READ WORK ORDER", terminalMutedStyle);
     }
 
     // Thin 4-edge outline for a hotbar cell (reference px; scaled by the HUD matrix).
@@ -1572,7 +1607,7 @@ public class MvpHud : MonoBehaviour
 
     void DrawFooterHint()
     {
-        string text = "多人 MVP: Start Host 后接任务；1-5 切热栏，左键/H 使用，HQ 内按 G 丢当前格到地上存放。";
+        string text = MvpLocale.Pick("MULTIPLAYER MVP: START HOST, ACCEPT A JOB; 1–5 SWITCH HOTBAR, LMB/H USE, G DROPS THE SELECTED HQ ITEM.", "多人 MVP: Start Host 后接任务；1-5 切热栏，左键/H 使用，HQ 内按 G 丢当前格到地上存放。");
         GUI.Label(new Rect(18, RefH - 30, 720, 24), text, mutedStyle);
     }
 
@@ -1757,6 +1792,7 @@ public class MvpHud : MonoBehaviour
         {
             case MvpHotbarItemId.Flashlight: return flashlightIcon;
             case MvpHotbarItemId.Battery: return decoyIcon; // reuse amber-toned icon for battery
+            case MvpHotbarItemId.WorkOrder: return workOrderIcon;
             default: return emptyIcon;
         }
     }
@@ -1773,7 +1809,7 @@ public class MvpHud : MonoBehaviour
 
     static string GetHotbarStorageSummary(PlayerHotbar hotbar)
     {
-        if (hotbar == null) return "热栏: 未找到本地玩家。";
+        if (hotbar == null) return MvpLocale.Pick("Hotbar: local player not found.", "热栏: 未找到本地玩家。");
 
         int usedSlots = 0, flashlights = 0, batteries = 0;
         for (int i = 0; i < PlayerHotbar.SlotCount; i++)
@@ -1956,6 +1992,7 @@ public class MvpHud : MonoBehaviour
         // Battery: dull office stock with a CRT-green charge mark.
         decoyIcon = MakeIcon(BlackCommissionUiTheme.OldWood, BlackCommissionUiTheme.MilitaryGreen, BlackCommissionUiTheme.CrtGreen, 2);
         flashlightIcon = MakeIcon(BlackCommissionUiTheme.ConcreteRaised, BlackCommissionUiTheme.CrtGreenDim, BlackCommissionUiTheme.CrtGreen, 4);
+        workOrderIcon = MakeIcon(BlackCommissionUiTheme.Paper, BlackCommissionUiTheme.MilitaryGreen, BlackCommissionUiTheme.InkFaded, 5);
     }
 
     static Texture2D MakeIcon(Color baseColor, Color accentColor, Color markColor, int kind)
@@ -1990,6 +2027,14 @@ public class MvpHud : MonoBehaviour
                 FillRect(texture, 13, 20, 24, 10, markColor);
                 FillRect(texture, 30, 17, 9, 16, accentColor);
                 FillRect(texture, 9, 23, 6, 4, accentColor);
+                break;
+            case 5:
+                FillRect(texture, 10, 7, 28, 34, accentColor);
+                FillRect(texture, 12, 9, 24, 30, baseColor);
+                FillRect(texture, 16, 14, 16, 2, markColor);
+                FillRect(texture, 16, 20, 13, 2, markColor);
+                FillRect(texture, 16, 26, 16, 2, markColor);
+                FillRect(texture, 16, 32, 10, 2, markColor);
                 break;
             default:
                 FillRect(texture, 12, 22, 24, 4, accentColor);

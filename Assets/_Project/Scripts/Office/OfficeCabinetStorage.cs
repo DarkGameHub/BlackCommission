@@ -125,6 +125,7 @@ public class OfficeCabinetStorage : MonoBehaviour, IInteractable
         {
             MvpHotbarItemId.Flashlight => "Flashlight",
             MvpHotbarItemId.Battery => "Battery",
+            MvpHotbarItemId.WorkOrder => "Work Order",
             _ => "Empty"
         };
     }

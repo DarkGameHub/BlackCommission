@@ -79,7 +79,7 @@ public class HqRollUpDoorReveal : MonoBehaviour, IInteractable
     // ── Manual mode (IInteractable). An empty hint in auto modes makes PlayerInteraction skip it. ──
     public string InteractHint =>
         trigger != Trigger.Manual || animating ? string.Empty
-        : targetOpen ? "[E] 关闭卷帘门" : "[E] 升起卷帘门";
+        : targetOpen ? MvpLocale.Pick("Close roll-up door", "关闭卷帘门") : MvpLocale.Pick("Raise roll-up door", "升起卷帘门");
 
     public void OnInteractStart(PlayerController player)
     {

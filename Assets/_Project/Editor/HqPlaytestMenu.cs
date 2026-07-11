@@ -181,7 +181,7 @@ public static class HqPlaytestMenu
         var p = Sub(root, "Interior");
 
         // --- LEFT (-X) wall: debt/takeover board, CRT computer, file boxes, sentinel ---
-        Prop(p, R + "AS_OfficeComputer", "Computer_CRT", new Vector3(1.0f, 0f, 6.0f), PropYaw.Computer, new Vector3(1.4f, 1.05f, 0.9f));
+        Prop(p, R + "AS_OfficeComputer", "Computer_CRT", new Vector3(1.0f, 0f, 6.0f), PropYaw.Computer, new Vector3(1.80f, 1.35f, 1.16f));
         Prop(p, R + "AS_OfficeDebtBoard", "DebtBoard", new Vector3(0.22f, 1.25f, 3.6f), PropYaw.DebtBoard, new Vector3(0.1f, 0.9f, 1.6f));
         Prop(p, R + "AS_OfficeToolSet", "FileBoxes", new Vector3(1.0f, 0f, 4.7f), 20f, new Vector3(0.8f, 0.6f, 0.8f));
         Prop(p, R + "AS_OfficeGasMaskSentinel", "Sentinel", new Vector3(1.0f, 0f, 2.2f), PropYaw.Sentinel, new Vector3(0.7f, 1.7f, 0.7f));

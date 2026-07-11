@@ -18,6 +18,10 @@ MonoBehaviour:
   client: "\u706B\u661F \xB7 \u5730\u7403\u9057\u4EA7\u5F81\u96C6\u4E8B\u52A1\u6240"
   description: "\u5F81\u96C6\u4E8B\u52A1\u6240\u5728\u706B\u661F\u5730\u8868\u7684\u7269\u6D41\u4E2D\u8F6C\u7AD9\u88AB\u6CD5\u9662\u67E5\u5C01\u4E86\u2014\u2014\u4E00\u6279\u5DF2\u6E05\u70B9\u672A\u6E05\u5173\u7684\u300C\u5730\u7403\u9057\u4EA7\u300D\u8D27\u8FD8\u9501\u5728\u4ED3\u91CC\u3002\u4ED6\u4EEC\u51FA\u94B1\u8BF7\u5916\u5305\u56E2\u961F\u628A\u8D27\u53D6\u56DE\u6765\u3002\u51B7\u85CF\u533A\u7684\u5C01\u6761\u522B\u591A\u95EE\uFF0C\u6309\u4EF6\u7ED3\u7B97\u3002"
   locationName: "\u706B\u661F \xB7 \u51BB\u7ED3\u7269\u6D41\u4E2D\u8F6C\u7AD9"
+  titleEnglish: "Frozen Hold - Consignment Recovery"
+  clientEnglish: "Mars Heritage Office"
+  descriptionEnglish: "A court-sealed transfer station still holds inventoried Earth-heritage cargo. Recover the consignments. Do not question the cold-room seals."
+  locationNameEnglish: "Mars - Sealed Logistics Transfer Station"
   sceneName: Mars_Logistics_01
   recommendedPlayersMin: 1
   recommendedPlayersMax: 4
@@ -25,6 +29,9 @@ MonoBehaviour:
   favouredCategoryIds: 06000000040000000b000000
   favouredMaterialClassIds: 00000000
   relicSentimentalClient: 0
+  clientScrawl: "Cold-room seals are inventory labels, not warnings."
+  clientScrawlChinese: "\u51B7\u85CF\u533A\u7684\u5C01\u6761\u662F\u5E93\u5B58\u6807\u7B7E\uFF0C\u4E0D\u662F\u8B66\u544A\u3002"
+  printQuirkSeed: 20981
   missionStartClockHour: 8
   contractWindowGameHours: 18
   realSecondsPerGameHour: 60
